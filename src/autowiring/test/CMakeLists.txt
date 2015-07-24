@@ -14,6 +14,7 @@ set(AutowiringTest_SRCS
   AutoFilterMultiDecorateTest.cpp
   AutoFilterSequencing.cpp
   AutoFilterTest.cpp
+  AutoIDTest.cpp
   AutoInjectableTest.cpp
   AutoPacketTest.cpp
   AutoPacketFactoryTest.cpp

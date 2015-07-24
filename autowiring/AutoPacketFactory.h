@@ -170,7 +170,7 @@ protected:
   /// <remarks>
   /// If a matching description was not found GetTypeDescriptor(type).GetAutoFilterTypeInfo() == nullptr
   /// </remarks>
-  AutoFilterDescriptor GetTypeDescriptorUnsafe(const std::type_info* nodeType);
+  AutoFilterDescriptor GetTypeDescriptorUnsafe(auto_id nodeType);
 
   static bool IsAutoPacketType(const std::type_info& dataType);
 
@@ -235,7 +235,6 @@ public:
 // Extern explicit template instantiation declarations added to prevent
 // exterior instantation of internally used template instances
 extern template struct SlotInformationStump<AutoPacketFactory, false>;
-extern template const std::shared_ptr<AutoPacketFactory>& SharedPointerSlot::as<AutoPacketFactory>(void) const;
 extern template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPacketFactory, CoreObject>(const std::shared_ptr<CoreObject>& Other);
 extern template class RegType<AutoPacketFactory>;
 extern template struct autowiring::fast_pointer_cast_blind<CoreObject, AutoPacketFactory>;

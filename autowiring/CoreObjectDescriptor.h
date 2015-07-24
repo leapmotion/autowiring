@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
+#include "auto_id.h"
 #include "AutoFilterDescriptor.h"
 #include "AutowiringEvents.h"
 #include "BoltBase.h"
@@ -25,8 +26,8 @@
 struct CoreObjectDescriptor {
   template<typename TActual, typename T>
   CoreObjectDescriptor(const std::shared_ptr<TActual>& value, T*) :
-    type(&typeid(T)),
-    actual_type(&typeid(auto_id<TActual>)),
+    type(auto_id_t<T>{}),
+    actual_type(auto_id_t<TActual>{}),
     stump(&SlotInformationStump<T>::s_stump),
     value(value),
     subscriber(MakeAutoFilterDescriptor<T>(value)),
@@ -55,6 +56,8 @@ struct CoreObjectDescriptor {
     (void) autowiring::fast_pointer_cast_initializer<TActual, CoreObject>::sc_init;
     (void) autowiring::fast_pointer_cast_initializer<CoreObject, T>::sc_init;
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) auto_id_t_init<TActual>::init;
+    (void) auto_id_t_init<T>::init;
   }
 
   /// <summary>
@@ -66,12 +69,12 @@ struct CoreObjectDescriptor {
   {}
 
   // The type of the passed pointer
-  const std::type_info* type;
+  const auto_id type;
 
   // The "actual type" used by Autowiring.  This type may differ from CoreObjectDescriptor::type in cases
   // where a type unifier is used, or if the concrete type is defined in an external module--for
   // instance, by a class factory.
-  const std::type_info* actual_type;
+  const auto_id actual_type;
 
   /// <summary>
   /// Used to obtain a list of slots defined on this type, for reflection purposes

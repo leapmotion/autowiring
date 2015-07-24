@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <unordered_set>
 #include <sstream>
 
 using namespace autowiring;
@@ -36,11 +37,11 @@ bool autowiring::dbg::IsLambda(const std::type_info& ti) {
 }
 #endif
 
-static std::string DemangleWithAutoID(const std::type_info& ti) {
-  auto retVal = demangle(ti);
+static std::string DemangleWithAutoID(auto_id id) {
+  auto retVal = demangle(id.block->ti);
 
   // prefix is at the beginning of the string, skip over it
-  static const char prefix [] = "auto_id<";
+  static const char prefix [] = "auto_id_t<";
 
   if (retVal.compare(0, sizeof(prefix) - 1, prefix) == 0) {
     size_t off = sizeof(prefix) - 1;
@@ -150,10 +151,10 @@ std::string autowiring::dbg::AutoFilterInfo(const char* name) {
 
       // Who provides this input?
       for (const auto& providerDesc : descs) {
-        auto providerArg = providerDesc.GetArgumentType(args[i].ti);
+        auto providerArg = providerDesc.GetArgumentType(args[i].id);
         if (providerArg && providerArg->is_output) {
           // Need to print information about this provider:
-          os << demangle(*args[i].ti) << ' ' << std::string(nLevels, ' ') << demangle(*providerDesc.GetType()) << std::endl;
+          os << demangle(args[i].id) << ' ' << std::string(nLevels, ' ') << demangle(providerDesc.GetType()) << std::endl;
 
           // The current descriptor provides an input to the parent, recurse
           fnCall(providerDesc, nLevels + 1);
@@ -179,24 +180,24 @@ std::vector<std::string> autowiring::dbg::ListRootDecorations(void) {
   const std::vector<AutoFilterDescriptor> descs = factory->GetAutoFilters();
 
   // Get all baseline descriptor types, figure out what isn't satisfied:
-  std::unordered_map<std::type_index, const std::type_info*> outputs;
-  std::unordered_map<std::type_index, const std::type_info*> inputs;
+  std::unordered_set<auto_id> outputs;
+  std::unordered_set<auto_id> inputs;
 
   for (const auto& desc : descs) {
     auto args = desc.GetAutoFilterArguments();
     for (size_t i = 0; i < desc.GetArity(); i++)
-      (args[i].is_output ? outputs : inputs)[*args[i].ti] = args[i].ti;
+      (args[i].is_output ? outputs : inputs).insert(args[i].id);
   }
 
   // Remove all inputs that exist in the outputs set:
   for (auto& output : outputs)
-    inputs.erase(*output.second);
+    inputs.erase(output);
 
   // Any remaining inputs are unsatisfied
   std::vector<std::string> retVal;
-  for (auto& input : inputs)
-    if (input.second)
-      retVal.push_back(DemangleWithAutoID(*input.second));
+  for (auto_id input : inputs)
+    if (input)
+      retVal.push_back(DemangleWithAutoID(input));
   return retVal;
 }
 
@@ -249,7 +250,7 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, CoreContext& ctxt) 
     for (size_t i = 0; i < desc.GetArity(); i++) {
       const AutoFilterArgument& arg = args[i];
 
-      std::string decoration = DemangleWithAutoID(*arg.ti);
+      std::string decoration = DemangleWithAutoID(arg.id);
 
       // Assign each decoration and ID
       if (decorations.find(decoration) == decorations.end()) {

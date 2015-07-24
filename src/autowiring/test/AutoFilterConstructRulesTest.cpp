@@ -116,9 +116,8 @@ TEST_F(AutoFilterConstructRulesTest, CorrectlyCallsCustomAllocator) {
 
   ASSERT_FALSE(HasCustomNewFunction::s_invoked) << "Custom allocator was invoked prematurely";
   auto packet = factory->NewPacket();
-  auto* phcnf = packet->GetShared<HasCustomNewFunction>();
-  auto& hcnf = *phcnf;
-  ASSERT_TRUE(phcnf && hcnf) << "Decoration with custom allocator not present on a packet as expected";
+  std::shared_ptr<const HasCustomNewFunction> hcnf = *packet->GetShared<HasCustomNewFunction>();
+  ASSERT_NE(nullptr, hcnf) << "Decoration with custom allocator not present on a packet as expected";
   ASSERT_TRUE(HasCustomNewFunction::s_invoked) << "Custom new allocator was not invoked as expected";
 
   for (size_t i = 0; i < 128; i++)

@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "auto_id.h"
-#include "SharedPointerSlot.h"
 
 class AutoPacket;
 template <class T> class auto_in;
@@ -30,7 +29,7 @@ class auto_arg
 public:
   typedef const T& type;
   typedef type arg_type;
-  typedef auto_id<T> id_type;
+  typedef auto_id_t<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = false;
@@ -39,6 +38,7 @@ public:
 
   template<class C>
   static const T& arg(C& packet) {
+    (void) auto_id_t_init<T, false>::init;
     return packet.template Get<T>();
   }
 };
@@ -68,7 +68,7 @@ class auto_arg<std::shared_ptr<const T>>
 public:
   typedef const std::shared_ptr<const T>& type;
   typedef type arg_type;
-  typedef auto_id<T> id_type;
+  typedef auto_id_t<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = true;
@@ -77,9 +77,12 @@ public:
 
   template<class C>
   static const std::shared_ptr<const T>& arg(C& packet) {
+    (void) auto_id_t_init<T, false>::init;
+
+    static const std::shared_ptr<const T> null;
     auto retVal = packet.template GetShared<T>();
     if (!retVal)
-      return SharedPointerSlot::null<const T>();
+      return null;
     return *retVal;
   }
 };
@@ -94,7 +97,7 @@ public:
   static_assert(std::is_const<T>::value, "Pointer-typed input parameters must point to a const-qualified type (T must be const-qualified)");
   typedef T* type;
   typedef T* arg_type;
-  typedef auto_id<T*> id_type;
+  typedef auto_id_t<T*> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = false;
@@ -103,6 +106,7 @@ public:
 
   template<class C>
   static const T* arg(C& packet) {
+    (void) auto_id_t_init<T, false>::init;
     return packet.template Get<const T*>();
   }
 };
@@ -171,7 +175,7 @@ public:
     operator T&() const { return arg; }
   };
 
-  typedef auto_id<T> id_type;
+  typedef auto_id_t<T> id_type;
   static const bool is_input = false;
   static const bool is_output = true;
   static const bool is_shared = false;
@@ -179,6 +183,9 @@ public:
   static const int tshift = 0;
 
   static std::shared_ptr<T> arg(AutoPacket& packet) {
+    // Need to ensure the identifier is initialized properly, we can do a full
+    // initialization because this is a byref output type
+    (void) auto_id_t_init<T>::init;
     return detail::auto_arg_ctor_helper<T>::arg(packet);
   }
 
@@ -210,6 +217,7 @@ public:
 
   template<class C>
   static std::shared_ptr<T> arg(C&) {
+    (void) auto_id_t_init<T, false>::init;
     return std::shared_ptr<T>();
   }
 };
@@ -234,7 +242,7 @@ class auto_arg<CoreContext&>
 public:
   typedef CoreContext& type;
   typedef CoreContext& arg_type;
-  typedef CoreContext id_type;
+  typedef auto_id_t<CoreContext> id_type;
   static const bool is_input = false;
   static const bool is_output = false;
   static const bool is_shared = false;
@@ -253,7 +261,7 @@ class auto_arg<std::shared_ptr<CoreContext>>
 public:
   typedef std::shared_ptr<CoreContext> type;
   typedef std::shared_ptr<CoreContext> arg_type;
-  typedef CoreContext id_type;
+  typedef auto_id_t<CoreContext> id_type;
   static const bool is_input = false;
   static const bool is_output = false;
   static const bool is_shared = false;
@@ -288,7 +296,7 @@ public:
     operator const T**(void) const { return ptr.get(); }
   };
 
-  typedef auto_id<T> id_type;
+  typedef auto_id_t<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = false;
@@ -297,6 +305,7 @@ public:
 
   template<class C>
   static type arg(C& packet) {
+    (void) auto_id_t_init<T, false>::init;
     return type{packet.template GetAll<T>()};
   }
 };
@@ -329,7 +338,7 @@ public:
     operator std::shared_ptr<const T>*(void) const { return ptr.get(); }
   };
 
-  typedef auto_id<T> id_type;
+  typedef auto_id_t<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = false;
@@ -338,6 +347,7 @@ public:
 
   template<class C>
   static type arg(C& packet) {
+    (void) auto_id_t_init<T, false>::init;
     return type{packet.template GetAllShared<T>()};
   }
 };

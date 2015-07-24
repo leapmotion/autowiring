@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "auto_id.h"
 #include "auto_signal.h"
 #include "AutowiringDebug.h"
 #include "AutowirableSlot.h"
@@ -154,7 +155,7 @@ public:
         static_cast<const AnySharedPointer*>(
           this
         )
-      )->slot()->get();
+      )->get();
   }
   
   operator std::weak_ptr<T>(void) const {
@@ -349,6 +350,7 @@ public:
   // !!!!! Read comment in AutoRequired if you get a compiler error here !!!!!
   AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) {
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) auto_id_t_init<T>::init;
 
     if (ctxt)
       ctxt->FindByTypeRecursive(*this);
@@ -356,6 +358,7 @@ public:
 
   AutowiredFast(const CoreContext* pCtxt) {
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) auto_id_t_init<T>::init;
 
     pCtxt->FindByTypeRecursive(*this);
   }

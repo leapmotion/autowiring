@@ -170,7 +170,7 @@ void AutoPacketFactory::operator-=(const AutoFilterDescriptor& desc) {
   RemoveSubscriber(desc);
 }
 
-AutoFilterDescriptor AutoPacketFactory::GetTypeDescriptorUnsafe(const std::type_info* nodeType) {
+AutoFilterDescriptor AutoPacketFactory::GetTypeDescriptorUnsafe(auto_id nodeType) {
   //ASSUME: type_info uniquely specifies descriptor
   for (auto& af : m_autoFilters)
     if (af.GetAutoFilterTypeInfo() == nodeType)
@@ -208,7 +208,6 @@ void AutoPacketFactory::ResetPacketStatistics(void) {
 }
 
 template struct SlotInformationStump<AutoPacketFactory, false>;
-template const std::shared_ptr<AutoPacketFactory>& SharedPointerSlot::as<AutoPacketFactory>(void) const;
 template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPacketFactory, CoreObject>(const std::shared_ptr<CoreObject>& Other);
 template class RegType<AutoPacketFactory>;
 template struct autowiring::fast_pointer_cast_blind<CoreObject, AutoPacketFactory>;

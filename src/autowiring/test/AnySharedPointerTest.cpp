@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
+#include "TestFixtures/Decoration.hpp"
 #include "TestFixtures/SimpleObject.hpp"
 #include <autowiring/AnySharedPointer.h>
 #include <autowiring/autowiring.h>
@@ -25,24 +26,6 @@ TEST_F(AnySharedPointerTest, CanReinterpretCastSharedPtr) {
 
 class MyUnusedClass {};
 
-template<>
-struct SharedPointerSlotT<MyUnusedClass>:
-  SharedPointerSlot
-{
-  SharedPointerSlotT(const std::shared_ptr<MyUnusedClass>& rhs)
-  {
-    dtorStrike() = false;
-  }
-
-  ~SharedPointerSlotT(void) {
-    dtorStrike() = true;
-  }
-
-  bool& dtorStrike(void) {
-    return (bool&) *m_space;
-  }
-};
-
 TEST_F(AnySharedPointerTest, OperatorEq) {
   AutoRequired<SimpleObject> sobj;
 
@@ -56,28 +39,6 @@ TEST_F(AnySharedPointerTest, OperatorEq) {
   sobjAny2 = sobj;
   ASSERT_TRUE((bool)sobjAny2);
   ASSERT_EQ(sobj, sobjAny2) << "An AnySharedPointer instance initialized by assignment violated an identity test";
-}
-
-TEST_F(AnySharedPointerTest, SimpleDestructorStrike)
-{
-  // We will need a buffer big enough for entire slot:
-  unsigned char buf[sizeof(SharedPointerSlotT<MyUnusedClass>)];
-  auto& mucSlot = *(SharedPointerSlotT<MyUnusedClass>*)buf;
-
-  // Placement new a basic shared pointer slot in the buffer:
-  SharedPointerSlot& slot = *new(buf) SharedPointerSlot;
-
-  // In-place polymorphism on the slot:
-  slot = std::make_shared<MyUnusedClass>();
-
-  // Destructor shouldn't be hit until we call it:
-  ASSERT_FALSE(mucSlot.dtorStrike()) << "Destructor was struck prematurely";
-
-  // Direct destructor call:
-  slot.~SharedPointerSlot();
-
-  // Verify we hit our dtor in the specialization we declared above:
-  ASSERT_TRUE(mucSlot.dtorStrike()) << "Virtual destructor on in-place polymorphic class was not hit as expected";
 }
 
 TEST_F(AnySharedPointerTest, AnySharedPointerRelease) {
@@ -140,10 +101,10 @@ TEST_F(AnySharedPointerTest, SlotDuplication) {
   {
     // Create a base slot to hold the shared pointer:
     AnySharedPointer slot1(sharedPtr);
-    ASSERT_FALSE(slot1->empty()) << "A slot initialized from a shared pointer was incorrectly marked as empty";
+    ASSERT_FALSE(slot1.empty()) << "A slot initialized from a shared pointer was incorrectly marked as empty";
 
     // Verify the type came across:
-    ASSERT_EQ(typeid(auto_id<bool>), slot1->type()) << "Dynamic initialization did not correctly adjust the dynamic type";
+    ASSERT_EQ(auto_id_t<bool>{}, slot1.type()) << "Dynamic initialization did not correctly adjust the dynamic type";
 
     // Now copy it over:
     slot2 = slot1;
@@ -153,7 +114,7 @@ TEST_F(AnySharedPointerTest, SlotDuplication) {
   }
 
   // Verify that the slot still holds a reference and that the reference count is correct:
-  ASSERT_FALSE(slot2->empty()) << "A slot should have continued to hold a shared pointer, but was prematurely cleared";
+  ASSERT_FALSE(slot2.empty()) << "A slot should have continued to hold a shared pointer, but was prematurely cleared";
   ASSERT_EQ(2, sharedPtr.use_count()) << "A slot going out of scope did not correctly decrement a shared pointer reference";
 }
 
@@ -170,7 +131,7 @@ TEST_F(AnySharedPointerTest, TrivialRelease) {
   ASSERT_FALSE(b.unique()) << "Expected slot to hold a reference to the second specified instance";
   
   // Now release, and verify that a release actually took place
-  slot->reset();
+  slot.reset();
   ASSERT_TRUE(b.unique()) << "Releasing a slot did not actually release the held value as expected";
 }
 
@@ -183,7 +144,7 @@ TEST_F(AnySharedPointerTest, NoMultipleDelete) {
   {
     AnySharedPointer slot;
     slot = a;
-    slot->reset();
+    slot.reset();
   }
 
   // Now verify that we didn't accidentally overdecrement the count:
@@ -192,9 +153,9 @@ TEST_F(AnySharedPointerTest, NoMultipleDelete) {
 
 TEST_F(AnySharedPointerTest, InitDerivesCorrectType) {
   AnySharedPointer slot;
-  slot->init<int>();
+  slot.init<int>();
 
-  ASSERT_EQ(typeid(auto_id<int>), slot->type()) << "A manually initialized slot did not have the expected type";
+  ASSERT_EQ(auto_id_t<int>{}, slot.type()) << "A manually initialized slot did not have the expected type";
 }
 
 TEST_F(AnySharedPointerTest, VoidReturnExpected) {
@@ -204,7 +165,7 @@ TEST_F(AnySharedPointerTest, VoidReturnExpected) {
   slot = v;
 
   // Validate equivalence of the void operator:
-  ASSERT_EQ(v.get(), slot->ptr()) << "Shared pointer slot did not return a void* with an expected value";
+  ASSERT_EQ(v.get(), slot.ptr()) << "Shared pointer slot did not return a void* with an expected value";
 }
 
 TEST_F(AnySharedPointerTest, CanHoldCoreObject) {
@@ -222,4 +183,61 @@ TEST_F(AnySharedPointerTest, CanFastCastToSelf) {
     co,
     autowiring::fast_pointer_cast<CoreObject>(co)
   ) << "Could not cast a CoreObject instance to itself";
+}
+
+class AlternateBase {
+public:
+  virtual ~AlternateBase(void) {}
+};
+
+class AnySharedPtrObjA:
+  public CoreObject
+{
+public:
+  int aVal = 101;
+  int aVal2 = 101;
+};
+
+class AnySharedPtrObjB:
+  public AlternateBase,
+  public Decoration<0>,
+  public AnySharedPtrObjA
+{
+public:
+  int bVal = 102;
+};
+
+TEST_F(AnySharedPointerTest, CanCrossCast) {
+  (void) auto_id_t_init<AnySharedPtrObjA>::init;
+  (void) auto_id_t_init<AnySharedPtrObjB>::init;
+
+  // Ensure that dynamic casters are non-null in the block:
+  auto nullCaster = &autowiring::null_cast<AnySharedPtrObjA, CoreObject>;
+  ASSERT_NE(
+    nullCaster,
+    (autowiring::fast_pointer_cast_blind<AnySharedPtrObjA, CoreObject>::cast)
+  ) << "Fast pointer caster for AnySharedPtrObjA was not correctly initialized";
+  ASSERT_NE(
+    reinterpret_cast<std::shared_ptr<void>(*)(const std::shared_ptr<CoreObject>&)>(nullCaster),
+    auto_id_t<AnySharedPtrObjA>::s_block.pFromObj
+  ) << "AnySharedPtrObjA dynamic caster was incorrectly assigned";
+
+  auto rootB = std::make_shared<AnySharedPtrObjB>();
+  auto rootA = std::static_pointer_cast<AnySharedPtrObjA>(rootB);
+  auto rootBPtr = rootB.get();
+  auto rootAPtr = static_cast<AnySharedPtrObjA*>(rootB.get());
+  ASSERT_NE((void*) rootBPtr, (void*) rootAPtr) << "Objects were not correctly detected as having separate offsets";
+
+  AnySharedPointer aASP = rootA;
+  std::shared_ptr<CoreObject> obj = aASP.as_obj();
+  ASSERT_NE(nullptr, obj) << "An object cast attempt did not succeed as expected";
+  ASSERT_EQ(101, aASP.as<AnySharedPtrObjA>()->aVal);
+
+  AnySharedPointer bASP;
+  bASP.init<AnySharedPtrObjB>();
+  bASP.try_assign(obj);
+
+  ASSERT_NE(bASP, nullptr) << "An attempted cast incorrectly resulted in a null return";
+  ASSERT_EQ(102, bASP.as<AnySharedPtrObjB>()->bVal);
+  ASSERT_EQ(aASP, bASP) << "An aliased shared pointer was not detected as being equal";
 }

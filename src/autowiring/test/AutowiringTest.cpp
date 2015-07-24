@@ -28,10 +28,12 @@ TEST_F(AutowiringTest, VerifyAutowiredFastNontrivial) {
   // This will cause a cache entry to be inserted into the CoreContext's memoization system.
   // If there is any improper or incorrect invalidation in that system, then the null entry
   // will create problems when we attempt to perform an AutowiredFast later on.
-  AutowiredFast<CallableInterface>();
+  AutowiredFast<CallableInterface> ciEmpty;
+  ASSERT_FALSE(ciEmpty.IsAutowired()) << "An entry was autowired prematurely";
 
   // Now we add the object
   AutoRequired<SimpleReceiver>();
+  ASSERT_FALSE(ciEmpty.IsAutowired()) << "An AutowiredFast field was incorrectly satisfied post-hoc";
 
   // Verify that AutowiredFast can find this object from its interface
   AutowiredFast<CallableInterface> ci;

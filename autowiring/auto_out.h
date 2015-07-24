@@ -120,7 +120,7 @@ public:
 
   typedef auto_out<T> type;
   typedef auto_out<T> arg_type;
-  typedef auto_id<T> id_type;
+  typedef auto_id_t<T> id_type;
   static const bool is_input = false;
   static const bool is_output = true;
   static const bool is_shared = false;

@@ -9,31 +9,33 @@
 struct AutoFilterArgument {
   AutoFilterArgument(void) = default;
 
+protected:
   AutoFilterArgument(
     bool is_input,
     bool is_output,
     bool is_shared,
     bool is_multi,
-    const std::type_info* ti,
+    auto_id id,
     int tshift
   ) :
     is_input(is_input),
     is_output(is_output),
     is_shared(is_shared),
     is_multi(is_multi),
-    ti(ti),
+    id(id),
     tshift(tshift)
   {}
 
+public:
   const bool is_input = false;
   const bool is_output = false;
   const bool is_shared = false;
   const bool is_multi = false;
-  const std::type_info* const ti = nullptr;
+  const auto_id id = auto_id_t<void>{};
   const int tshift = 0;
 
-  operator bool(void) const {
-    return !!ti;
+  explicit operator bool(void) const {
+    return static_cast<bool>(id);
   }
 };
 
@@ -47,7 +49,7 @@ struct AutoFilterArgumentT:
       auto_arg<T>::is_output,
       auto_arg<T>::is_shared,
       auto_arg<T>::is_multi,
-      &typeid(typename auto_arg<T>::id_type),
+      typename auto_arg<T>::id_type(),
       auto_arg<T>::tshift
     )
   {}

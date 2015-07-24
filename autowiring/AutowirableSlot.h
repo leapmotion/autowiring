@@ -1,9 +1,9 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "fast_pointer_cast.h"
-#include "SharedPointerSlot.h"
-#include "SlotInformation.h"
 #include "AnySharedPointer.h"
+#include "autowiring_error.h"
+#include "fast_pointer_cast.h"
+#include "SlotInformation.h"
 #include MEMORY_HEADER
 
 class CoreContext;
@@ -92,13 +92,13 @@ public:
   /// <returns>
   /// The type on which this deferred slot is bound
   /// </returns>
-  const std::type_info& GetType(void) const {
-    return AnySharedPointer::slot()->type();
+  auto_id GetType(void) const {
+    return AnySharedPointer::type();
   }
   
   // Reset this pointer. Similar to shared_ptr::reset().
   void reset() {
-    slot()->reset();
+    m_ptr.reset();
   }
 
   /// <returns>
@@ -151,6 +151,7 @@ public:
     // type is autowired, they are required at a minimum to know what that type's inheritance relations
     // are to other types in the system.
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) auto_id_t_init<T>::init;
     return !!get();
   }
 
@@ -160,6 +161,7 @@ public:
   T* get(void) const {
     // For now, we require that the full type be available to use this method
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) auto_id_t_init<T>::init;
     return get_unsafe();
   }
 
@@ -172,12 +174,7 @@ public:
   /// this may prevent the type from ever being detected as autowirable as a result.
   /// </remarks>
   T* get_unsafe(void) const {
-    return
-      static_cast<const AnySharedPointerT<T>*>(
-        static_cast<const AnySharedPointer*>(
-          this
-        )
-      )->slot()->get().get();
+    return static_cast<T*>(ptr());
   }
 
   explicit operator bool(void) const {
@@ -189,6 +186,7 @@ public:
     // where we can guarantee that the type will be completely defined, because the user is about
     // to make use of this type.
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) auto_id_t_init<T>::init;
 
     auto retVal = get();
     if (!retVal)
@@ -204,6 +202,7 @@ public:
     // We have to initialize here, in the operator context, because we don't actually know if the
     // user will be making use of this type.
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) auto_id_t_init<T>::init;
 
     return *retVal;
   }

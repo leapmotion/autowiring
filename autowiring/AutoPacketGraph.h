@@ -16,7 +16,7 @@
 struct DeliveryEdge
 {
   // The type info
-  const std::type_info* type_info;
+  auto_id type_info;
   
   // The AutoFilterDescriptor
   AutoFilterDescriptor descriptor;
@@ -41,7 +41,7 @@ namespace std {
   struct hash<DeliveryEdge>
   {
     size_t operator()(const DeliveryEdge& edge) const {
-      return (size_t) edge.descriptor.GetAutoFilter()->ptr();
+      return (size_t) edge.descriptor.GetAutoFilter().ptr();
     }
   };
 }
@@ -93,7 +93,7 @@ protected:
   /// <summary>
   /// Record the delivery of a packet and increment the number of times the packet has been delivered
   /// </summary>
-  void RecordDelivery(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input);
+  void RecordDelivery(auto_id id, const AutoFilterDescriptor& descriptor, bool input);
   
   /// AutowiringEvents overrides
   virtual void NewContext(CoreContext&) override {}

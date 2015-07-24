@@ -70,7 +70,14 @@ std::string autowiring::demangle(const std::type_index* ti) {
   return demangle_name(ti->name());
 }
 
+std::string autowiring::demangle(auto_id id) {
+  return
+    id.block->ti ?
+    autowiring::demangle(id.block->ti) :
+    "";
+}
+
 std::string autowiring::demangle(const AnySharedPointer& ptr) {
-  return autowiring::demangle(ptr->type());
+  return autowiring::demangle(ptr.type());
 }
 

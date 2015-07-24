@@ -188,16 +188,16 @@ std::shared_ptr<CoreContext> CoreContext::NextSibling(void) const {
   return nullptr;
 }
 
-const std::type_info& CoreContext::GetAutoTypeId(const AnySharedPointer& ptr) const {
+auto_id CoreContext::GetAutoTypeId(const AnySharedPointer& ptr) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
-  const std::type_info& ti = ptr->type();
+  auto ti = ptr.type();
   auto q = m_typeMemos.find(ti);
   if (q == m_typeMemos.end() || !q->second.pObjTraits)
     throw autowiring_error("Attempted to obtain the true type of a shared pointer that was not a member of this context");
 
   const CoreObjectDescriptor* pObjTraits = q->second.pObjTraits;
-  return *pObjTraits->type;
+  return pObjTraits->type;
 }
 
 void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
@@ -209,7 +209,7 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
     // concrete type defined in another context or potentially a unifier type.  Creating a slot here
     // is also undesirable because the complete type is not available and we can't create a dynaimc
     // caster to identify when this slot gets satisfied. If a slot was non-local, overwrite it.
-    auto q = m_typeMemos.find(*traits.actual_type);
+    auto q = m_typeMemos.find(traits.actual_type);
     if(q != m_typeMemos.end()) {
       auto& v = q->second;
 
@@ -271,7 +271,7 @@ void CoreContext::AddInternal(const AnySharedPointer& ptr) {
   std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
 
   // Verify that this type isn't already satisfied
-  MemoEntry& entry = m_typeMemos[ptr->type()];
+  MemoEntry& entry = m_typeMemos[ptr.type()];
   if (entry.m_value)
     throw autowiring_error("This interface is already present in the context");
 
@@ -286,7 +286,7 @@ void CoreContext::FindByType(AnySharedPointer& reference, bool localOnly) const 
 }
 
 MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference, bool localOnly) const {
-  const std::type_info& type = reference->type();
+  auto_id type = reference.type();
 
   // If we've attempted to search for this type before, we will return the value of the memo immediately:
   auto q = m_typeMemos.find(type);
@@ -301,7 +301,7 @@ MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference, bool local
   // Resolve based on iterated dynamic casts for each concrete type:
   const CoreObjectDescriptor* pObjTraits = nullptr;
   for(const auto& type : m_concreteTypes) {
-    if(!reference->try_assign(*type.value))
+    if(!reference.try_assign(type.value))
       // No match, try the next entry
       continue;
 
@@ -755,7 +755,7 @@ void CoreContext::Dump(std::ostream& os) const {
   
   for(const auto& entry : m_typeMemos) {
     os << demangle(entry.first);
-    const void* pObj = entry.second.m_value->ptr();
+    const void* pObj = entry.second.m_value.ptr();
     if(pObj)
       os << " 0x" << std::hex << pObj;
     os << std::endl;
@@ -903,7 +903,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
       // Determine whether the current candidate element satisfies the autowiring we are considering.
       // This is done internally via a dynamic cast on the interface type for which this polymorphic
       // base type was constructed.
-      if (!value.m_value->try_assign(entry.pCoreObject))
+      if (!value.m_value.try_assign(entry.pCoreObject))
         continue;
 
       // Success, assign the traits

@@ -18,18 +18,18 @@ public:
 };
 
 TEST_F(DecoratorTest, VerifyCorrectExtraction) {
-  vector<const type_info*> v;
+  vector<auto_id> v;
 
   // Run our prop extractor based on a known decorator:
   AutoRequired<FilterA> filterA;
   AutoFilterDescriptor desc(static_cast<std::shared_ptr<FilterA>&>(filterA));
   for(const AutoFilterArgument* cur = desc.GetAutoFilterArguments(); *cur; cur++)
-    v.push_back(cur->ti);
+    v.push_back(cur->id);
   ASSERT_EQ(2UL, v.size()) << "Extracted an insufficient number of types from a known filter function";
 
   // Arguments MUST be in order:
-  ASSERT_EQ(typeid(auto_id<Decoration<0>>), *v[0]);
-  ASSERT_EQ(typeid(auto_id<Decoration<1>>), *v[1]);
+  ASSERT_EQ(auto_id_t<Decoration<0>>{}, v[0]);
+  ASSERT_EQ(auto_id_t<Decoration<1>>{}, v[1]);
 }
 
 TEST_F(DecoratorTest, VerifyEmptyExtraction) {
@@ -88,7 +88,7 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
   ASSERT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
 
   // Verify the second one does:
-  ASSERT_THROW(packet2->GetSatisfaction<decltype(filter)>(), autowiring_error) << "Packet lacked an expected subscription";
+  ASSERT_NO_THROW(packet2->GetSatisfaction<decltype(filter)>()) << "Packet lacked an expected subscription";
   ASSERT_EQ(2UL, packet2->GetDecorationTypeCount()) << "Incorrect count of expected decorations";
   ASSERT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
 }

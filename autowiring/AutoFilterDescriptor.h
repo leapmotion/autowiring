@@ -24,7 +24,7 @@ struct AutoFilterDescriptorStub {
   /// <summary>
   /// Constructs a new packet subscriber entry based on the specified call extractor and call pointer
   /// </summary>
-  /// <param name="pType">The type of the underlying filter</param>
+  /// <param name="type">The type of the underlying filter</param>
   /// <param name="pArgs">The inputs accepted by the filter</param>
   /// <param name="deferred">True if the filter is deferred</param>
   /// <param name="pCall">A pointer to the AutoFilter call routine itself</param>
@@ -33,11 +33,11 @@ struct AutoFilterDescriptorStub {
   /// is required to carry information about the type of the proper member function to be called; t_extractedCall is
   /// required to be instantiated by the caller and point to the AutoFilter proxy routine.
   /// </summary>
-  AutoFilterDescriptorStub(const std::type_info* pType, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall);
+  AutoFilterDescriptorStub(auto_id type, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall);
 
 protected:
   // Type of the subscriber itself
-  const std::type_info* m_pType = nullptr;
+  auto_id m_type;
 
   // Altitude--controls when the filter gets called
   autowiring::altitude m_altitude = autowiring::altitude::Standard;
@@ -69,12 +69,12 @@ protected:
 public:
   // Accessor methods:
   autowiring::altitude GetAltitude(void) const { return m_altitude; }
-  const std::type_info* GetType() const { return m_pType; }
+  auto_id GetType() const { return m_type; }
   size_t GetArity(void) const { return m_arity; }
   size_t GetRequiredCount(void) const { return m_requiredCount; }
   const AutoFilterArgument* GetAutoFilterArguments(void) const { return m_pArgs; }
   bool IsDeferred(void) const { return m_deferred; }
-  const std::type_info* GetAutoFilterTypeInfo(void) const { return m_pType; }
+  auto_id GetAutoFilterTypeInfo(void) const { return m_type; }
 
   /// <returns>
   /// True if the specified type is present as an output argument on this filter
@@ -92,7 +92,7 @@ public:
   /// <remarks>
   /// Returns nullptr when no argument is of the requested type.
   /// </remarks>
-  const AutoFilterArgument* GetArgumentType(const std::type_info* argType) const;
+  const AutoFilterArgument* GetArgumentType(auto_id argType) const;
 
   /// <returns>A call lambda wrapping the associated subscriber</returns>
   /// <remarks>
@@ -146,7 +146,7 @@ struct AutoFilterDescriptor:
         // then take the type of the decomposed result.
         std::static_pointer_cast<typename Decompose<decltype(&T::AutoFilter)>::type>(subscriber)
       ),
-      &typeid(T),
+      auto_id_t<T>{},
       autowiring::altitude_of<
         T,
         CallExtractor<decltype(&T::AutoFilter)>::deferred ? autowiring::altitude::Dispatch : autowiring::altitude::Standard
@@ -155,7 +155,10 @@ struct AutoFilterDescriptor:
       CallExtractor<decltype(&T::AutoFilter)>::deferred,
       &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
     )
-  {}
+  {
+    // T must be completely defined at this point because we are trying to pull out an AutoFilter from it
+    (void) auto_id_t_init<T>::init;
+  }
 
   /// <summary>
   /// Adds a function to be called as an AutoFilter for this packet only.
@@ -167,13 +170,16 @@ struct AutoFilterDescriptor:
   AutoFilterDescriptor(Fn fn, autowiring::altitude altitude = autowiring::altitude::Standard):
     AutoFilterDescriptor(
       AnySharedPointer(std::make_shared<Fn>(std::forward<Fn>(fn))),
-      &typeid(Fn),
+      auto_id_t<Fn>{},
       altitude,
       CallExtractor<decltype(&Fn::operator())>::template Enumerate<AutoFilterArgument, AutoFilterArgumentT>::types,
       false,
       &CallExtractor<decltype(&Fn::operator())>::template Call<&Fn::operator()>
     )
-  {}
+  {
+    // Fn must be completely defined at this point because we are trying to pull out an AutoFilter from it
+    (void) auto_id_t_init<Fn>::init;
+  }
 
   /// <summary>
   /// Alternative constructor which can bind a stub
@@ -193,8 +199,8 @@ struct AutoFilterDescriptor:
   ///
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call
   /// </summary>
-  AutoFilterDescriptor(const AnySharedPointer& autoFilter, const std::type_info* pType, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall) :
-    AutoFilterDescriptorStub(pType, altitude, pArgs, deferred, pCall),
+  AutoFilterDescriptor(const AnySharedPointer& autoFilter, auto_id type, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall) :
+    AutoFilterDescriptorStub(type, altitude, pArgs, deferred, pCall),
     m_autoFilter(autoFilter)
   {}
 
@@ -212,13 +218,15 @@ struct AutoFilterDescriptor:
       ),
 
       // The remainder is fairly straightforward
-      &typeid(pfn),
+      auto_id_t<decltype(pfn)>{},
       altitude,
       CallExtractor<decltype(pfn)>::template Enumerate<AutoFilterArgument, AutoFilterArgumentT>::types,
       false,
       CallExtractor<decltype(pfn)>::Call
     )
-  {}
+  {
+    (void) auto_id_t_init<decltype(pfn)>::init;
+  }
 
 protected:
   // A hold on the enclosed autoFilter
@@ -226,7 +234,7 @@ protected:
 
 public:
   // Accessor methods:
-  bool empty(void) const { return !m_pCall || m_autoFilter->empty(); }
+  bool empty(void) const { return !m_pCall || m_autoFilter.empty(); }
   AnySharedPointer& GetAutoFilter(void) { return m_autoFilter; }
   const AnySharedPointer& GetAutoFilter(void) const { return m_autoFilter; }
 
@@ -235,7 +243,7 @@ public:
   /// </summary>
   void ReleaseAutoFilter(void) {
     m_arity = 0;
-    m_autoFilter->reset();
+    m_autoFilter.reset();
   }
 
   /// <returns>True when both the AutoFilter method and subscriber instance are equal.</returns>
@@ -303,7 +311,7 @@ namespace std {
   struct hash<AutoFilterDescriptor>
   {
     size_t operator()(const AutoFilterDescriptor& subscriber) const {
-      return (size_t) subscriber.GetAutoFilter()->ptr();
+      return (size_t) subscriber.GetAutoFilter().ptr();
     }
   };
 }
