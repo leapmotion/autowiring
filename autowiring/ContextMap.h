@@ -52,7 +52,7 @@ public:
 
   class iterator {
   public:
-    iterator(ContextMap& parent) :
+    iterator(const ContextMap& parent) :
       parent(parent)
     {
       std::lock_guard<std::mutex> lk(*parent.m_tracker);
@@ -67,15 +67,15 @@ public:
         iter++;
     }
       
-    iterator(ContextMap& parent, typename t_mpType::iterator iter, std::shared_ptr<CoreContext> ctxt) :
+    iterator(const ContextMap& parent, typename t_mpType::const_iterator iter, std::shared_ptr<CoreContext> ctxt) :
       parent(parent),
       iter(iter),
       ctxt(ctxt)
     {}
 
   private:
-    ContextMap& parent;
-    typename t_mpType::iterator iter;
+    const ContextMap& parent;
+    typename t_mpType::const_iterator iter;
     std::shared_ptr<CoreContext> ctxt;
 
   public:
@@ -103,8 +103,10 @@ public:
     }
   };
 
-  iterator begin(void) { return iterator(*this); }
-  iterator end(void) { return iterator(*this, m_contexts.end(), nullptr); }
+  typedef iterator const_iterator;
+
+  iterator begin(void) const { return iterator(*this); }
+  iterator end(void) const { return iterator(*this, m_contexts.end(), nullptr); }
 
   template<class Fn>
   void Enumerate(Fn&& fn) {
