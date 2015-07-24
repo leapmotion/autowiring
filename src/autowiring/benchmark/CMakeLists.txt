@@ -4,6 +4,8 @@ set(AutoBench_SRCS
   Benchmark.cpp
   ContextSearchBm.h
   ContextSearchBm.cpp
+  ContextTrackingBm.h
+  ContextTrackingBm.cpp
   DispatchQueueBm.h
   DispatchQueueBm.cpp
   Foo.h
