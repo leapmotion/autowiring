@@ -121,6 +121,8 @@ set(Autowiring_SRCS
   has_static_new.h
   has_validate.h
   hash_tuple.h
+  HeteroBlock.h
+  HeteroBlock.cpp
   index_tuple.h
   InterlockedExchange.h
   InvokeRelay.h
