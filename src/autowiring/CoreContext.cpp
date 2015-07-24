@@ -164,17 +164,16 @@ std::shared_ptr<CoreContext> CoreContext::FirstChild(void) const {
   }
 
   // Seems like we have no children, return here
-  return std::shared_ptr<CoreContext>();
+  return nullptr;
 }
 
 std::shared_ptr<CoreContext> CoreContext::NextSibling(void) const {
   // Root contexts do not have siblings
   if(!m_pParent)
-    return std::shared_ptr<CoreContext>();
+    return nullptr;
 
   // Our iterator will always be valid in our parent collection.  Take a copy, lock the parent collection down
   // to prevent it from being modified, and then see what happens when we increment
-
   std::lock_guard<std::mutex> lk(m_pParent->m_stateBlock->m_lock);
   for(
     auto cur = m_backReference;
@@ -186,7 +185,7 @@ std::shared_ptr<CoreContext> CoreContext::NextSibling(void) const {
   }
 
   // Failed to lock any successor child in the parent context, return unsuccessful
-  return std::shared_ptr<CoreContext>();
+  return nullptr;
 }
 
 const std::type_info& CoreContext::GetAutoTypeId(const AnySharedPointer& ptr) const {
