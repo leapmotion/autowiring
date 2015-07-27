@@ -194,6 +194,7 @@ add_conditional_sources(
 add_windows_sources(Autowiring_SRCS
   auto_future_win.h
   CoreThreadWin.cpp
+  CreationRulesWin.cpp
   SystemThreadPoolWin.cpp
   SystemThreadPoolWin.hpp
   SystemThreadPoolWinXP.cpp
@@ -210,6 +211,7 @@ add_mac_sources(Autowiring_SRCS
 )
 
 add_unix_sources(Autowiring_SRCS
+  CreationRulesUnix.cpp
   InterlockedExchangeUnix.cpp
   thread_specific_ptr_unix.h
 )

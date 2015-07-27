@@ -38,6 +38,24 @@
 #endif
 
 /*********************
+ * alignas support added in all versions of GCC, but not until MSVC 2015
+ *********************/
+#if defined(_MSC_VER) && _MSC_VER <= 1800
+  #define AUTO_ALIGNAS(n) __declspec(align(n))
+#else
+  #define AUTO_ALIGNAS alignas
+#endif
+
+/*********************
+ * alignof has similar support, but has a strange name in older versions
+ *********************/
+#if defined(_MSC_VER) && _MSC_VER <= 1800
+  #define AUTO_ALIGNOF __alignof
+#else
+  #define AUTO_ALIGNAS alignof
+#endif
+
+/*********************
  * Location of the unordered_set header
  *********************/
 #if defined(__APPLE__) && !defined(_LIBCPP_VERSION)
