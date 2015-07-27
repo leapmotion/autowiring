@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "Benchmark.h"
 #include "ContextSearchBm.h"
+#include "ContextTrackingBm.h"
 #include "DispatchQueueBm.h"
 #include "PrintableDuration.h"
 #include "PriorityBoost.h"
@@ -42,7 +43,9 @@ static std::map<std::string, Entry> sc_commands = {
   MakeEntry("search", "Autowiring context search cost", &ContextSearchBm::Search),
   MakeEntry("cache", "Autowiring cache behavior", &ContextSearchBm::Cache),
   MakeEntry("fast", "Autowired versus AutowiredFast", &ContextSearchBm::Fast),
-  MakeEntry("dispatch", "Dispatch queue execution rate", &DispatchQueueBm::Dispatch)
+  MakeEntry("dispatch", "Dispatch queue execution rate", &DispatchQueueBm::Dispatch),
+  MakeEntry("contextenum", "CoreContextEnumerator profiling", &ContextTrackingBm::ContextEnum),
+  MakeEntry("contextmap", "ContextMap profiling", &ContextTrackingBm::ContextMap),
 };
 
 static Benchmark All(void) {
