@@ -33,6 +33,16 @@ struct select_strategy {
     construction_strategy::standard;
 };
 
+/// <summary>
+/// Performs a platform-independent aligned allocation
+/// </summary>
+void* aligned_malloc(size_t ncb, size_t align);
+
+/// <summary>
+/// Corrolary of aligned_malloc
+/// </summary>
+void aligned_free(void* ptr);
+
 template<construction_strategy>
 struct strategy_impl {};
 
