@@ -52,7 +52,7 @@
 #if defined(_MSC_VER) && _MSC_VER <= 1800
   #define AUTO_ALIGNOF __alignof
 #else
-  #define AUTO_ALIGNAS alignof
+  #define AUTO_ALIGNOF alignof
 #endif
 
 /*********************
