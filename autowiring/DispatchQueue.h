@@ -304,7 +304,6 @@ public:
       "Dispatch queues cannot be used to describe intervals less than one microseconds in duration"
     );
 
-    std::chrono::steady_clock::time_point timepoint = std::chrono::steady_clock::now() + rhs;
     return{this, rhs};
   }
 
