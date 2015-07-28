@@ -58,7 +58,10 @@ HeteroBlock::HeteroBlock(const HeteroBlockEntry* pFirst, const HeteroBlockEntry*
     // Increment past the header:
     ncb += sizeof(BlockHeader);
   }
-  uint8_t* pBlock = (uint8_t*)autowiring::aligned_malloc(ncb + sizeof(BlockHeader), maxAlign);
+
+  size_t alignedRequest = ncb + sizeof(BlockHeader);
+  alignedRequest += (maxAlign - alignedRequest) % maxAlign;
+  uint8_t* pBlock = (uint8_t*)autowiring::aligned_malloc(alignedRequest, maxAlign);
   if (!pBlock)
     throw std::bad_alloc();
 
