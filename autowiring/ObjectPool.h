@@ -66,8 +66,15 @@ public:
     const std::function<void(T&)>& final = &DefaultFinalize<T>
   ), "Superceded by the placement construction version");
 
-  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time.</param>
-  /// <param name="maxPooled">The maximum number of objects cached by the pool.</param>
+  /// <param name="placement">
+  /// A placement constructor to be used on the memory allocated for objects
+  /// </param>
+  /// <param name="maxPooled">
+  /// The initializer that will be run on all objects issued by the pool before returning them to callers
+  /// </param>
+  /// <param name="final">
+  /// The finalizer that will be run on objects as they return to the pool
+  /// </param>
   ObjectPool(
     const autowiring::placement_t&,
     const std::function<void(T*)>& placement,
