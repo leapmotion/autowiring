@@ -4,6 +4,7 @@
 #include "ContextSearchBm.h"
 #include "ContextTrackingBm.h"
 #include "DispatchQueueBm.h"
+#include "ObjectPoolBm.h"
 #include "PrintableDuration.h"
 #include "PriorityBoost.h"
 #include <map>
@@ -46,6 +47,7 @@ static std::map<std::string, Entry> sc_commands = {
   MakeEntry("dispatch", "Dispatch queue execution rate", &DispatchQueueBm::Dispatch),
   MakeEntry("contextenum", "CoreContextEnumerator profiling", &ContextTrackingBm::ContextEnum),
   MakeEntry("contextmap", "ContextMap profiling", &ContextTrackingBm::ContextMap),
+  MakeEntry("objpool", "Object pool behaviors", &ObjectPoolBm::Allocation),
 };
 
 static Benchmark All(void) {

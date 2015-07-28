@@ -9,6 +9,8 @@ set(AutoBench_SRCS
   DispatchQueueBm.h
   DispatchQueueBm.cpp
   Foo.h
+  ObjectPoolBm.h
+  ObjectPoolBm.cpp
   PriorityBoost.h
   PriorityBoost.cpp
   PrintableDuration.h
