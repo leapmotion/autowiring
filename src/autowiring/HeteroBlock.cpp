@@ -44,6 +44,18 @@ HeteroBlock::HeteroBlock(const HeteroBlockEntry* pFirst, const HeteroBlockEntry*
 
     // Shift over the amount needed due to misalignment.  This works because we always
     // assume that the space at offset [0] is perfectly aligned for all data.
+    // This crazy arithmetic is a simplification of the following expression:
+    //
+    //  size_t slop = ncb % align;
+    //  size_t slack = (align - slop) % align;
+    //  ncb += slack;
+    //
+    // Written in one line, this is jsut:
+    //
+    //  ncb += (align - (ncb % align)) % align;
+    //
+    // However, `modulo x` is an idempotent operation under addition and subtraction,
+    // which means that the above expression simplifies down to just this:
     ncb += (align - ncb) % align;
 
     // Update the offset, advance by the size of the block header
