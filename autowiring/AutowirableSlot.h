@@ -129,7 +129,7 @@ public:
   typedef T value_type;
 
   AutowirableSlot(const std::shared_ptr<CoreContext>& ctxt) :
-    DeferrableAutowiring(AnySharedPointerT<T>(), ctxt)
+    DeferrableAutowiring(AnySharedPointerT<typename std::remove_const<T>::type>(), ctxt)
   {
     SlotInformationStackLocation::RegisterSlot(this);
   }
