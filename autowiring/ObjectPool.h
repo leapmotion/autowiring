@@ -21,7 +21,7 @@ void DefaultFinalize(T&){}
 
 namespace autowiring {
   struct placement_t {};
-  static const placement_t placement;
+  static const placement_t placement{};
 }
 
 /// <summary>
@@ -437,6 +437,7 @@ public:
     m_outstanding = rhs.m_outstanding;
     std::swap(m_objs, rhs.m_objs);
     std::swap(m_alloc, rhs.m_alloc);
+    std::swap(m_placement, rhs.m_placement);
 
     // Now we can take ownership of this monitor object:
     m_monitor->owner = this;
