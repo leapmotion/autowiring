@@ -3,6 +3,7 @@
 #include "HeteroBlock.h"
 #include "CreationRules.h"
 #include <functional>
+#include <new>
 #include <numeric>
 
 using namespace autowiring;
@@ -58,6 +59,8 @@ HeteroBlock::HeteroBlock(const HeteroBlockEntry* pFirst, const HeteroBlockEntry*
     ncb += sizeof(BlockHeader);
   }
   uint8_t* pBlock = (uint8_t*)autowiring::aligned_malloc(ncb + sizeof(BlockHeader), maxAlign);
+  if (!pBlock)
+    throw std::bad_alloc();
 
   // Initialize the deleter sentinel with null:
   *(BlockHeader*)(pBlock + ncb) = {};
