@@ -388,3 +388,19 @@ TEST_F(ObjectPoolTest, VerifyInitializerFinalizer) {
   ASSERT_FALSE(*initFlag) << "Returned item incorrectly caused a new initialization";
   ASSERT_TRUE(*termFlag) << "Returned item was not correctly finalized";
 }
+
+TEST_F(ObjectPoolTest, PlacementConstructor) {
+  ObjectPool<int> pool(
+    autowiring::placement,
+    [](int* pVal) {
+      *pVal = 109;
+    },
+    [](int& val) {
+      ASSERT_EQ(val, 109) << "Value was not placement constructed properly";
+      val = 110;
+    }
+  );
+
+  auto obj = pool();
+  ASSERT_EQ(110, *obj) << "Value was not correctly initialized";
+}

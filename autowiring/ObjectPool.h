@@ -19,6 +19,11 @@ void DefaultInitialize(T&){}
 template<typename T>
 void DefaultFinalize(T&){}
 
+namespace autowiring {
+  struct placement_t {};
+  static const placement_t placement;
+}
+
 /// <summary>
 /// Allows the management of a pool of objects based on an embedded factory.
 /// </summary>
@@ -37,20 +42,22 @@ template<class T>
 class ObjectPool
 {
 public:
-  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time.</param>
-  /// <param name="maxPooled">The maximum number of objects cached by the pool.</param>
-  ObjectPool(
-    size_t limit = ~0,
+  ObjectPool(void) :
+    ObjectPool(~0, ~0)
+  {}
+
+  ObjectPool(ObjectPool&& rhs)
+  {
+    *this = std::move(rhs);
+  }
+
+  DEPRECATED(ObjectPool(
+    size_t limit,
     size_t maxPooled = ~0,
     const std::function<T*()>& alloc = &DefaultCreate<T>,
     const std::function<void(T&)>& initial = &DefaultInitialize<T>,
     const std::function<void(T&)>& final = &DefaultFinalize<T>
-  ) :
-    m_monitor(std::make_shared<ObjectPoolMonitorT<T>>(this, initial, final)),
-    m_maxPooled(maxPooled),
-    m_limit(limit),
-    m_alloc(alloc)
-  {}
+  ), "Superceded by the placement construction version");
 
   /// <param name="alloc">An allocator to be used when creating objects.</param>
   DEPRECATED(ObjectPool(
@@ -58,11 +65,19 @@ public:
     const std::function<void(T&)>& initial = &DefaultInitialize<T>,
     const std::function<void(T&)>& final = &DefaultFinalize<T>
   ), "Superceded by the placement construction version");
-  
-  ObjectPool(ObjectPool&& rhs)
-  {
-    *this = std::move(rhs);
-  }
+
+  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time.</param>
+  /// <param name="maxPooled">The maximum number of objects cached by the pool.</param>
+  ObjectPool(
+    const autowiring::placement_t&,
+    const std::function<void(T*)>& placement,
+    const std::function<void(T&)>& initial = &DefaultInitialize<T>,
+    const std::function<void(T&)>& final = &DefaultFinalize<T>
+  ) :
+    m_monitor(std::make_shared<ObjectPoolMonitorT<T>>(this, initial, final)),
+    m_alloc(&DefaultCreate<T>),
+    m_placement(placement)
+  {}
 
   ~ObjectPool(void) {
     if(!m_monitor)
@@ -127,12 +142,13 @@ protected:
   size_t m_poolVersion = 0;
   std::vector<PoolEntry*> m_objs;
 
-  size_t m_maxPooled;
-  size_t m_limit;
+  size_t m_maxPooled = ~0;
+  size_t m_limit = ~0;
   size_t m_outstanding = 0;
 
-  // Allocator:
+  // Allocator, placement ctor:
   std::function<T*()> m_alloc;
+  std::function<void(T*)> m_placement{ [](T*) {} };
 
   /// <summary>
   /// Creates a shared pointer to wrap the specified object while it is issued.
@@ -198,7 +214,9 @@ protected:
       lk.unlock();
 
       // We failed to recover an object, create a new one:
-      return Wrap(new PoolEntry(*this, poolVersion, m_alloc()));
+      T* pObj = m_alloc();
+      m_placement(pObj);
+      return Wrap(new PoolEntry(*this, poolVersion, pObj));
     }
 
     // Transition from pooled to issued:
@@ -218,11 +236,6 @@ public:
   bool IsEmpty(void) const {
     std::lock_guard<std::mutex> lk(*m_monitor);
     return m_objs.empty() && !m_outstanding;
-  }
-
-  // Mutator methods:
-  void SetAlloc(const std::function<T*()>& alloc) {
-    m_alloc = alloc;
   }
 
   /// <summary>
@@ -429,6 +442,20 @@ public:
     m_monitor->owner = this;
   }
 };
+
+template<typename T>
+ObjectPool<T>::ObjectPool(
+  size_t limit,
+  size_t maxPooled,
+  const std::function<T*()>& alloc,
+  const std::function<void(T&)>& initial,
+  const std::function<void(T&)>& final
+) :
+  m_monitor(std::make_shared<ObjectPoolMonitorT<T>>(this, initial, final)),
+  m_maxPooled(maxPooled),
+  m_limit(limit),
+  m_alloc(alloc)
+{}
 
 template<typename T>
 ObjectPool<T>::ObjectPool(
