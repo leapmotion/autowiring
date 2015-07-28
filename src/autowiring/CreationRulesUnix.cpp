@@ -5,7 +5,7 @@
 
 void* autowiring::aligned_malloc(size_t ncb, size_t align) {
   void* pRetVal;
-  if(posix_memalign(&pRetVal, ncb, align))
+  if(posix_memalign(&pRetVal, align, ncb))
     return nullptr;
   return pRetVal;
 }
