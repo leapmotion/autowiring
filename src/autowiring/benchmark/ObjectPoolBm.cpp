@@ -60,6 +60,6 @@ Benchmark ObjectPoolBm::Allocation(void) {
     { "basic", &profile_basic<tenPack> },
     { "complex", &profile_basic<filling_vector> },
     { "pool_basic", &profile_pool<tenPack> },
-    { "pool_complex", &profile_pool<tenPack> }
+    { "pool_complex", &profile_pool<filling_vector> }
   };
 }
