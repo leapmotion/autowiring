@@ -90,6 +90,41 @@ CoreContext::~CoreContext(void) {
   // Tell all context members that we're tearing down:
   for(ContextMember* q : m_contextMembers)
     q->NotifyContextTeardown();
+
+  // Perform unlinking, if requested:
+  if(m_unlinkOnTeardown)
+    for (const auto& ccType : m_concreteTypes) {
+      uint8_t* pBase = (uint8_t*)ccType.value.ptr();
+
+      // Enumerate all slots and unlink them one at a time
+      for (auto cur = ccType.stump->pHead; cur; cur = cur->pFlink) {
+        if (cur->autoRequired)
+          // Only unlink slots that were Autowired.  AutoRequired slots will never participate
+          // in a cycle (because we would wind up with constructive chaos) so we don't really
+          // need to worry about them.  Furthermore, there are cases where users may want to
+          // refer to a context member in their destructor; in that case, they should use
+          // AutoRequired to enforce the relationship.
+          continue;
+
+        auto& da = *reinterpret_cast<DeferrableAutowiring*>(pBase + cur->slotOffset);
+        if (!da.IsAutowired())
+          // Nothing to do here, just short-circuit
+          continue;
+
+        auto q = m_typeMemos.find(da.GetType());
+        if (q == m_typeMemos.end())
+          // Weird.  Not in the context.  Circle around.
+          continue;
+
+        if (da != q->second.m_value)
+          // Not equal to the entry already here, came from an ancestor context or somewhere else.
+          // Circle around.
+          continue;
+
+        // OK, interior pointer and context teardown is underway, clear it out
+        da.reset();
+      }
+    }
 }
 
 std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate) {

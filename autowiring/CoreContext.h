@@ -253,6 +253,9 @@ protected:
   // The start token for the thread pool, if one exists
   std::shared_ptr<void> m_startToken;
 
+  // Unlink flag
+  bool m_unlinkOnTeardown = false;
+
   // Creation rules are allowed to refer to private methods in this type
   template<autowiring::construction_strategy, class T, class... Args>
   friend struct autowiring::crh;
@@ -638,6 +641,26 @@ public:
   template<typename T>
   void Add(const std::shared_ptr<T>& ptr) {
     AddInternal(AnySharedPointer(ptr));
+  }
+
+  /// <summary>
+  /// Sets the context's teardown unlink behavior
+  /// </summary>
+  /// <remarks>
+  /// If this feature is turned on, then during context destruction and after teardown listeners have
+  /// been run, all context members will be scanned for uses of Autowired.  If a context member has
+  /// such a field, and that field points to another member of the current context, then the field
+  /// will be unlinked.
+  ///
+  /// If a field is AutoRequired, it is skipped.  If the autowiring was satisfied outside of the
+  /// context (for instance, at global scope), it's also skipped.  AutowiredFast uses aren't registered
+  /// anywhere, so they are also skipped.
+  ///
+  /// This method may be called at any time where a valid CoreContext reference exists.  CoreContext
+  /// does not track additional state if this flag is set.
+  /// </reamrks>
+  void SetUnlinkOnTeardown(bool unlinkOnTeardown) {
+    m_unlinkOnTeardown = unlinkOnTeardown;
   }
 
   /// <summary>
