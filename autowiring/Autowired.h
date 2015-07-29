@@ -111,7 +111,7 @@ public:
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
     AutowirableSlot<T>(ctxt)
   {
-    if(ctxt)
+    if (ctxt)
       ctxt->Autowire(static_cast<AnySharedPointerT<T>&>(this->m_ptr), *this);
   }
 
@@ -309,7 +309,7 @@ public:
     return std::shared_ptr<T>::get();
   }
   
-  bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
+  bool IsAutowired(void) const { return std::shared_ptr<T>::get() != nullptr; }
 };
 
 /// <summary>

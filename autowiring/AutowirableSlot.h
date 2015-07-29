@@ -69,7 +69,7 @@ protected:
   std::weak_ptr<CoreContext> m_context;
 
   // The next entry to be autowired in this sequence
-  DeferrableAutowiring* m_pFlink;
+  DeferrableAutowiring* m_pFlink = nullptr;
 
   /// <summary>
   /// Causes this deferrable to unregister itself with the enclosing context
@@ -85,6 +85,11 @@ public:
   void SetFlink(DeferrableAutowiring* pFlink) {
     m_pFlink = pFlink;
   }
+
+  /// <returns>
+  /// True if the underlying field is autowired
+  /// </returns>
+  bool IsAutowired(void) const { return !!m_ptr.ptr(); }
 
   /// <returns>
   /// The context corresponding to this slot, if it hasn't already expired
@@ -121,6 +126,14 @@ public:
   virtual void SatisfyAutowiring(const AnySharedPointer& ptr) {
     m_ptr = ptr;
   }
+
+  bool operator!=(const AnySharedPointer& rhs) const { return m_ptr != rhs; }
+  bool operator==(const AnySharedPointer& rhs) const { return m_ptr == rhs; }
+
+  template<typename U>
+  bool operator==(const std::shared_ptr<U>& rhs) const {
+    return m_ptr == rhs;
+  }
 };
 
 template<class T>
@@ -154,7 +167,7 @@ public:
     // are to other types in the system.
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
     (void) auto_id_t_init<T>::init;
-    return !!get();
+    return DeferrableAutowiring::IsAutowired();
   }
 
   /// <remarks>
@@ -207,15 +220,6 @@ public:
     (void) auto_id_t_init<T>::init;
 
     return *retVal;
-  }
-
-  bool operator==(const AnySharedPointer& rhs) const {
-    return m_ptr == rhs;
-  }
-
-  template<typename U>
-  bool operator==(const std::shared_ptr<U>& rhs) const {
-    return m_ptr == rhs;
   }
 };
 
