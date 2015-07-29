@@ -15,7 +15,6 @@ namespace autowiring {
 // are run in the thread pool of the current context
 class parallel {
 public:
-
   // Add job to be run in the thread pool
   template<typename _Fx>
   void operator+=(_Fx&& fx) {
@@ -65,21 +64,34 @@ public:
 
   // Iterator that acts as a proxy to
   template<typename T>
-  struct iterator:
+  struct parallel_iterator:
     public std::iterator<std::input_iterator_tag, T>
   {
-    iterator(parallel& p, const size_t& remaining):
+    parallel_iterator(parallel& p, const size_t& remaining):
       m_parent(p),
       m_remaining(remaining)
     {}
 
-    bool operator!=(const iterator& rhs) {
+    bool operator!=(const parallel_iterator& rhs) {
       return m_remaining != rhs.m_remaining || &m_parent != &rhs.m_parent;
     }
 
-    iterator<T> operator++(void) {
+    parallel_iterator operator++(void) {
       m_parent.Pop<T>();
       return *this;
+    }
+
+    struct wrap {
+      wrap(T val) : val(val) {}
+
+      T val;
+      T& operator*(void) { return val; }
+    };
+
+    wrap operator++(int) {
+      wrap retVal = **this;
+      m_parent.Pop<T>();
+      return retVal;
     }
 
     T operator*(void) {
@@ -91,19 +103,43 @@ public:
     const size_t& m_remaining;
   };
 
+  template<typename T>
+  class collection {
+  public:
+    typedef parallel_iterator<T> iterator;
+
+    explicit collection(parallel& ll):
+      m_begin(ll.begin<T>()),
+      m_end(ll.end<T>())
+    {}
+
+  private:
+    iterator m_begin;
+    iterator m_end;
+
+  public:
+    const iterator& begin(void) { return m_begin; }
+    const iterator& end(void) const { return m_end; }
+  };
+
+  // Get a collection containing all entries of the specified type
+  template<typename T>
+  collection<T> all(void) {
+    return collection<T> { *this };
+  }
+
   // Get an iterator to the begining of out queue of job results
   template<typename T>
-  iterator<T> begin(void) {
-    return iterator<T>(*this, m_outstandingCount);
+  parallel_iterator<T> begin(void) {
+    return{ *this, m_outstandingCount };
   }
 
   // Iterator representing no jobs results remaining
   template<typename T>
-  iterator<T> end(void) {
-    static const size_t empty = 0;
-    return iterator<T>(*this, empty);
+  parallel_iterator<T> end(void) {
+    static const size_t zero = 0;
+    return { *this, zero };
   }
-
 
 protected:
   std::mutex m_queueMutex;
