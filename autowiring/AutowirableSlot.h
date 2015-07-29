@@ -116,7 +116,7 @@ public:
   /// <summary>
   /// Satisfies autowiring with a so-called "witness slot" which is guaranteed to be satisfied on the same type
   /// </summary>
-  virtual void SatisfyAutowiring(const AnySharedPointer& ptr) {
+  void SatisfyAutowiring(const AnySharedPointer& ptr) {
     (AnySharedPointer&)*this = ptr;
   }
 };
