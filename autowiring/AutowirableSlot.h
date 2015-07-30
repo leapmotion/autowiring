@@ -92,11 +92,6 @@ public:
   bool IsAutowired(void) const { return !!m_ptr.ptr(); }
 
   /// <returns>
-  /// The context corresponding to this slot, if it hasn't already expired
-  /// </returns>
-  std::shared_ptr<CoreContext> GetContext(void) const { return m_context.lock(); }
-
-  /// <returns>
   /// The type on which this deferred slot is bound
   /// </returns>
   auto_id GetType(void) const {
