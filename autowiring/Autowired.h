@@ -111,13 +111,8 @@ public:
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
     AutowirableSlot<T>(ctxt)
   {
-    if(ctxt)
-      ctxt->Autowire(
-      *static_cast<AnySharedPointerT<T>*>(
-        static_cast<AnySharedPointer*>(this)
-      ),
-      *this
-    );
+    if (ctxt)
+      ctxt->Autowire(static_cast<AnySharedPointerT<T>&>(this->m_ptr), *this);
   }
 
   ~Autowired(void) {
@@ -150,12 +145,7 @@ private:
 
 public:
   operator const std::shared_ptr<T>&(void) const {
-    return
-      static_cast<const AnySharedPointerT<T>*>(
-        static_cast<const AnySharedPointer*>(
-          this
-        )
-      )->get();
+    return static_cast<const AnySharedPointerT<T>&>(this->m_ptr).get();
   }
   
   operator std::weak_ptr<T>(void) const {
@@ -231,7 +221,7 @@ public:
       if(pFirstChild == this) {
         // Trivially satisfy, and then return.  This might look like a leak, but it's not, because we know
         // that Finalize is going to destroy the object.
-        newHead->SatisfyAutowiring(*this);
+        newHead->SatisfyAutowiring(this->m_ptr);
         newHead->Finalize();
         return;
       }
@@ -319,7 +309,7 @@ public:
     return std::shared_ptr<T>::get();
   }
   
-  bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
+  bool IsAutowired(void) const { return std::shared_ptr<T>::get() != nullptr; }
 };
 
 /// <summary>

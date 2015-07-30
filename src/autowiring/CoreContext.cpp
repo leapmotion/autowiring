@@ -15,7 +15,6 @@
 #include "thread_specific_ptr.h"
 #include "ThreadPool.h"
 #include <sstream>
-#include <stack>
 #include <stdexcept>
 
 using namespace autowiring;
@@ -90,6 +89,41 @@ CoreContext::~CoreContext(void) {
   // Tell all context members that we're tearing down:
   for(ContextMember* q : m_contextMembers)
     q->NotifyContextTeardown();
+
+  // Perform unlinking, if requested:
+  if(m_unlinkOnTeardown)
+    for (const auto& ccType : m_concreteTypes) {
+      uint8_t* pBase = (uint8_t*)ccType.value.ptr();
+
+      // Enumerate all slots and unlink them one at a time
+      for (auto cur = ccType.stump->pHead; cur; cur = cur->pFlink) {
+        if (cur->autoRequired)
+          // Only unlink slots that were Autowired.  AutoRequired slots will never participate
+          // in a cycle (because we would wind up with constructive chaos) so we don't really
+          // need to worry about them.  Furthermore, there are cases where users may want to
+          // refer to a context member in their destructor; in that case, they should use
+          // AutoRequired to enforce the relationship.
+          continue;
+
+        auto& da = *reinterpret_cast<DeferrableAutowiring*>(pBase + cur->slotOffset);
+        if (!da.IsAutowired())
+          // Nothing to do here, just short-circuit
+          continue;
+
+        auto q = m_typeMemos.find(da.GetType());
+        if (q == m_typeMemos.end())
+          // Weird.  Not in the context.  Circle around.
+          continue;
+
+        if (da != q->second.m_value)
+          // Not equal to the entry already here, came from an ancestor context or somewhere else.
+          // Circle around.
+          continue;
+
+        // OK, interior pointer and context teardown is underway, clear it out
+        da.reset();
+      }
+    }
 }
 
 std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate) {
@@ -819,14 +853,14 @@ void CoreContext::SatisfyAutowiring(std::unique_lock<std::mutex>& lk, MemoEntry&
   // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
   // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
   // release the lock.
-  std::stack<DeferrableAutowiring*> stk;
-  stk.push(entry.pFirst);
+  std::vector<DeferrableAutowiring*> stk;
+  stk.push_back(entry.pFirst);
   entry.pFirst = nullptr;
 
   // Depth-first search
   while (!stk.empty()) {
-    auto top = stk.top();
-    stk.pop();
+    auto top = stk.back();
+    stk.pop_back();
 
     for (DeferrableAutowiring* pCur = top; pCur; pCur = pCur->GetFlink()) {
       pCur->SatisfyAutowiring(entry.m_value);
@@ -834,7 +868,7 @@ void CoreContext::SatisfyAutowiring(std::unique_lock<std::mutex>& lk, MemoEntry&
       // See if there's another chain we need to process:
       auto child = pCur->ReleaseDependentChain();
       if (child)
-        stk.push(child);
+        stk.push_back(child);
 
       // Not everyone needs to be finalized.  The entities that don't require finalization
       // are identified by an empty strategy, and we just skip them.
@@ -892,7 +926,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     // also removed at the same time.
     //
     // Each connected nonroot deferrable autowiring is referred to as a "dependant chain".
-    std::stack<DeferrableAutowiring*> stk;
+    std::vector<DeferrableAutowiring*> stk;
     for (auto& cur : m_typeMemos) {
       MemoEntry& value = cur.second;
 
@@ -915,13 +949,13 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
       // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
       // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
       // release the lock.
-      stk.push(value.pFirst);
+      stk.push_back(value.pFirst);
       value.pFirst = nullptr;
 
       // Finish satisfying the remainder of the chain while we hold the lock:
       while (!stk.empty()) {
-        auto top = stk.top();
-        stk.pop();
+        auto top = stk.back();
+        stk.pop_back();
 
         for (DeferrableAutowiring* pNext = top; pNext; pNext = pNext->GetFlink()) {
           pNext->SatisfyAutowiring(value.m_value);
@@ -929,7 +963,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
           // See if there's another chain we need to process:
           auto child = pNext->ReleaseDependentChain();
           if (child)
-            stk.push(child);
+            stk.push_back(child);
 
           // Not everyone needs to be finalized.  The entities that don't require finalization
           // are identified by an empty strategy, and we just skip them.

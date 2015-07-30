@@ -48,14 +48,16 @@ public:
 /// <summary>
 /// Utility class which represents any kind of autowiring entry that may be deferred to a later date
 /// </summary>
-class DeferrableAutowiring:
-  protected AnySharedPointer
+class DeferrableAutowiring
 {
 public:
   DeferrableAutowiring(AnySharedPointer&& witness, const std::shared_ptr<CoreContext>& context);
   virtual ~DeferrableAutowiring(void);
 
 protected:
+  // The held shared pointer
+  AnySharedPointer m_ptr;
+
   /// <summary>
   /// This is the context that was available at the time the autowiring was performed.
   /// </summary>
@@ -67,7 +69,7 @@ protected:
   std::weak_ptr<CoreContext> m_context;
 
   // The next entry to be autowired in this sequence
-  DeferrableAutowiring* m_pFlink;
+  DeferrableAutowiring* m_pFlink = nullptr;
 
   /// <summary>
   /// Causes this deferrable to unregister itself with the enclosing context
@@ -77,12 +79,17 @@ protected:
 public:
   // Accessor methods:
   DeferrableAutowiring* GetFlink(void) { return m_pFlink; }
-  const AnySharedPointer& GetSharedPointer(void) const { return *this; }
+  const AnySharedPointer& GetSharedPointer(void) const { return m_ptr; }
 
   // Mutator methods:
   void SetFlink(DeferrableAutowiring* pFlink) {
     m_pFlink = pFlink;
   }
+
+  /// <returns>
+  /// True if the underlying field is autowired
+  /// </returns>
+  bool IsAutowired(void) const { return !!m_ptr.ptr(); }
 
   /// <returns>
   /// The context corresponding to this slot, if it hasn't already expired
@@ -93,7 +100,7 @@ public:
   /// The type on which this deferred slot is bound
   /// </returns>
   auto_id GetType(void) const {
-    return AnySharedPointer::type();
+    return m_ptr.type();
   }
   
   // Reset this pointer. Similar to shared_ptr::reset().
@@ -117,7 +124,15 @@ public:
   /// Satisfies autowiring with a so-called "witness slot" which is guaranteed to be satisfied on the same type
   /// </summary>
   void SatisfyAutowiring(const AnySharedPointer& ptr) {
-    (AnySharedPointer&)*this = ptr;
+    m_ptr = ptr;
+  }
+
+  bool operator!=(const AnySharedPointer& rhs) const { return m_ptr != rhs; }
+  bool operator==(const AnySharedPointer& rhs) const { return m_ptr == rhs; }
+
+  template<typename U>
+  bool operator==(const std::shared_ptr<U>& rhs) const {
+    return m_ptr == rhs;
   }
 };
 
@@ -152,7 +167,7 @@ public:
     // are to other types in the system.
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
     (void) auto_id_t_init<T>::init;
-    return !!get();
+    return DeferrableAutowiring::IsAutowired();
   }
 
   /// <remarks>
@@ -174,7 +189,7 @@ public:
   /// this may prevent the type from ever being detected as autowirable as a result.
   /// </remarks>
   T* get_unsafe(void) const {
-    return static_cast<T*>(ptr());
+    return static_cast<T*>(m_ptr.ptr());
   }
 
   explicit operator bool(void) const {
@@ -206,9 +221,12 @@ public:
 
     return *retVal;
   }
-
-  using AnySharedPointer::operator=;
 };
+
+template<typename T>
+bool operator==(const std::shared_ptr<T>& lhs, const AutowirableSlot<T>& rhs) {
+  return rhs == lhs;
+}
 
 /// <summary>
 /// A function-based autowirable slot, which invokes a lambda rather than binding a shared pointer
