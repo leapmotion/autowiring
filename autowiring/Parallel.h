@@ -147,18 +147,14 @@ public:
   template<typename T>
   void Pop(void) {
     std::unique_lock<std::mutex> lk(m_queueMutex);
+    if (!m_outstandingCount)
+      throw std::out_of_range("No outstanding jobs");
 
     if (std::is_same<void, T>::value) {
-      if(!m_nVoidEntries)
-        throw std::out_of_range("No outstanding jobs");
-
       m_queueUpdated.wait(lk, [this] { return m_nVoidEntries != 0; });
       m_nVoidEntries--;
     } else {
       auto& qu = m_queue[typeid(T)];
-      if (qu.empty())
-        throw std::out_of_range("No outstanding jobs");
-
       m_queueUpdated.wait(lk, [&qu] { return !qu.empty(); });
       qu.pop_front();
     }
