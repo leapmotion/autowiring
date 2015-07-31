@@ -1269,7 +1269,14 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
 }
 
 std::shared_ptr<CoreContext> CoreContext::SetCurrent(const std::shared_ptr<CoreContext>& ctxt) {
-  std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContextOrNull();
+  auto currentContext = autoCurrentContext.get();
+
+  // Short-circuit test, no need to proceed if we aren't changing the context:
+  if (*currentContext == ctxt)
+    return *currentContext;
+
+  // Value is changing, update:
+  auto retVal = *currentContext;
   if (ctxt)
     autoCurrentContext.reset(new std::shared_ptr<CoreContext>(ctxt));
   else
