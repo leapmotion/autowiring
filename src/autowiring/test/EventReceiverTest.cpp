@@ -299,7 +299,9 @@ TEST_F(EventReceiverTest, PathologicalTransmitterTest) {
   }
 
   // Spin until the jammer has transmitted a thousand messages:
-  while(jammer->totalXmit < 1000);
+  while(jammer->totalXmit < 1000) {
+    jammer->WaitForEvent(std::chrono::milliseconds(1));
+  }
   jammer->Stop();
   jammer->Wait();
 

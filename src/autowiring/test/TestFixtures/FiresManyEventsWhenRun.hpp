@@ -21,6 +21,7 @@ public:
         // Jam for awhile in an asynchronous way:
       while(++totalXmit % 100)
         m_ci(&CallableInterface::ZeroArgs)();
+      WaitForEvent(std::chrono::milliseconds(1));
     }
   }
 };
