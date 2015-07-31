@@ -1000,7 +1000,7 @@ public:
   /// context is assigned before invoking a CoreRunnable instance's Run method, and it's also assigned
   /// when a context is first constructed by a thread.
   /// </remarks>
-  static std::shared_ptr<CoreContext> CurrentContextOrNull(void);
+  static const std::shared_ptr<CoreContext>& CurrentContextOrNull(void);
 
   /// <summary>
   /// Identical to CurrentContextNoCheck, except returns the global context instead of a null pointer
