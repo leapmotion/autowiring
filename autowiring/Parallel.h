@@ -131,6 +131,11 @@ public:
   // Get an iterator to the begining of out queue of job results
   template<typename T>
   parallel_iterator<T> begin(void) {
+    if (!m_ctxt->IsRunning())
+      if (m_ctxt->IsShutdown())
+        throw std::runtime_error("Attempted to enumerate members of a context after the context was shut down");
+      else
+        throw std::runtime_error("Start the context before attempting to enumerate members of an autowiring::parallel collection");
     return{ *this, m_outstandingCount };
   }
 
