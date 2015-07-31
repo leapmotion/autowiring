@@ -26,6 +26,13 @@
 // If Boost.Thread is used, we want it to provide the new name for its <future> class
 #define BOOST_THREAD_PROVIDES_FUTURE
 
+#ifdef AUTOWIRING_IS_BEING_BUILT
+  // We know that we're using deprecated stuff in our unit tests, but the tests still
+  // need to do what they do.  Undefine all of the deprecated macros so we don't get
+  // spammed with warnings telling us what we already know.
+  #define AUTOWIRING_NO_DEPRECATE
+#endif
+
 #ifndef __has_feature
   #define __has_feature(x) (AUTOWIRE_##x)
 #endif
@@ -339,7 +346,7 @@
 /*********************
  * Deprecation convenience macro
  *********************/
-#ifndef _DEBUG
+#if !defined(_DEBUG) && !defined(AUTOWIRING_NO_DEPRECATE)
   #ifdef _MSC_VER
     #define DEPRECATED(signature, msg) __declspec(deprecated(msg)) signature
     #define DEPRECATED_CLASS(classname, msg) __declspec(deprecated(msg)) classname
