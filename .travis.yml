@@ -3,26 +3,44 @@ sudo: false
 
 matrix:
   include:
+  # - os: linux
+    # env:
+    # - _CC=gcc-4.8
+    # - _CXX=g++-4.8
+    # - CMAKE_URL=http://www.cmake.org/files/v3.1/cmake-3.1.0-Linux-i386.tar.gz
+    # - CMAKE_DIRNAME=cmake-3.1.0-Linux-i386
+    # - ADDITIONAL_CMAKE_FLAGS=
+    # addons:
+      # apt:
+        # sources:
+          # - ubuntu-toolchain-r-test
+        # packages:
+          # - gcc-4.8
+          # - g++-4.8
+          # - libc6-i386
   - os: linux
     env:
-    - _CC: gcc-4.8
-    - _CXX: g++-4.8
-    - CMAKE_URL=http://www.cmake.org/files/v3.1/cmake-3.1.0-Linux-i386.tar.gz
-    - CMAKE_DIRNAME=cmake-3.1.0-Linux-i386
+    - _CC=arm-linux-gnueabihf-gcc
+    - _CXX=arm-linux-gnueabihf-g++
+    - CMAKE_URL=http://www.cmake.org/files/v3.1/cmake-3.1.0-Linux-x86_64.tar.gz
+    - CMAKE_DIRNAME=cmake-3.1.0-Linux-x86_64
+    - ADDITIONAL_CMAKE_FLAGS=-DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake
     addons:
       apt:
         sources:
-          - ubuntu-toolchain-r-test
+        - ubuntu-toolchain-r-test
+        - debian-sid
         packages:
-          - gcc-4.8
-          - g++-4.8
-          - libc6-i386
-  - os: osx
-    env:
-    - _CC: clang
-    - _CXX: clang++
-    - CMAKE_URL=http://www.cmake.org/files/v3.1/cmake-3.1.0-Darwin64.tar.gz
-    - CMAKE_DIRNAME=cmake-3.1.0-Darwin64/CMake.app/Contents
+        - g++-4.9-arm-linux-gnueabi 
+        - gcc-4.9-arm-linux-gnueabi
+        - libstdc++-arm-none-eabi-newlib
+  # - os: osx
+    # env:
+    # - _CC=clang
+    # - _CXX=clang++
+    # - CMAKE_URL=http://www.cmake.org/files/v3.1/cmake-3.1.0-Darwin64.tar.gz
+    # - CMAKE_DIRNAME=cmake-3.1.0-Darwin64/CMake.app/Contents
+    # - ADDITIONAL_CMAKE_FLAGS=
 
 before_install:
   # Enforce whitespace guidelines
@@ -37,17 +55,20 @@ before_install:
 install:
   # CMake 3.1
   - curl $CMAKE_URL | tar xz
-
-before_script:
+  - ls $CMAKE_DIRNAME
+  - ls $CMAKE_DIRNAME/bin
+  - $CMAKE_DIRNAME/bin/cmake --version
   - export CC=$_CC
   - export CXX=$_CXX
+  - ls /usr/bin
+  - ls /usr/local/bin
   - $CXX --version
-  - export CPATH=/usr/include/c++/4.8:/usr/include/x86_64-linux-gnu/c++/4.8/:$CPATH
-  - export LD_LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.8:$LD_LIBRARY_PATH
+
+before_script:
+  - $CMAKE_DIRNAME/bin/cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=~/autowiring/ $ADDITIONAL_CMAKE_FLAGS
 
 script:
   # Build Autowriring, run unit tests, and install
-  - $CMAKE_DIRNAME/bin/cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=~/autowiring/
   - make -j 4 || make
   - ctest --output-on-failure
   - make install
