@@ -43,7 +43,9 @@ class ObjectPool
 {
 public:
   ObjectPool(void) :
-    ObjectPool(~0, ~0)
+    m_monitor(std::make_shared<ObjectPoolMonitorT<T>>(this, &DefaultInitialize<T>, &DefaultFinalize<T>)),
+    m_maxPooled(~0),
+    m_limit(~0)
   {}
 
   ObjectPool(ObjectPool&& rhs)
@@ -82,7 +84,6 @@ public:
     const std::function<void(T&)>& final = &DefaultFinalize<T>
   ) :
     m_monitor(std::make_shared<ObjectPoolMonitorT<T>>(this, initial, final)),
-    m_alloc(&DefaultCreate<T>),
     m_placement(placement)
   {}
 
@@ -154,7 +155,7 @@ protected:
   size_t m_outstanding = 0;
 
   // Allocator, placement ctor:
-  std::function<T*()> m_alloc;
+  std::function<T*()> m_alloc { &DefaultCreate<T> };
   std::function<void(T*)> m_placement{ [](T*) {} };
 
   /// <summary>
