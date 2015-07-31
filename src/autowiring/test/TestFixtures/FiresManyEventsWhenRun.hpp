@@ -17,9 +17,12 @@ public:
   AutoFired<CallableInterface> m_ci;
 
   void Run(void) override {
-    while(!ShouldStop() && totalXmit < 0x7FFFF000)
-      // Jam for awhile in an asynchronous way:
-    while(++totalXmit % 100)
-      m_ci(&CallableInterface::ZeroArgs)();
+    while(!ShouldStop() && totalXmit < 0x7FFFF000) {
+        // Jam for awhile in an asynchronous way:
+      while(++totalXmit % 100)
+        m_ci(&CallableInterface::ZeroArgs)();
+      if (totalXmit % 2000 == 0)
+        WaitForEvent(std::chrono::milliseconds(1));
+    }
   }
 };

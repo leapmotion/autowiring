@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include <functional>
 #include MUTEX_HEADER
 
 template<class T>
@@ -20,20 +21,12 @@ class ObjectPoolMonitor:
   public std::mutex
 {
 public:
-  /// <param name="pOwner">The owner of this object pool monitor</param>
-  ObjectPoolMonitor(void* pOwner);
+  ObjectPoolMonitor(void);
 
 private:
-  void* m_pOwner;
   bool m_abandoned = false;
 
 public:
-  // Accessor methods:
-  void* GetOwner(void) const { return m_pOwner; }
-
-  // Mutator methods:
-  void SetOwner(void* pOwner) { m_pOwner = pOwner; }
-
   /// <return>
   /// True if this pool has been abandoned
   /// </return>
@@ -43,4 +36,28 @@ public:
   /// Transitions this state keeper to the abandoned state, causing all outstanding shared pointers to be destroyed
   /// </remarks>
   void Abandon(void);
+};
+
+template<typename T>
+class ObjectPoolMonitorT:
+  public ObjectPoolMonitor
+{
+public:
+  ObjectPoolMonitorT(ObjectPool<T>* owner) :
+    owner(owner),
+    initial([](T&) {}),
+    fnl([](T&) {})
+  {}
+  ObjectPoolMonitorT(ObjectPool<T>* owner, std::function<void(T&)> initial, std::function<void(T&)> fnl) :
+    owner(owner),
+    initial(initial),
+    fnl(fnl)
+  {}
+
+  // Owner back-reference
+  ObjectPool<T>* owner;
+
+  // Resetters:
+  const std::function<void(T&)> initial;
+  const std::function<void(T&)> fnl;
 };

@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "C++11/cpp11.h"
 #include RVALUE_HEADER
 
 /// <summary>
@@ -28,7 +29,7 @@ protected:
     Entry(Fx&& fx):
       fx(std::forward<Fx&&>(fx))
     {}
-    
+
     Fx fx;
 
     void operator()(void) override { fx(); }

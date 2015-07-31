@@ -5,6 +5,6 @@
 
 void SatCounter::ThrowRepeatedCallException(void) const {
   std::stringstream ss;
-  ss << "Repeated call to " << autowiring::demangle(m_pType);
+  ss << "Repeated call to " << autowiring::demangle(m_type);
   throw std::runtime_error(ss.str());
 }

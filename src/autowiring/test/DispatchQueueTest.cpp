@@ -207,3 +207,19 @@ TEST_F(DispatchQueueTest, MoveConstructor) {
   }
   ASSERT_EQ(counter, 3) << "Lambdas not trasfered by move constructor";
 }
+
+TEST_F(DispatchQueueTest, ZeroIdenticalToPend) {
+  DispatchQueue dq;
+
+  int reference = 101;
+  int observation = 1;
+  dq += std::chrono::seconds(0), [&] { observation = reference; };
+  dq += [&] { reference = 102; };
+  ASSERT_EQ(2UL, dq.GetDispatchQueueLength()) << "Two dispatchers were added but two were not detected on the queue";
+
+  // Verify that the lambdas were executed in order:
+  dq.DispatchAllEvents();
+  ASSERT_EQ(0UL, dq.GetDispatchQueueLength()) << "Not all dispatchers were executed even though all dispatchers should have been ready";
+  ASSERT_NE(1, observation) << "Zero-delay lambda was not executed";
+  ASSERT_EQ(101, observation) << "Zero-delay lambda did not run in the order it was pended";
+}

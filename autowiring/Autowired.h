@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "auto_id.h"
 #include "auto_signal.h"
 #include "AutowiringDebug.h"
 #include "AutowirableSlot.h"
@@ -110,13 +111,8 @@ public:
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
     AutowirableSlot<T>(ctxt)
   {
-    if(ctxt)
-      ctxt->Autowire(
-      *static_cast<AnySharedPointerT<T>*>(
-        static_cast<AnySharedPointer*>(this)
-      ),
-      *this
-    );
+    if (ctxt)
+      ctxt->Autowire(static_cast<AnySharedPointerT<T>&>(this->m_ptr), *this);
   }
 
   ~Autowired(void) {
@@ -149,12 +145,7 @@ private:
 
 public:
   operator const std::shared_ptr<T>&(void) const {
-    return
-      static_cast<const AnySharedPointerT<T>*>(
-        static_cast<const AnySharedPointer*>(
-          this
-        )
-      )->slot()->get();
+    return static_cast<const AnySharedPointerT<T>&>(this->m_ptr).get();
   }
   
   operator std::weak_ptr<T>(void) const {
@@ -230,7 +221,7 @@ public:
       if(pFirstChild == this) {
         // Trivially satisfy, and then return.  This might look like a leak, but it's not, because we know
         // that Finalize is going to destroy the object.
-        newHead->SatisfyAutowiring(*this);
+        newHead->SatisfyAutowiring(this->m_ptr);
         newHead->Finalize();
         return;
       }
@@ -318,7 +309,7 @@ public:
     return std::shared_ptr<T>::get();
   }
   
-  bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
+  bool IsAutowired(void) const { return std::shared_ptr<T>::get() != nullptr; }
 };
 
 /// <summary>
@@ -349,6 +340,7 @@ public:
   // !!!!! Read comment in AutoRequired if you get a compiler error here !!!!!
   AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) {
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) auto_id_t_init<T>::init;
 
     if (ctxt)
       ctxt->FindByTypeRecursive(*this);
@@ -356,6 +348,7 @@ public:
 
   AutowiredFast(const CoreContext* pCtxt) {
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) auto_id_t_init<T>::init;
 
     pCtxt->FindByTypeRecursive(*this);
   }

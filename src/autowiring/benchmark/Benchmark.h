@@ -9,6 +9,9 @@ struct Stopwatch {
     start = std::chrono::profiling_clock::now();
   }
 
+  /// <summary>
+  /// Stops timing, with [n] operations having been conducted between start and stop
+  /// </summary>
   void Stop(size_t n) {
     auto stop = std::chrono::profiling_clock::now();
     std::chrono::duration<double> delta = stop - start;

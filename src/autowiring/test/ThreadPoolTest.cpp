@@ -6,6 +6,11 @@
 #include <autowiring/SystemThreadPoolStl.h>
 #include FUTURE_HEADER
 
+#ifdef _MSC_VER
+#include "SystemThreadPoolWinXP.hpp"
+#include "SystemThreadPoolWinLH.hpp"
+#endif
+
 class ThreadPoolTest:
   public testing::Test
 {};
@@ -30,38 +35,6 @@ TEST_F(ThreadPoolTest, SimpleSubmission) {
 
   auto rs = p->get_future();
   ASSERT_EQ(std::future_status::ready, rs.wait_for(std::chrono::seconds(5))) << "Thread pool lambda was not dispatched in a timely fashion";
-}
-
-static void PoolOverload(void) {
-  AutoCurrentContext ctxt;
-  ctxt->Initiate();
-
-  size_t cap = 1000;
-  auto ctr = std::make_shared<std::atomic<size_t>>(cap);
-  auto p = std::make_shared<std::promise<void>>();
-
-  for (size_t i = cap; i--;)
-    *ctxt += [=] {
-      if (!--*ctr)
-        p->set_value();
-    };
-
-  auto rs = p->get_future();
-  ASSERT_EQ(std::future_status::ready, rs.wait_for(std::chrono::seconds(5))) << "Pool saturation did not complete in a timely fashion";
-}
-
-TEST_F(ThreadPoolTest, PoolOverload) {
-  ::PoolOverload();
-}
-
-// On systems that don't have any OS-specific thread pool customizations, this method is redundant
-// On systems that do, this method ensures parity of behavior
-TEST_F(ThreadPoolTest, StlPoolTest) {
-  AutoCurrentContext ctxt;
-  auto pool = std::make_shared<autowiring::SystemThreadPoolStl>();
-  ctxt->SetThreadPool(pool);
-  pool->SuggestThreadPoolSize(2);
-  ::PoolOverload();
 }
 
 TEST_F(ThreadPoolTest, PendBeforeContextStart) {
@@ -126,3 +99,46 @@ TEST_F(ThreadPoolTest, ManualThreadPoolBehavior) {
   token->Leave();
   ASSERT_EQ(std::future_status::ready, launch.wait_for(std::chrono::seconds(5))) << "Token cancellation did not correctly release a single waiting thread";
 }
+
+template<typename T>
+class SystemThreadPoolTest:
+  public testing::Test
+{};
+
+TYPED_TEST_CASE_P(SystemThreadPoolTest);
+
+TYPED_TEST_P(SystemThreadPoolTest, PoolOverload) {
+  AutoCurrentContext ctxt;
+  auto pool = std::make_shared<TypeParam>();
+  ctxt->SetThreadPool(pool);
+  pool->SuggestThreadPoolSize(2);
+  ctxt->Initiate();
+
+  size_t cap = 1000;
+  auto ctr = std::make_shared<std::atomic<size_t>>(cap);
+  auto p = std::make_shared<std::promise<void>>();
+
+  for (size_t i = cap; i--;)
+    *ctxt += [=] {
+    if (!--*ctr)
+      p->set_value();
+  };
+
+  auto rs = p->get_future();
+  ASSERT_EQ(std::future_status::ready, rs.wait_for(std::chrono::seconds(5))) << "Pool saturation did not complete in a timely fashion";
+}
+
+REGISTER_TYPED_TEST_CASE_P(SystemThreadPoolTest, PoolOverload);
+
+typedef ::testing::Types<
+#ifdef _MSC_VER
+  // These pool types are Windows-only
+  autowiring::SystemThreadPoolWinXP,
+  autowiring::SystemThreadPoolWinLH,
+#endif
+
+  // All platforms test the STL thread pool
+  autowiring::SystemThreadPoolStl
+> t_testTypes;
+
+INSTANTIATE_TYPED_TEST_CASE_P(My, SystemThreadPoolTest, t_testTypes);

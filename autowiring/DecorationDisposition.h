@@ -12,24 +12,24 @@ struct DecorationKey {
   DecorationKey(void) = default;
 
   DecorationKey(const DecorationKey& rhs) :
-    ti(rhs.ti),
+    id(rhs.id),
     tshift(rhs.tshift)
   {}
   
-  explicit DecorationKey(const std::type_info& ti, int tshift) :
-    ti(&ti),
+  explicit DecorationKey(auto_id id, int tshift) :
+    id(id),
     tshift(tshift)
   {}
   
   // The type index
-  const std::type_info* ti = nullptr;
+  auto_id id;
 
   // Zero refers to a decoration created on this packet, a positive number [tshift] indicates
   // a decoration attached [tshift] packets ago.
   int tshift = -1;
   
   bool operator==(const DecorationKey& rhs) const {
-    return ti == rhs.ti && tshift == rhs.tshift;
+    return id == rhs.id && tshift == rhs.tshift;
   }
 };
 
@@ -37,7 +37,7 @@ namespace std {
   template<>
   struct hash<DecorationKey> {
     size_t operator()(const DecorationKey& key) const {
-      return key.tshift + key.ti->hash_code();
+      return key.tshift + (size_t)key.id.block;
     }
   };
 }

@@ -19,15 +19,18 @@ TEST_F(ParallelTest, Basic) {
 
   for (int i : {0,4,2,5,1,3}) {
     int sleepTime = dist(mt);
-    p += [i, sleepTime]() {
+    p += [i, sleepTime] {
       std::this_thread::sleep_for(sleepTime*std::chrono::milliseconds(1));
       return i;
     };
   }
 
   std::vector<int> result;
-  for (auto it = p.begin<int>(); it != p.end<int>(); ++it) {
+  auto it = p.begin<int>();
+  result.push_back(*it++);
+  while (it != p.end<int>()) {
     result.push_back(*it);
+    ++it;
   }
 
   ASSERT_EQ(result.size(), 6) << "Didn't receive all value";
@@ -36,4 +39,47 @@ TEST_F(ParallelTest, Basic) {
   for (int i = 0; i < static_cast<int>(result.size()); ++i) {
     ASSERT_EQ(i, result[i]) << "Didn't receive correct values";
   }
+}
+
+TEST_F(ParallelTest, All) {
+  AutoCurrentContext()->Initiate();
+  autowiring::parallel p;
+
+  for (size_t i = 0; i < 10; i++)
+    p += [i] { return i; };
+
+  std::vector<size_t> entries;
+  for(size_t cur : p.all<size_t>())
+    entries.push_back(cur);
+  std::sort(entries.begin(), entries.end());
+  for (size_t i = 1; i < entries.size(); i++)
+    ASSERT_EQ(entries[i - 1], entries[i] - 1) << "Entry did not complete as expected";
+}
+
+TEST_F(ParallelTest, VoidReturn) {
+  AutoCurrentContext()->Initiate();
+  autowiring::parallel p;
+
+  auto val = std::make_shared<std::atomic<size_t>>(0);
+  for (size_t i = 0; i < 100; i++)
+    p += [val] { (*val)++; };
+
+  size_t i = 0;
+  for (auto q = p.begin<void>(); q != p.end<void>(); ++q)
+    i++;
+  ASSERT_EQ(100UL, i) << "A sufficient number of empty lambdas were not encountered";
+}
+
+TEST_F(ParallelTest, VoidReturnAll) {
+  AutoCurrentContext()->Initiate();
+  autowiring::parallel p;
+
+  auto val = std::make_shared<std::atomic<size_t>>(0);
+  for (size_t i = 0; i < 100; i++)
+    p += [val] { (*val)++; };
+
+  size_t i = 0;
+  for (auto entry : p.all<void>())
+    i++;
+  ASSERT_EQ(100UL, i) << "A sufficient number of empty lambdas were not encountered";
 }

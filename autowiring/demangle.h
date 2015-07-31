@@ -4,6 +4,7 @@
 #include <typeindex>
 
 struct AnySharedPointer;
+struct auto_id;
 
 //
 // Demangle type names on mac and linux.
@@ -17,6 +18,7 @@ namespace autowiring {
   std::string demangle(const std::type_index* ti);
 
   std::string demangle(const AnySharedPointer& ptr);
+  std::string demangle(auto_id id);
 
   /// Returns a human-readable std::string describing the type.
   template<typename T>

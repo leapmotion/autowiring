@@ -236,16 +236,41 @@ public:
   /// </remarks>
   std::chrono::steady_clock::time_point SuggestSoonestWakeupTimeUnsafe(std::chrono::steady_clock::time_point latestTime) const;
 
-  class DispatchThunkDelayedExpression {
+  class DispatchThunkDelayedExpressionRel {
   public:
-    DispatchThunkDelayedExpression(DispatchQueue* pParent, std::chrono::steady_clock::time_point wakeup) :
+    DispatchThunkDelayedExpressionRel(DispatchQueue* pParent, std::chrono::microseconds delay) :
+      m_pParent(pParent),
+      m_delay(delay)
+    {}
+
+  private:
+    DispatchQueue* const m_pParent;
+    const std::chrono::microseconds m_delay;
+
+  public:
+    template<class _Fx>
+    void operator,(_Fx&& fx) {
+      // Let the parent handle this one directly after composing a delayed dispatch thunk r-value
+      if (m_delay.count())
+        *m_pParent += DispatchThunkDelayed(
+          std::chrono::steady_clock::now() + m_delay,
+          new DispatchThunk<_Fx>(std::forward<_Fx&&>(fx))
+        );
+      else
+        *m_pParent += std::forward<_Fx&&>(fx);
+    }
+  };
+
+  class DispatchThunkDelayedExpressionAbs {
+  public:
+    DispatchThunkDelayedExpressionAbs(DispatchQueue* pParent, std::chrono::steady_clock::time_point wakeup) :
       m_pParent(pParent),
       m_wakeup(wakeup)
     {}
 
   private:
-    DispatchQueue* m_pParent;
-    std::chrono::steady_clock::time_point m_wakeup;
+    DispatchQueue* const m_pParent;
+    const std::chrono::steady_clock::time_point m_wakeup;
 
   public:
     template<class _Fx>
@@ -266,8 +291,12 @@ public:
   /// <summary>
   /// Overload for the introduction of a delayed dispatch thunk
   /// </summary>
+  /// <remarks>
+  /// If the passed duration is equal to zero, the returned expression template will pend a lambda
+  /// to the dispatch queue as though that lambda were added with operator+= without any delay.
+  /// </remarks>
   template<class Rep, class Period>
-  DispatchThunkDelayedExpression operator+=(std::chrono::duration<Rep, Period> rhs) {
+  DispatchThunkDelayedExpressionRel operator+=(std::chrono::duration<Rep, Period> rhs) {
     // Verify that the duration is at least microseconds.  If you're getting an assertion here, try
     // using std::duration_cast<std::chrono::microseconds>(duration)
     static_assert(
@@ -275,14 +304,13 @@ public:
       "Dispatch queues cannot be used to describe intervals less than one microseconds in duration"
     );
 
-    std::chrono::steady_clock::time_point timepoint = std::chrono::steady_clock::now() + rhs;
-    return *this += timepoint;
+    return{this, rhs};
   }
 
   /// <summary>
   /// Overload for absolute-time based delayed dispatch thunk
   /// </summary>
-  DispatchThunkDelayedExpression operator+=(std::chrono::steady_clock::time_point rhs);
+  DispatchThunkDelayedExpressionAbs operator+=(std::chrono::steady_clock::time_point rhs);
 
   /// <summary>
   /// Directly pends a delayed dispatch thunk

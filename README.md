@@ -78,3 +78,5 @@ to find Autowiring once the package is installed by this means.
 
 Generally speaking, there is not really much reason to build an installer yourself unless you're testing out the bleeding edge.  The
 [releases page](https://github.com/leapmotion/autowiring/releases) lists the officially supported Autowiring releases.
+
+[![ZenHub Badge](https://raw.githubusercontent.com/ZenHubIO/support/master/zenhub-badge.png)](https://zenhub.io)

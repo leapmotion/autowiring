@@ -10,6 +10,10 @@ if(APPLE)
   set(CMAKE_OSX_ARCHITECTURES "x86_64;i386" CACHE STRING "Mac OS X build architectures" FORCE)
 endif()
 
+if(NOT (MSVC OR CMAKE_BUILD_TYPE))
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
+endif()
+
 # Need to classify the architecture before we run anything else
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
   set(autowiring_BUILD_ARM ON)

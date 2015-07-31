@@ -7,7 +7,6 @@ using namespace autowiring;
 
 RunCounter::RunCounter(const std::shared_ptr<CoreContextStateBlock>& stateBlock, const std::shared_ptr<CoreContext>& owner) :
   stateBlock(stateBlock),
-  owner(owner),
 
   // Increment the parent's outstanding count as well.  This will be held by the lambda, and will cause the enclosing
   // context's outstanding thread count to be incremented by one as long as we have any threads still running in our
@@ -16,7 +15,8 @@ RunCounter::RunCounter(const std::shared_ptr<CoreContextStateBlock>& stateBlock,
     stateBlock->parent ?
     stateBlock->parent->IncrementOutstandingThreadCount(owner->GetParentContext()) :
     nullptr
-  )
+  ),
+  owner(owner)
 {}
 
 RunCounter::~RunCounter(void) {

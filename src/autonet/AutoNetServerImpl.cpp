@@ -186,7 +186,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const CoreObjectDescriptor&
 
     // Add object data
     objData["name"] = autowiring::demangle(object.type);
-    objData["id"] = autowiring::demangle(object.value.slot()->type());
+    objData["id"] = autowiring::demangle(object.value.type());
 
     // Add slots for this object
     {
@@ -227,8 +227,8 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const CoreObjectDescriptor&
     if (!object.subscriber.empty()) {
       Json::object args;
       for (auto pArg = object.subscriber.GetAutoFilterArguments(); *pArg; ++pArg) {
-        args[autowiring::demangle(pArg->ti)] = Json::object{
-          {"id", autowiring::demangle(pArg->ti)},
+        args[autowiring::demangle(pArg->id)] = Json::object{
+          {"id", autowiring::demangle(pArg->id)},
           {"isInput", pArg->is_input},
           {"isOutput", pArg->is_output}
         };

@@ -2,3 +2,8 @@
 #include "stdafx.h"
 #include "Parallel.h"
 
+using namespace autowiring;
+
+void parallel_iterator<void>::operator++(int) {
+  m_parent.Pop<void>();
+}

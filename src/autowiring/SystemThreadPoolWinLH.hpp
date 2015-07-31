@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "DispatchQueue.h"
-#include "SystemThreadPool.h"
+#include "SystemThreadPoolWin.hpp"
 #include <Windows.h>
 #include <concurrent_queue.h>
 
@@ -10,23 +10,17 @@ namespace autowiring {
 /// <summary>
 /// A thread pool that makes use of the underlying system's APIs
 /// </summary>
-class SystemThreadPoolWin:
-  public SystemThreadPool
+class SystemThreadPoolWinLH:
+  public SystemThreadPoolWin
 {
 public:
-  SystemThreadPoolWin(void);
-  ~SystemThreadPoolWin(void);
+  SystemThreadPoolWinLH(void);
+  ~SystemThreadPoolWinLH(void);
 
 private:
   // Work item for single dispatchers
   PTP_WORK m_pwkDispatchRundown;
   PTP_WORK m_pwkSingle;
-
-  // Vector of dispathc queues that need to be run down
-  concurrency::concurrent_queue<std::shared_ptr<DispatchQueue>> m_rundownTargets;
-
-  // Our own internal dispatch queue containing items to be executed:
-  DispatchQueue m_toBeDone;
 
   // ThreadPool overrides:
   void OnStartUnsafe(void) override;

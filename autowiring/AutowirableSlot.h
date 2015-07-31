@@ -1,9 +1,9 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "fast_pointer_cast.h"
-#include "SharedPointerSlot.h"
-#include "SlotInformation.h"
 #include "AnySharedPointer.h"
+#include "autowiring_error.h"
+#include "fast_pointer_cast.h"
+#include "SlotInformation.h"
 #include MEMORY_HEADER
 
 class CoreContext;
@@ -48,14 +48,16 @@ public:
 /// <summary>
 /// Utility class which represents any kind of autowiring entry that may be deferred to a later date
 /// </summary>
-class DeferrableAutowiring:
-  protected AnySharedPointer
+class DeferrableAutowiring
 {
 public:
   DeferrableAutowiring(AnySharedPointer&& witness, const std::shared_ptr<CoreContext>& context);
   virtual ~DeferrableAutowiring(void);
 
 protected:
+  // The held shared pointer
+  AnySharedPointer m_ptr;
+
   /// <summary>
   /// This is the context that was available at the time the autowiring was performed.
   /// </summary>
@@ -67,7 +69,7 @@ protected:
   std::weak_ptr<CoreContext> m_context;
 
   // The next entry to be autowired in this sequence
-  DeferrableAutowiring* m_pFlink;
+  DeferrableAutowiring* m_pFlink = nullptr;
 
   /// <summary>
   /// Causes this deferrable to unregister itself with the enclosing context
@@ -77,7 +79,7 @@ protected:
 public:
   // Accessor methods:
   DeferrableAutowiring* GetFlink(void) { return m_pFlink; }
-  const AnySharedPointer& GetSharedPointer(void) const { return *this; }
+  const AnySharedPointer& GetSharedPointer(void) const { return m_ptr; }
 
   // Mutator methods:
   void SetFlink(DeferrableAutowiring* pFlink) {
@@ -85,20 +87,20 @@ public:
   }
 
   /// <returns>
-  /// The context corresponding to this slot, if it hasn't already expired
+  /// True if the underlying field is autowired
   /// </returns>
-  std::shared_ptr<CoreContext> GetContext(void) const { return m_context.lock(); }
+  bool IsAutowired(void) const { return !!m_ptr.ptr(); }
 
   /// <returns>
   /// The type on which this deferred slot is bound
   /// </returns>
-  const std::type_info& GetType(void) const {
-    return AnySharedPointer::slot()->type();
+  auto_id GetType(void) const {
+    return m_ptr.type();
   }
   
   // Reset this pointer. Similar to shared_ptr::reset().
   void reset() {
-    slot()->reset();
+    m_ptr.reset();
   }
 
   /// <returns>
@@ -116,8 +118,16 @@ public:
   /// <summary>
   /// Satisfies autowiring with a so-called "witness slot" which is guaranteed to be satisfied on the same type
   /// </summary>
-  virtual void SatisfyAutowiring(const AnySharedPointer& ptr) {
-    (AnySharedPointer&)*this = ptr;
+  void SatisfyAutowiring(const AnySharedPointer& ptr) {
+    m_ptr = ptr;
+  }
+
+  bool operator!=(const AnySharedPointer& rhs) const { return m_ptr != rhs; }
+  bool operator==(const AnySharedPointer& rhs) const { return m_ptr == rhs; }
+
+  template<typename U>
+  bool operator==(const std::shared_ptr<U>& rhs) const {
+    return m_ptr == rhs;
   }
 };
 
@@ -129,7 +139,7 @@ public:
   typedef T value_type;
 
   AutowirableSlot(const std::shared_ptr<CoreContext>& ctxt) :
-    DeferrableAutowiring(AnySharedPointerT<T>(), ctxt)
+    DeferrableAutowiring(AnySharedPointerT<typename std::remove_const<T>::type>(), ctxt)
   {
     SlotInformationStackLocation::RegisterSlot(this);
   }
@@ -151,7 +161,8 @@ public:
     // type is autowired, they are required at a minimum to know what that type's inheritance relations
     // are to other types in the system.
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
-    return !!get();
+    (void) auto_id_t_init<T>::init;
+    return DeferrableAutowiring::IsAutowired();
   }
 
   /// <remarks>
@@ -160,6 +171,7 @@ public:
   T* get(void) const {
     // For now, we require that the full type be available to use this method
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) auto_id_t_init<T>::init;
     return get_unsafe();
   }
 
@@ -172,12 +184,7 @@ public:
   /// this may prevent the type from ever being detected as autowirable as a result.
   /// </remarks>
   T* get_unsafe(void) const {
-    return
-      static_cast<const AnySharedPointerT<T>*>(
-        static_cast<const AnySharedPointer*>(
-          this
-        )
-      )->slot()->get().get();
+    return static_cast<T*>(m_ptr.ptr());
   }
 
   explicit operator bool(void) const {
@@ -189,6 +196,7 @@ public:
     // where we can guarantee that the type will be completely defined, because the user is about
     // to make use of this type.
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) auto_id_t_init<T>::init;
 
     auto retVal = get();
     if (!retVal)
@@ -204,12 +212,16 @@ public:
     // We have to initialize here, in the operator context, because we don't actually know if the
     // user will be making use of this type.
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) auto_id_t_init<T>::init;
 
     return *retVal;
   }
-
-  using AnySharedPointer::operator=;
 };
+
+template<typename T>
+bool operator==(const std::shared_ptr<T>& lhs, const AutowirableSlot<T>& rhs) {
+  return rhs == lhs;
+}
 
 /// <summary>
 /// A function-based autowirable slot, which invokes a lambda rather than binding a shared pointer

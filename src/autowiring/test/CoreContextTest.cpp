@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
+#include "TestFixtures/SimpleObject.hpp"
 #include <autowiring/AutoInjectable.h>
 #include <autowiring/ContextEnumerator.h>
 #include <algorithm>
@@ -200,9 +201,11 @@ TEST_F(CoreContextTest, NoEnumerateBeforeBoltReturn) {
   });
 
   // Verify that the context does not appear until the bolt has finished running:
-  while(!*finished)
+  while(!*finished) {
     for(auto cur : ContextEnumeratorT<NoEnumerateBeforeBoltReturn>(ctxt))
       ASSERT_TRUE(longTime->m_bDoneRunning) << "A context was enumerated before a bolt finished running";
+    AutoRequired<CoreThread>()->WaitForEvent(std::chrono::milliseconds(1));
+  }
 
   // Need to block until this thread is done
   t.join();
@@ -457,4 +460,65 @@ TEST_F(CoreContextTest, All) {
 
   ASSERT_TRUE(found1) << "Failed to find MyClassForAll<1> via its ContextMember interface";
   ASSERT_TRUE(found2) << "Failed to find MyClassForAll<2> via its ContextMember interface";
+}
+
+class ClassThatPoints1;
+class ClassThatPoints2;
+
+class ClassThatPoints1 {
+public:
+  Autowired<SimpleObject> so;
+  Autowired<ClassThatPoints2> b;
+};
+class ClassThatPoints2 {
+public:
+  ClassThatPoints2(const std::shared_ptr<CoreContext>& ctxt) :
+    v(ctxt)
+  {}
+
+  // Contrived case, but we need to be sure that only Autowired fields pointing to objects
+  // in this context are actually unlinked.  Autowired fields pointing elsewhere should be
+  // left alone.
+  Autowired<std::vector<int>> v;
+
+  Autowired<SimpleObject> so;
+  Autowired<ClassThatPoints1> a;
+};
+
+TEST_F(CoreContextTest, UnlinkOnTeardown) {
+  std::weak_ptr<ClassThatPoints1> weakA;
+  std::shared_ptr<ClassThatPoints2> strongB;
+  AutoRequired<SimpleObject> so;
+
+  // Set up a subcontext with some cycles and external links:
+  {
+    // Main context that gets reset second
+    AutoCreateContext ctxt;
+
+    // Sibling context that we're also going to reset
+    AutoCreateContext otherContext;
+    otherContext->Inject<std::vector<int>>();
+
+    AutoRequired<ClassThatPoints1> a(ctxt);
+    AutoRequired<ClassThatPoints2> b(ctxt, otherContext);
+    weakA = a;
+    strongB = b;
+    
+    ctxt->AddTeardownListener(
+      [weakA, strongB] {
+        // Verify that nothing got screwed up at this point:
+        auto a = weakA.lock();
+        ASSERT_FALSE(weakA.expired()) << "Weak pointer expired prematurely";
+        ASSERT_EQ(strongB, a->b) << "Unlink occurred prematurely";
+        ASSERT_EQ(a, strongB->a) << "Unlink occurred prematurely";
+      }
+    );
+
+    // Set the flag at the last possible and to ensure things still get torn down
+    ctxt->SetUnlinkOnTeardown(true);
+  }
+
+  ASSERT_TRUE(weakA.expired()) << "A reference was leaked even though unlinking was turned on";
+  ASSERT_TRUE(strongB->v.IsAutowired()) << "An Autowired field pointing to a foreign context was incorrectly unlinked";
+  ASSERT_EQ(so.get(), strongB->so.get()) << "An Autowired field was unlinked on teardown even though it pointed outside of a context";
 }

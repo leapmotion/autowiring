@@ -15,7 +15,7 @@ void JunctionBoxBase::TerminateAll(const std::list<std::weak_ptr<CoreContext>>& 
 }
 
 void JunctionBoxBase::FilterFiringException(const AnySharedPointer& pRecipient) const {
-  std::shared_ptr<CoreObject> obj = *pRecipient;
+  std::shared_ptr<CoreObject> obj = pRecipient.as_obj();
 
   // Obtain the current context and pass control:
   CoreContext::CurrentContext()->FilterFiringException(this, obj.get());

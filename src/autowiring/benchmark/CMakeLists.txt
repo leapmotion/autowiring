@@ -4,9 +4,13 @@ set(AutoBench_SRCS
   Benchmark.cpp
   ContextSearchBm.h
   ContextSearchBm.cpp
+  ContextTrackingBm.h
+  ContextTrackingBm.cpp
   DispatchQueueBm.h
   DispatchQueueBm.cpp
   Foo.h
+  ObjectPoolBm.h
+  ObjectPoolBm.cpp
   PriorityBoost.h
   PriorityBoost.cpp
   PrintableDuration.h

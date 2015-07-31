@@ -26,6 +26,13 @@
 // If Boost.Thread is used, we want it to provide the new name for its <future> class
 #define BOOST_THREAD_PROVIDES_FUTURE
 
+#ifdef AUTOWIRING_IS_BEING_BUILT
+  // We know that we're using deprecated stuff in our unit tests, but the tests still
+  // need to do what they do.  Undefine all of the deprecated macros so we don't get
+  // spammed with warnings telling us what we already know.
+  #define AUTOWIRING_NO_DEPRECATE
+#endif
+
 #ifndef __has_feature
   #define __has_feature(x) (AUTOWIRE_##x)
 #endif
@@ -35,6 +42,24 @@
  *********************/
 #ifdef _MSC_VER
   #define __func__ __FUNCTION__
+#endif
+
+/*********************
+ * alignas support added in all versions of GCC, but not until MSVC 2015
+ *********************/
+#if defined(_MSC_VER) && _MSC_VER <= 1800
+  #define AUTO_ALIGNAS(n) __declspec(align(n))
+#else
+  #define AUTO_ALIGNAS alignas
+#endif
+
+/*********************
+ * alignof has similar support, but has a strange name in older versions
+ *********************/
+#if defined(_MSC_VER) && _MSC_VER <= 1800
+  #define AUTO_ALIGNOF __alignof
+#else
+  #define AUTO_ALIGNOF alignof
 #endif
 
 /*********************
@@ -321,7 +346,7 @@
 /*********************
  * Deprecation convenience macro
  *********************/
-#ifndef _DEBUG
+#if !defined(_DEBUG) && !defined(AUTOWIRING_NO_DEPRECATE)
   #ifdef _MSC_VER
     #define DEPRECATED(signature, msg) __declspec(deprecated(msg)) signature
     #define DEPRECATED_CLASS(classname, msg) __declspec(deprecated(msg)) classname

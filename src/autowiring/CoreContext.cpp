@@ -15,7 +15,6 @@
 #include "thread_specific_ptr.h"
 #include "ThreadPool.h"
 #include <sstream>
-#include <stack>
 #include <stdexcept>
 
 using namespace autowiring;
@@ -90,6 +89,41 @@ CoreContext::~CoreContext(void) {
   // Tell all context members that we're tearing down:
   for(ContextMember* q : m_contextMembers)
     q->NotifyContextTeardown();
+
+  // Perform unlinking, if requested:
+  if(m_unlinkOnTeardown)
+    for (const auto& ccType : m_concreteTypes) {
+      uint8_t* pBase = (uint8_t*)ccType.value.ptr();
+
+      // Enumerate all slots and unlink them one at a time
+      for (auto cur = ccType.stump->pHead; cur; cur = cur->pFlink) {
+        if (cur->autoRequired)
+          // Only unlink slots that were Autowired.  AutoRequired slots will never participate
+          // in a cycle (because we would wind up with constructive chaos) so we don't really
+          // need to worry about them.  Furthermore, there are cases where users may want to
+          // refer to a context member in their destructor; in that case, they should use
+          // AutoRequired to enforce the relationship.
+          continue;
+
+        auto& da = *reinterpret_cast<DeferrableAutowiring*>(pBase + cur->slotOffset);
+        if (!da.IsAutowired())
+          // Nothing to do here, just short-circuit
+          continue;
+
+        auto q = m_typeMemos.find(da.GetType());
+        if (q == m_typeMemos.end())
+          // Weird.  Not in the context.  Circle around.
+          continue;
+
+        if (da != q->second.m_value)
+          // Not equal to the entry already here, came from an ancestor context or somewhere else.
+          // Circle around.
+          continue;
+
+        // OK, interior pointer and context teardown is underway, clear it out
+        da.reset();
+      }
+    }
 }
 
 std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate) {
@@ -164,17 +198,16 @@ std::shared_ptr<CoreContext> CoreContext::FirstChild(void) const {
   }
 
   // Seems like we have no children, return here
-  return std::shared_ptr<CoreContext>();
+  return nullptr;
 }
 
 std::shared_ptr<CoreContext> CoreContext::NextSibling(void) const {
   // Root contexts do not have siblings
   if(!m_pParent)
-    return std::shared_ptr<CoreContext>();
+    return nullptr;
 
   // Our iterator will always be valid in our parent collection.  Take a copy, lock the parent collection down
   // to prevent it from being modified, and then see what happens when we increment
-
   std::lock_guard<std::mutex> lk(m_pParent->m_stateBlock->m_lock);
   for(
     auto cur = m_backReference;
@@ -186,19 +219,19 @@ std::shared_ptr<CoreContext> CoreContext::NextSibling(void) const {
   }
 
   // Failed to lock any successor child in the parent context, return unsuccessful
-  return std::shared_ptr<CoreContext>();
+  return nullptr;
 }
 
-const std::type_info& CoreContext::GetAutoTypeId(const AnySharedPointer& ptr) const {
+auto_id CoreContext::GetAutoTypeId(const AnySharedPointer& ptr) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
-  const std::type_info& ti = ptr->type();
+  auto ti = ptr.type();
   auto q = m_typeMemos.find(ti);
   if (q == m_typeMemos.end() || !q->second.pObjTraits)
     throw autowiring_error("Attempted to obtain the true type of a shared pointer that was not a member of this context");
 
   const CoreObjectDescriptor* pObjTraits = q->second.pObjTraits;
-  return *pObjTraits->type;
+  return pObjTraits->type;
 }
 
 void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
@@ -210,7 +243,7 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
     // concrete type defined in another context or potentially a unifier type.  Creating a slot here
     // is also undesirable because the complete type is not available and we can't create a dynaimc
     // caster to identify when this slot gets satisfied. If a slot was non-local, overwrite it.
-    auto q = m_typeMemos.find(*traits.actual_type);
+    auto q = m_typeMemos.find(traits.actual_type);
     if(q != m_typeMemos.end()) {
       auto& v = q->second;
 
@@ -272,7 +305,7 @@ void CoreContext::AddInternal(const AnySharedPointer& ptr) {
   std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
 
   // Verify that this type isn't already satisfied
-  MemoEntry& entry = m_typeMemos[ptr->type()];
+  MemoEntry& entry = m_typeMemos[ptr.type()];
   if (entry.m_value)
     throw autowiring_error("This interface is already present in the context");
 
@@ -287,7 +320,7 @@ void CoreContext::FindByType(AnySharedPointer& reference, bool localOnly) const 
 }
 
 MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference, bool localOnly) const {
-  const std::type_info& type = reference->type();
+  auto_id type = reference.type();
 
   // If we've attempted to search for this type before, we will return the value of the memo immediately:
   auto q = m_typeMemos.find(type);
@@ -302,7 +335,7 @@ MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference, bool local
   // Resolve based on iterated dynamic casts for each concrete type:
   const CoreObjectDescriptor* pObjTraits = nullptr;
   for(const auto& type : m_concreteTypes) {
-    if(!reference->try_assign(*type.value))
+    if(!reference.try_assign(type.value))
       // No match, try the next entry
       continue;
 
@@ -584,9 +617,10 @@ bool CoreContext::DelayUntilInitiated(void) {
   return !IsShutdown();
 }
 
-std::shared_ptr<CoreContext> CoreContext::CurrentContextOrNull(void) {
+const std::shared_ptr<CoreContext>& CoreContext::CurrentContextOrNull(void) {
+  static const std::shared_ptr<CoreContext> empty;
   auto retVal = autoCurrentContext.get();
-  return retVal ? *retVal : nullptr;
+  return retVal ? *retVal : empty;
 }
 
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
@@ -756,7 +790,7 @@ void CoreContext::Dump(std::ostream& os) const {
   
   for(const auto& entry : m_typeMemos) {
     os << demangle(entry.first);
-    const void* pObj = entry.second.m_value->ptr();
+    const void* pObj = entry.second.m_value.ptr();
     if(pObj)
       os << " 0x" << std::hex << pObj;
     os << std::endl;
@@ -820,14 +854,14 @@ void CoreContext::SatisfyAutowiring(std::unique_lock<std::mutex>& lk, MemoEntry&
   // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
   // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
   // release the lock.
-  std::stack<DeferrableAutowiring*> stk;
-  stk.push(entry.pFirst);
+  std::vector<DeferrableAutowiring*> stk;
+  stk.push_back(entry.pFirst);
   entry.pFirst = nullptr;
 
   // Depth-first search
   while (!stk.empty()) {
-    auto top = stk.top();
-    stk.pop();
+    auto top = stk.back();
+    stk.pop_back();
 
     for (DeferrableAutowiring* pCur = top; pCur; pCur = pCur->GetFlink()) {
       pCur->SatisfyAutowiring(entry.m_value);
@@ -835,7 +869,7 @@ void CoreContext::SatisfyAutowiring(std::unique_lock<std::mutex>& lk, MemoEntry&
       // See if there's another chain we need to process:
       auto child = pCur->ReleaseDependentChain();
       if (child)
-        stk.push(child);
+        stk.push_back(child);
 
       // Not everyone needs to be finalized.  The entities that don't require finalization
       // are identified by an empty strategy, and we just skip them.
@@ -893,7 +927,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     // also removed at the same time.
     //
     // Each connected nonroot deferrable autowiring is referred to as a "dependant chain".
-    std::stack<DeferrableAutowiring*> stk;
+    std::vector<DeferrableAutowiring*> stk;
     for (auto& cur : m_typeMemos) {
       MemoEntry& value = cur.second;
 
@@ -904,7 +938,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
       // Determine whether the current candidate element satisfies the autowiring we are considering.
       // This is done internally via a dynamic cast on the interface type for which this polymorphic
       // base type was constructed.
-      if (!value.m_value->try_assign(entry.pCoreObject))
+      if (!value.m_value.try_assign(entry.pCoreObject))
         continue;
 
       // Success, assign the traits
@@ -916,13 +950,13 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
       // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
       // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
       // release the lock.
-      stk.push(value.pFirst);
+      stk.push_back(value.pFirst);
       value.pFirst = nullptr;
 
       // Finish satisfying the remainder of the chain while we hold the lock:
       while (!stk.empty()) {
-        auto top = stk.top();
-        stk.pop();
+        auto top = stk.back();
+        stk.pop_back();
 
         for (DeferrableAutowiring* pNext = top; pNext; pNext = pNext->GetFlink()) {
           pNext->SatisfyAutowiring(value.m_value);
@@ -930,7 +964,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
           // See if there's another chain we need to process:
           auto child = pNext->ReleaseDependentChain();
           if (child)
-            stk.push(child);
+            stk.push_back(child);
 
           // Not everyone needs to be finalized.  The entities that don't require finalization
           // are identified by an empty strategy, and we just skip them.
@@ -1236,7 +1270,14 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
 }
 
 std::shared_ptr<CoreContext> CoreContext::SetCurrent(const std::shared_ptr<CoreContext>& ctxt) {
-  std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContextOrNull();
+  const auto& currentContext = CurrentContextOrNull();
+
+  // Short-circuit test, no need to proceed if we aren't changing the context:
+  if (currentContext == ctxt)
+    return currentContext;
+
+  // Value is changing, update:
+  auto retVal = currentContext;
   if (ctxt)
     autoCurrentContext.reset(new std::shared_ptr<CoreContext>(ctxt));
   else

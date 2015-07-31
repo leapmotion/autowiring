@@ -33,7 +33,7 @@ TEST_F(AutoFilterDiagnosticsTest, CanGetExpectedTrueType) {
 
   // Get more information about this object from the enclosing context:
   AutoCurrentContext ctxt;
-  const std::type_info* ti = nullptr;
-  ASSERT_NO_THROW(ti = &ctxt->GetAutoTypeId(asp)) << "Exception thrown while attempting to get true type information";
-  ASSERT_EQ(typeid(FilterMemberNotInheritingObject), *ti) << "True type not correctly reported, got " << autowiring::demangle(*ti) << ", expected FilterMemberNotInheritingObject";
+  auto_id id;
+  ASSERT_NO_THROW(id = ctxt->GetAutoTypeId(asp)) << "Exception thrown while attempting to get true type information";
+  ASSERT_EQ(auto_id_t<FilterMemberNotInheritingObject>{}, id) << "True type not correctly reported, got " << autowiring::demangle(id) << ", expected FilterMemberNotInheritingObject";
 }

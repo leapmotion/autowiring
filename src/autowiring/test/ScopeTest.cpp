@@ -181,7 +181,6 @@ TEST_F(ScopeTest, RequireVsWire) {
 
   Autowired<A> a_wired_inner;
   ASSERT_FALSE(a_wired_inner.IsAutowired()) << "Autowired member became autowired too quickly";
-  ASSERT_EQ(a_wired_inner.GetContext(), ctxt_inner) << "Autowired member created in the wrong context";
 
   AutoRequired<A> a_required_outer(ctxt_outer);
   ASSERT_TRUE(a_required_outer.IsAutowired()) << "AutoRequired member unsatisfied after construction";

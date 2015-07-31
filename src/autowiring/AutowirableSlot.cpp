@@ -9,9 +9,8 @@
 using namespace std;
 
 DeferrableAutowiring::DeferrableAutowiring(AnySharedPointer&& witness, const std::shared_ptr<CoreContext>& context) :
-  AnySharedPointer(std::move(witness)),
-  m_context(context),
-  m_pFlink(nullptr)
+  m_ptr(std::move(witness)),
+  m_context(context)
 {}
 
 DeferrableAutowiring::~DeferrableAutowiring(void) {

@@ -35,6 +35,9 @@ protected:
   /// <summary>
   /// Called when the thread pool is being cleaned up
   /// </summary>
+  /// <remarks>
+  /// Where possible, this method should return immediately.
+  /// </remarks>
   virtual void OnStop(void) {}
 
 public:
@@ -48,6 +51,10 @@ public:
   /// <remarks>
   /// This method is idempotent.  Unlike CoreThread instances, a thread pool may be restarted.
   /// The returned shared pointer must be held for as long as the thread pool should be kept running.
+  /// If the returned token is destroyed, the thread pool will be stopped automatically.  Termination
+  /// of work items in the thread pool may occur at a later time on certain platforms; in some cases,
+  /// a call to Start may result in the creation of a new thread pool before the previous thread
+  /// pool is completely torn down.
   /// </remarks>
   virtual std::shared_ptr<void> Start(void);
 

@@ -8,11 +8,13 @@ set(AutowiringTest_SRCS
   AutoFilterAltitudeTest.cpp
   AutoFilterCollapseRulesTest.cpp
   AutoFilterConstructRulesTest.cpp
+  AutoFilterDescriptorTest.cpp
   AutoFilterDiagnosticsTest.cpp
   AutoFilterFunctionTest.cpp
   AutoFilterMultiDecorateTest.cpp
   AutoFilterSequencing.cpp
   AutoFilterTest.cpp
+  AutoIDTest.cpp
   AutoInjectableTest.cpp
   AutoPacketTest.cpp
   AutoPacketFactoryTest.cpp
@@ -32,6 +34,7 @@ set(AutowiringTest_SRCS
   ContextMapTest.cpp
   ContextMemberTest.cpp
   CoreThreadTest.cpp
+  CreationRulesTest.cpp
   CurrentContextPusherTest.cpp
   DecoratorTest.cpp
   DemangleTest.cpp
@@ -45,6 +48,7 @@ set(AutowiringTest_SRCS
   GlobalInitTest.hpp
   GlobalInitTest.cpp
   GuardObjectTest.cpp
+  HeteroBlockTest.cpp
   InterlockedRoutinesTest.cpp
   MultiInheritTest.cpp
   ObjectPoolTest.cpp

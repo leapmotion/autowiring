@@ -224,7 +224,7 @@ protected:
   std::list<CoreObjectDescriptor> m_concreteTypes;
 
   // This is a memoization map used to memoize any already-detected interfaces.
-  mutable std::unordered_map<std::type_index, MemoEntry> m_typeMemos;
+  mutable std::unordered_map<auto_id, MemoEntry> m_typeMemos;
 
   // All known context members, exception filters:
   std::vector<ContextMember*> m_contextMembers;
@@ -252,6 +252,9 @@ protected:
 
   // The start token for the thread pool, if one exists
   std::shared_ptr<void> m_startToken;
+
+  // Unlink flag
+  bool m_unlinkOnTeardown = false;
 
   // Creation rules are allowed to refer to private methods in this type
   template<autowiring::construction_strategy, class T, class... Args>
@@ -548,7 +551,7 @@ public:
   /// <returns>
   /// The type identifier of the referenced instance.
   /// </returns>
-  const std::type_info& GetAutoTypeId(const AnySharedPointer& ptr) const;
+  auto_id GetAutoTypeId(const AnySharedPointer& ptr) const;
 
   /// \internal
   /// <summary>
@@ -638,6 +641,26 @@ public:
   template<typename T>
   void Add(const std::shared_ptr<T>& ptr) {
     AddInternal(AnySharedPointer(ptr));
+  }
+
+  /// <summary>
+  /// Sets the context's teardown unlink behavior
+  /// </summary>
+  /// <remarks>
+  /// If this feature is turned on, then during context destruction and after teardown listeners have
+  /// been run, all context members will be scanned for uses of Autowired.  If a context member has
+  /// such a field, and that field points to another member of the current context, then the field
+  /// will be unlinked.
+  ///
+  /// If a field is AutoRequired, it is skipped.  If the autowiring was satisfied outside of the
+  /// context (for instance, at global scope), it's also skipped.  AutowiredFast uses aren't registered
+  /// anywhere, so they are also skipped.
+  ///
+  /// This method may be called at any time where a valid CoreContext reference exists.  CoreContext
+  /// does not track additional state if this flag is set.
+  /// </reamrks>
+  void SetUnlinkOnTeardown(bool unlinkOnTeardown) {
+    m_unlinkOnTeardown = unlinkOnTeardown;
   }
 
   /// <summary>
@@ -977,7 +1000,7 @@ public:
   /// context is assigned before invoking a CoreRunnable instance's Run method, and it's also assigned
   /// when a context is first constructed by a thread.
   /// </remarks>
-  static std::shared_ptr<CoreContext> CurrentContextOrNull(void);
+  static const std::shared_ptr<CoreContext>& CurrentContextOrNull(void);
 
   /// <summary>
   /// Identical to CurrentContextNoCheck, except returns the global context instead of a null pointer
@@ -1077,7 +1100,7 @@ public:
   void FindByType(std::shared_ptr<T>& slot, bool localOnly = false) const {
     AnySharedPointerT<T> reference;
     FindByType(reference, localOnly);
-    slot = reference.slot()->template as<T>();
+    slot = reference.template as<T>();
   }
 
   /// <summary>
@@ -1087,7 +1110,7 @@ public:
   void FindByTypeRecursive(std::shared_ptr<T>& ptr) const {
     AnySharedPointerT<T> slot;
     FindByTypeRecursive(slot, AutoSearchLambdaDefault());
-    ptr = slot.slot()->get();
+    ptr = slot.get();
   }
 
   /// <summary>

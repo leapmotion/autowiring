@@ -2,9 +2,7 @@
 #include "stdafx.h"
 #include "ObjectPoolMonitor.h"
 
-ObjectPoolMonitor::ObjectPoolMonitor(void* pOwner) :
-  m_pOwner(pOwner)
-{}
+ObjectPoolMonitor::ObjectPoolMonitor(void) {}
 
 void ObjectPoolMonitor::Abandon(void) {
   (std::lock_guard<std::mutex>)*this,

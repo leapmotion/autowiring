@@ -2,8 +2,8 @@
 #include "stdafx.h"
 #include "AutoFilterDescriptor.h"
 
-AutoFilterDescriptorStub::AutoFilterDescriptorStub(const std::type_info* pType, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall) :
-  m_pType(pType),
+AutoFilterDescriptorStub::AutoFilterDescriptorStub(auto_id type, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall) :
+  m_type(type),
   m_altitude(altitude),
   m_pArgs(pArgs),
   m_deferred(deferred),
@@ -20,21 +20,21 @@ AutoFilterDescriptorStub::AutoFilterDescriptorStub(const std::type_info* pType, 
 
 bool AutoFilterDescriptorStub::Provides(const std::type_info& ti) const {
   for (size_t i = GetArity(); i--;)
-    if (*m_pArgs[i].ti == ti)
+    if (*m_pArgs[i].id.block->ti == ti)
       return m_pArgs[i].is_output;
   return false;
 }
 
 bool AutoFilterDescriptorStub::Consumes(const std::type_info& ti) const {
   for (size_t i = GetArity(); i--;)
-    if (*m_pArgs[i].ti == ti)
+    if (*m_pArgs[i].id.block->ti == ti)
       return m_pArgs[i].is_output;
   return false;
 }
 
-const AutoFilterArgument* AutoFilterDescriptorStub::GetArgumentType(const std::type_info* argType) const {
+const AutoFilterArgument* AutoFilterDescriptorStub::GetArgumentType(auto_id argType) const {
   for (auto pArg = m_pArgs; *pArg; pArg++)
-    if (pArg->ti == argType)
+    if (pArg->id == argType)
       return pArg;
   return nullptr;
 }

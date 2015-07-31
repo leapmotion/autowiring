@@ -18,6 +18,7 @@ set(Autowiring_SRCS
   auto_arg.h
   auto_arg.cpp
   auto_id.h
+  auto_id.cpp
   auto_in.h
   auto_future.h
   auto_out.h
@@ -120,6 +121,8 @@ set(Autowiring_SRCS
   has_static_new.h
   has_validate.h
   hash_tuple.h
+  HeteroBlock.h
+  HeteroBlock.cpp
   index_tuple.h
   InterlockedExchange.h
   InvokeRelay.h
@@ -138,6 +141,7 @@ set(Autowiring_SRCS
   MemoEntry.cpp
   MicroAutoFilter.h
   MicroBolt.h
+  noop.h
   NullPool.h
   NullPool.cpp
   ObjectPool.h
@@ -148,7 +152,6 @@ set(Autowiring_SRCS
   CoreObjectDescriptor.h
   SatCounter.h
   SatCounter.cpp
-  SharedPointerSlot.h
   SlotInformation.cpp
   SlotInformation.h
   SystemThreadPool.cpp
@@ -193,8 +196,13 @@ add_conditional_sources(
 add_windows_sources(Autowiring_SRCS
   auto_future_win.h
   CoreThreadWin.cpp
+  CreationRulesWin.cpp
   SystemThreadPoolWin.cpp
-  SystemThreadPoolWin.h
+  SystemThreadPoolWin.hpp
+  SystemThreadPoolWinXP.cpp
+  SystemThreadPoolWinXP.hpp
+  SystemThreadPoolWinLH.cpp
+  SystemThreadPoolWinLH.hpp
   InterlockedExchangeWin.cpp
   thread_specific_ptr_win.h
 )
@@ -205,6 +213,7 @@ add_mac_sources(Autowiring_SRCS
 )
 
 add_unix_sources(Autowiring_SRCS
+  CreationRulesUnix.cpp
   InterlockedExchangeUnix.cpp
   thread_specific_ptr_unix.h
 )
