@@ -617,9 +617,10 @@ bool CoreContext::DelayUntilInitiated(void) {
   return !IsShutdown();
 }
 
-std::shared_ptr<CoreContext> CoreContext::CurrentContextOrNull(void) {
+const std::shared_ptr<CoreContext>& CoreContext::CurrentContextOrNull(void) {
+  static const std::shared_ptr<CoreContext> empty;
   auto retVal = autoCurrentContext.get();
-  return retVal ? *retVal : nullptr;
+  return retVal ? *retVal : empty;
 }
 
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
