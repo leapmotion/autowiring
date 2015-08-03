@@ -698,6 +698,13 @@ public:
     return Wait(cv, inputs, duration);
   }
 
+  /// <summary>
+  /// Retrieves the current packet being processed by an AutoFilter
+  /// </summary>
+  /// <remarks>
+  /// It is an error to call this anywhere except from an AutoFilter routine
+  /// </remarks>
+  static AutoPacket& CurrentPacket(void);
 
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;

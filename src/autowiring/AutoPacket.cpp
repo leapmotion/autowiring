@@ -488,6 +488,10 @@ std::shared_ptr<AutoPacket> AutoPacket::SuccessorUnsafe(void) {
   return m_successor;
 }
 
+AutoPacket& AutoPacket::CurrentPacket(void) {
+  throw std::runtime_error("Not implemented");
+}
+
 std::shared_ptr<CoreContext> AutoPacket::GetContext(void) const {
   return m_parentFactory->GetContext();
 }
