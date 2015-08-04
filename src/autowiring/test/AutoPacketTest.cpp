@@ -74,7 +74,7 @@ TEST_F(AutoPacketTest, AliasGet) {
 TEST_F(AutoPacketTest, CurrentPacket) {
   AutoRequired<AutoPacketFactory> factory;
   *factory += [](AutoPacket& packet) {
-    AutoPacket& current = AutoPacket::CurrentPacket();
+    AutoPacket& current = *(Autowired<AutoPacketFactory>()->CurrentPacket());
     ASSERT_EQ(&packet, &current) << "Current packet request did not correctly return a pointer to the current packet";
   };
 
