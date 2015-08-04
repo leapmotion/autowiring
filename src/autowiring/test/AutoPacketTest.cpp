@@ -80,5 +80,6 @@ TEST_F(AutoPacketTest, CurrentPacket) {
 
   auto packet = factory->NewPacket();
   ASSERT_TRUE(packet.unique()) << "A reference to a packet was leaked after all processing should have been done";
-  ASSERT_THROW(AutoPacket::CurrentPacket(), autowiring_error) << "An attempt to retrieve the current packet outside of an AutoFilter unexpectedly succeeded";
+  //AutoPacketFactory->CurrentPacket() can be used out of AutoFilter.
+  //ASSERT_THROW(Autowired<AutoPacketFactory>()->CurrentPacket(), autowiring_error) << "An attempt to retrieve the current packet outside of an AutoFilter unexpectedly succeeded";
 }
