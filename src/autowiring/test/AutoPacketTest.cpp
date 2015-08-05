@@ -82,3 +82,16 @@ TEST_F(AutoPacketTest, CurrentPacket) {
   ASSERT_TRUE(packet.unique()) << "A reference to a packet was leaked after all processing should have been done";
   ASSERT_THROW(AutoPacket::CurrentPacket(), autowiring_error) << "An attempt to retrieve the current packet outside of an AutoFilter unexpectedly succeeded";
 }
+
+TEST_F(AutoPacketTest, CurrentPacket2) {
+    AutoRequired<AutoPacketFactory> factory;
+    *factory += [](const int arg, AutoPacket& packet) {
+        AutoPacket& current = AutoPacket::CurrentPacket();
+        ASSERT_EQ(&packet, &current) << "Current packet request did not correctly return a pointer to the current packet";
+    };
+    auto packet = factory->NewPacket();
+    packet->Decorate(10);
+    ASSERT_TRUE(packet.unique()) << "A reference to a packet was leaked after all processing should have been done";
+    ASSERT_THROW(AutoPacket::CurrentPacket(), autowiring_error) << "An attempt to retrieve the current packet outside of an AutoFilter unexpectedly succeeded";
+
+}
