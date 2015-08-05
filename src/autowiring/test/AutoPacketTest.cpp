@@ -89,7 +89,7 @@ TEST_F(AutoPacketTest, NoLeakUnderThrow) {
   std::shared_ptr<AutoPacket> ptr;
   *factory += [&](AutoPacket& packet) {
     ptr = packet.shared_from_this();
-    throw std::runtime_error(nullptr);
+    throw std::runtime_error("");
   };
 
   ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "A filter that throws exeptions was not caught correctly";
