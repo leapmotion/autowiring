@@ -275,3 +275,10 @@ TEST_F(ScopeTest, RecursiveInject) {
   ASSERT_EQ(a_inner, a_inner_2);
   ASSERT_EQ(a_inner->GetContext(), a_inner_2->GetContext());
 }
+
+TEST_F(ScopeTest, NoPostHocAfterReset) {
+  Autowired<SimpleObject> sobj;
+  sobj.reset();
+  AutoRequired<SimpleObject>();
+  ASSERT_FALSE(sobj.IsAutowired()) << "An autowired slot was incorrectly satisfied after having been reset";
+}

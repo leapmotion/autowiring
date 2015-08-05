@@ -19,6 +19,11 @@ DeferrableAutowiring::~DeferrableAutowiring(void) {
   assert(m_context.expired());
 }
 
+void DeferrableAutowiring::reset(void) {
+  m_ptr.reset();
+  CancelAutowiring();
+}
+
 void DeferrableAutowiring::CancelAutowiring(void) {
   auto context = m_context.lock();
   if(!context)
