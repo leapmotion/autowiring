@@ -233,9 +233,11 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   lk.unlock();
 
   // Generate all calls
+  AutoPacket::SetCurrent(shared_from_this());
   for (SatCounter* call : callQueue)
     call->GetCall()(call->GetAutoFilter(), *this);
 
+  AutoPacket::SetCurrent(NULL);
   // Mark all unsatisfiable output types
   for (auto unsatOutputArg : unsatOutputArgs) {
     // One more producer run, even though we couldn't attach any new decorations
