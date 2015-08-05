@@ -7,11 +7,18 @@
 #include "AutoFilterDescriptor.h"
 #include "ContextEnumerator.h"
 #include "SatCounter.h"
+#include "thread_specific_ptr.h"
 #include <algorithm>
 #include <sstream>
 #include RVALUE_HEADER
 
 using namespace autowiring;
+
+/// <summary>
+/// A pointer to the current AutoPacket, specific to the current thread.
+/// </summary>
+/// <remarks>
+static thread_specific_ptr<std::weak_ptr<AutoPacket>> autoCurrentPacket;
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
@@ -226,9 +233,11 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   lk.unlock();
 
   // Generate all calls
+  AutoPacket::SetCurrent(shared_from_this());
   for (SatCounter* call : callQueue)
     call->GetCall()(call->GetAutoFilter(), *this);
 
+  AutoPacket::SetCurrent(NULL);
   // Mark all unsatisfiable output types
   for (auto unsatOutputArg : unsatOutputArgs) {
     // One more producer run, even though we couldn't attach any new decorations
@@ -486,6 +495,29 @@ std::shared_ptr<AutoPacket> AutoPacket::SuccessorUnsafe(void) {
   }
 
   return m_successor;
+}
+
+void AutoPacket::SetCurrent(const std::shared_ptr<AutoPacket>& apkt) {
+  auto retVal = autoCurrentPacket.get();
+  if (retVal && retVal->lock() == apkt)
+    return;
+
+  if (apkt)
+    autoCurrentPacket.reset(new std::weak_ptr<AutoPacket>(apkt));
+  else
+    autoCurrentPacket.reset();
+}
+
+AutoPacket& AutoPacket::CurrentPacket(void) {
+  auto retVal = autoCurrentPacket.get();
+  if (!retVal)
+    throw autowiring_error("Attempted to obtain a current AutoPacket, which was not made");
+
+  if (retVal->expired())
+    throw autowiring_error("Attempted to obtain a current AutoPacket, which was expired");
+
+  auto spPkt = retVal->lock();
+  return *spPkt;
 }
 
 std::shared_ptr<CoreContext> AutoPacket::GetContext(void) const {

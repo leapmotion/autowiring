@@ -70,3 +70,28 @@ TEST_F(AutoPacketTest, AliasGet) {
   const std::shared_ptr<const Decoration<0>>* ptr;
   ASSERT_TRUE(packet->Get(ptr)) << "Failed to find the shared pointer version of a trivial decoration on the packet";
 }
+
+TEST_F(AutoPacketTest, CurrentPacket) {
+  AutoRequired<AutoPacketFactory> factory;
+  *factory += [](AutoPacket& packet) {
+    AutoPacket& current = AutoPacket::CurrentPacket();
+    ASSERT_EQ(&packet, &current) << "Current packet request did not correctly return a pointer to the current packet";
+  };
+
+  auto packet = factory->NewPacket();
+  ASSERT_TRUE(packet.unique()) << "A reference to a packet was leaked after all processing should have been done";
+  ASSERT_THROW(AutoPacket::CurrentPacket(), autowiring_error) << "An attempt to retrieve the current packet outside of an AutoFilter unexpectedly succeeded";
+}
+
+TEST_F(AutoPacketTest, CurrentPacket2) {
+    AutoRequired<AutoPacketFactory> factory;
+    *factory += [](const int arg, AutoPacket& packet) {
+        AutoPacket& current = AutoPacket::CurrentPacket();
+        ASSERT_EQ(&packet, &current) << "Current packet request did not correctly return a pointer to the current packet";
+    };
+    auto packet = factory->NewPacket();
+    packet->Decorate(10);
+    ASSERT_TRUE(packet.unique()) << "A reference to a packet was leaked after all processing should have been done";
+    ASSERT_THROW(AutoPacket::CurrentPacket(), autowiring_error) << "An attempt to retrieve the current packet outside of an AutoFilter unexpectedly succeeded";
+
+}
