@@ -22,6 +22,7 @@ DeferrableAutowiring::~DeferrableAutowiring(void) {
 void DeferrableAutowiring::reset(void) {
   m_ptr.reset();
   CancelAutowiring();
+  m_context.reset();
 }
 
 void DeferrableAutowiring::CancelAutowiring(void) {
