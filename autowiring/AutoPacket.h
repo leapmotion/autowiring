@@ -706,6 +706,8 @@ public:
   /// </remarks>
   static AutoPacket& CurrentPacket(void);
 
+  static void SetCurrent(const std::shared_ptr<AutoPacket>& apkt);
+
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;
 };
