@@ -44,9 +44,13 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
   // Call all subscribers with no required or optional arguments:
   // NOTE: This may result in decorations that cause other subscribers to be called.
   AutoPacket::SetCurrent(shared_from_this());
-  for (SatCounter* call : callCounters)
-    call->GetCall()(call->GetAutoFilter(), *this);
-
+  try {
+    for (SatCounter* call : callCounters)
+      call->GetCall()(call->GetAutoFilter(), *this);
+  } catch(...) {
+    AutoPacket::SetCurrent(NULL);
+    throw;
+  }
   AutoPacket::SetCurrent(NULL);
 }
 
