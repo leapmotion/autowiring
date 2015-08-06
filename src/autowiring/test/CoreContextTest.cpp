@@ -522,3 +522,46 @@ TEST_F(CoreContextTest, UnlinkOnTeardown) {
   ASSERT_TRUE(strongB->v.IsAutowired()) << "An Autowired field pointing to a foreign context was incorrectly unlinked";
   ASSERT_EQ(so.get(), strongB->so.get()) << "An Autowired field was unlinked on teardown even though it pointed outside of a context";
 }
+
+TEST_F(CoreContextTest, InitiateAssertsSignals) {
+  AutoCurrentContext outer;
+
+  auto teardown = std::make_shared<bool>(false);
+  {
+    AutoCreateContext ctxt;
+    auto initiated = std::make_shared<bool>(false);
+    auto running = std::make_shared<bool>(false);
+    auto shutdown = std::make_shared<bool>(false);
+
+    ctxt->onInitiated += [initiated] { *initiated = true; };
+    ctxt->onRunning += [running] { *running = true; };
+    ctxt->onShutdown += [shutdown] { *shutdown = true; };
+    ctxt->onTeardown += [teardown] (const CoreContext&) { *teardown = true; };
+
+    ctxt->Initiate();
+    ASSERT_TRUE(*initiated) << "Initiation signal not asserted on context startup";
+    ASSERT_FALSE(*running) << "Running signal asserted before the outer context was started";
+    ASSERT_FALSE(*shutdown) << "Termination signal asserted prematurely";
+    *initiated = false;
+
+    outer->Initiate();
+    ASSERT_FALSE(*initiated) << "Initiation signal was redundantly asserted";
+    ASSERT_TRUE(*running) << "Running signal not asserted when the outer context was started";
+    ASSERT_FALSE(*shutdown) << "Termination signal asserted prematurely";
+
+    *running = false;
+
+    ctxt->Initiate();
+    ASSERT_FALSE(*initiated) << "Initiation signal redundantly asserted";
+    ASSERT_FALSE(*running) << "Running signal redundantly asserted";
+    ASSERT_FALSE(*shutdown) << "Termination signal asserted unexpectedly";
+
+    ctxt->SignalShutdown();
+    ASSERT_FALSE(*initiated) << "Initiation signal not asserted during teardown";
+    ASSERT_FALSE(*running) << "Running signal asserted improperly on teardown";
+    ASSERT_TRUE(*shutdown) << "Termination signal not asserted as expected";
+
+    ASSERT_FALSE(*teardown) << "Teardown handler notified prematurely";
+  }
+  ASSERT_TRUE(*teardown) << "Teardown handler not correctly notified on context teardown";
+}
