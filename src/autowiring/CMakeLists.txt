@@ -33,6 +33,7 @@ set(Autowiring_SRCS
   AutoConfigListing.h
   AutoConfigParser.cpp
   AutoConfigParser.hpp
+  AutoCurrentPacketPusher.h
   AutoFilterDescriptor.h
   AutoFilterDescriptor.cpp
   AutoFilterArgument.h

@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
+#include "AutoCurrentPacketPusher.h"
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketInternal.hpp"
@@ -7,11 +8,17 @@
 #include "AutoFilterDescriptor.h"
 #include "ContextEnumerator.h"
 #include "SatCounter.h"
+#include "thread_specific_ptr.h"
 #include <algorithm>
 #include <sstream>
 #include RVALUE_HEADER
 
 using namespace autowiring;
+
+/// <summary>
+/// A pointer to the current AutoPacket, specific to the current thread.
+/// </summary>
+static thread_specific_ptr<AutoPacket> autoCurrentPacket = nullptr;
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
@@ -226,8 +233,11 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   lk.unlock();
 
   // Generate all calls
-  for (SatCounter* call : callQueue)
-    call->GetCall()(call->GetAutoFilter(), *this);
+  {
+    AutoCurrentPacketPusher apkt(*this);
+    for (SatCounter* call : callQueue)
+      call->GetCall()(call->GetAutoFilter(), *this);
+  }
 
   // Mark all unsatisfiable output types
   for (auto unsatOutputArg : unsatOutputArgs) {
@@ -486,6 +496,21 @@ std::shared_ptr<AutoPacket> AutoPacket::SuccessorUnsafe(void) {
   }
 
   return m_successor;
+}
+
+void AutoPacket::SetCurrent(const std::shared_ptr<AutoPacket>& apkt) {
+  if (apkt)
+    autoCurrentPacket.reset(apkt.get());
+  else
+    autoCurrentPacket.release();
+}
+
+AutoPacket& AutoPacket::CurrentPacket(void) {
+  auto retVal = autoCurrentPacket.get();
+  if (!retVal)
+    throw autowiring_error("Attempted to obtain a current AutoPacket, which was not made");
+
+  return *retVal;
 }
 
 std::shared_ptr<CoreContext> AutoPacket::GetContext(void) const {
