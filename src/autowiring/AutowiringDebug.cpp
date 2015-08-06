@@ -38,6 +38,9 @@ bool autowiring::dbg::IsLambda(const std::type_info& ti) {
 #endif
 
 static std::string DemangleWithAutoID(auto_id id) {
+  if (!id.block->ti)
+    return "<unknown>";
+
   auto retVal = demangle(id.block->ti);
 
   // prefix is at the beginning of the string, skip over it
