@@ -98,10 +98,17 @@ public:
     return m_ptr.type();
   }
   
-  // Reset this pointer. Similar to shared_ptr::reset().
-  void reset() {
-    m_ptr.reset();
-  }
+  /// <summary>
+  /// Performs a full reset of this slot
+  /// </summary>
+  /// <remarks>
+  /// This operation prevents the slot from being satisfied, if it hasn't already been satisfied, and causes
+  /// the pointed-to object to be set to null.  Any attached dependant chains are also destroyed.
+  ///
+  /// This method may not be safely called from an unsynchronized context.  Callers must ensure that
+  /// this field is not in use during the call to reset or a data race will result.
+  /// </remarks>
+  void reset();
 
   /// <returns>
   /// The strategy that should be used to satisfy this slot
