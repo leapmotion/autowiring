@@ -18,7 +18,6 @@ using namespace autowiring;
 /// <summary>
 /// A pointer to the current AutoPacket, specific to the current thread.
 /// </summary>
-/// <remarks>
 static thread_specific_ptr<AutoPacket> autoCurrentPacket = nullptr;
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
