@@ -100,9 +100,15 @@ public:
   void AutoFilter(std::shared_ptr<const UnnamedExternalClass>) {}
 };
 
+class ProducesUnnamedExternalClassSharedPtr {
+public:
+  void AutoFilter(std::shared_ptr<UnnamedExternalClass>&) {}
+};
+
 TEST_F(AutoFilterConstructRulesTest, CanAcceptUndefinedSharedPointerInput) {
   AutoRequired<AcceptsUnnamedExternalClass> auec;
   AutoRequired<AcceptsUnnamedExternalClassSharedPtr> auecsp;
+  AutoRequired<ProducesUnnamedExternalClassSharedPtr> puecsp;
 }
 
 class GeneratesCustomAllocatedType {

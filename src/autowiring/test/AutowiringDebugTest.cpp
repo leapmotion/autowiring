@@ -124,3 +124,21 @@ TEST_F(AutowiringDebugTest, BasicAutoFilterGraph) {
   std::stringstream ss;
   autowiring::dbg::WriteAutoFilterGraph(ss);
 }
+
+struct IncompleteOutputType;
+
+class SyntheticFilterIDClass {
+public:
+  void AutoFilter(std::shared_ptr<IncompleteOutputType>&) {}
+};
+
+TEST_F(AutowiringDebugTest, FilterWithSyntheticID) {
+  AutoRequired<SyntheticFilterIDClass>();
+
+  std::ostringstream os;
+  autowiring::dbg::WriteAutoFilterGraph(os);
+  std::string str = os.str();
+
+  size_t off = str.find("IncompleteOutputType [i]", 0);
+  ASSERT_NE(std::string::npos, off) << "AutoFilterGraph dump failed to correctly handle an uninstantiated output type";
+}

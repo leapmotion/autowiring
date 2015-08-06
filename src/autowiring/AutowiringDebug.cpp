@@ -38,16 +38,23 @@ bool autowiring::dbg::IsLambda(const std::type_info& ti) {
 #endif
 
 static std::string DemangleWithAutoID(auto_id id) {
-  auto retVal = demangle(id.block->ti);
+  if (id.block->ti)
+    return demangle(id.block->ti);
+
+  // Full type information unavailable.  Provide incomplete information instead.
+  std::string retVal = demangle(id.block->ti_synth);
 
   // prefix is at the beginning of the string, skip over it
-  static const char prefix [] = "auto_id_t<";
+  static const char prefix[] = "autowiring::s<";
 
   if (retVal.compare(0, sizeof(prefix) - 1, prefix) == 0) {
     size_t off = sizeof(prefix) - 1;
     size_t end = retVal.find_last_not_of(' ', retVal.find_last_of('>') - 1);
     retVal = retVal.substr(off, end - off + 1);
   }
+
+  // Append an "[i]" to signify that this type is incomplete
+  retVal.append(" [i]");
   return retVal;
 }
 

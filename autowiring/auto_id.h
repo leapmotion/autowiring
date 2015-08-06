@@ -5,6 +5,8 @@
 #include TYPE_INDEX_HEADER
 
 namespace autowiring {
+  template<typename> struct s {};
+
   /// <summary>
   /// Returns an index for use with the auto_id system
   /// </summary>
@@ -27,8 +29,9 @@ namespace autowiring {
   struct auto_id_block {
     auto_id_block(void) = default;
 
-    auto_id_block(int index):
+    auto_id_block(int index, const std::type_info& ti_synth):
       index(index),
+      ti_synth(&ti_synth),
       pToObj(NullToObj),
       pFromObj(NullFromObj)
     {}
@@ -44,6 +47,7 @@ namespace autowiring {
     ):
       index(index),
       ti(&typeid(T)),
+      ti_synth(&typeid(s<T>)),
       ncb(sizeof(T)),
       align(safe_align_of<T>::value),
       pToObj(
@@ -57,6 +61,9 @@ namespace autowiring {
     // Index and underlying type
     int index;
     const std::type_info* ti;
+
+    // Synthetic ID.  This ID is always valid but it's created as a template substitution.
+    const std::type_info* ti_synth;
 
     // General properties of the underlying type
     size_t ncb;
@@ -184,7 +191,7 @@ class auto_id_t_init<T, false>
 {
   auto_id_t_init(void) {
     auto* ptr = &auto_id_t<T>::s_block;
-    new (ptr) autowiring::auto_id_block(ptr->index ? ptr->index : autowiring::CreateIndex());
+    new (ptr) autowiring::auto_id_block(ptr->index ? ptr->index : autowiring::CreateIndex(), typeid(autowiring::s<T>));
   }
 
 public:
