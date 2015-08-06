@@ -233,8 +233,15 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   lk.unlock();
 
   // Generate all calls
-  for (SatCounter* call : callQueue)
-    call->GetCall()(call->GetAutoFilter(), *this);
+  AutoPacket::SetCurrent(shared_from_this());
+  try {
+    for (SatCounter* call : callQueue)
+      call->GetCall()(call->GetAutoFilter(), *this);
+  } catch(...) {
+    AutoPacket::SetCurrent(NULL);
+    throw;
+  }
+  AutoPacket::SetCurrent(NULL);
 
   // Mark all unsatisfiable output types
   for (auto unsatOutputArg : unsatOutputArgs) {
