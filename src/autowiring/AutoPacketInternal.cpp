@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "AutoCurrentPacket.h"
+#include "AutoCurrentPacketPusher.h"
 #include "AutoPacketInternal.hpp"
 #include "AutoPacketFactory.h"
 #include "SatCounter.h"
@@ -45,7 +45,7 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
   // Call all subscribers with no required or optional arguments:
   // NOTE: This may result in decorations that cause other subscribers to be called.
   {
-    AutoCurrentPacket pkt(*this);
+    autowiring::AutoCurrentPacketPusher pkt(*this);
     for (SatCounter* call : callCounters)
       call->GetCall()(call->GetAutoFilter(), *this);
   }

@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "AutoCurrentPacket.h"
+#include "AutoCurrentPacketPusher.h"
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketInternal.hpp"
@@ -235,7 +235,7 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
 
   // Generate all calls
   {
-    AutoCurrentPacket apkt(*this);
+    AutoCurrentPacketPusher apkt(*this);
     for (SatCounter* call : callQueue)
       call->GetCall()(call->GetAutoFilter(), *this);
   }
