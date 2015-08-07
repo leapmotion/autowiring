@@ -81,7 +81,7 @@ CoreContext::~CoreContext(void) {
   );
 
   // Notify all ContextMember instances that their parent is going away
-  NotifyTeardownListeners();
+  onTeardown(*this);
 
   // Make sure events aren't happening anymore:
   UnregisterEventReceiversUnsafe();
@@ -435,6 +435,7 @@ void CoreContext::Initiate(void) {
   // Notify all child contexts that they can start if they want
   if (!IsRunning()) {
     lk.unlock();
+    onInitiated();
 
     // Need to inject a delayed context type so that this context will not be destroyed until
     // it has an opportunity to start.
@@ -464,6 +465,7 @@ void CoreContext::Initiate(void) {
   // call to Start that follows the unlock.
   threadPool = m_threadPool;
   lk.unlock();
+  onInitiated();
 
   // Start the thread pool out of the lock, and then update our start token if our thread pool
   // reference has not changed.  The next pool could potentially be nullptr if the parent is going
@@ -489,6 +491,9 @@ void CoreContext::Initiate(void) {
     for (auto q = beginning; q != m_threads.end(); ++q)
       (*q)->Start(outstanding);
   }
+
+  // We assert this condition only after all threads have been at least notified that they can start
+  onRunning();
 
   // Update state of children now that we are initated
   TryTransitionChildrenState();
@@ -532,6 +537,7 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
     
     m_stateBlock->m_stateChanged.notify_all();
   }
+  onShutdown();
 
   // Teardown interleave assurance--all of these contexts will generally be destroyed
   // at the exit of this block, due to the behavior of SignalTerminate, unless exterior
@@ -1208,7 +1214,10 @@ void CoreContext::TryTransitionChildrenState(void) {
             // Child had it's state changed
             child->m_stateBlock->m_stateChanged.notify_all();
             
+            // Raise the run condition in the child
             childLk.unlock();
+            child->onRunning();
+
             auto outstanding = child->m_stateBlock->IncrementOutstandingThreadCount(child);
             
             while (q != child->m_threads.end()) {

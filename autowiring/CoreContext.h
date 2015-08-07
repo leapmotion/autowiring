@@ -21,7 +21,6 @@
 #include "MemoEntry.h"
 #include "CoreObjectDescriptor.h"
 #include "result_or_default.h"
-#include "TeardownNotifier.h"
 #include "ThreadPool.h"
 #include "TypeRegistry.h"
 #include "TypeUnifier.h"
@@ -144,7 +143,6 @@ public:
 /// Events, threads, and filter graphs require that the context's Initiate() function is called.
 /// </remarks>
 class CoreContext:
-  public TeardownNotifier,
   public std::enable_shared_from_this<CoreContext>
 {
 protected:
@@ -152,6 +150,19 @@ protected:
   CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference);
 
 public:
+  // Asserted when the context is initiated
+  autowiring::signal<void()> onInitiated;
+
+  // Asserted when the context is actually running
+  autowiring::signal<void()> onRunning;
+
+  // Asserted when the context is being shut down
+  autowiring::signal<void()> onShutdown;
+
+  // Asserted when the context is tearing down but before members objects are destroyed or
+  // any contained AutoWired fields are unlinked
+  autowiring::signal<void(const CoreContext&)> onTeardown;
+
   virtual ~CoreContext(void);
 
   /// <summary>
@@ -486,18 +497,27 @@ protected:
   // Internal resolvers, used to determine which teardown style the user would like to use
   /// \internal
   template<class Fx>
-  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void)) { TeardownNotifier::AddTeardownListener(fx); }
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void)) {
+    onTeardown += [fx](const CoreContext&) { fx(); };
+  }
 
   /// \internal
   template<class Fx>
-  void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&)) { TeardownNotifier::AddTeardownListener([fx, this] () mutable { fx(*this); }); }
-  /// \internal
-  template<class Fx>
-  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void) const) { TeardownNotifier::AddTeardownListener(std::forward<Fx&&>(fx)); }
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&)) {
+    onTeardown += std::move(fx);
+  }
 
   /// \internal
   template<class Fx>
-  void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&) const) { TeardownNotifier::AddTeardownListener([fx, this] () mutable { fx(*this); }); }
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void) const) {
+    onTeardown += [fx](const CoreContext&) { fx(); };
+  }
+
+  /// \internal
+  template<class Fx>
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&) const) {
+    onTeardown += std::move(fx);
+  }
 
 public:
   // Accessor methods:
@@ -1267,9 +1287,7 @@ public:
   /// Adds a teardown notifier which receives a pointer to this context on destruction
   /// </summary>
   template<class Fx>
-  void AddTeardownListener(Fx&& fx) {
-    AddTeardownListener2<Fx>(std::forward<Fx&&>(fx), &Fx::operator());
-  }
+  void DEPRECATED(AddTeardownListener(Fx&& fx), "Superceded by onTeardown");
 
   /// <summary>
   /// Unregisters a slot as a recipient of potential autowiring
@@ -1281,6 +1299,12 @@ public:
   /// </summary>
   void Dump(std::ostream& os) const;
 };
+
+
+template<class Fx>
+void CoreContext::AddTeardownListener(Fx&& fx) {
+  AddTeardownListener2<Fx>(std::forward<Fx&&>(fx), &Fx::operator());
+}
 
 namespace autowiring {
   /// <summary>
