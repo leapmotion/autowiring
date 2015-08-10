@@ -363,3 +363,28 @@ TEST_F(AutoSignalTest, ComplexInheritanceSignal) {
     ASSERT_TRUE(handlerCount > 0) << "Signal handler was not invoked";
   }
 }
+
+TEST_F(AutoSignalTest, CanMoveSignal) {
+  autowiring::signal<void()> signal;
+  bool hit = false;
+
+  {
+    autowiring::signal<void()> innerSignal;
+    innerSignal += [&hit] { hit = true; };
+
+    autowiring::signal<void()> innerSignal2(std::move(innerSignal));
+    innerSignal();
+    ASSERT_FALSE(hit) << "A signal handler was hit on a signal that should have been moved";
+
+    innerSignal2();
+    ASSERT_TRUE(hit) << "Registered listeners were not correctly moved under move construction";
+    hit = false;
+
+    signal = std::move(innerSignal2);
+    innerSignal2();
+    ASSERT_FALSE(hit) << "A signal handler was hit on a signal that should have been moved";
+  }
+
+  signal();
+  ASSERT_TRUE(hit) << "Registered listeners were not correctly moved under move assignment";
+}
