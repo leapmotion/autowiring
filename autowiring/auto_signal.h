@@ -85,7 +85,22 @@ namespace autowiring {
   struct signal<void(Args...)>:
     signal_base
   {
+  public:
     typedef std::shared_ptr<detail::signal_node_t_base<Args...>> entry_t;
+
+    signal(void) = default;
+
+    signal(signal&& rhs) :
+      m_listeners(std::move(rhs.m_listeners))
+    {
+      rhs.m_listeners.clear();
+    }
+
+    signal& operator=(signal&& rhs) {
+      m_listeners = std::move(rhs.m_listeners);
+      rhs.m_listeners.clear();
+      return *this;
+    }
 
   private:
     // Listeners and the corresponding lock:
@@ -124,7 +139,6 @@ namespace autowiring {
     }
 
   public:
-
     /// <summary>
     /// Attaches the specified handler to this signal
     /// </summary>
