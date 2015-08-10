@@ -52,6 +52,7 @@ set(AutowiringTest_SRCS
   InterlockedRoutinesTest.cpp
   MultiInheritTest.cpp
   ObjectPoolTest.cpp
+  ObservableTest.cpp
   ParallelTest.cpp
   PostConstructTest.cpp
   SelfSelectingFixtureTest.cpp
