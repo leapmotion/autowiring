@@ -40,15 +40,14 @@ void SystemThreadPoolStl::AddWorkerThreadUnsafe(void) {
 }
 
 void SystemThreadPoolStl::OnStartUnsafe(void) {
-  auto concurrent = std::thread::hardware_concurrency();
   if (m_outstanding)
     // Do nothing if the pool size was already set by someone else
     return;
 
-  // TODO:  Set this number according to std::thread::hardware_concurrency.  This can't
+  // TODO:  Set this number according to std::thread::hardware_concurrency (or
+  // get_nprocs() on gcc, to retain libstdc++ backwards-compatibility).  This can't
   // be done right now due to the fact that DispatchQueue has terrible concurrency
   // performance.
-  (void)concurrent;
   while (m_outstanding < 2)
     AddWorkerThreadUnsafe();
 }
