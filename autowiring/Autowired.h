@@ -116,23 +116,7 @@ public:
   }
 
   ~Autowired(void) {
-    // And remove any events that were added to the object by this autowired field
-    auto localEvents = std::move(m_events);
-    for (auto& registration : localEvents) {
-      registration.reset();
-    }
-
-    if(m_pFirstChild == this)
-      // Tombstoned, nothing to do:
-      return;
-
-    // Need to ensure that nobody tries to fill us while we are tearing down:
-    this->CancelAutowiring();
-
-    // And now we destroy our deferrable autowiring collection:
-    std::unique_ptr<DeferrableAutowiring> prior;
-    for(DeferrableAutowiring* cur = m_pFirstChild; cur; cur = cur->GetFlink())
-      prior.reset(cur);
+    reset();
   }
 
 private:
@@ -185,6 +169,25 @@ public:
     return signal_relay<U, Args... >(*this, sig);
   }
 
+  // AutowirableSlot overrides:
+  void reset(void) override {
+    // And remove any events that were added to the object by this autowired field
+    auto localEvents = std::move(m_events);
+    for (auto& registration : localEvents)
+      registration.reset();
+
+    // Linked list unwind deletion:
+    for (
+      DeferrableAutowiring *prior, *cur = ReleaseDependentChain();
+      cur;
+      cur = cur->GetFlink(), delete prior
+    )
+      prior = cur;
+
+    // Base type completes the reset behavior
+    AutowirableSlot<T>::reset();
+  }
+
   /// <summary>
   /// Assigns a lambda function to be called when the dependency for this slot is autowired.
   /// </summary>
@@ -192,7 +195,15 @@ public:
   /// In contrast with CoreContext::NotifyWhenAutowired, the specified lambda is only
   /// called as long as this Autowired slot has not been destroyed.  If this slot is destroyed
   /// before the dependency is satisfied, i.e. because the owning context shuts down, the
-  /// lambda is never invoked.
+  /// lambda is cancelled.
+  ///
+  /// Note that, if T is injected at about the same time as this object is destroyed, then cancellation
+  /// of the autowired lambda could potentially race with satisfaction of that same lambda.  This type
+  /// of race is called a cancellation race, and can result in the lambda being invoked even though this
+  /// object has been destroyed.
+  ///
+  /// Users who use Autowired as a member of their class do not need to consider this case.  Autowired
+  /// fields declared as class members are always cancelled before the enclosing object is destroyed.
   ///
   /// \include snippets/Autowired_Notify.txt
   /// </remarks>

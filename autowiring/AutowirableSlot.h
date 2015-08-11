@@ -108,7 +108,7 @@ public:
   /// This method may not be safely called from an unsynchronized context.  Callers must ensure that
   /// this field is not in use during the call to reset or a data race will result.
   /// </remarks>
-  void reset();
+  virtual void reset(void);
 
   /// <returns>
   /// The strategy that should be used to satisfy this slot
@@ -119,15 +119,20 @@ public:
   virtual DeferrableUnsynchronizedStrategy* GetStrategy(void) { return nullptr; }
 
   /// <summary>
+  /// Releases autowiring objects that are associated with the current slot
   /// </summary>
+  /// <remarks>
+  /// These objects are generally all objects that have been registered on this slot to receive notifications of
+  /// some kind when the slot itself is satisfied.  When the context is tearing down, there is potentially an
+  /// ownership and responsibility race on this datatype--should the dependant chain be executed on the objects
+  /// that have been satisfied, or should it be destroyed?
+  /// </remarks>
   virtual DeferrableAutowiring* ReleaseDependentChain(void) { return nullptr; }
 
   /// <summary>
   /// Satisfies autowiring with a so-called "witness slot" which is guaranteed to be satisfied on the same type
   /// </summary>
-  void SatisfyAutowiring(const AnySharedPointer& ptr) {
-    m_ptr = ptr;
-  }
+  void SatisfyAutowiring(const AnySharedPointer& ptr);
 
   bool operator!=(const AnySharedPointer& rhs) const { return m_ptr != rhs; }
   bool operator==(const AnySharedPointer& rhs) const { return m_ptr == rhs; }
