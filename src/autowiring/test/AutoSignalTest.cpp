@@ -388,3 +388,45 @@ TEST_F(AutoSignalTest, CanMoveSignal) {
   signal();
   ASSERT_TRUE(hit) << "Registered listeners were not correctly moved under move assignment";
 }
+
+namespace {
+  class ObjectA;
+  class ObjectB;
+
+  class ObjectA {
+  public:
+    ObjectA(void);
+
+    autowiring::signal<void()> x;
+    Autowired<ObjectB> b;
+  };
+
+  class ObjectB {
+  public:
+    ObjectB(void);
+
+    autowiring::signal<void()> y;
+    Autowired<ObjectA> a;
+  };
+
+  ObjectA::ObjectA(void) {
+    b(&ObjectB::y) += [] {};
+  }
+
+  ObjectB::ObjectB(void) {
+    a(&ObjectA::x) += [] {};
+  }
+}
+
+TEST_F(AutoSignalTest, CyclicRegistrationUnlink) {
+  std::weak_ptr<CoreContext> ctxt;
+  {
+    AutoCreateContext ctxt;
+    ctxt->SetUnlinkOnTeardown(true);
+
+    AutoRequired<ObjectA> a(ctxt);
+    AutoRequired<ObjectB> b(ctxt);
+  }
+
+  ASSERT_TRUE(ctxt.expired()) << "A context pointer was linked in an intentional cyclic dependency network";
+}

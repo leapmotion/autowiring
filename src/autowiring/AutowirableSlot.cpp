@@ -37,3 +37,7 @@ void DeferrableAutowiring::CancelAutowiring(void) {
   // Tell our context we are going away:
   context->CancelAutowiringNotification(this);
 }
+
+void DeferrableAutowiring::SatisfyAutowiring(const AnySharedPointer& ptr) {
+  m_ptr = ptr;
+}
