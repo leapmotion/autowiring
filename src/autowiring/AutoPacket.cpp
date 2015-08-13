@@ -236,7 +236,7 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   {
     AutoCurrentPacketPusher apkt(*this);
     for (SatCounter* call : callQueue)
-      call->GetCall()(call->GetAutoFilter(), *this);
+      call->GetCall()(call->GetAutoFilter().ptr(), *this);
   }
 
   // Mark all unsatisfiable output types
@@ -296,7 +296,7 @@ void AutoPacket::PulseSatisfactionUnsafe(std::unique_lock<std::mutex> lk, Decora
     // Run through calls while unsynchronized:
     lk.unlock();
     for (SatCounter* call : callQueue) {
-      call->GetCall()(call->GetAutoFilter(), *this);
+      call->GetCall()(call->GetAutoFilter().ptr(), *this);
       call->remaining = 0;
     }
     lk.lock();
@@ -469,7 +469,7 @@ const SatCounter* AutoPacket::AddRecipient(const AutoFilterDescriptor& descripto
 
   if (!sat.remaining)
     // Filter is ready to be called, oblige it
-    sat.GetCall()(sat.GetAutoFilter(), *this);
+    sat.GetCall()(sat.GetAutoFilter().ptr(), *this);
 
   // Done
   return &sat;
@@ -530,8 +530,8 @@ bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterArgument* inp
         autowiring::altitude::Dispatch,
         inputs,
         false,
-        [] (const AnySharedPointer& obj, AutoPacket&) {
-          auto stub = obj.as<SignalStub>();
+        [] (const void* pObj, AutoPacket&) {
+          SignalStub* stub = (SignalStub*)pObj;
 
           // Completed, mark the output as satisfied and update the condition variable
           std::lock_guard<std::mutex>(stub->packet.m_lock);

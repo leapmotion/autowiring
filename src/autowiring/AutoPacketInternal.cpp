@@ -47,7 +47,7 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
   {
     autowiring::AutoCurrentPacketPusher pkt(*this);
     for (SatCounter* call : callCounters)
-      call->GetCall()(call->GetAutoFilter(), *this);
+      call->GetCall()(call->GetAutoFilter().ptr(), *this);
   }
 }
 

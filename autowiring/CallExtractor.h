@@ -13,7 +13,7 @@
 class Deferred;
 
 // The type of the call centralizer
-typedef void(*t_extractedCall)(const AnySharedPointer& obj, AutoPacket&);
+typedef void(*t_extractedCall)(const void* obj, AutoPacket&);
 
 template<class MemFn, class Index = typename make_index_tuple<Decompose<MemFn>::N>::type>
 struct CallExtractor;
@@ -62,9 +62,9 @@ struct CallExtractor<RetType (*)(Args...), index_tuple<N...>>:
   /// <summary>
   /// Binder struct, lets us refer to an instance of Call by type
   /// </summary>
-  static void Call(const AnySharedPointer& obj, AutoPacket& packet) {
-    const void* pfn = obj.ptr();
-    
+  /// <param name="obj">A shared pointer to the object to be called</param>
+  /// <param name="packet">The AutoPacket to be used to satisfy the input arguments for the extractor</param>
+  static void Call(const void* pfn, AutoPacket& packet) {
     // Setup, handoff, commit
     CallExtractorSetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
     ((t_pfn)pfn)(
@@ -89,14 +89,7 @@ struct CallExtractor<void (T::*)(Args...), index_tuple<N...>> :
   /// Binder struct, lets us refer to an instance of Call by type
   /// </summary>
   template<void(T::*memFn)(Args...)>
-  static void Call(const AnySharedPointer& obj, AutoPacket& packet) {
-    const void* pObj = obj.ptr();
-
-    // This exception type indicates that an attempt was made to construct an AutoFilterDescriptor with an
-    // AnySharedPointer which was not the type of its own member function.  Be sure to cast the AnySharedPointer
-    // to the correct foundation type before attempting to construct an AutoFilterDescriptor.
-    assert(auto_id_t<T>{} == obj.type());
-
+  static void Call(const void* pObj, AutoPacket& packet) {
     // Extract, call, commit
     CallExtractorSetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
     (((T*) pObj)->*memFn)(
@@ -118,9 +111,7 @@ struct CallExtractor<void (T::*)(Args...) const, index_tuple<N...>> :
   static const bool deferred = false;
   
   template<void(T::*memFn)(Args...) const>
-  static void Call(const AnySharedPointer& obj, AutoPacket& packet) {
-    const void* pObj = obj.ptr();
-
+  static void Call(const void* pObj, AutoPacket& packet) {
     // Extract, call, commit
     CallExtractorSetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
     (((const T*) pObj)->*memFn)(
@@ -142,9 +133,7 @@ struct CallExtractor<Deferred(T::*)(Args...), index_tuple<N...>> :
   static const bool deferred = true;
 
   template<Deferred(T::*memFn)(Args...)>
-  static void Call(const AnySharedPointer& obj, AutoPacket& autoPacket) {
-    const void* pObj = obj.ptr();
-
+  static void Call(const void* pObj, AutoPacket& autoPacket) {
     // Obtain a shared pointer of the AutoPacket in order to ensure the packet
     // is not destroyed when we pend this lambda to the destination object's
     // dispatch queue.
