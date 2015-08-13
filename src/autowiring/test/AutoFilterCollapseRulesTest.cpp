@@ -218,6 +218,22 @@ TEST_F(AutoFilterCollapseRulesTest, CoreContextArg) {
   ASSERT_TRUE(match2) << "Shared pointer input argument did not match expectation";
 }
 
+static_assert(
+  std::is_same<
+    auto_arg<Decoration<0>>::id_type,
+    auto_arg<std::shared_ptr<const Decoration<0>>>::id_type
+  >::value,
+  "ID type of a const shared_ptr did not match the fundamental type"
+);
+
+static_assert(
+  std::is_same<
+    auto_arg<Decoration<0>>::id_type,
+    auto_arg<const std::shared_ptr<Decoration<0> const>&>::id_type
+  >::value,
+  "ID type of a const shared_ptr const reference did not match the fundamental type"
+);
+
 TEST_F(AutoFilterCollapseRulesTest, MultiConstCollapse) {
   AutoRequired<AutoPacketFactory> factory;
 
