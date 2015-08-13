@@ -8,7 +8,6 @@
 #include "Decompose.h"
 #include "index_tuple.h"
 #include "noop.h"
-#include <cassert>
 
 class Deferred;
 
@@ -17,17 +16,12 @@ namespace autowiring {
 // The type of the call centralizer
 typedef void(*t_extractedCall)(const void* obj, AutoPacket&);
 
-template<class MemFn, class Index = typename make_index_tuple<Decompose<MemFn>::N>::type>
-struct CE;
-
 template<class... Args>
-struct CESetup
-{
-  template<class... Ts>
-  CESetup(AutoPacket& packet, Ts&&... args) :
+struct CESetup {
+  CESetup(AutoPacket& packet) :
     packet(packet),
     pshr(packet.GetContext()),
-    args(std::forward<Ts&&>(args)...)
+    args(auto_arg<Args>::arg(packet)...)
   {}
 
   AutoPacket& packet;
@@ -47,6 +41,21 @@ struct CESetup
   bool Commit(...) { return false; }
 };
 
+// Slightly more efficient no-argument specialization
+template<>
+struct CESetup<>
+{
+  CESetup(AutoPacket& packet);
+
+  CurrentContextPusher pshr;
+
+  template<int>
+  bool Commit(...) { return false; }
+};
+
+template<class MemFn, class Index = typename make_index_tuple<Decompose<MemFn>::N>::type>
+struct CE;
+
 /// <summary>
 /// Specialization for nonmember function calls
 /// </summary>
@@ -54,6 +63,7 @@ template<class RetType, class... Args, int... N>
 struct CE<RetType (*)(Args...), index_tuple<N...>>:
   Decompose<RetType(*)(Args...)>
 {
+  typedef CESetup<Args...> t_ceSetup;
   static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
   static const bool deferred = false;
   static const bool stateless = true;
@@ -68,7 +78,7 @@ struct CE<RetType (*)(Args...), index_tuple<N...>>:
   /// <param name="packet">The AutoPacket to be used to satisfy the input arguments for the extractor</param>
   static void Call(const void* pfn, AutoPacket& packet) {
     // Setup, handoff, commit
-    CESetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
+    t_ceSetup extractor(packet);
     ((t_pfn)pfn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
@@ -83,6 +93,7 @@ template<class T, class... Args, int... N>
 struct CE<void (T::*)(Args...), index_tuple<N...>> :
   Decompose<void (T::*)(Args...)>
 {
+  typedef CESetup<Args...> t_ceSetup;
   static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
   static const bool stateless = false;
   static const bool deferred = false;
@@ -93,7 +104,7 @@ struct CE<void (T::*)(Args...), index_tuple<N...>> :
   template<void(T::*memFn)(Args...)>
   static void Call(const void* pObj, AutoPacket& packet) {
     // Extract, call, commit
-    CESetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
+    t_ceSetup extractor(packet);
     (((T*) pObj)->*memFn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
@@ -108,6 +119,7 @@ template<class T, class... Args, int... N>
 struct CE<void (T::*)(Args...) const, index_tuple<N...>> :
   Decompose<void (T::*)(Args...)>
 {
+  typedef CESetup<Args...> t_ceSetup;
   static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
   static const bool stateless = true;
   static const bool deferred = false;
@@ -115,7 +127,7 @@ struct CE<void (T::*)(Args...) const, index_tuple<N...>> :
   template<void(T::*memFn)(Args...) const>
   static void Call(const void* pObj, AutoPacket& packet) {
     // Extract, call, commit
-    CESetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
+    t_ceSetup extractor(packet);
     (((const T*) pObj)->*memFn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
@@ -130,6 +142,7 @@ template<class T, class... Args, int... N>
 struct CE<Deferred(T::*)(Args...), index_tuple<N...>> :
   Decompose<void (T::*)(Args...)>
 {
+  typedef CESetup<Args...> t_ceSetup;
   static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
   static const bool stateless = false;
   static const bool deferred = true;
@@ -145,7 +158,7 @@ struct CE<Deferred(T::*)(Args...), index_tuple<N...>> :
     *(T*) pObj += [pObj, pAutoPacket] {
 
       // Extract, call, commit
-      CESetup<Args...> extractor(*pAutoPacket, (auto_arg<Args>::arg(*pAutoPacket))...);
+      t_ceSetup extractor(*pAutoPacket);
       (((T*) pObj)->*memFn)(
         static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
       );

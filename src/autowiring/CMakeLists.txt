@@ -74,6 +74,7 @@ set(Autowiring_SRCS
   BoltBase.cpp
   BoltBase.h
   CallExtractor.h
+  CallExtractor.cpp
   ConfigRegistry.cpp
   ConfigRegistry.h
   ContextEnumerator.cpp
