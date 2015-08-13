@@ -24,8 +24,7 @@ class thread_specific_ptr {
 public:
   typedef void (*t_cleanupFunction)(T *);
   
-  thread_specific_ptr():
-    m_cleanupFunction([](T* p){ delete p; })
+  thread_specific_ptr(void)
   {
     init();
   }
@@ -60,13 +59,12 @@ public:
   void reset(T* new_value=nullptr) {
     T* const current_value = get();
     
-    if (current_value != new_value) {
-      set(new_value);
-      
-      if (current_value != nullptr) {
-        m_cleanupFunction(current_value);
-      }
-    }
+    if (current_value == new_value)
+      return;
+
+    set(new_value);
+    if (current_value && m_cleanupFunction)
+      m_cleanupFunction(current_value);
   }
   
 private:
@@ -79,8 +77,8 @@ private:
   // Cleanup thread specific ptr when destoyed
   void freeTLS();
   
-  // Functions called the cleanup old value. Defaults to "delete m_ptr"
-  t_cleanupFunction m_cleanupFunction;
+  // Functions called the cleanup old value
+  t_cleanupFunction m_cleanupFunction = [](T* p) { delete p; };
   
   // Key to thread local storage
   TLS_KEY_TYPE m_key;

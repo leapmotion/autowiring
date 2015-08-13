@@ -2,18 +2,24 @@
 #pragma once
 #include "AutoPacket.h"
 
+namespace autowiring {
+
 /// <summary>
 /// RAII for AutoPacket::SetCurrent
 /// </summary>
-namespace autowiring {
-    class AutoCurrentPacketPusher
-    {
-    public:
-        AutoCurrentPacketPusher(AutoPacket& apkt) {
-            AutoPacket::SetCurrent(apkt.shared_from_this());
-        };
-        ~AutoCurrentPacketPusher(void) {
-            AutoPacket::SetCurrent(nullptr);
-        };
-    };
+class AutoCurrentPacketPusher
+{
+public:
+  AutoCurrentPacketPusher(AutoPacket& apkt):
+    prior(AutoPacket::SetCurrent(&apkt))
+  {}
+
+  ~AutoCurrentPacketPusher(void) {
+    AutoPacket::SetCurrent(prior);
+  };
+
+private:
+  AutoPacket* const prior;
+};
+
 }
