@@ -33,7 +33,7 @@ struct AutoFilterDescriptorStub {
   /// is required to carry information about the type of the proper member function to be called; t_extractedCall is
   /// required to be instantiated by the caller and point to the AutoFilter proxy routine.
   /// </summary>
-  AutoFilterDescriptorStub(auto_id type, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall);
+  AutoFilterDescriptorStub(auto_id type, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, autowiring::t_extractedCall pCall);
 
 protected:
   // Type of the subscriber itself
@@ -64,7 +64,7 @@ protected:
   // that will actually be passed is of a type corresponding to the member function bound
   // by this operation.  Strong guarantees must be made that the types passed into this routine
   // are identical to the types expected by the corresponding call.
-  t_extractedCall m_pCall = nullptr;
+  autowiring::t_extractedCall m_pCall = nullptr;
 
 public:
   // Accessor methods:
@@ -100,7 +100,7 @@ public:
   /// The packet must already be decorated with all required parameters for the
   /// subscribers, or an exception will be thrown.
   /// </remarks>
-  t_extractedCall GetCall(void) const { return m_pCall; }
+  autowiring::t_extractedCall GetCall(void) const { return m_pCall; }
 };
 
 /// <summary>
@@ -149,14 +149,14 @@ struct AutoFilterDescriptor:
       auto_id_t<T>{},
       autowiring::altitude_of<
         T,
-        CallExtractor<decltype(&T::AutoFilter)>::deferred ? autowiring::altitude::Dispatch : autowiring::altitude::Standard
+        autowiring::CE<decltype(&T::AutoFilter)>::deferred ? autowiring::altitude::Dispatch : autowiring::altitude::Standard
       >::value,
       Decompose<decltype(&T::AutoFilter)>::template Enumerate<AutoFilterArgument, AutoFilterArgumentT>::types,
-      CallExtractor<decltype(&T::AutoFilter)>::deferred,
-      &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
+      autowiring::CE<decltype(&T::AutoFilter)>::deferred,
+      &autowiring::CE<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
     )
   {
-    // T must be completely defined at this point because we are trying to pull out an AutoFilter from it
+    // T must be a complete type at this point because we are trying to pull out an AutoFilter from it
     (void) auto_id_t_init<T>::init;
   }
 
@@ -172,9 +172,9 @@ struct AutoFilterDescriptor:
       AnySharedPointer(std::make_shared<Fn>(std::forward<Fn>(fn))),
       auto_id_t<Fn>{},
       altitude,
-      CallExtractor<decltype(&Fn::operator())>::template Enumerate<AutoFilterArgument, AutoFilterArgumentT>::types,
+      autowiring::CE<decltype(&Fn::operator())>::template Enumerate<AutoFilterArgument, AutoFilterArgumentT>::types,
       false,
-      &CallExtractor<decltype(&Fn::operator())>::template Call<&Fn::operator()>
+      &autowiring::CE<decltype(&Fn::operator())>::template Call<&Fn::operator()>
     )
   {
     // Fn must be completely defined at this point because we are trying to pull out an AutoFilter from it
@@ -199,7 +199,7 @@ struct AutoFilterDescriptor:
   ///
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call
   /// </summary>
-  AutoFilterDescriptor(const AnySharedPointer& autoFilter, auto_id type, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall) :
+  AutoFilterDescriptor(const AnySharedPointer& autoFilter, auto_id type, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, autowiring::t_extractedCall pCall) :
     AutoFilterDescriptorStub(type, altitude, pArgs, deferred, pCall),
     m_autoFilter(autoFilter)
   {}
@@ -220,9 +220,9 @@ struct AutoFilterDescriptor:
       // The remainder is fairly straightforward
       auto_id_t<decltype(pfn)>{},
       altitude,
-      CallExtractor<decltype(pfn)>::template Enumerate<AutoFilterArgument, AutoFilterArgumentT>::types,
+      autowiring::CE<decltype(pfn)>::template Enumerate<AutoFilterArgument, AutoFilterArgumentT>::types,
       false,
-      CallExtractor<decltype(pfn)>::Call
+      autowiring::CE<decltype(pfn)>::Call
     )
   {
     (void) auto_id_t_init<decltype(pfn)>::init;

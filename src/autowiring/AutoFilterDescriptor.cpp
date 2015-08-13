@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "AutoFilterDescriptor.h"
 
-AutoFilterDescriptorStub::AutoFilterDescriptorStub(auto_id type, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall) :
+AutoFilterDescriptorStub::AutoFilterDescriptorStub(auto_id type, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, autowiring::t_extractedCall pCall) :
   m_type(type),
   m_altitude(altitude),
   m_pArgs(pArgs),
