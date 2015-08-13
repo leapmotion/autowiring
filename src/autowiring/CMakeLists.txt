@@ -154,6 +154,7 @@ set(Autowiring_SRCS
   SatCounter.cpp
   SlotInformation.cpp
   SlotInformation.h
+  sum.h
   SystemThreadPool.cpp
   SystemThreadPool.h
   SystemThreadPoolStl.cpp
