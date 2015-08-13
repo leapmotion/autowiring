@@ -50,6 +50,14 @@ public:
   // Accessor methods:
   size_t size(void) const {return m_contexts.size();}
 
+  /// <summary>
+  /// Removes all elements from the map
+  /// </summary>
+  void clear(void) {
+    std::lock_guard<std::mutex> lk(*m_tracker);
+    m_contexts.clear();
+  }
+
   class iterator {
   public:
     iterator(const ContextMap& parent) :
