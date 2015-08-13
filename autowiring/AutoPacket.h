@@ -5,9 +5,11 @@
 #include "auto_arg.h"
 #include "auto_id.h"
 #include "AutoFilterArgument.h"
+#include "Decompose.h"
 #include "DecorationDisposition.h"
 #include "demangle.h"
 #include "is_any.h"
+#include "index_tuple.h"
 #include "is_shared_ptr.h"
 #include "noop.h"
 #include "TeardownNotifier.h"
@@ -29,6 +31,9 @@ template<class MemFn>
 struct Decompose;
 
 namespace autowiring {
+  template<class MemFn, class Index>
+  struct CE;
+
   template<typename T>
   struct is_shared_ptr:
     std::false_type
@@ -700,6 +705,23 @@ public:
   /// It is an error to call this anywhere except from an AutoFilter routine
   /// </remarks>
   static AutoPacket& CurrentPacket(void);
+
+  /// <summary>
+  /// Invokes the specified function as though it were an AutoFilter on this packet
+  /// </summary>
+  template<typename Fx, typename... Outputs>
+  void Call(Fx&& fx, Outputs&... outputs) {
+    typedef typename make_index_tuple<Decompose<decltype(&Fx::operator())>::N>::type t_index;
+    typedef autowiring::CE<decltype(&Fx::operator()), t_index> t_call;
+    typedef typename t_call::t_ceSetup t_ceSetup;
+
+    t_ceSetup setup(*this);
+    t_call::template CallWithArgs<&Fx::operator()>(&fx, setup);
+
+    autowiring::noop(
+      (setup.template Extract<Outputs>(outputs), false)...
+    );
+  }
 
   /// <summary>
   /// Sets the current AutoPacket pointer

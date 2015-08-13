@@ -138,3 +138,35 @@ TEST_F(AutoPacketTest, ComplexNetwork) {
   ASSERT_EQ(pPacketB, packet.get()) << "Current packet in second second-level filter call was not equal as expected";
   ASSERT_EQ(pPacketAA, packet.get()) << "Current packet in third-level filter call was not equal as expected";
 }
+
+TEST_F(AutoPacketTest, CallTest) {
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet = factory->NewPacket();
+
+  packet->Decorate(Decoration<0>{101});
+  packet->Decorate(Decoration<1>{102});
+
+  bool called = false;
+  Decoration<0> rd0;
+  Decoration<1> rd1;
+  
+  Decoration<2> rd2;
+  std::shared_ptr<Decoration<2>> shared_rd2;
+
+  packet->Call(
+    [&](const Decoration<0>& d0, Decoration<1> d1, Decoration<2>& d2) {
+      called = true;
+      rd0 = d0;
+      rd1 = d1;
+      d2 = Decoration<2>{ 299 };
+    },
+    rd2,
+    shared_rd2
+  );
+
+  ASSERT_TRUE(called) << "Call-by lambda was not invoked as expected";
+  ASSERT_EQ(101, rd0.i) << "Decoration<0> was not properly copied into a call";
+  ASSERT_EQ(102, rd1.i) << "Decoration<1> was not properly copied into a call";
+  ASSERT_EQ(299, rd2.i) << "Decoration<2> was not extracted from the call filter properly";
+  ASSERT_EQ(299, shared_rd2->i) << "Shared pointer extraction did not recover a correct value";
+}

@@ -16,6 +16,19 @@ namespace autowiring {
 // The type of the call centralizer
 typedef void(*t_extractedCall)(const void* obj, AutoPacket&);
 
+struct tag_xoutput_t {};
+struct tag_xoutput_shared_t {};
+
+template<typename T>
+struct tag_xoutput_disc {
+  typedef tag_xoutput_t tag;
+};
+
+template<typename T>
+struct tag_xoutput_disc<std::shared_ptr<T>> {
+  typedef tag_xoutput_shared_t tag;
+};
+
 template<class... Args>
 struct CESetup {
   CESetup(AutoPacket& packet) :
@@ -39,6 +52,17 @@ struct CESetup {
 
   template<int N>
   bool Commit(...) { return false; }
+
+  template<typename Arg>
+  Arg& ExtractInternal(const tag_xoutput_t&) { return *autowiring::get<std::shared_ptr<Arg>>(args); }
+
+  template<typename Arg>
+  Arg& ExtractInternal(const tag_xoutput_shared_t&) { return autowiring::get<Arg>(args); }
+
+  template<typename Arg>
+  void Extract(Arg& arg) {
+    arg = ExtractInternal<Arg>(typename tag_xoutput_disc<Arg>::tag{});
+  }
 };
 
 // Slightly more efficient no-argument specialization
@@ -110,6 +134,14 @@ struct CE<void (T::*)(Args...), index_tuple<N...>> :
     );
     autowiring::noop(extractor.template Commit<N>(false)...);
   }
+
+  template<void(T::*memFn)(Args...)>
+  static void CallWithArgs(const void* pObj, t_ceSetup& pack) {
+    // Extract, call, commit
+    (((T*)pObj)->*memFn)(
+      static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(pack.args))...
+    );
+  }
 };
 
 /// <summary>
@@ -132,6 +164,14 @@ struct CE<void (T::*)(Args...) const, index_tuple<N...>> :
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
     autowiring::noop(extractor.template Commit<N>(false)...);
+  }
+
+  template<void(T::*memFn)(Args...) const>
+  static void CallWithArgs(const void* pObj, t_ceSetup& pack) {
+    // Extract, call, commit
+    (((const T*)pObj)->*memFn)(
+      static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(pack.args))...
+    );
   }
 };
 
