@@ -217,3 +217,34 @@ TEST_F(AutoFilterCollapseRulesTest, CoreContextArg) {
   ASSERT_TRUE(match1) << "Reference input argument did not match expected";
   ASSERT_TRUE(match2) << "Shared pointer input argument did not match expectation";
 }
+
+static_assert(
+  std::is_same<
+    auto_arg<Decoration<0>>::id_type,
+    auto_arg<std::shared_ptr<const Decoration<0>>>::id_type
+  >::value,
+  "ID type of a const shared_ptr did not match the fundamental type"
+);
+
+static_assert(
+  std::is_same<
+    auto_arg<Decoration<0>>::id_type,
+    auto_arg<const std::shared_ptr<Decoration<0> const>&>::id_type
+  >::value,
+  "ID type of a const shared_ptr const reference did not match the fundamental type"
+);
+
+TEST_F(AutoFilterCollapseRulesTest, MultiConstCollapse) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  auto called = std::make_shared<bool>(false);
+  *factory += [called] (const std::shared_ptr<Decoration<0> const>&) {
+    *called = true;
+  };
+
+  auto packet = factory->NewPacket();
+
+  ASSERT_FALSE(*called) << "Const shared pointer const reference variant invoked prematurely";
+  packet->Decorate(Decoration<0>{});
+  ASSERT_TRUE(*called) << "Const shared pointer const reference variant not invoked";
+}

@@ -103,6 +103,14 @@ public:
 };
 
 /// <summary>
+/// Specialization for "const std::shared_ptr<const T>&" ~ auto_in<T>
+/// </summary>
+template<class T>
+class auto_arg<const std::shared_ptr<const T>&>:
+  public auto_arg<std::shared_ptr<const T>>
+{};
+
+/// <summary>
 /// Specialization for "T*" ~ auto_in<T*>.  T must be const-qualified in order to be an input parameter.
 /// </summary>
 template<class T>
