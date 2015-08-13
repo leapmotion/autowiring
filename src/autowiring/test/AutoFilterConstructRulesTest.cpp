@@ -175,32 +175,3 @@ TEST_F(AutoFilterConstructRulesTest, NonCopyableDecorationOut) {
   ASSERT_NE(nullptr, val) << "Non-copyable decoration was claimed to be present on the packet but, when inspected, was absent";
   ASSERT_EQ(101, (**val).i) << "Decoration was not properly extracted";
 }
-
-TEST_F(AutoFilterConstructRulesTest, NonCopyableDecorationWithSharedPtr) {
-  AutoRequired<AutoPacketFactory> factory;
-
-  auto called = std::make_shared<bool>(false);
-  auto shared_ptr_called = std::make_shared<bool>(false);
-
-  *factory += [called](DecorationThatCannotBeCopied& out) {
-    out.i = 101;
-  };
-
-  *factory += [shared_ptr_called](const std::shared_ptr<DecorationThatCannotBeCopied const>& in) {
-    *shared_ptr_called = true;
-  };
-
-  *factory += [called](const DecorationThatCannotBeCopied& in) {
-    *called = true;
-  };
-
-  auto packet = factory->NewPacket();
-  ASSERT_TRUE(packet->Has<DecorationThatCannotBeCopied>()) << "Non-copyable decoration was not present on the packet";
-
-  auto val = packet->GetShared<DecorationThatCannotBeCopied>();
-  ASSERT_NE(nullptr, val) << "Non-copyable decoration was claimed to be present on the packet but, when inspected, was absent";
-  ASSERT_EQ(101, (**val).i) << "Decoration was not properly extracted";
-
-  ASSERT_TRUE(*called) << "Filter accepting a non-copyable decoration was not called as expected";
-  ASSERT_TRUE(*shared_ptr_called) << "Filter accepting a shared-pointer of a non-copyable decoration was not called as expected";
-}

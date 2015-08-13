@@ -217,3 +217,17 @@ TEST_F(AutoFilterCollapseRulesTest, CoreContextArg) {
   ASSERT_TRUE(match1) << "Reference input argument did not match expected";
   ASSERT_TRUE(match2) << "Shared pointer input argument did not match expectation";
 }
+
+TEST_F(AutoFilterCollapseRulesTest, MultiConstCollapse) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  auto shared_ptr_called = std::make_shared<bool>(false);
+  *factory += [shared_ptr_called](const std::shared_ptr<Decoration<0> const>& in) {
+    *shared_ptr_called = true;
+  };
+
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>{101});
+
+  ASSERT_TRUE(*shared_ptr_called) << "Const shared pointer const reference variant not invoked";
+}
