@@ -132,3 +132,46 @@ TEST_F(AutoFilterConstructRulesTest, CorrectlyCallsCustomAllocator) {
       hcnf->data[i]
     ) << "Custom new allocator did not fill space, mismatch at offset " << i;
 }
+
+class DecorationThatCannotBeCopied {
+public:
+  DecorationThatCannotBeCopied(const DecorationThatCannotBeCopied&) = delete;
+  void operator=(const DecorationThatCannotBeCopied&) = delete;
+
+  DecorationThatCannotBeCopied(int i = 0) :
+    i(i)
+  {}
+
+  int i;
+};
+
+TEST_F(AutoFilterConstructRulesTest, NonCopyableDecorationIn) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  auto called = std::make_shared<bool>(false);
+  *factory += [called](const DecorationThatCannotBeCopied& in) {
+    *called = true;
+  };
+
+  auto packet = factory->NewPacket();
+  packet->Decorate(std::make_shared<DecorationThatCannotBeCopied>(1));
+  ASSERT_TRUE(*called) << "Filter accepting a non-copyable decoration was not called as expected";
+}
+
+TEST_F(AutoFilterConstructRulesTest, NonCopyableDecorationOut) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  auto called = std::make_shared<bool>(false);
+  *factory += [called](DecorationThatCannotBeCopied& out) {
+    *called = true;
+    out.i = 101;
+  };
+
+  auto packet = factory->NewPacket();
+  ASSERT_TRUE(*called) << "Filter accepting a non-copyable decoration was not called as expected";
+  ASSERT_TRUE(packet->Has<DecorationThatCannotBeCopied>()) << "Non-copyable decoration was not present on the packet";
+
+  auto val = packet->GetShared<DecorationThatCannotBeCopied>();
+  ASSERT_NE(nullptr, val) << "Non-copyable decoration was claimed to be present on the packet but, when inspected, was absent";
+  ASSERT_EQ(101, (**val).i) << "Decoration was not properly extracted";
+}
