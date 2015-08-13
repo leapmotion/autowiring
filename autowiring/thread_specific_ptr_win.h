@@ -16,6 +16,7 @@ void thread_specific_ptr<T>::set(T* value) {
 template<typename T>
 void thread_specific_ptr<T>::init() {
   m_key = TlsAlloc();
+  set(nullptr);
 }
 
 template<typename T>
