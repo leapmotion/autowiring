@@ -12,17 +12,19 @@
 
 class Deferred;
 
+namespace autowiring {
+
 // The type of the call centralizer
 typedef void(*t_extractedCall)(const void* obj, AutoPacket&);
 
 template<class MemFn, class Index = typename make_index_tuple<Decompose<MemFn>::N>::type>
-struct CallExtractor;
+struct CE;
 
 template<class... Args>
-struct CallExtractorSetup
+struct CESetup
 {
   template<class... Ts>
-  CallExtractorSetup(AutoPacket& packet, Ts&&... args) :
+  CESetup(AutoPacket& packet, Ts&&... args) :
     packet(packet),
     pshr(packet.GetContext()),
     args(std::forward<Ts&&>(args)...)
@@ -49,7 +51,7 @@ struct CallExtractorSetup
 /// Specialization for nonmember function calls
 /// </summary>
 template<class RetType, class... Args, int... N>
-struct CallExtractor<RetType (*)(Args...), index_tuple<N...>>:
+struct CE<RetType (*)(Args...), index_tuple<N...>>:
   Decompose<RetType(*)(Args...)>
 {
   static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
@@ -66,7 +68,7 @@ struct CallExtractor<RetType (*)(Args...), index_tuple<N...>>:
   /// <param name="packet">The AutoPacket to be used to satisfy the input arguments for the extractor</param>
   static void Call(const void* pfn, AutoPacket& packet) {
     // Setup, handoff, commit
-    CallExtractorSetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
+    CESetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
     ((t_pfn)pfn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
@@ -78,7 +80,7 @@ struct CallExtractor<RetType (*)(Args...), index_tuple<N...>>:
 /// Specialization for member function AutoFilter functions
 /// </summary>
 template<class T, class... Args, int... N>
-struct CallExtractor<void (T::*)(Args...), index_tuple<N...>> :
+struct CE<void (T::*)(Args...), index_tuple<N...>> :
   Decompose<void (T::*)(Args...)>
 {
   static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
@@ -91,7 +93,7 @@ struct CallExtractor<void (T::*)(Args...), index_tuple<N...>> :
   template<void(T::*memFn)(Args...)>
   static void Call(const void* pObj, AutoPacket& packet) {
     // Extract, call, commit
-    CallExtractorSetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
+    CESetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
     (((T*) pObj)->*memFn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
@@ -103,7 +105,7 @@ struct CallExtractor<void (T::*)(Args...), index_tuple<N...>> :
 /// Specialization for stateless member function AutoFilter routines
 /// </summary>
 template<class T, class... Args, int... N>
-struct CallExtractor<void (T::*)(Args...) const, index_tuple<N...>> :
+struct CE<void (T::*)(Args...) const, index_tuple<N...>> :
   Decompose<void (T::*)(Args...)>
 {
   static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
@@ -113,7 +115,7 @@ struct CallExtractor<void (T::*)(Args...) const, index_tuple<N...>> :
   template<void(T::*memFn)(Args...) const>
   static void Call(const void* pObj, AutoPacket& packet) {
     // Extract, call, commit
-    CallExtractorSetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
+    CESetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
     (((const T*) pObj)->*memFn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
@@ -125,7 +127,7 @@ struct CallExtractor<void (T::*)(Args...) const, index_tuple<N...>> :
 /// Specialization for deferred member function AutoFilter routines
 /// </summary>
 template<class T, class... Args, int... N>
-struct CallExtractor<Deferred(T::*)(Args...), index_tuple<N...>> :
+struct CE<Deferred(T::*)(Args...), index_tuple<N...>> :
   Decompose<void (T::*)(Args...)>
 {
   static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
@@ -143,7 +145,7 @@ struct CallExtractor<Deferred(T::*)(Args...), index_tuple<N...>> :
     *(T*) pObj += [pObj, pAutoPacket] {
 
       // Extract, call, commit
-      CallExtractorSetup<Args...> extractor(*pAutoPacket, (auto_arg<Args>::arg(*pAutoPacket))...);
+      CESetup<Args...> extractor(*pAutoPacket, (auto_arg<Args>::arg(*pAutoPacket))...);
       (((T*) pObj)->*memFn)(
         static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
       );
@@ -151,3 +153,5 @@ struct CallExtractor<Deferred(T::*)(Args...), index_tuple<N...>> :
     };
   }
 };
+
+}
