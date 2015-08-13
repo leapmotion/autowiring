@@ -701,7 +701,18 @@ public:
   /// </remarks>
   static AutoPacket& CurrentPacket(void);
 
-  static void SetCurrent(const std::shared_ptr<AutoPacket>& apkt);
+  /// <summary>
+  /// Sets the current AutoPacket pointer
+  /// </summary>
+  static AutoPacket* SetCurrent(AutoPacket* apkt);
+
+  /// <summary>
+  /// Clears the current AutoPacket pointer
+  /// </summary>
+  /// <remarks>
+  /// Identical to SetCurrent(nullptr)
+  /// </remarks>
+  static AutoPacket* ClearCurrent(void) { return SetCurrent(nullptr); }
 
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;

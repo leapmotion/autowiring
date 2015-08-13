@@ -18,7 +18,7 @@ using namespace autowiring;
 /// <summary>
 /// A pointer to the current AutoPacket, specific to the current thread.
 /// </summary>
-static thread_specific_ptr<AutoPacket> autoCurrentPacket = nullptr;
+static thread_specific_ptr<AutoPacket> autoCurrentPacket{ nullptr };
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
@@ -498,11 +498,13 @@ std::shared_ptr<AutoPacket> AutoPacket::SuccessorUnsafe(void) {
   return m_successor;
 }
 
-void AutoPacket::SetCurrent(const std::shared_ptr<AutoPacket>& apkt) {
-  if (apkt)
-    autoCurrentPacket.reset(apkt.get());
+AutoPacket* AutoPacket::SetCurrent(AutoPacket* apkt) {
+  AutoPacket* prior = autoCurrentPacket.get();
+  if(apkt)
+    autoCurrentPacket.reset(apkt);
   else
     autoCurrentPacket.release();
+  return prior;
 }
 
 AutoPacket& AutoPacket::CurrentPacket(void) {

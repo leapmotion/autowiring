@@ -111,3 +111,30 @@ TEST_F(AutoPacketTest, CurrentPacketUnderDecoration) {
   ASSERT_THROW(AutoPacket::CurrentPacket(), autowiring_error) << "An attempt to retrieve the current packet outside of an AutoFilter unexpectedly succeeded";
 }
 
+TEST_F(AutoPacketTest, ComplexNetwork) {
+  AutoRequired<AutoPacketFactory> factory;
+  *factory += [](Decoration<0>&) {};
+
+
+  AutoPacket* pPacketA = nullptr;
+  *factory += [&pPacketA](const Decoration<0>&, Decoration<1>&) {
+    pPacketA = &AutoPacket::CurrentPacket();
+  };
+
+  AutoPacket* pPacketB = nullptr;
+  *factory += [&pPacketB](const Decoration<0>&, Decoration<2>&) {
+    pPacketB = &AutoPacket::CurrentPacket();
+  };
+
+  AutoPacket* pPacketAA = nullptr;
+  *factory += [&pPacketAA](const Decoration<1>&) {
+    pPacketAA = &AutoPacket::CurrentPacket();
+  };
+
+  std::shared_ptr<AutoPacket> packet;
+  ASSERT_NO_THROW(packet = factory->NewPacket()) << "Packet construction threw an exception unexpectedly";
+
+  ASSERT_EQ(pPacketA, packet.get()) << "Current packet in first second-level filter call was not equal as expected";
+  ASSERT_EQ(pPacketB, packet.get()) << "Current packet in second second-level filter call was not equal as expected";
+  ASSERT_EQ(pPacketAA, packet.get()) << "Current packet in third-level filter call was not equal as expected";
+}
