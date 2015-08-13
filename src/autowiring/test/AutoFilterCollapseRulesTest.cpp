@@ -221,13 +221,14 @@ TEST_F(AutoFilterCollapseRulesTest, CoreContextArg) {
 TEST_F(AutoFilterCollapseRulesTest, MultiConstCollapse) {
   AutoRequired<AutoPacketFactory> factory;
 
-  auto shared_ptr_called = std::make_shared<bool>(false);
-  *factory += [shared_ptr_called](const std::shared_ptr<Decoration<0> const>& in) {
-    *shared_ptr_called = true;
+  auto called = std::make_shared<bool>(false);
+  *factory += [called] (const std::shared_ptr<Decoration<0> const>&) {
+    *called = true;
   };
 
   auto packet = factory->NewPacket();
-  packet->Decorate(Decoration<0>{101});
 
-  ASSERT_TRUE(*shared_ptr_called) << "Const shared pointer const reference variant not invoked";
+  ASSERT_FALSE(*called) << "Const shared pointer const reference variant invoked prematurely";
+  packet->Decorate(Decoration<0>{});
+  ASSERT_TRUE(*called) << "Const shared pointer const reference variant not invoked";
 }
