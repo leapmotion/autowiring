@@ -273,3 +273,18 @@ TEST_F(ContextMapTest, VerifyRangeBasedEnumeration) {
 
   ASSERT_EQ(3UL, ct) << "Context map range-based enumeration did not correctly enumerate all members";
 }
+
+TEST_F(ContextMapTest, Clear) {
+  std::shared_ptr<CoreContext> ctxt1 = AutoCreateContext();
+  std::shared_ptr<CoreContext> ctxt2 = AutoCreateContext();
+  std::shared_ptr<CoreContext> ctxt3 = AutoCreateContext();
+
+  ContextMap<string> mp;
+  mp.Add("a", ctxt1);
+  mp.Add("b", ctxt2);
+  mp.Add("c", ctxt3);
+
+  ASSERT_EQ(3UL, mp.size()) << "Map did not have the correct number of entries after setup";
+  mp.clear();
+  ASSERT_EQ(0UL, mp.size()) << "Map clear operation did not clear the map itself as expected";
+}
