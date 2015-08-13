@@ -20,3 +20,10 @@ TEST_F(TupleTest, TieTest) {
   autowiring::tuple<std::unique_ptr<int>&> tup(val);
   ASSERT_EQ(22, *autowiring::get<0>(tup)) << "Tied tuple did not retrieve the expected value";
 }
+
+TEST_F(TupleTest, AddressTest) {
+  autowiring::tuple<std::unique_ptr<int>> tup;
+  std::unique_ptr<int>& v = autowiring::get<0>(tup);
+
+  ASSERT_EQ(&tup.value, &v) << "Get operation did not provide a correct reference to the underlying tuple value";
+}
