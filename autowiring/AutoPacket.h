@@ -158,11 +158,6 @@ protected:
   void Decorate(const AnySharedPointer& ptr, DecorationKey key);
 
   /// <summary>
-  /// Invoked from a checkout when a checkout has completed
-  /// </summary>
-  void UnsafeComplete(const DecorationKey& data);
-
-  /// <summary>
   /// The portion of Successor that must run under a lock
   /// </summary>
   std::shared_ptr<AutoPacket> SuccessorUnsafe(void);
