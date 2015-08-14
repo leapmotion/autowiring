@@ -79,12 +79,11 @@ CoreContext::~CoreContext(void) {
     !autoCurrentContext.get()->use_count() ||
     autoCurrentContext.get()->get() != this
   );
+  // Make sure events aren't happening anymore:
+  UnregisterEventReceiversUnsafe();
 
   // Notify all ContextMember instances that their parent is going away
   onTeardown(*this);
-
-  // Make sure events aren't happening anymore:
-  UnregisterEventReceiversUnsafe();
 
   // Tell all context members that we're tearing down:
   for(ContextMember* q : m_contextMembers)
