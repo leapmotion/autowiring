@@ -18,6 +18,7 @@ typedef void(*t_extractedCall)(const void* obj, AutoPacket&);
 
 struct tag_xoutput_t {};
 struct tag_xoutput_shared_t {};
+struct tag_no_construct_t {};
 
 template<typename T>
 struct tag_xoutput_disc {
@@ -29,12 +30,69 @@ struct tag_xoutput_disc<std::shared_ptr<T>> {
   typedef tag_xoutput_shared_t tag;
 };
 
+template<typename T, typename Pack, typename = void>
+struct extraction_filter :
+  public auto_arg<T>
+{
+  extraction_filter(Pack&) {}
+};
+
+template<typename T, class... Allocated>
+struct extraction_filter<
+  T,
+  autowiring::tuple<Allocated...>,
+  typename std::enable_if<!autowiring::find<T, Allocated...>::value>::type
+> :
+  public auto_arg<T>
+{
+  extraction_filter(autowiring::tuple<Allocated...>&) {}
+};
+
+template<typename T, class... Allocated>
+struct extraction_filter<
+  T,
+  autowiring::tuple<Allocated...>,
+  typename std::enable_if<
+    autowiring::find<T, Allocated...>::value &&
+    auto_arg<T>::is_output
+  >::type
+> {
+  extraction_filter(autowiring::tuple<Allocated...>& allocated) :
+    allocated(allocated)
+  {}
+
+  autowiring::tuple<Allocated...>& allocated;
+
+  template<typename... Outputs>
+  std::shared_ptr<typename std::decay<T>::type> arg(AutoPacket& packet) {
+    typedef typename std::decay<T>::type TActual;
+    auto& value = autowiring::get<T>(allocated);
+
+    // Do-nothing shared pointer for this value, because it's externally allocated
+    return std::shared_ptr<TActual>{
+      &value,
+      [] (TActual*) {}
+    };
+  }
+};
+
+/// <summary>
+/// An argument pack that holds all of the inputs and outputs to an AutoFilter during its invocation
+/// </summary>
+/// <param name="shared_outputs">Holds true if output types should be declared as shared pointers, false otherwise</param>
 template<class... Args>
 struct CESetup {
   CESetup(AutoPacket& packet) :
     packet(packet),
     pshr(packet.GetContext()),
     args(auto_arg<Args>::arg(packet)...)
+  {}
+
+  template<typename... Allocated>
+  CESetup(AutoPacket& packet, autowiring::tuple<Allocated...>& allocated) :
+    packet(packet),
+    pshr(packet.GetContext()),
+    args(extraction_filter<Args, autowiring::tuple<Allocated...>>(allocated).arg(packet)...)
   {}
 
   AutoPacket& packet;

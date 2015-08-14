@@ -151,7 +151,6 @@ TEST_F(AutoPacketTest, CallTest) {
   Decoration<1> rd1;
   
   Decoration<2> rd2;
-  std::shared_ptr<Decoration<2>> shared_rd2;
 
   packet->Call(
     [&](const Decoration<0>& d0, Decoration<1> d1, Decoration<2>& d2) {
@@ -160,15 +159,13 @@ TEST_F(AutoPacketTest, CallTest) {
       rd1 = d1;
       d2 = Decoration<2>{ 299 };
     },
-    rd2,
-    shared_rd2
+    rd2
   );
 
   ASSERT_TRUE(called) << "Call-by lambda was not invoked as expected";
   ASSERT_EQ(101, rd0.i) << "Decoration<0> was not properly copied into a call";
   ASSERT_EQ(102, rd1.i) << "Decoration<1> was not properly copied into a call";
   ASSERT_EQ(299, rd2.i) << "Decoration<2> was not extracted from the call filter properly";
-  ASSERT_EQ(299, shared_rd2->i) << "Shared pointer extraction did not recover a correct value";
 }
 
 static void SimpleCall(const Decoration<0>& d0, Decoration<1>& d1, Decoration<2>& d2) {
@@ -187,4 +184,53 @@ TEST_F(AutoPacketTest, ObjectCallTest) {
 
   ASSERT_EQ(299, d1.i) << "Moore value not assigned correctly";
   ASSERT_EQ(1001, d2.i) << "Mealy value not assigned correctly";
+}
+
+namespace {
+  class CountsCopies {
+  public:
+    CountsCopies(void) {
+      s_nConstructions++;
+    }
+
+    CountsCopies(CountsCopies& rhs) :
+      nCopies(rhs.nCopies + 1),
+      value(rhs.value)
+    {}
+
+    void operator=(const CountsCopies& rhs) {
+      nCopies = rhs.nCopies + 1;
+      value = rhs.value;
+    }
+
+    static size_t s_nConstructions;
+
+    int nCopies = 0;
+    int value = 2;
+  };
+
+  size_t CountsCopies::s_nConstructions = 0;
+}
+
+TEST_F(AutoPacketTest, NoUnneededOutputCopy) {
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet = factory->NewPacket();
+
+  packet->Decorate(Decoration<0>{101});
+
+  CountsCopies rcc;
+  CountsCopies* pRcc = nullptr;
+
+  packet->Call(
+    [&](const Decoration<0>& d0, CountsCopies& cc) {
+      cc.value = 109;
+      pRcc = &cc;
+    },
+    rcc
+  );
+
+  ASSERT_EQ(1UL, CountsCopies::s_nConstructions) << "An unexpected number of default constructed entities was created";
+  ASSERT_EQ(&rcc, pRcc) << "Destination value was not found at the correct address";
+  ASSERT_EQ(109, rcc.value) << "Copy-counting output value was not copied correctly";
+  ASSERT_EQ(0UL, rcc.nCopies) << "An unnecessary number of copies was made during an extracting call";
 }

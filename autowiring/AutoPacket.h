@@ -716,7 +716,15 @@ public:
     typedef autowiring::CE<decltype(pfn), t_index> t_call;
     typedef typename t_call::t_ceSetup t_ceSetup;
 
-    t_ceSetup setup(*this);
+    // Completely unnecessary.  Call will avoid making unneeded copies, and this is guaranteed
+    // by a unit test.  Dereference your shared pointers before passing them in.
+    static_assert(
+      !is_any<is_shared_ptr<Outputs>::value...>::value,
+      "Do not use shared pointer arguments as output arguments with Call"
+    );
+
+    auto outputTuple = autowiring::tie(outputs...);
+    t_ceSetup setup(*this, outputTuple);
     t_call::CallWithArgs((void*)pfn, setup);
 
     autowiring::noop(
@@ -732,13 +740,17 @@ public:
     typedef typename make_index_tuple<Decompose<decltype(&Fx::operator())>::N>::type t_index;
     typedef autowiring::CE<decltype(&Fx::operator()), t_index> t_call;
     typedef typename t_call::t_ceSetup t_ceSetup;
-
-    t_ceSetup setup(*this);
-    t_call::template CallWithArgs<&Fx::operator()>(&fx, setup);
-
-    autowiring::noop(
-      (setup.template Extract<Outputs>(outputs), false)...
+    
+    // Completely unnecessary.  Call will avoid making unneeded copies, and this is guaranteed
+    // by a unit test.  Dereference your shared pointers before passing them in.
+    static_assert(
+      !is_any<is_shared_ptr<Outputs>::value...>::value,
+      "Do not use shared pointer arguments as output arguments with Call"
     );
+
+    auto outputTuple = autowiring::tie(outputs...);
+    t_ceSetup setup(*this, outputTuple);
+    t_call::template CallWithArgs<&Fx::operator()>(&fx, setup);
   }
 
   /// <summary>
