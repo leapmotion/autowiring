@@ -4,6 +4,7 @@
 #include "at_exit.h"
 #include "auto_arg.h"
 #include "auto_id.h"
+#include "auto_tuple.h"
 #include "AutoFilterArgument.h"
 #include "Decompose.h"
 #include "DecorationDisposition.h"
@@ -705,6 +706,23 @@ public:
   /// It is an error to call this anywhere except from an AutoFilter routine
   /// </remarks>
   static AutoPacket& CurrentPacket(void);
+
+  /// <summary>
+  /// Invokes the specified function as though it were an AutoFilter on this packet
+  /// </summary>
+  template<typename... InArgs, typename... Outputs>
+  void Call(void(*pfn)(InArgs...), Outputs&... outputs) {
+    typedef typename make_index_tuple<sizeof...(InArgs)>::type t_index;
+    typedef autowiring::CE<decltype(pfn), t_index> t_call;
+    typedef typename t_call::t_ceSetup t_ceSetup;
+
+    t_ceSetup setup(*this);
+    t_call::CallWithArgs((void*)pfn, setup);
+
+    autowiring::noop(
+      (setup.template Extract<Outputs>(outputs), false)...
+    );
+  }
 
   /// <summary>
   /// Invokes the specified function as though it were an AutoFilter on this packet

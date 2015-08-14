@@ -170,3 +170,21 @@ TEST_F(AutoPacketTest, CallTest) {
   ASSERT_EQ(299, rd2.i) << "Decoration<2> was not extracted from the call filter properly";
   ASSERT_EQ(299, shared_rd2->i) << "Shared pointer extraction did not recover a correct value";
 }
+
+static void SimpleCall(const Decoration<0>& d0, Decoration<1>& d1, Decoration<2>& d2) {
+  d1.i = 299;
+  d2.i = d0.i;
+}
+
+TEST_F(AutoPacketTest, ObjectCallTest) {
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>{1001});
+
+  Decoration<1> d1;
+  Decoration<2> d2;
+  packet->Call(SimpleCall, d1, d2);
+
+  ASSERT_EQ(299, d1.i) << "Moore value not assigned correctly";
+  ASSERT_EQ(1001, d2.i) << "Mealy value not assigned correctly";
+}

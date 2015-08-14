@@ -108,6 +108,13 @@ struct CE<RetType (*)(Args...), index_tuple<N...>>:
     );
     autowiring::noop(extractor.template Commit<N>(false)...);
   }
+  
+  static void CallWithArgs(void* pfn, t_ceSetup& pack) {
+    // Extract, call, commit
+    ((t_pfn)pfn)(
+      static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(pack.args))...
+    );
+  }
 };
 
 /// <summary>
