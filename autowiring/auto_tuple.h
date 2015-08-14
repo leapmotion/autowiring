@@ -15,7 +15,10 @@ namespace autowiring {
   /// Finds the specified type T in the argument pack
   /// </remarks>
   template<typename T, typename... Args>
-  struct find;
+  struct find {
+    static const bool value = false;
+    static const size_t index = 0;
+  };
   
   template<typename T, typename Arg, typename... Args>
   struct find<T, Arg, Args...> {
@@ -28,12 +31,6 @@ namespace autowiring {
     // matches are found, holds the sum of all of those values.
     static const size_t index =
       (value ? 1 + find<T, Args...>::index : 0);
-  };
-
-  template<typename T>
-  struct find<T> {
-    static const bool value = false;
-    static const size_t index = 0;
   };
 
   template<int N, class... Args>
@@ -107,6 +104,7 @@ namespace autowiring {
     typedef tuple_value<sizeof...(Args), Arg> t_value;
 
     tuple(void) = default;
+    tuple(const tuple&) = default;
 
     tuple(Arg&& arg, Args&&... args) :
       tuple<Args...>(std::forward<Args>(args)...),
@@ -127,5 +125,10 @@ namespace autowiring {
   template<class... Args>
   tuple<Args&...> tie(Args&... args) {
     return tuple<Args&...>(args...);
+  }
+
+  template<class... Args>
+  tuple<Args...> make_tuple(Args&&... args) {
+    return tuple<Args...>(std::forward<Args&&>(args)...);
   }
 }

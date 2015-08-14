@@ -16,6 +16,10 @@ namespace autowiring {
 // The type of the call centralizer
 typedef void(*t_extractedCall)(const void* obj, AutoPacket&);
 
+/// <summary>
+/// An argument pack that holds all of the inputs and outputs to an AutoFilter during its invocation
+/// </summary>
+/// <param name="shared_outputs">Holds true if output types should be declared as shared pointers, false otherwise</param>
 template<class... Args>
 struct CESetup {
   CESetup(AutoPacket& packet) :
