@@ -1,5 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "is_any.h"
+#include "index_tuple.h"
+#include "sum.h"
 
 namespace autowiring {
   /// <summary>
@@ -7,6 +10,31 @@ namespace autowiring {
   /// </summary>
   template<class... Args>
   struct tuple {};
+
+  /// <summary>
+  /// Finds the specified type T in the argument pack
+  /// </remarks>
+  template<typename T, typename... Args>
+  struct find;
+  
+  template<typename T, typename Arg, typename... Args>
+  struct find<T, Arg, Args...> {
+    // Holds true if T is found, false otherwise
+    static const bool value =
+      std::is_same<T, Arg>::value ||
+      find<T, Args...>::value;
+
+    // Holds one more than the index of the found item.  In the case that multiple
+    // matches are found, holds the sum of all of those values.
+    static const size_t index =
+      (value ? 1 + find<T, Args...>::index : 0);
+  };
+
+  template<typename T>
+  struct find<T> {
+    static const bool value = false;
+    static const size_t index = 0;
+  };
 
   template<int N, class... Args>
   struct nth_type;
@@ -54,6 +82,21 @@ namespace autowiring {
           typename nth_type<N, Args...>::type
         >&
       >(val).value;
+  }
+
+  template<class Arg, class... Args>
+  Arg& get(tuple<Args...>& val) {
+    static_assert(
+      is_any<std::is_same<Arg, Args>::value...>::value,
+      "Requested type is not one of any of the types held in the specified tuple"
+    );
+
+    static const size_t index = find<Arg, Args...>::index;
+    static_assert(
+      index <= sizeof...(Args),
+      "Requested type appears multiple times in the specified tuple"
+    );
+    return get<index - 1>(val);
   }
 
   template<class Arg, class... Args>
