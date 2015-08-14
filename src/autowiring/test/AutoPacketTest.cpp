@@ -168,21 +168,30 @@ TEST_F(AutoPacketTest, CallTest) {
   ASSERT_EQ(299, rd2.i) << "Decoration<2> was not extracted from the call filter properly";
 }
 
-static void SimpleCall(const Decoration<0>& d0, Decoration<1>& d1, Decoration<2>& d2) {
-  d1.i = 299;
+static void SimpleCall(std::shared_ptr<const Decoration<4>> d4, const Decoration<0>& d0, Decoration<1>& d1, Decoration<2>& d2, Decoration<3>& unused) {
+  d1.i = d4->i;
   d2.i = d0.i;
+  unused.i = 9999;
 }
+
+static_assert(auto_arg<Decoration<2>&>::is_output, "Output type not correctly detected");
+
+static_assert(
+  autowiring::choice<Decoration<2>&, autowiring::tuple<const Decoration<0>&, Decoration<1>&, Decoration<2>&>>::is_matched,
+  "Failed to match an obvious choice output"
+);
 
 TEST_F(AutoPacketTest, ObjectCallTest) {
   AutoRequired<AutoPacketFactory> factory;
   auto packet = factory->NewPacket();
   packet->Decorate(Decoration<0>{1001});
+  packet->Decorate(Decoration<4>{9001});
 
   Decoration<1> d1;
   Decoration<2> d2;
   packet->Call(SimpleCall, d1, d2);
 
-  ASSERT_EQ(299, d1.i) << "Moore value not assigned correctly";
+  ASSERT_EQ(9001, d1.i) << "Moore value not assigned correctly";
   ASSERT_EQ(1001, d2.i) << "Mealy value not assigned correctly";
 }
 

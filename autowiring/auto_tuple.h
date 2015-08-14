@@ -126,4 +126,9 @@ namespace autowiring {
   tuple<Args&...> tie(Args&... args) {
     return tuple<Args&...>(args...);
   }
+
+  template<class... Args>
+  tuple<Args...> make_tuple(Args&&... args) {
+    return tuple<Args...>(std::forward<Args&&>(args)...);
+  }
 }

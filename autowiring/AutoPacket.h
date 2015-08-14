@@ -59,6 +59,9 @@ namespace autowiring {
   struct is_shared_ptr<T&> :
     is_shared_ptr<T>
   {};
+
+  template<typename Arg, typename Pack, typename = void>
+  struct choice;
 }
 
 /// <summary>
@@ -707,6 +710,11 @@ public:
   /// </remarks>
   static AutoPacket& CurrentPacket(void);
 
+  template<typename Fn, typename Args, int... N>
+  static void CallWithChoiceTuple(Fn& fn, Args&& args, index_tuple<N...>) {
+    fn(autowiring::get<N>(args).value...);
+  }
+
   /// <summary>
   /// Invokes the specified function as though it were an AutoFilter on this packet
   /// </summary>
@@ -724,19 +732,22 @@ public:
     );
 
     auto outputTuple = autowiring::tie(outputs...);
-    t_ceSetup setup(*this, outputTuple);
-    t_call::CallWithArgs((void*)pfn, setup);
-
-    autowiring::noop(
-      (setup.template Extract<Outputs>(outputs), false)...
+    CallWithChoiceTuple(
+      pfn,
+      autowiring::make_tuple(
+        autowiring::choice<InArgs, decltype(outputTuple)>{
+          *this, outputTuple
+        }...
+      ),
+      t_index{}
     );
   }
 
   /// <summary>
-  /// Invokes the specified function as though it were an AutoFilter on this packet
+  /// Invokes a particular member function on the specified function object
   /// </summary>
-  template<typename Fx, typename... Outputs>
-  void Call(Fx&& fx, Outputs&... outputs) {
+  template<typename Fx, typename... InArgs, typename... Outputs>
+  void Call(Fx&& fx, void (Fx::*memfn)(InArgs...) const, Outputs&... outputs) {
     typedef typename make_index_tuple<Decompose<decltype(&Fx::operator())>::N>::type t_index;
     typedef autowiring::CE<decltype(&Fx::operator()), t_index> t_call;
     typedef typename t_call::t_ceSetup t_ceSetup;
@@ -749,8 +760,23 @@ public:
     );
 
     auto outputTuple = autowiring::tie(outputs...);
-    t_ceSetup setup(*this, outputTuple);
-    t_call::template CallWithArgs<&Fx::operator()>(&fx, setup);
+    CallWithChoiceTuple(
+      fx,
+      autowiring::make_tuple(
+        autowiring::choice<InArgs, decltype(outputTuple)>{
+          *this, outputTuple
+        }...
+      ),
+      t_index{}
+    );
+  }
+
+  /// <summary>
+  /// Invokes the specified function as though it were an AutoFilter on this packet
+  /// </summary>
+  template<typename Fx, typename... Outputs>
+  void Call(Fx&& fx, Outputs&... outputs) {
+    Call(std::forward<Fx&&>(fx), &Fx::operator(), outputs...);
   }
 
   /// <summary>
@@ -769,6 +795,52 @@ public:
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;
 };
+
+namespace autowiring {
+  template<typename Arg, typename Pack, typename>
+  struct choice {
+    choice(AutoPacket&, Pack&) {}
+    typename std::decay<Arg>::type value;
+  };
+
+  template<typename Arg, typename... Outputs>
+  struct choice<
+    Arg,
+    autowiring::tuple<Outputs...>,
+    typename std::enable_if<
+      auto_arg<Arg>::is_output &&
+      find<
+        typename std::decay<Arg>::type,
+        typename std::decay<Outputs>::type...
+      >::value
+    >::type
+  >
+  {
+    static const bool is_matched = true;
+    choice(AutoPacket&, autowiring::tuple<Outputs...>& outputs):
+      value(get<Arg>(outputs))
+    {}
+
+    Arg& value;
+  };
+
+  template<typename Arg, typename Pack>
+  struct choice<
+    Arg,
+    Pack,
+    typename std::enable_if<
+      !auto_arg<Arg>::is_output
+    >::type
+  >
+  {
+    static const bool is_matched = true;
+    choice(AutoPacket& packet, Pack&) :
+      value(packet.Get<typename std::decay<Arg>::type>())
+    {}
+
+    const Arg& value;
+  };
+}
 
 /// <summary>
 /// AutoPacket specialization

@@ -16,66 +16,6 @@ namespace autowiring {
 // The type of the call centralizer
 typedef void(*t_extractedCall)(const void* obj, AutoPacket&);
 
-struct tag_xoutput_t {};
-struct tag_xoutput_shared_t {};
-struct tag_no_construct_t {};
-
-template<typename T>
-struct tag_xoutput_disc {
-  typedef tag_xoutput_t tag;
-};
-
-template<typename T>
-struct tag_xoutput_disc<std::shared_ptr<T>> {
-  typedef tag_xoutput_shared_t tag;
-};
-
-template<typename T, typename Pack, typename = void>
-struct extraction_filter :
-  public auto_arg<T>
-{
-  extraction_filter(Pack&) {}
-};
-
-template<typename T, class... Allocated>
-struct extraction_filter<
-  T,
-  autowiring::tuple<Allocated...>,
-  typename std::enable_if<!autowiring::find<T, Allocated...>::value>::type
-> :
-  public auto_arg<T>
-{
-  extraction_filter(autowiring::tuple<Allocated...>&) {}
-};
-
-template<typename T, class... Allocated>
-struct extraction_filter<
-  T,
-  autowiring::tuple<Allocated...>,
-  typename std::enable_if<
-    autowiring::find<T, Allocated...>::value &&
-    auto_arg<T>::is_output
-  >::type
-> {
-  extraction_filter(autowiring::tuple<Allocated...>& allocated) :
-    allocated(allocated)
-  {}
-
-  autowiring::tuple<Allocated...>& allocated;
-
-  template<typename... Outputs>
-  std::shared_ptr<typename std::decay<T>::type> arg(AutoPacket& packet) {
-    typedef typename std::decay<T>::type TActual;
-    auto& value = autowiring::get<T>(allocated);
-
-    // Do-nothing shared pointer for this value, because it's externally allocated
-    return std::shared_ptr<TActual>{
-      &value,
-      [] (TActual*) {}
-    };
-  }
-};
-
 /// <summary>
 /// An argument pack that holds all of the inputs and outputs to an AutoFilter during its invocation
 /// </summary>
@@ -86,13 +26,6 @@ struct CESetup {
     packet(packet),
     pshr(packet.GetContext()),
     args(auto_arg<Args>::arg(packet)...)
-  {}
-
-  template<typename... Allocated>
-  CESetup(AutoPacket& packet, autowiring::tuple<Allocated...>& allocated) :
-    packet(packet),
-    pshr(packet.GetContext()),
-    args(extraction_filter<Args, autowiring::tuple<Allocated...>>(allocated).arg(packet)...)
   {}
 
   AutoPacket& packet;
@@ -110,17 +43,6 @@ struct CESetup {
 
   template<int N>
   bool Commit(...) { return false; }
-
-  template<typename Arg>
-  Arg& ExtractInternal(const tag_xoutput_t&) { return *autowiring::get<std::shared_ptr<Arg>>(args); }
-
-  template<typename Arg>
-  Arg& ExtractInternal(const tag_xoutput_shared_t&) { return autowiring::get<Arg>(args); }
-
-  template<typename Arg>
-  void Extract(Arg& arg) {
-    arg = ExtractInternal<Arg>(typename tag_xoutput_disc<Arg>::tag{});
-  }
 };
 
 // Slightly more efficient no-argument specialization
@@ -166,13 +88,6 @@ struct CE<RetType (*)(Args...), index_tuple<N...>>:
     );
     autowiring::noop(extractor.template Commit<N>(false)...);
   }
-  
-  static void CallWithArgs(void* pfn, t_ceSetup& pack) {
-    // Extract, call, commit
-    ((t_pfn)pfn)(
-      static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(pack.args))...
-    );
-  }
 };
 
 /// <summary>
@@ -199,14 +114,6 @@ struct CE<void (T::*)(Args...), index_tuple<N...>> :
     );
     autowiring::noop(extractor.template Commit<N>(false)...);
   }
-
-  template<void(T::*memFn)(Args...)>
-  static void CallWithArgs(const void* pObj, t_ceSetup& pack) {
-    // Extract, call, commit
-    (((T*)pObj)->*memFn)(
-      static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(pack.args))...
-    );
-  }
 };
 
 /// <summary>
@@ -229,14 +136,6 @@ struct CE<void (T::*)(Args...) const, index_tuple<N...>> :
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
     autowiring::noop(extractor.template Commit<N>(false)...);
-  }
-
-  template<void(T::*memFn)(Args...) const>
-  static void CallWithArgs(const void* pObj, t_ceSetup& pack) {
-    // Extract, call, commit
-    (((const T*)pObj)->*memFn)(
-      static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(pack.args))...
-    );
   }
 };
 
