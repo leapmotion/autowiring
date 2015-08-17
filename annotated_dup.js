@@ -1,4 +1,4 @@
-var annotated =
+var annotated_dup =
 [
     [ "autowiring", "namespaceautowiring.html", "namespaceautowiring" ],
     [ "detail", null, [
@@ -8,9 +8,11 @@ var annotated =
     [ "auto_arg", "classauto__arg.html", null ],
     [ "auto_arg< auto_in< T > >", "classauto__arg_3_01auto__in_3_01_t_01_4_01_4.html", null ],
     [ "auto_arg< AutoPacket & >", "classauto__arg_3_01_auto_packet_01_6_01_4.html", null ],
+    [ "auto_arg< const std::shared_ptr< const T > & >", "classauto__arg_3_01const_01std_1_1shared__ptr_3_01const_01_t_01_4_01_6_01_4.html", null ],
     [ "auto_arg< const T & >", "classauto__arg_3_01const_01_t_01_6_01_4.html", null ],
     [ "auto_arg< const T >", "classauto__arg_3_01const_01_t_01_4.html", null ],
     [ "auto_arg< CoreContext & >", "classauto__arg_3_01_core_context_01_6_01_4.html", null ],
+    [ "auto_arg< std::shared_ptr< AutoPacket > >", "classauto__arg_3_01std_1_1shared__ptr_3_01_auto_packet_01_4_01_4.html", null ],
     [ "auto_arg< std::shared_ptr< const T > * >", "classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_5_01_4.html", null ],
     [ "auto_arg< std::shared_ptr< const T > >", "classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_4.html", null ],
     [ "auto_arg< std::shared_ptr< CoreContext > >", "classauto__arg_3_01std_1_1shared__ptr_3_01_core_context_01_4_01_4.html", null ],

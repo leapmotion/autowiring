@@ -6,7 +6,7 @@ var searchData=
   ['belownormal',['BelowNormal',['../_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0eab59972ff632793f205ffc303eba53481',1,'BasicThread.h']]],
   ['bolt',['Bolt',['../class_bolt.html',1,'']]],
   ['bolt_2eh',['Bolt.h',['../_bolt_8h.html',1,'']]],
-  ['bolt_3c_20sigils_2e_2e_2e_3e',['Bolt&lt; Sigils...&gt;',['../class_bolt.html',1,'']]],
+  ['bolt_3c_20sigils_2e_2e_2e_20_3e',['Bolt&lt; Sigils... &gt;',['../class_bolt.html',1,'']]],
   ['boltable',['Boltable',['../struct_boltable.html',1,'']]],
   ['boltbase',['BoltBase',['../class_bolt_base.html',1,'']]],
   ['boltbase_2eh',['BoltBase.h',['../_bolt_base_8h.html',1,'']]],

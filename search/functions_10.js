@@ -1,11 +1,12 @@
 var searchData=
 [
   ['send',['Send',['../class_auto_net_transport.html#a71fdfa8441d2e4611df85ff139a5fa71',1,'AutoNetTransport']]],
-  ['setcurrent',['SetCurrent',['../class_core_context.html#a4b2aca013ec6ca56def339ccc2a950e7',1,'CoreContext::SetCurrent(const std::shared_ptr&lt; CoreContext &gt; &amp;ctxt)'],['../class_core_context.html#ad306c1c3703311ba1fe7fdb4add279f9',1,'CoreContext::SetCurrent(void)']]],
+  ['setcurrent',['SetCurrent',['../class_auto_packet.html#a269b84b07693afab6a7ba2621c389f4c',1,'AutoPacket::SetCurrent()'],['../class_core_context.html#a4b2aca013ec6ca56def339ccc2a950e7',1,'CoreContext::SetCurrent(const std::shared_ptr&lt; CoreContext &gt; &amp;ctxt)'],['../class_core_context.html#ad306c1c3703311ba1fe7fdb4add279f9',1,'CoreContext::SetCurrent(void)']]],
   ['setcurrentthreadname',['SetCurrentThreadName',['../class_basic_thread.html#aa6d8803cdc6ab28b1d79740b115487c5',1,'BasicThread']]],
   ['setdispatchercap',['SetDispatcherCap',['../class_dispatch_queue.html#a6e455ffdaece9c129717211f13752fa3',1,'DispatchQueue']]],
   ['setthreadpool',['SetThreadPool',['../class_core_context.html#a2eff2c50f12c4de4e9e82a49a4bb2bc7',1,'CoreContext']]],
   ['settransporthandler',['SetTransportHandler',['../class_auto_net_transport.html#a98115d15fde7d0e1083b1943afe7b03d',1,'AutoNetTransport']]],
+  ['setunlinkonteardown',['SetUnlinkOnTeardown',['../class_core_context.html#a15918e5e6962e2865b6da51e557f35c8',1,'CoreContext']]],
   ['shouldstop',['ShouldStop',['../class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994',1,'CoreRunnable']]],
   ['signalshutdown',['SignalShutdown',['../class_core_context.html#a8e0ff07669244590fcdcec9aeb588aa5',1,'CoreContext']]],
   ['signalterminate',['SignalTerminate',['../class_core_context.html#a107256cd9f29a43301afca98cd7309a5',1,'CoreContext']]],

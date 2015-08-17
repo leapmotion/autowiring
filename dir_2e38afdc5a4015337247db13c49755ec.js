@@ -4,6 +4,7 @@ var dir_2e38afdc5a4015337247db13c49755ec =
     [ "auto_arg.h", "auto__arg_8h.html", [
       [ "arg_is_out", "structarg__is__out.html", null ],
       [ "auto_arg", "classauto__arg.html", null ],
+      [ "auto_arg< const std::shared_ptr< const T > & >", "classauto__arg_3_01const_01std_1_1shared__ptr_3_01const_01_t_01_4_01_6_01_4.html", null ],
       [ "auto_arg< const T & >", "classauto__arg_3_01const_01_t_01_6_01_4.html", null ],
       [ "auto_arg< const T >", "classauto__arg_3_01const_01_t_01_4.html", null ],
       [ "auto_arg< CoreContext & >", "classauto__arg_3_01_core_context_01_6_01_4.html", null ],
@@ -36,6 +37,7 @@ var dir_2e38afdc5a4015337247db13c49755ec =
     [ "AutoPacket.h", "_auto_packet_8h.html", [
       [ "auto_arg", "classauto__arg.html", null ],
       [ "auto_arg< AutoPacket & >", "classauto__arg_3_01_auto_packet_01_6_01_4.html", null ],
+      [ "auto_arg< std::shared_ptr< AutoPacket > >", "classauto__arg_3_01std_1_1shared__ptr_3_01_auto_packet_01_4_01_4.html", null ],
       [ "AutoPacket", "class_auto_packet.html", "class_auto_packet" ]
     ] ],
     [ "AutoPacketFactory.h", "_auto_packet_factory_8h.html", [

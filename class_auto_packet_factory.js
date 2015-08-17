@@ -13,7 +13,7 @@ var class_auto_packet_factory =
     [ "GetOutstandingPacketCount", "class_auto_packet_factory.html#acdc9c322e9fe5257202c0d00b68a5059", null ],
     [ "GetPacketLifetimeStandardDeviation", "class_auto_packet_factory.html#a8743ffc532d0fe739782a2f843a86467", null ],
     [ "GetTotalPacketCount", "class_auto_packet_factory.html#a002ce21f9b397665baa809d20fcdb6eb", null ],
-    [ "GetTypeDescriptorUnsafe", "class_auto_packet_factory.html#a7a6329926ddb0ce8c19775435eacf756", null ],
+    [ "GetTypeDescriptorUnsafe", "class_auto_packet_factory.html#ad263f6aa47089ee6c2b5ecc75527a645", null ],
     [ "NewPacket", "class_auto_packet_factory.html#adddbad76bc70d641a05fcccc4643be20", null ],
     [ "OnStart", "class_auto_packet_factory.html#aa60dd197a5520d5b06b1a1c9bfa8dda9", null ],
     [ "OnStop", "class_auto_packet_factory.html#ac8615d15ffbe346e4f2f6976e8f4dcdc", null ],
