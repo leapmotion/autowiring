@@ -19,6 +19,9 @@ void DefaultInitialize(T&){}
 template<typename T>
 void DefaultFinalize(T&){}
 
+template<typename T>
+void DefaultPlacement(T* ptr) { new(ptr) T; }
+
 namespace autowiring {
   struct placement_t {};
   static const placement_t placement{};
@@ -79,7 +82,7 @@ public:
   /// </param>
   ObjectPool(
     const autowiring::placement_t&,
-    const std::function<void(T*)>& placement,
+    const std::function<void(T*)>& placement = &DefaultPlacement<T>,
     const std::function<void(T&)>& initial = &DefaultInitialize<T>,
     const std::function<void(T&)>& final = &DefaultFinalize<T>
   ) :
