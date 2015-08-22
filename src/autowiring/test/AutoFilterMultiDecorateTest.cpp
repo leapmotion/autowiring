@@ -50,6 +50,32 @@ TEST_F(AutoFilterMultiDecorateTest, MultiDecorateTest) {
   ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
 }
 
+TEST_F(AutoFilterMultiDecorateTest, MultiWithSingleDecorateTest) {
+  int called = 0;
+  float f_called = 0.0f;
+
+  *factory += [&called](int& out) { out = called++; };
+  *factory += [&called](int& out) { out = called++; };
+  *factory += [&f_called](float& out) { out = ++f_called; };
+  *factory += [&called](const int* vals [], const float& val) {
+    ASSERT_NE(nullptr, vals);
+    called++;
+
+    // Guarantee that values were added in the expected order
+    int i;
+    for (i = 0; vals[i]; i++)
+      ASSERT_EQ(i, *(vals[i])) << "Incorrect values were added to the packet";
+
+    // Verify we got the number of values out that we wanted to get out
+    ASSERT_EQ(2, i) << "The wrong number of values were added to the packet";
+    ASSERT_EQ(1.0f, val) << "The wrong number of val were added to the packet";
+  };
+  ASSERT_EQ(0, called) << "Lambda functions were called before expected";
+
+  auto packet = factory->NewPacket();
+  ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
+}
+
 TEST_F(AutoFilterMultiDecorateTest, MultiPostHocIntroductionTest) {
   int called = 0;
 
