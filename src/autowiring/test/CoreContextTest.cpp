@@ -8,6 +8,12 @@
 #include THREAD_HEADER
 #include FUTURE_HEADER
 
+// A lot of clients invoke arbitrary CoreContext members during teardown of this type.  If any of those members are
+// potentially abstract, the result could be a disastrous pure virtual function call.  Broadly speaking, while there
+// are not guarantees that calls to the base versions of CoreContext virtual functions will perform the desired
+// operation, there should never be a circumstance where such calls trigger a crash.
+static_assert(!std::is_abstract<CoreContext>::value, "CoreContext cannot be abstract");
+
 class CoreContextTest:
   public testing::Test
 {};
