@@ -147,7 +147,7 @@ class CoreContext:
 {
 protected:
   typedef std::list<std::weak_ptr<CoreContext>> t_childList;
-  CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference);
+  CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference, const std::type_info& sigilType);
 
 public:
   // Asserted when the context is initiated
@@ -177,6 +177,9 @@ protected:
 
   // Back-referencing iterator which refers to ourselves in our parent's child list:
   const t_childList::iterator m_backReference;
+
+  // Sigil type, used during bolting
+  const std::type_info& m_sigilType;
 
   // State block for this context:
   std::shared_ptr<CoreContextStateBlock> m_stateBlock;
@@ -528,7 +531,7 @@ public:
   /// The number of child contexts of this context.
   size_t GetChildCount(void) const;
   /// The type used as a sigil when creating this class, if any.
-  virtual const std::type_info& GetSigilType(void) const = 0;
+  const std::type_info& GetSigilType(void) const { return m_sigilType; }
   /// The Context iterator for the parent context's children, pointing to this context.
   t_childList::iterator GetBackReference(void) const { return m_backReference; }
   /// A shared reference to the parent context of this context.
@@ -545,7 +548,7 @@ public:
 
   /// True if the sigil type of this CoreContext matches the specified sigil type.
   template<class Sigil>
-  bool Is(void) const { return GetSigilType() == typeid(Sigil); }
+  bool Is(void) const { return m_sigilType == typeid(Sigil); }
 
   /// <summary>
   /// The first child in the set of this context's children.
@@ -1327,17 +1330,10 @@ class CoreContextT:
   public CoreContext
 {
 public:
-  static const std::type_info& sc_type;
-
   CoreContextT(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference) :
-    CoreContext(pParent, backReference)
+    CoreContext(pParent, backReference, typeid(T))
   {}
-
-  const std::type_info& GetSigilType(void) const override { return sc_type; }
 };
-
-template<class T>
-const std::type_info& CoreContextT<T>::sc_type = typeid(T);
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 

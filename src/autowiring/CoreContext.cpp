@@ -52,9 +52,10 @@ public:
 static thread_specific_ptr<std::shared_ptr<CoreContext>> autoCurrentContext;
 
 // Peer Context Constructor. Called interally by CreatePeer
-CoreContext::CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference) :
+CoreContext::CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference, const std::type_info& sigilType) :
   m_pParent(pParent),
   m_backReference(backReference),
+  m_sigilType(sigilType),
   m_stateBlock(std::make_shared<CoreContextStateBlock>(pParent ? pParent->m_stateBlock : nullptr)),
   m_junctionBoxManager(new JunctionBoxManager),
   m_threadPool(std::make_shared<NullPool>())
