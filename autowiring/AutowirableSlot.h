@@ -247,6 +247,8 @@ class AutowirableSlotFn:
   static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
 
 public:
+  typedef typename std::decay<Fn>::type FnActual;
+
   AutowirableSlotFn(const std::shared_ptr<CoreContext>& ctxt, Fn&& fn) :
     AutowirableSlot<T>(ctxt),
     fn(std::move(fn))
@@ -258,14 +260,14 @@ public:
   }
 
   // Underlying lambda that we will call:
-  const Fn fn;
+  const FnActual fn;
 
   /// <summary>
   /// Finalization routine, called by our strategy
   /// </summary>
   void Finalize(void) override {
     // Let the lambda execute as it sees fit:
-    CallThroughObj(fn, &Fn::operator());
+    CallThroughObj(fn, &FnActual::operator());
 
     // Call the lambda, remove all accountability to the context, self-destruct, and return:
     this->m_context.reset();
@@ -273,7 +275,7 @@ public:
   }
 
   template<class L, class Ret, class... Args>
-  void CallThroughObj(const Fn& fn, Ret(L::*pfn)(Args...) const) {
+  void CallThroughObj(const FnActual& fn, Ret(L::*pfn)(Args...) const) {
     (fn.*pfn)(
       (Args) *this...
     );

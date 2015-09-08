@@ -385,3 +385,20 @@ TEST_F(PostConstructTest, PostConstructCanSafelyThrow) {
   Autowired<PostConstructThrowsException> pcte;
   ASSERT_FALSE(pcte.IsAutowired()) << "A context member which threw an exception post-construction was incorrectly introduced into a context";
 }
+
+TEST_F(PostConstructTest, CallbackCanBeCopied) {
+  auto callCount = std::make_shared<int>(0);
+  auto fn = [callCount] {
+    (*callCount)++;
+  };
+
+  Autowired<SimpleObject> sobj;
+  sobj.NotifyWhenAutowired(fn);
+
+  AutoCurrentContext ctxt;
+  ctxt->NotifyWhenAutowired<SimpleObject>(fn);
+
+  AutoRequired<SimpleObject>();
+
+  ASSERT_EQ(2UL, *callCount) << "Twice-bound autowiring listener was not called twice as expected";
+}
