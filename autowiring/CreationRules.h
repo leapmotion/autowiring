@@ -85,7 +85,7 @@ struct crh<construction_strategy::factory_new, T, Args...>
   typedef T TActual;
   
   static_assert(
-    std::is_base_of<CoreObject, T>::value || !has_static_new<T>::value,
+    std::is_base_of<CoreObject, T>::value,
     "If type T provides a static New method, then the constructed type MUST directly inherit Object"
   );
 
