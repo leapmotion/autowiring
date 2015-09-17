@@ -48,6 +48,22 @@ struct TestInfoProxy {
   const testing::TestInfo& m_info;
 };
 
+namespace autowiring {
+  namespace testing {
+    struct hung {
+      CoreContext& ctxt;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const hung& lhs) {
+      auto runnables = lhs.ctxt.GetRunnables();
+      for (CoreRunnable* runnable : runnables)
+        if (runnable->IsRunning())
+          os << autowiring::demangle(typeid(*runnable)) << '\n';
+      return os;
+    }
+  }
+}
+
 /// <summary>
 /// Provides a test fixture which ensures proper cleanup of a created subcontext
 /// </summary>
@@ -117,7 +133,7 @@ public:
     // Do not allow teardown to take more than 5 seconds.  This is considered a "timely teardown" limit.
     // If it takes more than this amount of time to tear down, the test case itself should invoke SignalShutdown
     // and Wait itself with the extended teardown period specified.
-    ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Test case took too long to tear down, unit tests running after this point are untrustworthy";
+    ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Test case took too long to tear down, unit tests running after this point are untrustworthy.  Hung runnables:\n" << autowiring::testing::hung{ *ctxt };
 
     // Global context should return to quiescence:
     if (!allowGlobalReferences)
