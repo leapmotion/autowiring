@@ -55,6 +55,7 @@ set(AutowiringTest_SRCS
   ParallelTest.cpp
   PostConstructTest.cpp
   SelfSelectingFixtureTest.cpp
+  SpinLockTest.cpp
   TeardownNotifierTest.cpp
   TypeRegistryTest.cpp
   SatisfiabilityTest.cpp
