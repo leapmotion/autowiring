@@ -114,6 +114,12 @@ public:
   void Stop(bool graceful = true);
 
   /// <summary>
+  /// Sleeps this thread for the specified duration.
+  /// </summary>
+  /// <returns>False if the thread was terminated before the timeout elapsed.</returns>
+  bool ThreadSleep(std::chrono::nanoseconds timeout);
+
+  /// <summary>
   /// Waits indefinitely. Returns when this runnable stops.
   /// </summary>
   void Wait(void);

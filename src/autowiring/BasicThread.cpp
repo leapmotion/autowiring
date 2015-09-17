@@ -119,11 +119,6 @@ void BasicThread::PerformStatusUpdate(const std::function<void()>& fn) const {
   m_state->m_stateCondition.notify_all();
 }
 
-bool BasicThread::ThreadSleep(std::chrono::nanoseconds timeout) const {
-  std::unique_lock<std::mutex> lk(m_state->m_lock);
-  return m_state->m_stateCondition.wait_for(lk, timeout, [this] { return ShouldStop(); });
-}
-
 bool BasicThread::OnStart(void) {
   std::shared_ptr<CoreContext> context = m_context.lock();
   if(!context)

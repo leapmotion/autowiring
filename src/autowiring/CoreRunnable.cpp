@@ -53,6 +53,11 @@ void CoreRunnable::Stop(bool graceful) {
   }
 }
 
+bool CoreRunnable::ThreadSleep(std::chrono::nanoseconds timeout) {
+  std::unique_lock<std::mutex> lk(m_lock);
+  return m_cv.wait_for(lk, timeout, [this] { return ShouldStop(); });
+}
+
 void CoreRunnable::Wait(void) {
   {
     std::unique_lock<std::mutex> lk(m_lock);
