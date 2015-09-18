@@ -46,7 +46,7 @@ endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8")
-    message(FATAL_ERROR "GCC version 4.8 minimum is required to build Autowiring")
+    message(FATAL_ERROR "GCC version 4.8 minimum is required to build Autowiring, ${CMAKE_CXX_COMPILER_VERSION} is installed")
   endif()
 elseif (MSVC)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "18.0")
