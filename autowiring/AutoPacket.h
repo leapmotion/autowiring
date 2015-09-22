@@ -721,8 +721,6 @@ public:
   template<typename... InArgs, typename... Outputs>
   void Call(void(*pfn)(InArgs...), Outputs&... outputs) {
     typedef typename make_index_tuple<sizeof...(InArgs)>::type t_index;
-    typedef autowiring::CE<decltype(pfn), t_index> t_call;
-    typedef typename t_call::t_ceSetup t_ceSetup;
 
     // Completely unnecessary.  Call will avoid making unneeded copies, and this is guaranteed
     // by a unit test.  Dereference your shared pointers before passing them in.
@@ -749,8 +747,6 @@ public:
   template<typename Fx, typename... InArgs, typename... Outputs>
   void Call(Fx&& fx, void (Fx::*memfn)(InArgs...) const, Outputs&... outputs) {
     typedef typename make_index_tuple<Decompose<decltype(&Fx::operator())>::N>::type t_index;
-    typedef autowiring::CE<decltype(&Fx::operator()), t_index> t_call;
-    typedef typename t_call::t_ceSetup t_ceSetup;
     
     // Completely unnecessary.  Call will avoid making unneeded copies, and this is guaranteed
     // by a unit test.  Dereference your shared pointers before passing them in.
