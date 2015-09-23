@@ -4,7 +4,16 @@
 #include "CoreContext.h"
 #include <map>
 
-extern std::shared_ptr<CoreContext> NewContextThunk(void);
+namespace autowiring {
+  struct tracker
+  {
+    // Lock proper
+    std::mutex lock;
+
+    // True when the enclosing context map has been destroyed
+    bool destroyed = false;
+  };
+}
 
 /// <summary>
 /// A context map allows the management of semitransient contexts
@@ -24,25 +33,18 @@ template<class Key>
 class ContextMap
 {
 public:
-  struct tracker:
-    public std::mutex
-  {
-    // True when the enclosing context map has been destroyed
-    bool destroyed = false;
-  };
-
   ContextMap(void) = default;
 
   ~ContextMap(void) {
     // Teardown pathway assurance:
-    std::lock_guard<std::mutex> lk(*m_tracker);
+    std::lock_guard<std::mutex> lk(m_tracker->lock);
     m_tracker->destroyed = true;
   }
 
 private:
   // Tracker lock, used to protect against accidental destructor-contending access while still allowing
   // the parent ContextMap structure to be stack-allocated
-  const std::shared_ptr<tracker> m_tracker = std::make_shared<tracker>();
+  const std::shared_ptr<autowiring::tracker> m_tracker = std::make_shared<autowiring::tracker>();
   typedef std::map<Key, std::weak_ptr<CoreContext>> t_mpType;
   t_mpType m_contexts;
 
@@ -54,7 +56,7 @@ public:
   /// Removes all elements from the map
   /// </summary>
   void clear(void) {
-    std::lock_guard<std::mutex> lk(*m_tracker);
+    std::lock_guard<std::mutex> lk(m_tracker->lock);
     m_contexts.clear();
   }
 
@@ -63,7 +65,7 @@ public:
     iterator(const ContextMap& parent) :
       parent(parent)
     {
-      std::lock_guard<std::mutex> lk(*parent.m_tracker);
+      std::lock_guard<std::mutex> lk(parent.m_tracker->lock);
 
       // Advance to the first iterator we can actually lock down:
       iter = parent.m_contexts.begin();
@@ -93,7 +95,7 @@ public:
       std::shared_ptr<CoreContext> deferred = std::move(ctxt);
 
       // Loop until we get another stable entry:
-      std::lock_guard<std::mutex> lk(*parent.m_tracker);
+      std::lock_guard<std::mutex> lk(parent.m_tracker->lock);
       do iter++;
       while (iter != parent.m_contexts.end() && !(ctxt = iter->second.lock()));
 
@@ -118,7 +120,7 @@ public:
 
   template<class Fn>
   void Enumerate(Fn&& fn) {
-    std::lock_guard<std::mutex> lk(*m_tracker);
+    std::lock_guard<std::mutex> lk(m_tracker->lock);
     for(const auto& entry : m_contexts) {
       auto ctxt = entry.second.lock();
       if(ctxt && !fn(entry.first, ctxt))
@@ -136,22 +138,22 @@ public:
   /// An exception will be thrown if the passed key is already associated with a context
   /// </remarks>
   void Add(const Key& key, const std::shared_ptr<CoreContext>& context) {
-    std::lock_guard<std::mutex> lk(*m_tracker);
+    std::lock_guard<std::mutex> lk(m_tracker->lock);
     auto& rhs = m_contexts[key];
     if(!rhs.expired())
       throw autowiring_error("Specified key is already associated with another context");
 
     rhs = context;
 
-    std::weak_ptr<tracker> tracker(m_tracker);
-    context->AddTeardownListener([this, key, tracker] {
+    std::weak_ptr<autowiring::tracker> tracker(m_tracker);
+    context->onTeardown += [this, key, tracker] (const CoreContext&) {
       // Prevent the map from being deleted while we process this teardown notice:
       auto locked = tracker.lock();
       if(!locked)
         // Context survived the map
         return;
 
-      std::lock_guard<std::mutex> lk(*locked);
+      std::lock_guard<std::mutex> lk(locked->lock);
       if(locked->destroyed)
         // Map passed through teardown pathway while we were trying to lock it
         return;
@@ -175,19 +177,19 @@ public:
       auto sp = q->second.lock();
       if(!sp)
         this->m_contexts.erase(key);
-    });
+    };
   }
 
   /// <summary>
   /// Attempts to find a context by the specified key
   /// </summary>
   std::shared_ptr<CoreContext> Find(const Key& key) const {
-    std::lock_guard<std::mutex> lk(*m_tracker);
+    std::lock_guard<std::mutex> lk(m_tracker->lock);
     auto q = m_contexts.find(key);
 
     return
       q == m_contexts.end() ?
-      std::shared_ptr<CoreContext>() :
+      nullptr :
       q->second.lock();
   }
 
