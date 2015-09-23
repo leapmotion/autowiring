@@ -276,6 +276,10 @@ class AutoRequired:
 {
 public:
   using std::shared_ptr<T>::operator=;
+
+  AutoRequired(const AutoRequired<T>& rhs) :
+    std::shared_ptr<T>(rhs)
+  {}
   
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
   // If you are getting an error tracked to this line, ensure that class T is totally
@@ -418,12 +422,30 @@ class AutoConstruct:
 public:
   template<class... Args>
   AutoConstruct(Args&&... args) :
-    std::shared_ptr<T>(CoreContext::CurrentContext()->template Inject<T>(std::forward<Args&&>(args)...))
+    std::shared_ptr<T>(init(std::forward<Args&&>(args)...))
   {}
 
   operator bool(void) const { return IsAutowired(); }
   operator T*(void) const { return std::shared_ptr<T>::get(); }
   bool IsAutowired(void) const { return std::shared_ptr<T>::get() != nullptr; }
+
+private:
+  std::shared_ptr<T> init(void) { return CoreContext::CurrentContext()->template Inject<T>(); }
+  std::shared_ptr<T> init(const AutoConstruct<T>& rhs) { return rhs; }
+
+  template<typename Arg, typename... Args>
+  typename std::enable_if<
+    !std::is_same<
+      AutoConstruct<T>,
+      typename std::decay<Arg>::type
+    >::value,
+    std::shared_ptr<T>
+  >::type init(Arg&& arg, Args&&... args) {
+    return CoreContext::CurrentContext()->template Inject<T>(
+      std::forward<Arg>(arg),
+      std::forward<Args&&>(args)...
+    );
+  }
 };
 
 /// <summary>
