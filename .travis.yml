@@ -7,7 +7,7 @@ matrix:
     env:
     - _CC: gcc-4.8
     - _CXX: g++-4.8
-    - CMAKE_URL=http://www.cmake.org/files/v3.1/cmake-3.1.0-Linux-i386.tar.gz
+    - CMAKE_URL=http://cmake.org/files/v3.1/cmake-3.1.0-Linux-i386.tar.gz
     - CMAKE_DIRNAME=cmake-3.1.0-Linux-i386
     addons:
       apt:
@@ -21,7 +21,7 @@ matrix:
     env:
     - _CC: clang
     - _CXX: clang++
-    - CMAKE_URL=http://www.cmake.org/files/v3.1/cmake-3.1.0-Darwin64.tar.gz
+    - CMAKE_URL=http://cmake.org/files/v3.1/cmake-3.1.0-Darwin64.tar.gz
     - CMAKE_DIRNAME=cmake-3.1.0-Darwin64/CMake.app/Contents
 
 before_install:
@@ -36,7 +36,7 @@ before_install:
 
 install:
   # CMake 3.1
-  - curl $CMAKE_URL | tar xz
+  - curl -L $CMAKE_URL | tar xz
 
 before_script:
   - export CC=$_CC
