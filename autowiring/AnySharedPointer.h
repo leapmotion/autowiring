@@ -48,7 +48,7 @@ public:
   /// <returns>True if the assignment succeeds</returns>
   bool try_assign(const std::shared_ptr<CoreObject>& rhs) {
     if (!m_ti.block->pFromObj)
-      return nullptr;
+      return false;
     auto ptr = m_ti.block->pFromObj(rhs);
     if (!ptr)
       return false;

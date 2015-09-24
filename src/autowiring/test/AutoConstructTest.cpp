@@ -5,17 +5,19 @@ class AutoConstructTest:
   public testing::Test
 {};
 
-class HasDefaultCtorAndOthers {
-public:
-  HasDefaultCtorAndOthers(void) :
-    v(101)
-  {}
-  HasDefaultCtorAndOthers(int v) :
-    v(v)
-  {}
+namespace {
+  class HasDefaultCtorAndOthers {
+  public:
+    HasDefaultCtorAndOthers(void) :
+      v(101)
+    {}
+    HasDefaultCtorAndOthers(int v) :
+      v(v)
+    {}
 
-  const int v;
-};
+    const int v;
+  };
+}
 
 TEST_F(AutoConstructTest, AutoConstructNoArgs) {
   AutoConstruct<HasDefaultCtorAndOthers> hdcao;
@@ -52,4 +54,8 @@ TEST_F(AutoConstructTest, CanConstructRvalueCtor) {
   }
 
   ASSERT_TRUE(originalPtr.unique()) << "Memory leak detected due to incorrect forwarding of a unique pointer";
+}
+
+TEST_F(AutoConstructTest, CanCopyAutoConstruct) {
+  AutoConstruct<HasDefaultCtorAndOthers> v(100);
 }

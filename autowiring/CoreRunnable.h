@@ -29,7 +29,7 @@ private:
   std::shared_ptr<CoreObject> m_outstanding;
 
 protected:
-  std::mutex m_lock;
+  mutable std::mutex m_lock;
   std::condition_variable m_cv;
 
   /// <returns>
@@ -112,6 +112,12 @@ public:
   /// guaranteed to either return immediately, or once the thread implementation completes.
   /// </remarks>
   void Stop(bool graceful = true);
+
+  /// <summary>
+  /// Sleeps this thread for the specified duration.
+  /// </summary>
+  /// <returns>False if the thread was terminated before the timeout elapsed.</returns>
+  bool ThreadSleep(std::chrono::nanoseconds timeout);
 
   /// <summary>
   /// Waits indefinitely. Returns when this runnable stops.

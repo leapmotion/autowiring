@@ -192,20 +192,6 @@ protected:
   void PerformStatusUpdate(const std::function<void()>& fn) const;
 
   /// <summary>
-  /// Sleeps this thread for the specified duration.
-  /// </summary>
-  /// <returns>False if the thread was terminated before the timeout elapsed.</returns>
-  /// <remarks>
-  /// Events are dispatched by this method while the sleep is taking place, which makes this
-  /// method similar to an alertable wait on Windows.  Callers are cautioned against holding
-  /// locks while calling this method; if this is done, a deadlock could result.
-  ///
-  /// Callers should not invoke this method outside of this thread's thread context, or an
-  /// interruption exception could result.
-  /// </remarks>
-  bool ThreadSleep(std::chrono::nanoseconds timeout) const;
-
-  /// <summary>
   /// Causes a new thread to be created in which the Run method will be invoked
   /// </summary>
   /// <returns>True to indicate that the thread was started successfully, false if it was already started or cancelled</returns>
