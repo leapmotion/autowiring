@@ -29,7 +29,7 @@ private:
   std::shared_ptr<CoreObject> m_outstanding;
 
 protected:
-  std::mutex m_lock;
+  mutable std::mutex m_lock;
   std::condition_variable m_cv;
 
   /// <returns>
