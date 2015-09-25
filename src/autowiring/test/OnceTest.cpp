@@ -49,7 +49,7 @@ TEST(OnceTest, MultiLambdaPending) {
   autowiring::once o;
   std::atomic<int> x{ 0 };
   std::atomic<int> y{ 0 };
-  bool go = false;
+  bool go = true;
 
   std::thread v([&] {
     while(go) {
@@ -64,6 +64,7 @@ TEST(OnceTest, MultiLambdaPending) {
   std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
   // Finally we verify that everything got hit as we expected:
+  go = false;
   v.join();
   ASSERT_EQ(y, x) << "Not all pended lambdas were executed as expected";
 }
