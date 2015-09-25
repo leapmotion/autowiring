@@ -225,7 +225,11 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
     // Multiple decorations.  Single-input types should never be encountered, but if they are,
     // we can't call them.  Always call multi-input entries.
     for (auto subscriber : disposition.m_subscribers) {
-      if (subscriber.type == DecorationDisposition::Subscriber::Type::Multi)
+      if (subscriber.type != DecorationDisposition::Subscriber::Type::Multi)
+        throw autowiring_error("An AutoFilter was detected which has single-decorate inputs in a graph with multi-decorate outputs");
+
+      // One more entry for this input to consider
+      if(subscriber.satCounter->Decrement())
         callQueue.push_back(subscriber.satCounter);
     }
     break;
@@ -412,13 +416,13 @@ const SatCounter& AutoPacket::GetSatisfaction(auto_id subscriber) const {
 void AutoPacket::ThrowNotDecoratedException(const DecorationKey& key) {
   std::stringstream ss;
   ss << "Attempted to obtain a type " << autowiring::demangle(key.id) << " which was not decorated on this packet";
-  throw std::runtime_error(ss.str());
+  throw autowiring_error(ss.str());
 }
 
 void AutoPacket::ThrowMultiplyDecoratedException(const DecorationKey& key) {
   std::stringstream ss;
   ss << "Attempted to obtain a type " << autowiring::demangle(key.id) << " which was decorated more than once on this packet";
-  throw std::runtime_error(ss.str());
+  throw autowiring_error(ss.str());
 }
 
 size_t AutoPacket::GetDecorationTypeCount(void) const
@@ -431,6 +435,18 @@ AutoPacket::t_decorationMap AutoPacket::GetDecorations(void) const
 {
   std::lock_guard<std::mutex> lk(m_lock);
   return m_decoration_map;
+}
+
+bool AutoPacket::IsUnsatisfiable(const auto_id& id) const
+{
+  const DecorationDisposition* pDisposition = GetDisposition(DecorationKey{ id, 0 });
+  if (!pDisposition)
+    return false;
+  if (!pDisposition->m_decorations.empty())
+    return false;
+  if (pDisposition->m_nProducersRun == pDisposition->m_publishers.size())
+    return false;
+  return true;
 }
 
 void AutoPacket::ForwardAll(const std::shared_ptr<AutoPacket>& recipient) const {

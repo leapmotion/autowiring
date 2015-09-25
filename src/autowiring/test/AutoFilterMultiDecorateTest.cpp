@@ -50,6 +50,62 @@ TEST_F(AutoFilterMultiDecorateTest, MultiDecorateTest) {
   ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
 }
 
+TEST_F(AutoFilterMultiDecorateTest, MultiWithSingleDecorateTest) {
+  int called = 0;
+  int f_called = 0;
+
+  *factory += [&called](AutoPacket& packet, Decoration<0>& out) {
+    ASSERT_FALSE(packet.IsUnsatisfiable<Decoration<0>>());
+    ASSERT_FALSE(packet.IsUnsatisfiable<Decoration<1>>());
+    out.i = called++;
+  };
+  
+  *factory += [&called](AutoPacket& packet, Decoration<0>& out) {
+    ASSERT_FALSE(packet.IsUnsatisfiable<Decoration<0>>());
+    ASSERT_FALSE(packet.IsUnsatisfiable<Decoration<1>>());
+    out.i = called++;
+  };
+
+  *factory += [&f_called](AutoPacket& packet, Decoration<1>& out) {
+    ASSERT_FALSE(packet.IsUnsatisfiable<Decoration<0>>());
+    ASSERT_FALSE(packet.IsUnsatisfiable<Decoration<1>>());
+    out.i = ++f_called;
+  };
+
+  *factory += [&called](const Decoration<1>& val, const Decoration<0>* vals []) {
+    ASSERT_NE(nullptr, vals);
+    called++;
+
+    // Guarantee that values were added in the expected order
+    int i;
+    for (i = 0; vals[i]; i++)
+      ASSERT_EQ(i, vals[i]->i) << "Incorrect values were added to the packet";
+
+    // Verify we got the number of values out that we wanted to get out
+    ASSERT_EQ(2, i) << "The wrong number of values were added to the packet";
+    ASSERT_EQ(1, val.i) << "The wrong number of val were added to the packet";
+  };
+  ASSERT_EQ(0, called) << "Lambda functions were called before expected";
+
+  // Verify internal integrity of the factory using reflection:
+  int nOutputDec0 = 0;
+  int nOutputDec1 = 0;
+  for (auto& filter : factory->GetAutoFilters())
+    for (auto arg = filter.GetAutoFilterArguments(); *arg; arg++)
+      if(arg->is_output) {
+        if (*arg->id.block->ti == typeid(Decoration<0>))
+          nOutputDec0++;
+        else if (*arg->id.block->ti == typeid(Decoration<1>))
+          nOutputDec1++;
+      }
+
+  ASSERT_EQ(2UL, nOutputDec0) << "Counted an incorrect number of Decoration<0> publishers";
+  ASSERT_EQ(1UL, nOutputDec1) << "Counted an incorrect number of Decoration<1> publishers";
+
+  auto packet = factory->NewPacket();
+  ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
+}
+
 TEST_F(AutoFilterMultiDecorateTest, MultiPostHocIntroductionTest) {
   int called = 0;
 
