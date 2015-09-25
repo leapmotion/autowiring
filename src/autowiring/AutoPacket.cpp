@@ -412,13 +412,13 @@ const SatCounter& AutoPacket::GetSatisfaction(auto_id subscriber) const {
 void AutoPacket::ThrowNotDecoratedException(const DecorationKey& key) {
   std::stringstream ss;
   ss << "Attempted to obtain a type " << autowiring::demangle(key.id) << " which was not decorated on this packet";
-  throw std::runtime_error(ss.str());
+  throw autowiring_error(ss.str());
 }
 
 void AutoPacket::ThrowMultiplyDecoratedException(const DecorationKey& key) {
   std::stringstream ss;
   ss << "Attempted to obtain a type " << autowiring::demangle(key.id) << " which was decorated more than once on this packet";
-  throw std::runtime_error(ss.str());
+  throw autowiring_error(ss.str());
 }
 
 size_t AutoPacket::GetDecorationTypeCount(void) const
@@ -431,6 +431,18 @@ AutoPacket::t_decorationMap AutoPacket::GetDecorations(void) const
 {
   std::lock_guard<std::mutex> lk(m_lock);
   return m_decoration_map;
+}
+
+bool AutoPacket::IsUnsatisfiable(const auto_id& id) const
+{
+  const DecorationDisposition* pDisposition = GetDisposition(DecorationKey{ id, 0 });
+  if (!pDisposition)
+    return false;
+  if (!pDisposition->m_decorations.empty())
+    return false;
+  if (pDisposition->m_nProducersRun == pDisposition->m_publishers.size())
+    return false;
+  return true;
 }
 
 void AutoPacket::ForwardAll(const std::shared_ptr<AutoPacket>& recipient) const {

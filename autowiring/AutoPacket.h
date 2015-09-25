@@ -216,6 +216,16 @@ public:
   t_decorationMap GetDecorations(void) const;
 
   /// <returns>
+  /// True if the specified type is unsatisfiable
+  /// </returns>
+  bool IsUnsatisfiable(const auto_id& id) const;
+
+  template<typename T>
+  bool IsUnsatisfiable(void) const {
+    return IsUnsatisfiable(auto_id_t<T>{});
+  }
+
+  /// <returns>
   /// True if this packet posesses one or more instances of a decoration of the specified type
   /// </returns>
   /// <remarks>
