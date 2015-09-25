@@ -7,9 +7,10 @@
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
+#include "CallExtractor.h"
 #include "CoreRunnable.h"
 #include "ContextMember.h"
-#include "CallExtractor.h"
+#include "CoreObjectDescriptor.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
 #include "ExceptionFilter.h"
@@ -19,7 +20,7 @@
 #include "JunctionBoxManager.h"
 #include "member_new_type.h"
 #include "MemoEntry.h"
-#include "CoreObjectDescriptor.h"
+#include "once.h"
 #include "result_or_default.h"
 #include "ThreadPool.h"
 #include "TypeRegistry.h"
@@ -151,13 +152,13 @@ protected:
 
 public:
   // Asserted when the context is initiated
-  autowiring::signal<void()> onInitiated;
+  autowiring::once_signal<CoreContext> onInitiated;
 
   // Asserted when the context is actually running
-  autowiring::signal<void()> onRunning;
+  autowiring::once_signal<CoreContext> onRunning;
 
   // Asserted when the context is being shut down
-  autowiring::signal<void()> onShutdown;
+  autowiring::once_signal<CoreContext> onShutdown;
 
   // Asserted when the context is tearing down but before members objects are destroyed or
   // any contained AutoWired fields are unlinked

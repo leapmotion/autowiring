@@ -52,6 +52,7 @@ set(AutowiringTest_SRCS
   MultiInheritTest.cpp
   ObjectPoolTest.cpp
   ObservableTest.cpp
+  OnceTest.cpp
   ParallelTest.cpp
   PostConstructTest.cpp
   SelfSelectingFixtureTest.cpp
