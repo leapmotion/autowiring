@@ -13,6 +13,7 @@ TEST_F(ObservableTest, SimpleAssignmentCheck) {
   ob.onChanged += [&hit] { hit = true; };
   ob = 2;
   ASSERT_TRUE(hit) << "OnChanged handler not hit when the observable value was modified";
+  ASSERT_EQ(2, *ob) << "operator * gives an incorrect value";
 }
 
 TEST_F(ObservableTest, BeforeAndAfter) {
