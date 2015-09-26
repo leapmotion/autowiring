@@ -37,6 +37,7 @@ private:
 
 public:
   operator const T&(void) const { return val; }
+  const T& operator*(void) const { return val; }
 
   observable& operator=(const T& rhs) {
     onBeforeChanged(val, rhs);
