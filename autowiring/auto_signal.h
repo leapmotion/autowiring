@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "Decompose.h"
+#include "spin_lock.h"
 #include <atomic>
 #include <functional>
 #include <list>
@@ -104,7 +105,7 @@ namespace autowiring {
 
   private:
     // Listeners and the corresponding lock:
-    mutable std::mutex m_lock;
+    mutable autowiring::spin_lock m_lock;
     std::list<entry_t> m_listeners;
 
     // Perfect match override:
@@ -146,18 +147,23 @@ namespace autowiring {
     registration_t operator+=(Fn fn) {
       auto entry = make_registration<Fn>(std::forward<Fn>(fn), &Fn::operator());
 
-      std::lock_guard<std::mutex> lk(m_lock);
-      m_listeners.push_back(entry);
+      {
+        std::lock_guard<autowiring::spin_lock> lk(m_lock);
+        m_listeners.push_back(entry);
+      }
       return {this, entry.get()};
     }
 
     void operator-=(detail::signal_node_base* rhs) override {
-      std::lock_guard<std::mutex> lk(m_lock);
-      for (auto listener = m_listeners.begin(); listener != m_listeners.end(); ++listener)
-        if (listener->get() == rhs) {
-          m_listeners.erase(listener);
+      auto iter = m_listeners.begin();
+      while (iter != m_listeners.end()) {
+        if (iter->get() == rhs) {
+          (std::lock_guard<autowiring::spin_lock>)m_lock,
+          m_listeners.erase(iter);
           return;
         }
+        (std::lock_guard<autowiring::spin_lock>)m_lock, ++iter;
+      }
       throw std::runtime_error("Attempted to remove node which is not part of this list.");
     }
 
@@ -184,7 +190,7 @@ namespace autowiring {
       auto iter = m_listeners.begin();
       while (iter != m_listeners.end()) {
         auto callee = iter;
-        (std::lock_guard<std::mutex>)m_lock, ++iter;
+        (std::lock_guard<autowiring::spin_lock>)m_lock, ++iter;
         (**callee)(args...);
       }
     }
