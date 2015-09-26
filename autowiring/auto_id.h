@@ -96,6 +96,10 @@ struct auto_id {
     return block == rhs.block;
   }
 
+  bool operator!=(auto_id rhs) const {
+    return block != rhs.block;
+  }
+
   explicit operator bool(void) const {
     return block && block->index;
   }
