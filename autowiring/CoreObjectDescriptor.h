@@ -38,7 +38,7 @@ struct CoreObjectDescriptor {
     pFilter(autowiring::fast_pointer_cast<ExceptionFilter>(value)),
     pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
     receivesEvents(
-      [this, value]{
+      [this, value] {
         // Because we manually added AutowiringEvents to the JunctionBoxManager, check here also
         if (autowiring::fast_pointer_cast<AutowiringEvents>(value))
           return true;
@@ -46,9 +46,17 @@ struct CoreObjectDescriptor {
         for (auto evt = g_pFirstEventEntry; evt; evt = evt->pFlink)
           if (evt->IsSameAs(pCoreObject.get()))
             return true;
+
         // "T" not found in event registry
         return false;
       }()
+    ),
+    primitiveOffset(
+      reinterpret_cast<size_t>(
+        static_cast<T*>(
+          reinterpret_cast<TActual*>(1)
+        )
+      ) - 1
     )
   {
     // We can instantiate casts to CoreObject here at the point where object traits are being generated
@@ -123,4 +131,7 @@ struct CoreObjectDescriptor {
 
   // Does this type receive events?
   bool receivesEvents;
+
+  // Distance from TActual to T
+  size_t primitiveOffset;
 };
