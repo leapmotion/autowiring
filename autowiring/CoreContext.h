@@ -148,6 +148,7 @@ class CoreContext:
 {
 protected:
   typedef std::list<std::weak_ptr<CoreContext>> t_childList;
+  CoreContext(const CoreContext&) = delete;
   CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference, const std::type_info& sigilType);
 
 public:
