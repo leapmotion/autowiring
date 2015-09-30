@@ -11,6 +11,16 @@ namespace autowiring {
   template<class... Args>
   struct tuple {};
 
+  template<typename T>
+  struct is_tuple {
+    static const bool value = false;
+  };
+
+  template<typename... Args>
+  struct is_tuple<tuple<Args...>> {
+    static const bool value = true;
+  };
+
   /// <summary>
   /// Finds the specified type T in the argument pack
   /// </remarks>
@@ -46,39 +56,16 @@ namespace autowiring {
     nth_type<N - 1, Tail...>
   {};
 
-  template<int N, class T>
-  struct tuple_value {
-    tuple_value(void) = default;
-
-    tuple_value(T&& value) :
-      value(std::forward<T&&>(value))
-    {}
-
-    T value;
-  };
-
   template<int N, class... Args>
   typename nth_type<N, Args...>::type& get(tuple<Args...>& val) {
     static_assert(N < sizeof...(Args), "Requested tuple index is out of bounds");
-    return
-      static_cast<
-        tuple_value<
-          sizeof...(Args) - N - 1,
-          typename nth_type<N, Args...>::type
-        >&
-      >(val).value;
+    return val.get(std::integral_constant<int, sizeof...(Args) - N - 1>{});
   }
 
   template<int N, class... Args>
   const typename nth_type<N, Args...>::type& get(const tuple<Args...>& val) {
     static_assert(N < sizeof...(Args), "Requested tuple index is out of bounds");
-    return
-      static_cast<
-        tuple_value<
-          sizeof...(Args) - N - 1,
-          typename nth_type<N, Args...>::type
-        >&
-      >(val).value;
+    return val.get(std::integral_constant<int, sizeof...(Args) - N - 1>{});
   }
 
   template<class Arg, class... Args>
@@ -96,30 +83,125 @@ namespace autowiring {
     return get<index - 1>(val);
   }
 
-  template<class Arg, class... Args>
-  struct tuple<Arg, Args...>:
-    tuple<Args...>,
-    tuple_value<sizeof...(Args), Arg>
+  template<typename T>
+  T&& transfer(tuple<T>&& rhs) {
+    return std::move(rhs.val);
+  }
+
+  template<typename T>
+  typename std::enable_if<!is_tuple<T>::value, T&&>::type
+  transfer(typename std::remove_reference<T>::type& rhs)
   {
-    typedef tuple_value<sizeof...(Args), Arg> t_value;
+    return static_cast<T&&>(rhs);
+  }
+
+  template<class Arg>
+  struct tuple<Arg>
+  {
+  public:
+    tuple(void) = default;
+    tuple(const tuple& rhs) :
+      val(rhs.val)
+    {}
+    tuple(tuple&& rhs) :
+      val(std::forward<Arg&&>(rhs.val))
+    {}
+
+    template<typename T>
+    explicit tuple(T&& rhs) :
+      val(transfer<T&&>(rhs))
+    {}
+
+    Arg val;
+
+    Arg& get(std::integral_constant<int, 0>&&) { return val; }
+    const Arg& get(std::integral_constant<int, 0>&&) const { return val; }
+
+    tuple& operator=(const tuple& rhs) {
+      val = rhs.val;
+      return *this;
+    }
+
+    template<class OtherT>
+    tuple& operator=(const tuple<OtherT>& rhs) {
+      val = rhs.val;
+      return *this;
+    }
+
+    tuple& operator=(tuple&& rhs) {
+      std::swap(val, rhs.val);
+      return *this;
+    }
+
+    template<class OtherT>
+    tuple& operator=(tuple<OtherT>&& rhs) {
+      std::swap(val, rhs.val);
+      return *this;
+    }
+  };
+
+  template<class Arg, class ArgNext, class... Args>
+  struct tuple<Arg, ArgNext, Args...> :
+    tuple<ArgNext, Args...>
+  {
+    typedef tuple<ArgNext, Args...> t_base;
 
     tuple(void) = default;
-    tuple(const tuple&) = default;
-
-    tuple(Arg&& arg, Args&&... args) :
-      tuple<Args...>(std::forward<Args>(args)...),
-      tuple_value<sizeof...(Args), Arg>(std::forward<Arg&&>(arg))
+    tuple(const tuple& rhs) :
+      t_base{ static_cast<const t_base&>(rhs) },
+      val(rhs.val)
     {}
+
+    tuple(tuple&& rhs) :
+      t_base{ std::forward<t_base&&>(rhs) },
+      val(std::forward<Arg&&>(rhs.val))
+    {}
+
+    template<typename FnArg1, typename FnArg2, typename... FnArgs>
+    tuple(
+      FnArg1&& arg1,
+      FnArg2&& arg2,
+      FnArgs&&... args
+    ) :
+      t_base{ std::forward<FnArg2&&>(arg2), std::forward<FnArgs&&>(args)... },
+      val(std::forward<FnArg1&&>(arg1))
+    {}
+
+    tuple& operator=(const tuple& rhs) {
+      // Copy base then ourselves
+      static_cast<t_base&>(*this) = static_cast<const t_base&>(rhs);
+      val = rhs.val;
+      return *this;
+    }
 
     template<class OtherT, class... OtherTs>
     tuple& operator=(const tuple<OtherT, OtherTs...>& rhs) {
-      // Base type copy
-      static_cast<tuple<Args...>&>(*this) = static_cast<const tuple<OtherTs...>&>(rhs);
-
-      // Interior copy:
-      t_value::value = static_cast<const typename tuple<OtherT, OtherTs...>::t_value&>(rhs).value;
+      // Copy base then ourselves
+      static_cast<t_base&>(*this) = static_cast<const tuple<OtherTs...>&>(rhs);
+      val = rhs.val;
       return *this;
     }
+
+    tuple& operator=(tuple&& rhs) {
+      // Move base then ourselves
+      static_cast<t_base&>(*this) = static_cast<t_base&&>(rhs);
+      val = std::move(rhs.val);
+      return *this;
+    }
+
+    template<class OtherT, class... OtherTs>
+    tuple& operator=(tuple<OtherT, OtherTs...>&& rhs) {
+      // Move base then ourselves
+      static_cast<t_base&>(*this) = static_cast<const tuple<OtherTs...>&&>(rhs);
+      val = std::move(rhs.val);
+      return *this;
+    }
+
+    using t_base::get;
+    Arg& get(std::integral_constant<int, 1 + sizeof...(Args)>&&) { return val; }
+    const Arg& get(std::integral_constant<int, 1 + sizeof...(Args)>&&) const { return val; }
+
+    Arg val;
   };
 
   template<class... Args>
