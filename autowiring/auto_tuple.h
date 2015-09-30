@@ -3,6 +3,7 @@
 #include "is_any.h"
 #include "index_tuple.h"
 #include "sum.h"
+#include <memory>
 
 namespace autowiring {
   /// <summary>

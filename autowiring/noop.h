@@ -4,4 +4,9 @@
 namespace autowiring {
   template<class... Args>
   void noop(Args...) {}
+
+  template<class... Args>
+  struct noop_t {
+    void operator()(Args...) const {}
+  };
 }
