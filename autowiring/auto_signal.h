@@ -199,7 +199,7 @@ namespace autowiring {
       static_assert(!std::is_reference<Fn>::value, "Cannot construct a reference binding");
 
       template<typename _Fn>
-      entry(_Fn fn) : fn(std::forward<_Fn>(fn)) {}
+      entry(signal&, _Fn fn) : fn(std::forward<_Fn>(fn)) {}
       const Fn fn;
       void operator()(const Args&... args) override { fn(args...); }
     };
@@ -370,21 +370,15 @@ namespace autowiring {
     /// to free this object.
     /// </remarks>
     template<typename Fn>
-    typename std::enable_if<
-      Decompose<decltype(&std::decay<Fn>::type::operator())>::N == sizeof...(Args),
-      registration_t
-    >::type operator+=(Fn fn) {
-      auto* e = new entry<typename std::decay<Fn>::type>(std::forward<Fn&&>(fn));
-      Link(e);
-      return{ this, e };
-    }
+    registration_t operator+=(Fn fn) {
+      typedef typename std::decay<Fn>::type FnDecay;
+      typedef typename std::conditional<
+        Decompose<decltype(&FnDecay::operator())>::N == sizeof...(Args),
+        entry<FnDecay>,
+        entry_reflexive<FnDecay>
+      >::type EntryType;
 
-    template<typename Fn>
-    typename std::enable_if<
-      Decompose<decltype(&std::decay<Fn>::type::operator())>::N == sizeof...(Args) + 1,
-      registration_t
-    >::type operator+=(Fn fn) {
-      auto* e = new entry_reflexive<typename std::decay<Fn>::type>(*this, std::forward<Fn>(fn));
+      auto* e = new EntryType(*this, std::forward<Fn&&>(fn));
       Link(e);
       return{ this, e };
     }

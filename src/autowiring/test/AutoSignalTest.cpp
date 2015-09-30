@@ -529,3 +529,22 @@ TEST_F(AutoSignalTest, NecessaryMoveCase) {
   ASSERT_NE(nullptr, val) << "Value was moved when it should not have been moved";
   ASSERT_EQ(nullptr, mustBeMoved) << "Value was not moved when it should have been moved";
 }
+
+TEST_F(AutoSignalTest, NestedSignalRegistration) {
+  autowiring::signal<void()> sig;
+
+  bool outer = false;
+  bool inner = false;
+  sig += [&] {
+    outer = true;
+
+    // This registration will occur too late for the handler to be called, because at the time
+    // of registration, the signal was already asserted.
+    sig += [&] {
+      inner = true;
+    };
+  };
+  sig();
+  ASSERT_TRUE(outer) << "Outer signal was not asserted even though it was registered in advance";
+  ASSERT_FALSE(inner) << "Inner signal was asserted even though it should not yet have been registered";
+}
