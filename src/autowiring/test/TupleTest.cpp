@@ -4,6 +4,7 @@
 #include <string>
 
 static_assert(10 == autowiring::sum<1, 2, 7>::value, "Sum template function did not evaluate a sum correctly");
+static_assert(autowiring::is_tuple<autowiring::tuple<int, int>>::value, "Autowiring tuple not correctly recognized as a tuple");
 
 class TupleTest:
   public testing::Test
@@ -47,7 +48,7 @@ TEST_F(TupleTest, AddressTest) {
   autowiring::tuple<std::unique_ptr<int>> tup;
   std::unique_ptr<int>& v = autowiring::get<0>(tup);
 
-  ASSERT_EQ(&tup.value, &v) << "Get operation did not provide a correct reference to the underlying tuple value";
+  ASSERT_EQ(&tup.val, &v) << "Get operation did not provide a correct reference to the underlying tuple value";
 }
 
 TEST_F(TupleTest, GetByTypeTest) {
@@ -59,4 +60,37 @@ TEST_F(TupleTest, GetByTypeTest) {
   ASSERT_EQ(1, iVal) << "Integer value type mismatch";
   ASSERT_EQ(2, lVal) << "Long value type mismatch";
   ASSERT_EQ(1.9f, fVal) << "Float value type mismatch";
+}
+
+namespace {
+  class CountsCopies {
+  public:
+    CountsCopies(void) = default;
+    CountsCopies(const CountsCopies& rhs) { nCopies++; }
+    void operator=(const CountsCopies& rhs) { nCopies++; }
+    static int nCopies;
+  };
+
+  int CountsCopies::nCopies = 0;
+}
+
+TEST_F(TupleTest, NoUnneededCopies) {
+  CountsCopies isCopied;
+  autowiring::tuple<CountsCopies> nCopies(isCopied);
+
+  ASSERT_EQ(1, CountsCopies::nCopies) << "Too many copies made during in-place tuple construction";
+}
+
+TEST_F(TupleTest, CanHoldMoveOnly) {
+  auto up = std::unique_ptr<int>{ new int {999} };
+  int* pVal = up.get();
+
+  autowiring::tuple<std::unique_ptr<int>, bool> pp{ std::move(up), false };
+  autowiring::tuple<std::unique_ptr<int>, bool> rhs = std::move(pp);
+
+  ASSERT_EQ(nullptr, autowiring::get<0>(pp).get()) << "Tuple move did not wipe out an r-value properly";
+  ASSERT_EQ(pVal, autowiring::get<0>(rhs).get()) << "Tuple move did not transfer an r-value properly";
+
+  rhs = std::move(rhs);
+  ASSERT_EQ(pVal, autowiring::get<0>(rhs).get()) << "Reflexive transfer invalidated incorrectly";
 }
