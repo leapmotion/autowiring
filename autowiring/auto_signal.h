@@ -1,7 +1,10 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "Decompose.h"
+#include "index_tuple.h"
+#include "noop.h"
 #include "spin_lock.h"
+#include "auto_tuple.h"
 #include <atomic>
 #include <functional>
 #include <list>
@@ -19,26 +22,72 @@ namespace autowiring {
   struct registration_t;
 
   namespace detail {
-    struct signal_node_base {};
-
-    template<typename... Args>
-    struct signal_node_t_base:
-      signal_node_base
-    {
-      virtual void operator()(Args... args) = 0;
+    // Holds true if type T can be copied safely
+    template<typename T>
+    struct can_copy {
+      static const bool value =
+        !std::is_abstract<T>::value &&
+        std::is_copy_constructible<T>::value;
     };
 
-    // Holds a reference to one of the signal holders
-    template<typename Fn, typename... Args>
-    struct signal_node_t :
-      signal_node_t_base<Args...>
+    // Utility type for handling dereferencing of an input value
+    template<typename T, typename = void>
+    struct dereferencer
     {
-      signal_node_t(Fn&& fn) : fn(fn) {}
-      const Fn fn;
+      static_assert(std::is_copy_constructible<T>::value, "T must be copy constructable");
+      static_assert(!std::is_abstract<T>::value, "T cannot be abstract");
 
-      virtual void operator()(Args... args) override {
-        fn(args...);
-      }
+      dereferencer(dereferencer&& rhs) : val(std::move(rhs.val)) {}
+      dereferencer(T&& val) : val(std::move(val)) {}
+      T val;
+      const T& operator*(void) const { return val; }
+    };
+
+    template<typename T>
+    struct dereferencer<T&&, void>
+    {
+      dereferencer(dereferencer&& rhs) : val(std::move(rhs.val)) {}
+      dereferencer(T&& val) : val(std::move(val)) {}
+      T val;
+      const T& operator*(void) const { return val; }
+    };
+
+    /// <summary>
+    /// Copyable reference argument
+    /// </summary>
+    template<typename T>
+    struct dereferencer<T&, typename std::enable_if<!can_copy<T>::value>::type> {
+      dereferencer(const dereferencer& rhs) : val(rhs.val) {}
+      dereferencer(const T& val) : val(val) {}
+      const T& val;
+      const T& operator*(void) const { return val; }
+    };
+
+    /// <summary>
+    /// Non-copyable reference argument
+    /// </summary>
+    template<typename T>
+    struct dereferencer<T&, typename std::enable_if<can_copy<T>::value>::type> {
+      dereferencer(dereferencer&& rhs) : val(std::move(rhs.val)) {}
+      dereferencer(const T& val) : val(val) {}
+      T val;
+      const T& operator*(void) const { return val; }
+    };
+
+    // Callable wrapper type, always invoked in a synchronized context
+    struct callable_base {
+      virtual ~callable_base(void) {}
+      virtual void operator()() = 0;
+      callable_base* m_pFlink = nullptr;
+    };
+
+    template<typename Fn>
+    struct callable :
+      callable_base
+    {
+      callable(Fn&& fn) : fn(std::move(fn)) {}
+      Fn fn;
+      void operator()() override { fn(); }
     };
   }
 
@@ -46,37 +95,42 @@ namespace autowiring {
     /// <summary>
     /// Removes the signal node identified on the rhs without requiring full type information
     /// </summary>
-    virtual void operator-=(detail::signal_node_base* rhs) = 0;
-
-    /// <summary>
-    /// Removes the specified registration
-    /// </summary>
-    void operator-=(const registration_t& reg);
+    /// <remarks>
+    /// This operation invalidates the specified unique pointer.  If the passed unique pointer is
+    /// already nullptr, this operation has no effect.
+    /// </remarks>
+    virtual void operator-=(registration_t& rhs) = 0;
   };
 
-  struct registration_t
-  {
+  struct registration_t {
     registration_t(void) = default;
 
-    registration_t(signal_base* parent, detail::signal_node_base* entry) :
-      parent(parent),
-      entry(entry)
+    registration_t(signal_base* owner, void* pobj) :
+      owner(owner),
+      pobj(pobj)
     {}
 
-    signal_base* parent = nullptr;
-    detail::signal_node_base* entry;
-
-    explicit operator bool(void) const { return !!parent; }
-
-    bool operator==(const registration_t& rhs) const {
-      return parent == rhs.parent && entry == rhs.entry;
+    registration_t(registration_t&& rhs) :
+      owner(rhs.owner),
+      pobj(rhs.pobj)
+    {
+      rhs.pobj = nullptr;
     }
 
-    void reset(void) {
-      if (parent)
-        *parent -= entry;
-      parent = nullptr;
+    registration_t(const registration_t& rhs) = delete;
+
+    signal_base* owner;
+    void* pobj;
+
+    bool operator==(const registration_t& rhs) const { return pobj == rhs.pobj; }
+
+    void operator=(registration_t&& rhs) {
+      owner = rhs.owner;
+      pobj = rhs.pobj;
+      rhs.pobj = nullptr;
     }
+
+    operator bool(void) const { return pobj != nullptr; }
   };
 
   /// <summary>
@@ -87,87 +141,250 @@ namespace autowiring {
     signal_base
   {
   public:
-    typedef std::shared_ptr<detail::signal_node_t_base<Args...>> entry_t;
-
     signal(void) = default;
 
     signal(signal&& rhs) :
-      m_listeners(std::move(rhs.m_listeners))
+      m_pFirstListener(rhs.m_pFirstListener),
+      m_pLastListener(rhs.m_pLastListener)
     {
-      rhs.m_listeners.clear();
+      if (rhs.m_pFirstDelayedCall.load())
+        throw autowiring_error("Attempted to move a signal where pended lambdas still exist");
+      rhs.m_pFirstListener = nullptr;
+      rhs.m_pLastListener = nullptr;
+    }
+
+    ~signal(void) {
+      {
+        detail::callable_base* prior = nullptr;
+        for (detail::callable_base* cur = m_pFirstDelayedCall; cur; cur = cur->m_pFlink) {
+          delete prior;
+          prior = cur;
+        }
+      }
+      {
+        entry_base* prior = nullptr;
+        for (entry_base* cur = m_pFirstListener; cur; cur = cur->pFlink) {
+          delete prior;
+          prior = cur;
+        }
+      }
     }
 
     signal& operator=(signal&& rhs) {
-      m_listeners = std::move(rhs.m_listeners);
-      rhs.m_listeners.clear();
+      std::swap(m_pFirstListener, rhs.m_pFirstListener);
+      std::swap(m_pLastListener, rhs.m_pLastListener);
       return *this;
     }
 
   private:
-    // Listeners and the corresponding lock:
-    mutable autowiring::spin_lock m_lock;
-    std::list<entry_t> m_listeners;
+    // Lock held by whomever is currently invoking signal handlers
+    mutable autowiring::spin_lock m_callLock;
 
-    // Perfect match override:
-    template<typename Fn>
-    entry_t make_registration(Fn fn, void (Fn::*)(Args...) const) {
-      return std::make_shared<
-        detail::signal_node_t<Fn, Args...>
-      >(std::forward<Fn>(fn));
-    }
+    // Base type for listeners attached to this signal
+    struct entry_base {
+      virtual ~entry_base(void) {}
+      virtual void operator()(const Args&... args) = 0;
 
-    template<class Fn>
-    struct Forwarder:
-      detail::signal_node_t_base<Args...>
-    {
-      Forwarder(signal* parent, Fn&& fn) :
-        parent(parent),
-        fn(std::forward<Fn&&>(fn))
-      {}
-
-      signal*const parent;
-      const Fn fn;
-
-      void operator()(Args... args) override {
-        registration_t reg{parent, this};
-        fn(&reg, args...);
-      }
+      entry_base* pFlink = nullptr;
+      entry_base* pBlink = nullptr;
     };
 
     template<typename Fn>
-    entry_t make_registration(Fn fn, void (Fn::*)(registration_t*, Args...) const) {
-      return std::make_shared<Forwarder<Fn>>(this, std::forward<Fn>(fn));
+    struct entry:
+      entry_base
+    {
+      static_assert(!std::is_reference<Fn>::value, "Cannot construct a reference binding");
+
+      template<typename _Fn>
+      entry(_Fn fn) : fn(std::forward<_Fn>(fn)) {}
+      const Fn fn;
+      void operator()(const Args&... args) override { fn(args...); }
+    };
+
+    template<typename Fn>
+    struct entry_reflexive :
+      entry_base
+    {
+      static_assert(!std::is_reference<Fn>::value, "Cannot construct a reference binding");
+
+      template<typename _Fn>
+      entry_reflexive(signal& owner, _Fn fn) :
+        owner(owner),
+        fn(std::forward<_Fn>(fn))
+      {}
+      signal& owner;
+      const Fn fn;
+      void operator()(const Args&... args) override { fn(registration_t{ &owner, this }, args...); }
+    };
+
+    // Doubly linked list of all of our listeners
+    entry_base* m_pFirstListener = nullptr;
+    entry_base* m_pLastListener = nullptr;
+
+    // Calls that had to be delayed because the lock was held
+    mutable std::atomic<detail::callable_base*> m_pFirstDelayedCall{ nullptr };
+
+    void LinkUnsafe(entry_base& e) {
+      // Standard, boring linked list insertion:
+      e.pBlink = m_pLastListener;
+      if (m_pLastListener)
+        m_pLastListener->pFlink = &e;
+      if (!m_pFirstListener)
+        m_pFirstListener = &e;
+      m_pLastListener = &e;
+    }
+
+    struct callable_link :
+      detail::callable_base
+    {
+      callable_link(signal& owner, entry_base* entry) :
+        owner(owner),
+        entry(std::move(entry))
+      {}
+
+      signal& owner;
+      entry_base*const entry;
+      void operator()() override { owner.LinkUnsafe(*entry); }
+    };
+
+    void Link(entry_base* e) {
+      std::unique_lock<autowiring::spin_lock> callLk(m_callLock, std::try_to_lock);
+      if (callLk)
+        LinkUnsafe(*e);
+      else
+        CallLater(new callable_link{ *this, e });
+    }
+
+    void UnlinkUnsafe(const entry_base& entry) {
+      if (m_pFirstListener == &entry) {
+        m_pFirstListener = m_pFirstListener->pFlink;
+        if (m_pFirstListener)
+          m_pFirstListener->pBlink = nullptr;
+      }
+      if (m_pLastListener == &entry) {
+        m_pLastListener = m_pLastListener->pBlink;
+        if (m_pLastListener)
+          m_pLastListener->pFlink = nullptr;
+      }
+    }
+
+    struct callable_unlink :
+      detail::callable_base
+    {
+      callable_unlink(signal& owner, std::unique_ptr<entry_base>&& entry) :
+        owner(owner),
+        entry(std::move(entry))
+      {}
+
+      signal& owner;
+      std::unique_ptr<entry_base> entry;
+      void operator()() override { owner.UnlinkUnsafe(*entry); }
+    };
+
+    /// <summary>
+    /// Removes the specified entry from the set of listeners
+    /// </summary>
+    void Unlink(std::unique_ptr<entry_base> entry) {
+      // Try to obtain the call lock.  If a call is already underway then we need to delegate cleanup
+      // responsibility to that call.
+      std::unique_lock<autowiring::spin_lock> callLk(m_callLock, std::try_to_lock);
+      if (callLk)
+        // Acquired the call lock, now we need the list lock so we can make changes to the list
+        // The list lock is only held under insertion and deletion, not enumeration, and so we
+        // do not need to worry about anyone holding outstanding counts anywhere.
+        UnlinkUnsafe(*entry);
+      else
+        // Need to make an unregistration request, append it to our list of callables
+        CallLater(new callable_unlink(*this, std::move(entry)));
+    }
+
+    /// <summary>
+    /// Sequential signaling mechanism, invoked under the call lock
+    /// </summary>
+    void SignalUnsafe(Args... args) const {
+      for (auto cur = m_pFirstListener; cur; cur = cur->pFlink)
+        (*cur)(args...);
+    }
+
+    template<typename... FnArgs>
+    struct callable_signal :
+      detail::callable_base
+    {
+      callable_signal(const signal& owner, FnArgs&&... args) :
+        owner(owner),
+        args(std::forward<FnArgs&&>(args)...)
+      {}
+
+      const signal& owner;
+      autowiring::tuple<detail::dereferencer<FnArgs&&>...> args;
+
+      template<int... N>
+      void call(index_tuple<N...>) {
+        owner.SignalUnsafe(*autowiring::get<N>(args)...);
+      }
+
+      void operator()() override {
+        call(make_index_tuple<sizeof...(FnArgs)>::type{});
+      }
+    };
+
+    void InvokeDelayedCalls(void) const {
+      // If there were any other dispatchers, obtain them and invoke all of them:
+      while (m_pFirstDelayedCall.load(std::memory_order_relaxed)) {
+        std::unique_lock<autowiring::spin_lock> callLk(m_callLock, std::try_to_lock);
+        if (!callLk)
+          return;
+
+        // Flip links on the dispatchers so they are called in the right order:
+        detail::callable_base* lastLink = nullptr;
+        for (
+          detail::callable_base* cur = m_pFirstDelayedCall.exchange(nullptr, std::memory_order_relaxed);
+          cur;
+          std::swap(cur, lastLink)
+        )
+          std::swap(lastLink, cur->m_pFlink);
+
+        // Call all dispatchers in the right order
+        for (std::unique_ptr<detail::callable_base> cur{ lastLink }; cur; cur.reset(cur->m_pFlink))
+          (*cur)();
+      }
+    }
+
+    /// <summary>
+    /// Appends a callable to be invoked later
+    /// </summary>
+    void CallLater(detail::callable_base* pCallable) const {
+      do pCallable->m_pFlink = m_pFirstDelayedCall.load(std::memory_order_relaxed);
+      while (!m_pFirstDelayedCall.compare_exchange_weak(pCallable->m_pFlink, pCallable, std::memory_order_release, std::memory_order_relaxed));
     }
 
   public:
     /// <summary>
     /// Attaches the specified handler to this signal
     /// </summary>
+    /// <remarks>
+    /// If the return value is not captured, the signal cannot be unregistered.  Users are not required
+    /// to free this object.
+    /// </remarks>
     template<typename Fn>
-    registration_t operator+=(Fn fn) {
-      auto entry = make_registration<Fn>(std::forward<Fn>(fn), &Fn::operator());
-
-      {
-        std::lock_guard<autowiring::spin_lock> lk(m_lock);
-        m_listeners.push_back(entry);
-      }
-      return {this, entry.get()};
+    typename std::enable_if<
+      Decompose<decltype(&std::decay<Fn>::type::operator())>::N == sizeof...(Args),
+      registration_t
+    >::type operator+=(Fn fn) {
+      auto* e = new entry<typename std::decay<Fn>::type>(std::forward<Fn&&>(fn));
+      Link(e);
+      return{ this, e };
     }
 
-    void operator-=(detail::signal_node_base* rhs) override {
-      auto iter = m_listeners.begin();
-      while (iter != m_listeners.end()) {
-        if (iter->get() == rhs) {
-          (std::lock_guard<autowiring::spin_lock>)m_lock,
-          m_listeners.erase(iter);
-          return;
-        }
-        (std::lock_guard<autowiring::spin_lock>)m_lock, ++iter;
-      }
-      throw std::runtime_error("Attempted to remove node which is not part of this list.");
+    template<typename Fn>
+    typename std::enable_if<
+      Decompose<decltype(&std::decay<Fn>::type::operator())>::N == sizeof...(Args) + 1,
+      registration_t
+    >::type operator+=(Fn fn) {
+      auto* e = new entry_reflexive<typename std::decay<Fn>::type>(*this, std::forward<Fn>(fn));
+      Link(e);
+      return{ this, e };
     }
-
-    using signal_base::operator-=;
 
     /// <summary>
     /// Unregisters the specified registration object and clears its status
@@ -177,22 +394,45 @@ namespace autowiring {
     /// this method returns in multithreaded cases.  The handler is only guaranteed not to be called
     /// if `rhs.unique()` is true.
     /// </remarks>
-    void operator-=(entry_t rhs) {
-      *this -= rhs.get();
+    void operator-=(registration_t& rhs) override {
+      if (rhs.owner != this)
+        throw autowiring_error("Attempted to unlink a registration on an unrelated signal");
+      if (!rhs.pobj)
+        return;
+
+      Unlink(std::unique_ptr<entry_base>{ static_cast<entry_base*>(rhs.pobj) });
+      rhs.pobj = nullptr;
     }
 
     /// <summary>
     /// Raises the signal and invokes all attached handlers
     /// </summary>
-    void operator()(Args... args) const {
-      // A basic foreach doesn't work, since calling an element may remove it from the list.
-      // To compensate, we must move to the next element BEFORE calling the function.
-      auto iter = m_listeners.begin();
-      while (iter != m_listeners.end()) {
-        auto callee = iter;
-        (std::lock_guard<autowiring::spin_lock>)m_lock, ++iter;
-        (**callee)(args...);
+    /// <param name="args">
+    template<typename... FnArgs>
+    void operator()(FnArgs&&... args) const {
+      {
+        std::unique_lock<autowiring::spin_lock> callLk(m_callLock, std::try_to_lock);
+        if (callLk)
+          // Can safely make this call under lock because there are never any blocking
+          // operations involving this lock.
+          SignalUnsafe(std::forward<FnArgs>(args)...);
+        else {
+          // Need to create a dispatcher thunk for this call and then pend it to the list, we are not
+          // responsible for calling this dispatcher
+          CallLater(
+            new callable_signal<FnArgs...>{
+              *this,
+              std::forward<FnArgs&&>(args)...
+            }
+          );
+        }
       }
+      InvokeDelayedCalls();
     }
+
+    // This overload is provided so that statement completion makes sense.  Because of the
+    // template format of the earlier function call overload, overload resolution will never
+    // select this variant.
+    //void operator()(Args... args) const;
   };
 }

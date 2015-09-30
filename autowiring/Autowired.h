@@ -156,9 +156,9 @@ public:
       Autowired<T>* l_field = field; //lambda capture of references doesn't work right.
       autowiring::signal<void(Args...)> U::* l_member = member;
 
-      field->NotifyWhenAutowired([l_field, l_member, rhs](){
-        auto reg = static_cast<U*>(l_field->get())->*l_member += rhs;
-        l_field->m_events.push_back(reg);
+      field->NotifyWhenAutowired([l_field, l_member, rhs] {
+        auto& sig = static_cast<U*>(l_field->get())->*l_member;
+        l_field->m_events.push_back(sig += rhs);
       });
     }
   };
@@ -173,8 +173,8 @@ public:
   void reset(void) override {
     // And remove any events that were added to the object by this autowired field
     auto localEvents = std::move(m_events);
-    for (auto& registration : localEvents)
-      registration.reset();
+    for (auto& localEvent : localEvents)
+      *localEvent.owner -= localEvent;
 
     // Linked list unwind deletion:
     for (

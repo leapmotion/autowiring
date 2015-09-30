@@ -4,8 +4,4 @@
 #include "SlotInformation.h"
 
 using namespace autowiring;
-using namespace autowiring::detail;
 
-void signal_base::operator-=(const registration_t& reg) {
-  *this -= reg.entry;
-}

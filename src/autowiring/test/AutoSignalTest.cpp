@@ -4,9 +4,31 @@
 
 using namespace autowiring;
 
+namespace {
+  class CountsCopies {
+  public:
+    CountsCopies(void) = default;
+    CountsCopies(const CountsCopies&) { nCopies++; }
+    CountsCopies(CountsCopies&& rhs) { nMoves++; }
+    void operator=(const CountsCopies&) { nCopies++; }
+    void operator=(CountsCopies&& rhs) { nMoves++; }
+
+    static int nCopies;
+    static int nMoves;
+  };
+
+  int CountsCopies::nCopies = 0;
+  int CountsCopies::nMoves = 0;
+}
+
 class AutoSignalTest:
   public testing::Test
-{};
+{
+  void SetUp(void) override {
+    CountsCopies::nCopies = 0;
+    CountsCopies::nMoves = 0;
+  }
+};
 
 class RaisesASignal {
 public:
@@ -240,7 +262,8 @@ TEST_F(AutoSignalTest, NodeRemoval) {
   
   ASSERT_ANY_THROW(signal1 -= registration2) << "Removing a registration from a different signal than it was registered to failed to throw an exception";
 
-  registration1.reset();
+  signal1 -= registration1;
+
   signal1();
   signal2();
   
@@ -277,9 +300,9 @@ TEST_F(AutoSignalTest, SelfReferencingCall) {
 
   //The main test is just if this thing will compile
   registration_t registration1 =
-    signal1 += [&](registration_t* reg, int magic) {
+    signal1 += [&](registration_t reg, int magic) {
       ASSERT_EQ(magic, magic_number);
-      ASSERT_EQ(registration1, *reg);
+      ASSERT_EQ(registration1, reg);
       handler_called1 = true;
     };
 
@@ -299,11 +322,11 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
   int magic_number = 123;
   
   registration_t registration1 =
-    signal1 += [&](registration_t* reg, int magic) {
+    signal1 += [&](registration_t& reg, int magic) {
       ASSERT_EQ(magic, magic_number);
-      ASSERT_EQ(registration1, *reg);
+      ASSERT_EQ(registration1, reg);
       ++handler_called1;
-      reg->reset();
+      signal1 -= reg;
     };
   
   auto lambda3 = [&](int magic) {
@@ -311,16 +334,15 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
   };
 
   registration_t registration2 =
-    signal1 += [&](registration_t* reg, int magic) {
+    signal1 += [&](registration_t& reg, int magic) {
       ASSERT_EQ(magic, magic_number);
-      ASSERT_EQ(registration2, *reg);
+      ASSERT_EQ(registration2, reg);
       ++handler_called2;
     
       //+= is an append operation, but because when we're traveling the list and we grab the next pointer
       //*before* the function get's called, this append won't be picked up until the 2nd pass.
       signal1 += std::move(lambda3);
-    
-      reg->reset();
+      signal1 -= reg;
     };
   
   signal1(magic_number);
@@ -389,6 +411,32 @@ TEST_F(AutoSignalTest, CanMoveSignal) {
   ASSERT_TRUE(hit) << "Registered listeners were not correctly moved under move assignment";
 }
 
+TEST_F(AutoSignalTest, OneRemovesAll) {
+  autowiring::signal<void()> sig;
+  std::vector<registration_t> regs;
+  auto sentry = std::make_shared<bool>();
+
+  int nRun = 0;
+
+  {
+    auto clearall = [&, sentry] {
+      nRun++;
+      for (auto& reg : regs)
+        sig -= reg;
+      regs.clear();
+      ASSERT_EQ(3UL, sentry.use_count()) << "A registered lambda was destroyed before all lambdas were run";
+    };
+
+    static_assert(Decompose<decltype(&decltype(clearall)::operator())>::N == 0, "clearall lambda did not decompose correctly");
+
+    regs.push_back(sig += clearall);
+    regs.push_back(sig += clearall);
+  }
+  sig();
+  ASSERT_TRUE(sentry.unique()) << "Some signal handlers were leaked on teardown";
+  ASSERT_EQ(2, nRun) << "Should have executed all signals even if all signals were unlinked under a callback";
+}
+
 namespace {
   class ObjectA;
   class ObjectB;
@@ -429,4 +477,55 @@ TEST_F(AutoSignalTest, CyclicRegistrationUnlink) {
   }
 
   ASSERT_TRUE(ctxt.expired()) << "A context pointer was linked in an intentional cyclic dependency network";
+}
+
+TEST_F(AutoSignalTest, TrivialCountCase) {
+  autowiring::signal<void(const CountsCopies&)> sig;
+  sig(CountsCopies{});
+  ASSERT_EQ(0UL, CountsCopies::nCopies) << "Copy made under trivial forwarding";
+}
+
+TEST_F(AutoSignalTest, TrivialMoveCountCase) {
+  autowiring::signal<void(const std::unique_ptr<int>&)> sig;
+
+  // We have this line just to ensure it compiles
+  sig(std::unique_ptr<int>{ new int });
+
+  std::unique_ptr<int> val{ new int };
+  sig(std::move(val));
+  ASSERT_NE(nullptr, val) << "Value was moved when it should have been possible to operate on it in-place";
+}
+
+TEST_F(AutoSignalTest, TotalMoveCount) {
+  autowiring::signal<void(const CountsCopies&)> sig;
+
+  bool flag = true;
+  sig += [&] (const CountsCopies&) {
+    if(flag) {
+      // This recursive call will require that CountsCopies be moved at least once
+      sig(CountsCopies{});
+      flag = false;
+    }
+  };
+
+  // This should not require that the move ctor is invoked at all
+  sig(CountsCopies{});
+  ASSERT_EQ(1UL, CountsCopies::nMoves) << "Too many move constructions were required to invoke the signal";
+}
+
+TEST_F(AutoSignalTest, NecessaryMoveCase) {
+  autowiring::signal<void(const std::unique_ptr<int>&)> sig;
+
+  std::unique_ptr<int> mustBeMoved{ new int };
+  int callCt = 0;
+  sig += [&] (const std::unique_ptr<int>& cc) {
+    if (callCt == 0)
+      sig(std::move(mustBeMoved));
+    callCt++;
+  };
+
+  std::unique_ptr<int> val{ new int };
+  sig(std::move(val));
+  ASSERT_NE(nullptr, val) << "Value was moved when it should not have been moved";
+  ASSERT_EQ(nullptr, mustBeMoved) << "Value was not moved when it should have been moved";
 }
