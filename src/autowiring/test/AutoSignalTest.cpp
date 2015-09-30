@@ -322,7 +322,7 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
   int magic_number = 123;
   
   registration_t registration1 =
-    signal1 += [&](registration_t& reg, int magic) {
+    signal1 += [&](registration_t reg, int magic) {
       ASSERT_EQ(magic, magic_number);
       ASSERT_EQ(registration1, reg);
       ++handler_called1;
@@ -334,7 +334,7 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
   };
 
   registration_t registration2 =
-    signal1 += [&](registration_t& reg, int magic) {
+    signal1 += [&](registration_t reg, int magic) {
       ASSERT_EQ(magic, magic_number);
       ASSERT_EQ(registration2, reg);
       ++handler_called2;

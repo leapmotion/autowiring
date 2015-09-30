@@ -19,7 +19,7 @@
 
 using namespace autowiring;
 
-static_assert(!std::has_copy_constructor<CoreContext>::value, "Copy constructor incorrectly inferred on CoreContext");
+static_assert(!std::is_copy_constructible<CoreContext>::value, "Copy constructor incorrectly inferred on CoreContext");
 
 class DelayedContextHold:
   public CoreRunnable

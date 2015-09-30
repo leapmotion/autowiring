@@ -1,16 +1,18 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "auto_tuple.h"
+#include "autowiring_error.h"
 #include "Decompose.h"
 #include "index_tuple.h"
 #include "noop.h"
 #include "spin_lock.h"
-#include "auto_tuple.h"
 #include <atomic>
 #include <functional>
 #include <list>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include TYPE_TRAITS_HEADER
 
 /// <summary>
 /// Implements an asynchronous signal concept as an AutoFired alternative
@@ -141,7 +143,8 @@ namespace autowiring {
     signal_base
   {
   public:
-    signal(void) = default;
+    signal(void) {}
+    signal(const signal&) = delete;
 
     signal(signal&& rhs) :
       m_pFirstListener(rhs.m_pFirstListener),
@@ -324,7 +327,7 @@ namespace autowiring {
       }
 
       void operator()() override {
-        call(make_index_tuple<sizeof...(FnArgs)>::type{});
+        call(typename make_index_tuple<sizeof...(FnArgs)>::type{});
       }
     };
 
