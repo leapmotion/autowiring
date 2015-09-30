@@ -26,13 +26,6 @@ set(Autowiring_SRCS
   auto_signal.h
   auto_signal.cpp
   auto_tuple.h
-  AutoConfig.h
-  AutoConfigBase.cpp
-  AutoConfigBase.h
-  AutoConfigListing.cpp
-  AutoConfigListing.h
-  AutoConfigParser.cpp
-  AutoConfigParser.hpp
   AutoCurrentPacketPusher.h
   AutoFilterDescriptor.h
   AutoFilterDescriptor.cpp
@@ -75,8 +68,6 @@ set(Autowiring_SRCS
   BoltBase.h
   CallExtractor.h
   CallExtractor.cpp
-  ConfigRegistry.cpp
-  ConfigRegistry.h
   ContextEnumerator.cpp
   ContextEnumerator.h
   ContextMap.h
