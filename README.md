@@ -52,7 +52,7 @@ You're also going to need a copy of Visual Studio 2012 or better.  Other build s
     cd autowiring
     cmake .
 
-At this point, you'll have a solution file in your root directory called "Autowiring.sln", if you run Visual Studio as an adminstrator and build the INSTALL
+At this point, you'll have a solution file in your root directory called "Autowiring.sln", if you run Visual Studio as an administrator and build the INSTALL
 target then Autowiring will be installed on your system.  As with the other platforms, CMake will be able to find autowiring when it's installed this way
 via the [find_package](http://www.cmake.org/cmake/help/v3.0/command/find_package.html) command.  Alternatively, if you prefer to build from the command line:
 
