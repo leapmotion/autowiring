@@ -17,3 +17,6 @@ public:
   const char* what(void) const throw() override {return m_what.c_str();}
 };
 
+namespace autowiring {
+  void ThrowFailedTypeParseException(const std::string& str, const std::type_info& ti);
+}

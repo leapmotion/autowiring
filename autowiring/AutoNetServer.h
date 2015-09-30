@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "CoreThread.h"
-#include "ConfigRegistry.h"
 #include "index_tuple.h"
 #include <autowiring/Decompose.h>
 #include <sstream>
