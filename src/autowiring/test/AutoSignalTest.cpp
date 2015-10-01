@@ -550,6 +550,19 @@ TEST_F(AutoSignalTest, NestedSignalRegistration) {
   ASSERT_FALSE(inner) << "Inner signal was asserted even though it should not yet have been registered";
 }
 
+TEST_F(AutoSignalTest, NoLingeringListeners) {
+  autowiring::signal<void()> sig;
+  auto x = std::make_shared<bool>(false);
+
+  auto reg = sig += [x] {};
+  sig += [&] { sig -= reg; };
+
+  // Invoke the signal, which will defer unregistration of the other listener and should
+  // not cause leakage.
+  sig();
+  ASSERT_TRUE(x.unique()) << "Lambda function unregistration was leaked";
+}
+
 TEST_F(AutoSignalTest, PathologicalSyncTest) {
   autowiring::signal<void()> sig;
   bool proceed = true;
