@@ -40,52 +40,6 @@
     </Expand>
   </Type>
 
-  <Type Name="std::vector&lt;CoreObjectDescriptor, std::allocator&lt;CoreObjectDescriptor&gt;&gt;">
-    <DisplayString>[size = {_Mylast - _Myfirst}]</DisplayString>
-    <Expand>
-      <Item Name="Size">_Mylast - _Myfirst</Item>
-      <ArrayItems>
-        <Size>_Mylast - _Myfirst</Size>
-        <ValuePointer>_Myfirst</ValuePointer>
-      </ArrayItems>
-    </Expand>
-  </Type>
-
-  <Type Name="CoreObjectDescriptor">
-    <DisplayString Condition="type._M_data != nullptr">[{((char*)type._M_data + 6 + (*(char*)type._M_data == 's')),sb}, uses = {((std::shared_ptr&lt;Object&gt;*)((SharedPointerSlot*)value.m_space)-&gt;m_space)-&gt;_Rep-&gt;_Uses}]</DisplayString>
-    <DisplayString>?</DisplayString>
-    <Expand>
-      <Item Name="Pointer">pObject._Ptr,na</Item>
-
-      <Item Name="AutoFilter" Condition="subscriber.m_pCall != nullptr">subscriber</Item>
-
-      <Synthetic Name="Exception Filter" Condition="pFilter._Ptr != nullptr">
-        <DisplayString>true</DisplayString>
-      </Synthetic>
-
-      <Item Name="Member Name" Condition="pContextMember._Ptr &amp;&amp; pContextMember._Ptr-&gt;m_name">
-        pContextMember._Ptr-&gt;m_name,sb
-      </Item>
-      <Synthetic Name="Member Name" Condition="pContextMember._Ptr &amp;&amp; !pContextMember._Ptr-&gt;m_name">
-        <DisplayString>(none)</DisplayString>
-      </Synthetic>
-
-      <Synthetic Name="Thread State" Condition="pBasicThread._Ptr != nullptr">
-        <DisplayString Condition="pBasicThread._Ptr->m_completed">Complete</DisplayString>
-        <DisplayString Condition="pBasicThread._Ptr->m_running &amp;&amp; !pBasicThread._Ptr->m_stop">Running</DisplayString>
-        <DisplayString Condition="pBasicThread._Ptr->m_running">Shutting Down</DisplayString>
-        <DisplayString Condition="pBasicThread._Ptr->m_stop">Cancelled</DisplayString>
-        <DisplayString>Not Started</DisplayString>
-      </Synthetic>
-
-      <Item Name="Event Receiver">receivesEvents</Item>
-
-      <Synthetic Name="Bolt" Condition="pBoltBase._Ptr != nullptr">
-        <DisplayString>Bolt</DisplayString>
-      </Synthetic>
-    </Expand>
-  </Type>
-
   <Type Name="AutoFilterDescriptor">
     <DisplayString Condition="m_deferred">[{m_requiredCount} in, {m_arity - m_requiredCount} out, deferred]</DisplayString>
     <DisplayString>[{m_requiredCount} in, {m_arity - m_requiredCount} out]</DisplayString>
@@ -110,15 +64,6 @@
       <Item Name="[remaining]">remaining + optional</Item>
       <Item Name="[called]">called</Item>
       <ExpandedItem>(AutoFilterDescriptor*)this</ExpandedItem>
-    </Expand>
-  </Type>
-
-  <Type Name="AutoPacketFactory">
-    <DisplayString>Packet Factory</DisplayString>
-    <Expand>
-      <Item Name="Filters">
-        m_autoFilters
-      </Item>
     </Expand>
   </Type>
 
@@ -171,4 +116,41 @@
     </Expand>
   </Type>
 
+  <Type Name="CoreContext">
+    <DisplayString>[ {m_concreteTypes._Mysize} types]</DisplayString>
+    <DisplayString>[ {m_concreteTypes._Mysize} types]</DisplayString>
+    <Expand>
+      <Item Name="Initiated">onInitiated.flag</Item>
+      <Item Name="Running">onRunning.flag</Item>
+      <Item Name="Shutdown">onShutdown.flag</Item>
+      <Item Name="Items">m_concreteTypes</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="auto_id">
+    <DisplayString>[ {block->ti} ]</DisplayString>
+    <Expand>
+      <Item Name="value">value</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="CoreObjectDescriptor">
+    <DisplayString Condition="pCoreRunnable._Ptr->m_wasStarted">{type.block->ti->_M_d_name,sb}</DisplayString>
+    <DisplayString>{type.block->ti->_M_d_name,sb}</DisplayString>
+    <Expand>
+      <ExpandedItem>(CoreObject*)(pCoreObject._Ptr)</ExpandedItem>
+      <Item Name="Initiated" Condition="pCoreRunnable._Ptr != nullptr">pCoreRunnable._Ptr->m_wasStarted</Item>
+      <Item Name="Running" Condition="pCoreRunnable._Ptr != nullptr">pCoreRunnable._Ptr->m_wasStarted &amp;&amp; pCoreRunnable._Ptr->m_outstanding._Ptr != nullptr</Item>
+      <Item Name="Shutdown" Condition="pCoreRunnable._Ptr != nullptr">pCoreRunnable._Ptr->m_shouldStop</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="AutowirableSlot&lt;*&gt;">
+    <DisplayString Condition="m_ptr.m_ptr._Ptr">{*($T1*)m_ptr.m_ptr._Ptr}</DisplayString>
+    <DisplayString>empty</DisplayString>
+    <Expand>
+      <Item Name="[ptr]">($T1*)m_ptr.m_ptr._Ptr</Item>
+    </Expand>
+  </Type>
+  
 </AutoVisualizer>
