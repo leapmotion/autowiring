@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/autowiring.h>
+#include <thread>
 
 using namespace autowiring;
 
@@ -547,4 +548,53 @@ TEST_F(AutoSignalTest, NestedSignalRegistration) {
   sig();
   ASSERT_TRUE(outer) << "Outer signal was not asserted even though it was registered in advance";
   ASSERT_FALSE(inner) << "Inner signal was asserted even though it should not yet have been registered";
+}
+
+TEST_F(AutoSignalTest, NoLingeringListeners) {
+  autowiring::signal<void()> sig;
+  auto x = std::make_shared<bool>(false);
+
+  auto reg = sig += [x] {};
+  sig += [&] { sig -= reg; };
+
+  // Invoke the signal, which will defer unregistration of the other listener and should
+  // not cause leakage.
+  sig();
+  ASSERT_TRUE(x.unique()) << "Lambda function unregistration was leaked";
+}
+
+TEST_F(AutoSignalTest, PathologicalSyncTest) {
+  autowiring::signal<void()> sig;
+  bool proceed = true;
+
+  // This thread slams the signal in a tight loop
+  std::thread t([&] {
+    while (proceed)
+      sig();
+  });
+
+  // Make sure our thread exits properly
+  auto r = MakeAtExit([&] {
+    proceed = false;
+    t.join();
+  });
+
+  // Need to make sure that the signal is only ever asserted from the thread above:
+  auto tid = t.get_id();
+  bool succeeded = false;
+  size_t nAssertions = 0;
+  sig += [&, tid] {
+    succeeded &= (tid == std::this_thread::get_id());
+    nAssertions++;
+  };
+
+  // Register and unregister the same listener in a tight loop, this should create chaos
+  while (nAssertions < 1000) {
+    auto x = std::make_shared<bool>(false);
+    auto r = sig += [x] {
+      *x = x.unique();
+    };
+    sig -= r;
+    ASSERT_FALSE(*x) << "Lambda was invoked after it was destroyed";
+  }
 }

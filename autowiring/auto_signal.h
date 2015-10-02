@@ -135,6 +135,21 @@ namespace autowiring {
     operator bool(void) const { return pobj != nullptr; }
   };
 
+  // Current state of the signal, used as a type of lock.
+  enum class SignalState {
+    // Signal is totally idle, this is the default state
+    Free,
+
+    // Someone is presently inserting or removing a listener
+    Updating,
+
+    // Signal is being asserted in some thread
+    Asserting,
+
+    // Signal is being asserted, and there is deferred work to be done
+    Deferred,
+  };
+
   /// <summary>
   /// A signal registration entry, for use as an embedded member variable of a context member.
   /// </summary>
@@ -180,8 +195,7 @@ namespace autowiring {
     }
 
   private:
-    // Lock held by whomever is currently invoking signal handlers
-    mutable autowiring::spin_lock m_callLock;
+    mutable std::atomic<SignalState> m_state{ SignalState::Free };
 
     // Base type for listeners attached to this signal
     struct entry_base {
@@ -224,7 +238,7 @@ namespace autowiring {
     entry_base* m_pFirstListener = nullptr;
     entry_base* m_pLastListener = nullptr;
 
-    // Calls that had to be delayed because the lock was held
+    // Calls that had to be delayed due to asynchronous issues
     mutable std::atomic<detail::callable_base*> m_pFirstDelayedCall{ nullptr };
 
     void LinkUnsafe(entry_base& e) {
@@ -246,16 +260,50 @@ namespace autowiring {
       {}
 
       signal& owner;
-      entry_base*const entry;
-      void operator()() override { owner.LinkUnsafe(*entry); }
+      entry_base* entry;
+      void operator()() override {
+        if(entry)
+          owner.LinkUnsafe(*entry);
+      }
     };
 
     void Link(entry_base* e) {
-      std::unique_lock<autowiring::spin_lock> callLk(m_callLock, std::try_to_lock);
-      if (callLk)
-        LinkUnsafe(*e);
-      else
-        CallLater(new callable_link{ *this, e });
+      SignalState state = SignalState::Free;
+
+      // We don't mind rare failures, here, because our algorithm is correct regardless
+      // of the return value of this comparison, it's just slightly more efficient if
+      // there is no failure.
+      if (!m_state.compare_exchange_weak(state, SignalState::Updating)) {
+        // Control is contended, we need to hand off linkage responsibility to someone else.
+        auto link = new callable_link{ *this, e };
+        CallLater(link);
+
+        for (;;) {
+          // Try to transition from Asserting to the Deferred state first, if we succeed here
+          // then the call operator will take responsibility for our insertion request.
+          state = SignalState::Asserting;
+          if (m_state.compare_exchange_weak(state, SignalState::Deferred))
+            return;
+
+          // If we observed the state as being Deferred, then we can also short-circuit
+          if (state == SignalState::Deferred)
+            return;
+
+          // Next try to transition from Free to Updating.
+          state = SignalState::Free;
+          if (m_state.compare_exchange_weak(state, SignalState::Updating)) {
+            // Success, cancel the operation and exit here.  We can't delete this link because
+            // it has already been submitted to the queue, but calling it has no effect and it
+            // will be cleaned up later.
+            link->entry = nullptr;
+            break;
+          }
+        }
+      }
+
+      // Link and go straight to the Free state.  Updating is exclusive.
+      LinkUnsafe(*e);
+      m_state = SignalState::Free;
     }
 
     void UnlinkUnsafe(const entry_base& entry) {
@@ -281,24 +329,38 @@ namespace autowiring {
 
       signal& owner;
       std::unique_ptr<entry_base> entry;
-      void operator()() override { owner.UnlinkUnsafe(*entry); }
+      void operator()() override {
+        if(entry)
+          owner.UnlinkUnsafe(*entry);
+      }
     };
 
     /// <summary>
     /// Removes the specified entry from the set of listeners
     /// </summary>
-    void Unlink(std::unique_ptr<entry_base> entry) {
-      // Try to obtain the call lock.  If a call is already underway then we need to delegate cleanup
-      // responsibility to that call.
-      std::unique_lock<autowiring::spin_lock> callLk(m_callLock, std::try_to_lock);
-      if (callLk)
-        // Acquired the call lock, now we need the list lock so we can make changes to the list
-        // The list lock is only held under insertion and deletion, not enumeration, and so we
-        // do not need to worry about anyone holding outstanding counts anywhere.
-        UnlinkUnsafe(*entry);
-      else
-        // Need to make an unregistration request, append it to our list of callables
-        CallLater(new callable_unlink(*this, std::move(entry)));
+    void Unlink(std::unique_ptr<entry_base> e) {
+      // See discussion in Link
+      SignalState state = SignalState::Free;
+      if (!m_state.compare_exchange_weak(state, SignalState::Updating)) {
+        auto link = new callable_unlink(*this, std::move(e));
+        CallLater(link);
+
+        for (;;) {
+          state = SignalState::Asserting;
+          if (m_state.compare_exchange_weak(state, SignalState::Deferred))
+            return;
+          if (state == SignalState::Deferred)
+            return;
+
+          state = SignalState::Free;
+          if (m_state.compare_exchange_weak(state, SignalState::Updating)) {
+            e = std::move(link->entry);
+            break;
+          }
+        }
+      }
+      UnlinkUnsafe(*e);
+      m_state = SignalState::Free;
     }
 
     /// <summary>
@@ -331,34 +393,22 @@ namespace autowiring {
       }
     };
 
-    void InvokeDelayedCalls(void) const {
-      // If there were any other dispatchers, obtain them and invoke all of them:
-      while (m_pFirstDelayedCall.load(std::memory_order_relaxed)) {
-        std::unique_lock<autowiring::spin_lock> callLk(m_callLock, std::try_to_lock);
-        if (!callLk)
-          return;
-
-        // Flip links on the dispatchers so they are called in the right order:
-        detail::callable_base* lastLink = nullptr;
-        for (
-          detail::callable_base* cur = m_pFirstDelayedCall.exchange(nullptr, std::memory_order_relaxed);
-          cur;
-          std::swap(cur, lastLink)
-        )
-          std::swap(lastLink, cur->m_pFlink);
-
-        // Call all dispatchers in the right order
-        for (std::unique_ptr<detail::callable_base> cur{ lastLink }; cur; cur.reset(cur->m_pFlink))
-          (*cur)();
-      }
-    }
-
     /// <summary>
     /// Appends a callable to be invoked later
     /// </summary>
     void CallLater(detail::callable_base* pCallable) const {
-      do pCallable->m_pFlink = m_pFirstDelayedCall.load(std::memory_order_relaxed);
-      while (!m_pFirstDelayedCall.compare_exchange_weak(pCallable->m_pFlink, pCallable, std::memory_order_release, std::memory_order_relaxed));
+      detail::callable_base* newFlink;
+      do {
+        newFlink = m_pFirstDelayedCall.load(std::memory_order_relaxed);
+        pCallable->m_pFlink = newFlink;
+      } while (
+        !m_pFirstDelayedCall.compare_exchange_weak(
+          newFlink,
+          pCallable,
+          std::memory_order_acq_rel,
+          std::memory_order_relaxed
+        )
+      );
     }
 
   public:
@@ -407,24 +457,85 @@ namespace autowiring {
     /// <param name="args">
     template<typename... FnArgs>
     void operator()(FnArgs&&... args) const {
-      {
-        std::unique_lock<autowiring::spin_lock> callLk(m_callLock, std::try_to_lock);
-        if (callLk)
-          // Can safely make this call under lock because there are never any blocking
-          // operations involving this lock.
-          SignalUnsafe(std::forward<FnArgs>(args)...);
-        else {
-          // Need to create a dispatcher thunk for this call and then pend it to the list, we are not
-          // responsible for calling this dispatcher
-          CallLater(
-            new callable_signal<FnArgs...>{
-              *this,
-              std::forward<FnArgs&&>(args)...
-            }
-          );
+      for (;;) {
+        SignalState state = SignalState::Free;
+        if (m_state.compare_exchange_weak(state, SignalState::Asserting, std::memory_order_release, std::memory_order_relaxed)) {
+          // Can safely make this call under state because there are never any blocking
+          // operations involving this lock.  We cannot let exceptions propagate out of
+          // here because we might not actually be able to give up control.
+          try {
+            SignalUnsafe(std::forward<FnArgs>(args)...);
+          } catch(...) {}
+          break;
         }
+        
+        switch (state) {
+        case SignalState::Free:
+        case SignalState::Updating:
+          // Spurious failure, or insertion.
+          // We cannot delegate control to insertion, and spurious failure shoudl be retried.
+          continue;
+        default:
+          // Asserting or deferred for awhile, we need to take another option
+          break;
+        }
+
+        // We failed to obtain control.  Create a thunk here.
+        CallLater(
+          new callable_signal<FnArgs...>{
+            *this,
+            std::forward<FnArgs&&>(args)...
+          }
+        );
+
+        // Now ensure that someone is going to take responsibility to make this invocation
+        do {
+          state = SignalState::Asserting;
+          if (m_state.compare_exchange_weak(state, SignalState::Deferred))
+            // Success, we have transferred responsibility for this call to the other entity.
+            return;
+          if (state == SignalState::Deferred)
+            // Failure, egg came back on our face.  Responsibility was reflected back on to us.
+            // Take charge.
+            break;
+          state = SignalState::Free;
+        } while (!m_state.compare_exchange_weak(state, SignalState::Asserting));
+
+        // Great.  If we got here it's because everyone got away and we're left holding the bag.
+        // We thought we were going to need to pend a callable signal but instead we're still going
+        // to need to invoke it ourselves.
+        break;
       }
-      InvokeDelayedCalls();
+
+      // Try to get out of the asserting state and into the free state
+      for(
+        SignalState state = SignalState::Asserting;
+        !m_state.compare_exchange_weak(state, SignalState::Free, std::memory_order_release, std::memory_order_relaxed);
+        state = SignalState::Asserting
+      ) {
+        // Failed to give up control.  Our state was deferred or the delayed call list was non-empty,
+        // we need to transition to the Asserting state and empty our list before proceeding
+        state = SignalState::Deferred;
+        m_state.compare_exchange_strong(state, SignalState::Asserting);
+        if (state == SignalState::Asserting)
+          // Spurious failure, circle around
+          continue;
+
+        // Take ownership of the dispatcher list and reverse this forward-linked list.
+        detail::callable_base* lastLink = nullptr;
+        for (
+          detail::callable_base* cur = m_pFirstDelayedCall.exchange(nullptr, std::memory_order_acquire);
+          cur;
+          std::swap(cur, lastLink)
+        )
+          std::swap(lastLink, cur->m_pFlink);
+
+        // Call all dispatchers in the right order
+        for (std::unique_ptr<detail::callable_base> cur{ lastLink }; cur; cur.reset(cur->m_pFlink))
+          // Eat any exception that occurs
+          try { (*cur)(); }
+          catch(...) {}
+      }
     }
 
     // This overload is provided so that statement completion makes sense.  Because of the
