@@ -569,8 +569,12 @@ TEST_F(AutoSignalTest, PathologicalSyncTest) {
 
   // This thread slams the signal in a tight loop
   std::thread t([&] {
-    while (proceed)
+    int i = 0;
+    while (proceed) {
       sig();
+      if (++i % 10000 == 0)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
   });
 
   // Make sure our thread exits properly
@@ -589,6 +593,7 @@ TEST_F(AutoSignalTest, PathologicalSyncTest) {
   };
 
   // Register and unregister the same listener in a tight loop, this should create chaos
+  int i = 0;
   while (nAssertions < 1000) {
     auto x = std::make_shared<bool>(false);
     auto r = sig += [x] {
@@ -596,5 +601,7 @@ TEST_F(AutoSignalTest, PathologicalSyncTest) {
     };
     sig -= r;
     ASSERT_FALSE(*x) << "Lambda was invoked after it was destroyed";
+    if (++i % 10000 == 0)
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 }
