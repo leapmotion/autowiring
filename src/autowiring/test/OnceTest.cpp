@@ -55,6 +55,8 @@ TEST(OnceTest, MultiLambdaPending) {
     while(go) {
       o += [&] { x++; };
       y++;
+      if (y % 10000 == 0)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
   });
 
