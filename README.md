@@ -25,7 +25,7 @@ This will configure the project to build fat binaries by default.  If you wish t
 
     cmake . -DCMAKE_OSX_ARCHITECTURES:STRING=x86_64
 
-### Linix
+### Linux
 
 The commands for Unix are different depending on what package manager you're using.  Ubuntu's package manager is apt-get, OpenSUSE uses zypper, and
 CentOS systems use yum.  The major apparent difference to the user will be that the package to install has a different name.  For Ubuntu, do this:
