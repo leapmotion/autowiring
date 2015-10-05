@@ -2,6 +2,7 @@
 #pragma once
 #include "SimpleReceiver.hpp"
 #include <autowiring/CoreThread.h>
+#include <thread>
 
 class FiresManyEventsWhenRun:
   public CoreThread
@@ -22,7 +23,7 @@ public:
       while(++totalXmit % 100)
         m_ci(&CallableInterface::ZeroArgs)();
       if (totalXmit % 2000 == 0)
-        WaitForEvent(std::chrono::milliseconds(1));
+        std::this_thread::yield();
     }
   }
 };

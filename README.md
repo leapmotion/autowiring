@@ -25,7 +25,7 @@ This will configure the project to build fat binaries by default.  If you wish t
 
     cmake . -DCMAKE_OSX_ARCHITECTURES:STRING=x86_64
 
-### Linix
+### Linux
 
 The commands for Unix are different depending on what package manager you're using.  Ubuntu's package manager is apt-get, OpenSUSE uses zypper, and
 CentOS systems use yum.  The major apparent difference to the user will be that the package to install has a different name.  For Ubuntu, do this:
@@ -69,6 +69,16 @@ Building on Android requires the use of a toolchain file.  You will need to use 
 Similar requirements to Arm-linux, you must specify a toolchain file.  You must also specify the path to your Android toolchain directory.  Make sure you update `/opt/android-standalone-toolchain` to point to your actual Android standalone toolchain directory. To build for 64 bit android systems, export the environment variable `export ARMv8=true`. If you aren't cross-compiling, then simply run cmake with no options.
 
     cmake . -DCMAKE_TOOLCHAIN_FILE=toolchain-android.cmake -DLLVM_ANDROID_TOOLCHAIN_DIR=/opt/android-standalone-toolchain
+
+# Test
+
+To run all Autowiring unit tests as a sanity check:
+
+    bin/AutowiringTest
+
+If running through valgrind, make sure to specify fair thread scheduling or else some pathological test cases may hang:
+
+    valgrind --fair-sched=yes bin/AutowiringTest
 
 # Install
 
