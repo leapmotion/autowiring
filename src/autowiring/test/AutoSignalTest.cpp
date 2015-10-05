@@ -438,6 +438,24 @@ TEST_F(AutoSignalTest, OneRemovesAll) {
   ASSERT_EQ(2, nRun) << "Should have executed all signals even if all signals were unlinked under a callback";
 }
 
+TEST_F(AutoSignalTest, SingleUnregisterFromMany) {
+  autowiring::signal<void()> sig;
+
+  size_t ct = 0;
+  auto l = [&] { ct++; };
+
+  sig += l;
+  sig += l;
+  auto r = sig += l;
+  sig += l;
+  sig += l;
+  sig += l;
+  sig -= r;
+
+  sig();
+  ASSERT_EQ(5UL, ct) << "Incorrect number of signals asserted";
+}
+
 namespace {
   class ObjectA;
   class ObjectB;

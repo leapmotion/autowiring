@@ -317,6 +317,12 @@ namespace autowiring {
         if (m_pLastListener)
           m_pLastListener->pFlink = nullptr;
       }
+
+      // Neighbor unlink:
+      if (entry.pFlink)
+        entry.pFlink->pBlink = entry.pBlink;
+      if (entry.pBlink)
+        entry.pBlink->pFlink = entry.pFlink;
     }
 
     struct callable_unlink :
