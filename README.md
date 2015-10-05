@@ -70,6 +70,16 @@ Similar requirements to Arm-linux, you must specify a toolchain file.  You must 
 
     cmake . -DCMAKE_TOOLCHAIN_FILE=toolchain-android.cmake -DLLVM_ANDROID_TOOLCHAIN_DIR=/opt/android-standalone-toolchain
 
+# Test
+
+To run all Autowiring unit tests as a sanity check:
+
+    bin/AutowiringTest
+
+If running through valgrind, make sure to specify fair thread scheduling or else some pathological test cases may hang:
+
+    valgrind --fair-sched=yes bin/AutowiringTest
+
 # Install
 
 Autowiring uses CPack, which knows how to use rpm/deb/wix/dragndrop, and will target the correct version depending on which system you're on.  To build
