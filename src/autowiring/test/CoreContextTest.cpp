@@ -207,11 +207,9 @@ TEST_F(CoreContextTest, NoEnumerateBeforeBoltReturn) {
   });
 
   // Verify that the context does not appear until the bolt has finished running:
-  while(!*finished) {
+  while(!*finished)
     for(auto cur : ContextEnumeratorT<NoEnumerateBeforeBoltReturn>(ctxt))
       ASSERT_TRUE(longTime->m_bDoneRunning) << "A context was enumerated before a bolt finished running";
-    AutoRequired<CoreThread>()->WaitForEvent(std::chrono::milliseconds(1));
-  }
 
   // Need to block until this thread is done
   t.join();
