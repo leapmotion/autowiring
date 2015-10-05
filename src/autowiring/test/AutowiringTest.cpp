@@ -99,6 +99,8 @@ class DynamicCastDerivedType : public PublicBase, private PrivateBase {
 public:
   DynamicCastDerivedType(void) {}
   ~DynamicCastDerivedType(void) {}
+
+  FRIEND_TEST(AutowiringTest, PostHocTypeAdvertisement);
 };
 
 TEST_F(AutowiringTest, TestFailureOfDynamicCast) {
@@ -107,6 +109,21 @@ TEST_F(AutowiringTest, TestFailureOfDynamicCast) {
   PrivateBase* priv = dynamic_cast<PrivateBase*>(pub);
   ASSERT_EQ(nullptr, priv) << "Dynamic cast failed to give nullptr when cross casting to a private base class";
   static_assert(!std::is_base_of<DynamicCastDerivedType, PrivateBase>::value, "is_base_of said a private base was a base");
+}
+
+TEST_F(AutowiringTest, PostHocTypeAdvertisement) {
+  AutoCurrentContext ctxt;
+  AutoRequired<DynamicCastDerivedType> dcdt;
+  Autowired<PrivateBase> pb;
+
+  ASSERT_FALSE(pb.IsAutowired()) << "Private base type was present in the context before it was advertised";
+  ctxt->Add(
+    std::shared_ptr<PrivateBase>{
+      dcdt,
+      static_cast<PrivateBase*>(dcdt.get())
+    }
+  );
+  ASSERT_TRUE(pb.IsAutowired()) << "Type was not autowired after an injection event took place that should have made it available";
 }
 
 class CompletelyUndefinedType;
