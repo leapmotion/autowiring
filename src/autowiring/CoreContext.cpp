@@ -252,9 +252,9 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
 
       if (v.m_local) {
         if (traits.pCoreObject && *v.m_value == traits.pCoreObject)
-          throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
+          throw autowiring_error("An attempt was made to add the same value to the same context more than once");
         if (*v.m_value)
-          throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+          throw autowiring_error("An attempt was made to add the same type to the same context more than once");
       }
       else {
         v.m_value = traits.value;
