@@ -211,3 +211,20 @@ TEST_F(AutowiringTest, FastNullDereferenceAttempt) {
   ASSERT_ANY_THROW(*co) << "A dereference attempt on a CoreObject did not throw an exception as expected";
   ASSERT_ANY_THROW((void)co->one) << "A dereference attempt on a CoreObject did not throw an exception as expected";
 }
+
+namespace {
+  class InjectsItself:
+    public CoreObject
+  {
+  public:
+    InjectsItself(bool recurse) {
+      if(recurse)
+        AutoConstruct<InjectsItself>{false};
+    }
+  };
+}
+
+TEST_F(AutowiringTest, AutowiresItself) {
+  // Try to overtake:
+  ASSERT_NO_THROW(AutoConstruct<InjectsItself> bii(true)) << "An overtaken constructor incorrectly caused an exception to be thrown";
+}
