@@ -214,7 +214,7 @@ namespace autowiring {
 
       template<typename _Fn>
       entry(signal&, _Fn fn) : fn(std::forward<_Fn>(fn)) {}
-      const Fn fn;
+      Fn fn;
       void operator()(const Args&... args) override { fn(args...); }
     };
 
