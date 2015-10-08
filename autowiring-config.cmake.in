@@ -7,8 +7,8 @@
 if ("@CMAKE_CURRENT_BINARY_DIR@" STREQUAL CMAKE_CURRENT_LIST_DIR)
   set(autowiring_INCLUDE_DIR "@PROJECT_SOURCE_DIR@")
 else()
-  set(autowiring_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/../include")
+  set(autowiring_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/include")
 endif()
 
-include("${CMAKE_CURRENT_LIST_DIR}/AutowiringTargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/AutowiringTargets.cmake")
 set(autowiring_FOUND TRUE)
