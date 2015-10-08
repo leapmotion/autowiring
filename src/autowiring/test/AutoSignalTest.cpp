@@ -616,3 +616,45 @@ TEST_F(AutoSignalTest, PathologicalSyncTest) {
     ASSERT_FALSE(*x) << "Lambda was invoked after it was destroyed";
   }
 }
+
+namespace {
+  class OuterType {
+  public:
+    autowiring::signal<void()> sig;
+  };
+
+  class WiresInOuterScope {
+  public:
+    WiresInOuterScope(void) {
+      outer(&OuterType::sig) += [this] {
+        ASSERT_EQ(0xDEADBEEFC0FECAFE, magic);
+      };
+    }
+
+    ~WiresInOuterScope(void) {
+      magic = 0xEEEE0000FFFF0000;
+    }
+
+    Autowired<OuterType> outer;
+    uint64_t magic = 0xDEADBEEFC0FECAFE;
+  };
+}
+
+TEST_F(AutoSignalTest, OuterPostDereference) {
+  AutoRequired<OuterType> outer;
+
+  AutoCreateContext ctxt;
+  outer->sig += [&] {
+    // This will cause the outer context to be destroyed, which will cause one
+    // of the signal handlers to be reset.  Unfortunatley, however, we aren't yet
+    // done hitting all signal handlers, so this statement will cause the very next
+    // invoked signal--registered in WiresInOuterScope's ctor--to possibly be
+    // called even though its context is gone.
+    ctxt.reset();
+  };
+
+  ctxt->Inject<WiresInOuterScope>();
+
+  // This should trigger an exception:
+  outer->sig();
+}
