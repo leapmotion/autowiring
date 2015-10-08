@@ -32,7 +32,6 @@
 #include STL_UNORDERED_MAP
 
 struct CoreContextStateBlock;
-class AutoInjectable;
 class BasicThread;
 class BoltBase;
 class CoreContext;
@@ -288,14 +287,6 @@ protected:
   /// Overload which does not perform injection
   /// </summary>
   std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate);
-
-  /// \internal
-  /// <summary>
-  /// Register new context with parent and notify others of its creation.
-  /// </summary>
-  /// <param name="pfnCreate">A creation routine which can create the desired context</param>
-  /// <param name="inj">An injectable to be inserted into the context before bolts are fired</param>
-  std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, AutoInjectable&& pInj);
 
   // Adds a bolt proper to this context
   template<typename T, typename... Sigils>
@@ -604,16 +595,6 @@ private:
   }
 
 public:
-  /// \internal
-  /// <summary>
-  /// Factory to create a new context
-  /// </summary>
-  /// <param name="inj">An injectable type.</param>
-  template<class T>
-  std::shared_ptr<CoreContextT<T>> Create(AutoInjectable&& inj) {
-    return std::static_pointer_cast<CoreContextT<T>>(CreateInternal(&CoreContext::CreateUntyped<T>, std::move(inj)));
-  }
-
   /// <summary>
   /// Creates a child context of this context.
   /// </summary>

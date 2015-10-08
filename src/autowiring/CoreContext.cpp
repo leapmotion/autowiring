@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "CoreContext.h"
-#include "AutoInjectable.h"
 #include "AutoPacketFactory.h"
 #include "CoreContextStateBlock.h"
 #include "CoreThread.h"
@@ -129,11 +128,7 @@ CoreContext::~CoreContext(void) {
     }
 }
 
-std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate) {
-  return CreateInternal(pfnCreate, AutoInjectable());
-}
-
-std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, AutoInjectable&& inj)
+std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate)
 {
   // don't allow new children if shutting down
   if(IsShutdown())
@@ -162,9 +157,6 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, 
   // transition directly to the running state without having to wait in Initiated
   if (IsRunning())
     retVal->m_state = State::CanRun;
-
-  // Inject before broadcasting the creation notice
-  inj();
 
   // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
   BroadcastContextCreationNotice(retVal->GetSigilType());
