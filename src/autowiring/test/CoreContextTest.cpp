@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/SimpleObject.hpp"
-#include <autowiring/AutoInjectable.h>
 #include <autowiring/ContextEnumerator.h>
 #include <algorithm>
 #include <set>
@@ -154,31 +153,6 @@ TEST_F(CoreContextTest, CorrectHitExceptionalTeardown) {
 
   // Now verify that the correct deleter was hit to release partially constructed memory:
   ASSERT_EQ(1UL, HasOverriddenNewOperator::s_deleterHitCount) << "Deleter was not correctly hit in an exceptional teardown";
-}
-
-struct PreBoltInjectionSigil {};
-
-class BoltThatChecksForAThread:
-  public Bolt<PreBoltInjectionSigil>
-{
-public:
-  void ContextCreated(void) override {
-    m_threadPresent = Autowired<CoreThread>().IsAutowired();
-  }
-
-  bool m_threadPresent = false;
-};
-
-TEST_F(CoreContextTest, PreBoltInjection) {
-  AutoRequired<BoltThatChecksForAThread> myBolt;
-  AutoCreateContextT<PreBoltInjectionSigil> ctxt(MakeInjectable<CoreThread>());
-
-  // Basic functionality check on the injectable
-  Autowired<CoreThread> ct(ctxt);
-  ASSERT_TRUE(ct) << "Injection did not take place in the created context as expected";
-
-  // Verify the bolt was hit as expected
-  ASSERT_TRUE(myBolt->m_threadPresent) << "Bolt was not correctly fired after injection";
 }
 
 struct NoEnumerateBeforeBoltReturn {};

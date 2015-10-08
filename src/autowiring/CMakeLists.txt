@@ -32,8 +32,6 @@ set(Autowiring_SRCS
   AutoFilterArgument.h
   AutoFuture.cpp
   AutoFuture.h
-  AutoInjectable.cpp
-  AutoInjectable.h
   AutoPacket.cpp
   AutoPacket.h
   AutoPacketInternal.cpp
