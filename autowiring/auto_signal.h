@@ -204,6 +204,7 @@ namespace autowiring {
 
       entry_base* pFlink = nullptr;
       entry_base* pBlink = nullptr;
+      bool unlinked = false;
     };
 
     template<typename Fn>
@@ -345,6 +346,9 @@ namespace autowiring {
     /// Removes the specified entry from the set of listeners
     /// </summary>
     void Unlink(std::unique_ptr<entry_base> e) {
+      // Mark the entry as unlinked first
+      e->unlinked = true;
+
       // See discussion in Link
       SignalState state = SignalState::Free;
       if (!m_state.compare_exchange_weak(state, SignalState::Updating)) {
@@ -373,8 +377,10 @@ namespace autowiring {
     /// Sequential signaling mechanism, invoked under the call lock
     /// </summary>
     void SignalUnsafe(Args... args) const {
-      for (auto cur = m_pFirstListener; cur; cur = cur->pFlink)
-        (*cur)(args...);
+      for (auto cur = m_pFirstListener; cur; cur = cur->pFlink) {
+        if (!cur->unlinked)
+          (*cur)(args...);
+      }
     }
 
     template<typename... FnArgs>
