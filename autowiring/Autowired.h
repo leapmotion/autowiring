@@ -173,8 +173,9 @@ public:
   void reset(void) override {
     // And remove any events that were added to the object by this autowired field
     auto localEvents = std::move(m_events);
-    for (auto& localEvent : localEvents)
-      *localEvent.owner -= localEvent;
+    for (auto& localEvent : localEvents) {
+      localEvent.owner->unlink(localEvent, true);
+    }
 
     // Linked list unwind deletion:
     for (
