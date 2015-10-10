@@ -196,12 +196,15 @@ namespace autowiring {
 
     // Base type for listeners attached to this signal
     struct entry_base {
+      entry_base(void) {}
+      entry_base(const entry_base& rhs) = delete;
+
       virtual ~entry_base(void) {}
       virtual void operator()(const Args&... args) = 0;
 
       entry_base* pFlink = nullptr;
       entry_base* pBlink = nullptr;
-      std::atomic<bool> unlinkImmediately{false};
+      std::atomic<bool> unlinkImmediately{ false };
     };
 
     template<typename Fn>
