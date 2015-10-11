@@ -77,3 +77,16 @@ TEST_F(HeteroBlockTest, DestroySharedPtrTest) {
   }
   ASSERT_TRUE(ref.unique()) << "Object referred to by a shared pointer was not destroyed as expected";
 }
+class AUTO_ALIGNAS(16) MyAlignedClass{
+  int v;
+};
+
+TEST_F(HeteroBlockTest, StackAlignmentCheck) {
+  MyAlignedClass a;
+  MyAlignedClass b;
+  MyAlignedClass c;
+
+  ASSERT_EQ(0UL, reinterpret_cast<size_t>(&a) % 16) << "Misalignment of variable A";
+  ASSERT_EQ(0UL, reinterpret_cast<size_t>(&b) % 16) << "Misalignment of variable B";
+  ASSERT_EQ(0UL, reinterpret_cast<size_t>(&c) % 16) << "Misalignment of variable C";
+}
