@@ -95,9 +95,12 @@ namespace autowiring {
 
   struct signal_base {
     /// <summary>
-    /// Unregisters the specified registration object and clears its status
+    /// Removes the signal node identified on the rhs without requiring full type information
     /// </summary>
-    virtual void unlink(registration_t& rhs, bool immediately) = 0;
+    /// <remarks>
+    /// This operation invalidates the specified unique pointer.  If the passed unique pointer is
+    /// already nullptr, this operation has no effect.
+    /// </remarks>
     virtual void operator-=(registration_t& rhs) = 0;
   };
 
@@ -196,15 +199,11 @@ namespace autowiring {
 
     // Base type for listeners attached to this signal
     struct entry_base {
-      entry_base(void) {}
-      entry_base(const entry_base& rhs) = delete;
-
       virtual ~entry_base(void) {}
       virtual void operator()(const Args&... args) = 0;
 
       entry_base* pFlink = nullptr;
       entry_base* pBlink = nullptr;
-      std::atomic<bool> unlinkImmediately{ false };
     };
 
     template<typename Fn>
@@ -215,7 +214,7 @@ namespace autowiring {
 
       template<typename _Fn>
       entry(signal&, _Fn fn) : fn(std::forward<_Fn>(fn)) {}
-      const Fn fn;
+      Fn fn;
       void operator()(const Args&... args) override { fn(args...); }
     };
 
@@ -374,10 +373,8 @@ namespace autowiring {
     /// Sequential signaling mechanism, invoked under the call lock
     /// </summary>
     void SignalUnsafe(Args... args) const {
-      for (auto cur = m_pFirstListener; cur; cur = cur->pFlink) {
-        if (!cur->unlinkImmediately)
-          (*cur)(args...);
-      }
+      for (auto cur = m_pFirstListener; cur; cur = cur->pFlink)
+        (*cur)(args...);
     }
 
     template<typename... FnArgs>
@@ -446,32 +443,18 @@ namespace autowiring {
     /// Unregisters the specified registration object and clears its status
     /// </summary>
     /// <remarks>
-    /// immediately - whether the handler is guaranteed not to be called after this method
-    /// returns.
-    /// </remarks>
-    void unlink(registration_t& rhs, bool immediately) override {
-      if (rhs.owner != this)
-        throw autowiring_error("Attempted to unlink a registration on an unrelated signal");
-      if (!rhs.pobj)
-        return;
-
-      auto e = static_cast<entry_base*>(rhs.pobj);
-      if (immediately)
-        e->unlinkImmediately = true;
-      Unlink(std::unique_ptr<entry_base>{ e });
-      rhs.pobj = nullptr;
-    }
-
-    /// <summary>
-    /// Unregisters the specified registration object and clears its status
-    /// </summary>
-    /// <remarks>
     /// This method does not guarantee that the named registration object will not be called after
     /// this method returns in multithreaded cases.  The handler is only guaranteed not to be called
     /// if `rhs.unique()` is true.
     /// </remarks>
     void operator-=(registration_t& rhs) override {
-      unlink(rhs, false);
+      if (rhs.owner != this)
+        throw autowiring_error("Attempted to unlink a registration on an unrelated signal");
+      if (!rhs.pobj)
+        return;
+
+      Unlink(std::unique_ptr<entry_base>{ static_cast<entry_base*>(rhs.pobj) });
+      rhs.pobj = nullptr;
     }
 
     /// <summary>
