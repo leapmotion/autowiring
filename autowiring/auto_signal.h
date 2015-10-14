@@ -479,7 +479,7 @@ namespace autowiring {
         case SignalState::Free:
         case SignalState::Updating:
           // Spurious failure, or insertion.
-          // We cannot delegate control to insertion, and spurious failure shoudl be retried.
+          // We cannot delegate control to insertion, and spurious failure should be retried.
           continue;
         default:
           // Asserting or deferred for awhile, we need to take another option
