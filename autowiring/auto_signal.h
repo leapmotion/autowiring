@@ -481,8 +481,10 @@ namespace autowiring {
           // Spurious failure, or insertion.
           // We cannot delegate control to insertion, and spurious failure should be retried.
           continue;
-        default:
-          // Asserting or deferred for awhile, we need to take another option
+          case SignalState::Asserting:
+          case SignalState::Deferred:
+          // Some other thread is already asserting this signal, doing work, we need to ensure
+          // that thread takes responsibility for this call.
           break;
         }
 
