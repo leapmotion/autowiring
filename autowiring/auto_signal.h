@@ -513,6 +513,8 @@ namespace autowiring {
         break;
       }
 
+      if (m_state == SignalState::Free) return;
+
       // Try to get out of the asserting state and into the free state
       for(
         SignalState state = SignalState::Asserting;
