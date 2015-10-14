@@ -9,6 +9,7 @@ set(AutowiringTest_SRCS
   AutoFilterDiagnosticsTest.cpp
   AutoFilterFunctionTest.cpp
   AutoFilterMultiDecorateTest.cpp
+  AutoFilterRvalueTest.cpp
   AutoFilterSequencing.cpp
   AutoFilterTest.cpp
   AutoIDTest.cpp
