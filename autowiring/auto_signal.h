@@ -507,14 +507,14 @@ namespace autowiring {
           state = SignalState::Free;
         } while (!m_state.compare_exchange_weak(state, SignalState::Asserting));
 
-        // Great.  If we got here it's because everyone got away and we're left holding the bag.
-        // We thought we were going to need to pend a callable signal but instead we're still going
-        // to need to invoke it ourselves.
         break;
       }
 
       if (m_state == SignalState::Free) return;
 
+      // Great.  If we got here it's because everyone got away and we're left holding the bag.
+      // We thought we were going to need to pend a callable signal but instead we're still going
+      // to need to invoke it ourselves.
       // Try to get out of the asserting state and into the free state
       for(
         SignalState state = SignalState::Asserting;
