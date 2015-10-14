@@ -496,27 +496,30 @@ namespace autowiring {
           }
         );
 
-        // Now ensure that someone is going to take responsibility to make this invocation
+        // Now ensure that someone is going to take responsibility to make this invocation.  We do
+        // this by trying to transition the Asserting state to Deferred before the currently
+        // asserting thread manages to transition from Asserting to Free.  This is an implicit
+        // race condition, whoever wins the race gets to return control to the caller.
         do {
           state = SignalState::Asserting;
           if (m_state.compare_exchange_weak(state, SignalState::Deferred))
             // Success, we have transferred responsibility for this call to the other entity.
             return;
+
           if (state == SignalState::Deferred)
-            // Failure, egg came back on our face.  Responsibility was reflected back on to us.
-            // Take charge.
-            break;
+            // State is already deferred, maybe by someone else.  We can return control directly.
+            return;
+
           state = SignalState::Free;
         } while (!m_state.compare_exchange_weak(state, SignalState::Asserting));
 
+        // Great.  If we got here it's because we were able to transition from Free to Asserting, which
+        // means that everyone else has already returned to their callers.  We are the only ones still
+        // in operator().  We are going to have to call the callable_signal that we just got finished
+        // pending.
         break;
       }
 
-      if (m_state == SignalState::Free) return;
-
-      // Great.  If we got here it's because everyone got away and we're left holding the bag.
-      // We thought we were going to need to pend a callable signal but instead we're still going
-      // to need to invoke it ourselves.
       // Try to get out of the asserting state and into the free state
       for(
         SignalState state = SignalState::Asserting;
