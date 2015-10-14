@@ -658,3 +658,37 @@ TEST_F(AutoSignalTest, OuterPostDereference) {
   // This should trigger an exception:
   outer->sig();
 }
+
+namespace {
+  class WithSignal {
+  public:
+    autowiring::signal<void()> sig;
+  };
+}
+
+TEST_F(AutoSignalTest, ReallocationCheck) {
+  AutoCurrentContext ctxt;
+  size_t hitCount = 0;
+
+  std::unique_ptr<Autowired<WithSignal>> contrived{
+    new Autowired<WithSignal>{}
+  };
+
+  {
+    // Delete the Autowired field while the signal handler is being called.  This is intended to simulate
+    // a legal possible multithreaded scenario where a signal handler is being asserted at about the same
+    // time as an Autowired field is being destroyed.
+    (*contrived)(&WithSignal::sig) += [&] {
+      hitCount++;
+      contrived.reset();
+
+      Autowired<WithSignal> ws;
+      ws->sig();
+    };
+    ctxt->Inject<WithSignal>();
+  }
+  Autowired<WithSignal> sig3;
+  sig3->sig();
+
+  ASSERT_EQ(1UL, hitCount) << "A signal handler was hit even though the base Autowired field was destroyed";
+}
