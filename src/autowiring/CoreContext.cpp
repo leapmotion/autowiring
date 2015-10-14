@@ -131,8 +131,8 @@ CoreContext::~CoreContext(void) {
 std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate)
 {
   // don't allow new children if shutting down
-  if(IsShutdown())
-    throw autowiring_error("Cannot create a child context; this context is already shut down");
+  if (IsShutdown())
+    throw dispatch_aborted_exception("Cannot create a child context; this context is already shut down");
     
   t_childList::iterator childIterator;
   {
