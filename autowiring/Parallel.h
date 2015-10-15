@@ -183,6 +183,17 @@ public:
     return parallel_collection<T> { begin<T>(), end<T>() };
   }
 
+  // Blocks until all outstanding work is done
+  void barrier(void) {
+    std::unique_lock<std::mutex> lk(m_queueMutex);
+    m_queueUpdated.wait(lk, [this] {
+      size_t totalReady = m_nVoidEntries;
+      for (auto& entry : m_queue)
+        totalReady += entry.second.size();
+      return m_outstandingCount == totalReady;
+    });
+  }
+
   // Get an iterator to the begining of out queue of job results
   template<typename T>
   parallel_iterator<T> begin(void) {
@@ -210,6 +221,7 @@ protected:
   // For void entries we don't need a queue, we can just keep a general count of "done"
   size_t m_nVoidEntries = 0;
 
+  // Total number of entries currently outstanding:
   size_t m_outstandingCount = 0;
 
   AutoCurrentContext m_ctxt;
