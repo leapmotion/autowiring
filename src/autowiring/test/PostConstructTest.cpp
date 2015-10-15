@@ -391,16 +391,36 @@ namespace {
 }
 
 TEST_F(PostConstructTest, StrictNotificationArrangement) {
-  size_t call[3] = {0, 0, 0};
-  size_t callIdx = 1;
+  int call[7] = {-1, -1, -1, -1, -1, -1, -1};
+  int callIdx = 1;
 
   AutoCurrentContext ctxt;
-  Autowired<EmptyType> obj;
-  obj.NotifyWhenAutowired([&] { call[0] = callIdx++; });
-  ctxt->NotifyWhenAutowired<EmptyType>([&] { call[1] = callIdx++; });
-  obj.NotifyWhenAutowired([&] { call[2] = callIdx++; });
+  Autowired<EmptyType> obj1;
+  obj1.NotifyWhenAutowired([&] {
+    call[0] = callIdx++;
+  });
+  ctxt->NotifyWhenAutowired<EmptyType>([&] {
+    call[1] = callIdx++;
+  });
+  obj1.NotifyWhenAutowired([&] {
+    call[2] = callIdx++;
+  });
+  ctxt->NotifyWhenAutowired<EmptyType>([&] {
+    call[3] = callIdx++;
+  });
+  Autowired<EmptyType> obj2;
+  obj2.NotifyWhenAutowired([&] {
+    call[4] = callIdx++;
+  });
+  obj1.NotifyWhenAutowired([&] {
+    call[5] = callIdx++;
+  });
+  obj2.NotifyWhenAutowired([&] {
+    call[6] = callIdx++;
+  });
+
   ctxt->Inject<EmptyType>();
 
-  for (size_t i = 0; i < 3; i++)
+  for (int i = 0; i < 7; i++)
     ASSERT_EQ(i + 1, call[i]) << "Registered autowired handler was not called in the correct order";
 }
