@@ -82,4 +82,5 @@ TEST_F(ParallelTest, VoidReturnAll) {
   for (auto entry : p.all<void>())
     i++;
   ASSERT_EQ(100UL, i) << "A sufficient number of empty lambdas were not encountered";
+  ASSERT_EQ(100, *val) << "Not all pended lambda functions were called as expected";
 }

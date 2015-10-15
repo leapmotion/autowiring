@@ -137,6 +137,8 @@ public:
     (std::lock_guard<std::mutex>)m_queueMutex, ++m_outstandingCount;
 
     *m_ctxt += [this, fx] {
+      fx();
+
       std::lock_guard<std::mutex> lk(m_queueMutex);
       m_nVoidEntries++;
       m_queueUpdated.notify_all();
