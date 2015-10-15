@@ -84,5 +84,5 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
   }
   param.sched_priority = PTHREAD_MIN_PRIORITY + (percent*(PTHREAD_MAX_PRIORITY - PTHREAD_MIN_PRIORITY) + 50) / 100;
 
-  pthread_setschedparam(m_thisThread.native_handle(), policy, &param);
+  pthread_setschedparam(m_state->m_thisThread.native_handle(), policy, &param);
 }
