@@ -616,3 +616,79 @@ TEST_F(AutoSignalTest, PathologicalSyncTest) {
     ASSERT_FALSE(*x) << "Lambda was invoked after it was destroyed";
   }
 }
+
+namespace {
+  class OuterType {
+  public:
+    autowiring::signal<void()> sig;
+  };
+
+  class WiresInOuterScope {
+  public:
+    WiresInOuterScope(void) {
+      outer(&OuterType::sig) += [this] {
+        ASSERT_EQ(0xDEADBEEFC0FECAFE, magic);
+      };
+    }
+
+    ~WiresInOuterScope(void) {
+      magic = 0xEEEE0000FFFF0000;
+    }
+
+    Autowired<OuterType> outer;
+    uint64_t magic = 0xDEADBEEFC0FECAFE;
+  };
+}
+
+TEST_F(AutoSignalTest, OuterPostDereference) {
+  AutoRequired<OuterType> outer;
+
+  AutoCreateContext ctxt;
+  outer->sig += [&] {
+    // This will cause the outer context to be destroyed, which will cause one
+    // of the signal handlers to be reset.  Unfortunatley, however, we aren't yet
+    // done hitting all signal handlers, so this statement will cause the very next
+    // invoked signal--registered in WiresInOuterScope's ctor--to possibly be
+    // called even though its context is gone.
+    ctxt.reset();
+  };
+
+  ctxt->Inject<WiresInOuterScope>();
+
+  // This should trigger an exception:
+  outer->sig();
+}
+
+namespace {
+  class WithSignal {
+  public:
+    autowiring::signal<void()> sig;
+  };
+}
+
+TEST_F(AutoSignalTest, ReallocationCheck) {
+  AutoCurrentContext ctxt;
+  size_t hitCount = 0;
+
+  std::unique_ptr<Autowired<WithSignal>> contrived{
+    new Autowired<WithSignal>{}
+  };
+
+  {
+    // Delete the Autowired field while the signal handler is being called.  This is intended to simulate
+    // a legal possible multithreaded scenario where a signal handler is being asserted at about the same
+    // time as an Autowired field is being destroyed.
+    (*contrived)(&WithSignal::sig) += [&] {
+      hitCount++;
+      contrived.reset();
+
+      Autowired<WithSignal> ws;
+      ws->sig();
+    };
+    ctxt->Inject<WithSignal>();
+  }
+  Autowired<WithSignal> sig3;
+  sig3->sig();
+
+  ASSERT_EQ(1UL, hitCount) << "A signal handler was hit even though the base Autowired field was destroyed";
+}

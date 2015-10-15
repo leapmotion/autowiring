@@ -132,6 +132,23 @@ public:
     return this->operator const std::shared_ptr<T>&().get();
   }
 
+  template<typename Fn, typename... Args>
+  struct wrapper {
+    wrapper(Autowired<T>* field, Fn&& fn) :
+      field(field),
+      fn(std::forward<Fn&&>(fn))
+    {}
+
+    Autowired<T>* field;
+    Fn fn;
+
+    void operator()(const Args&... args) {
+      if (field->IsAutowired()) {
+        fn(args...);
+      }
+    }
+  };
+
   //A small temporary structure for the info required to register an event
   //with a member signal on an autowired field.
   template<typename U, typename... Args>
@@ -147,10 +164,11 @@ public:
     void operator+=(Fn&& rhs) {
       Autowired<T>* l_field = field; //lambda capture of references doesn't work right.
       autowiring::signal<void(Args...)> U::* l_member = member;
+      auto wrapped = wrapper<Fn, Args...>(l_field, std::forward<Fn&&>(rhs));
 
-      field->NotifyWhenAutowired([l_field, l_member, rhs] {
+      field->NotifyWhenAutowired([l_field, l_member, wrapped] {
         auto& sig = static_cast<U*>(l_field->get())->*l_member;
-        l_field->m_events.push_back(sig += rhs);
+        l_field->m_events.push_back(sig += wrapped);
       });
     }
   };
@@ -165,8 +183,9 @@ public:
   void reset(void) override {
     // And remove any events that were added to the object by this autowired field
     auto localEvents = std::move(m_events);
-    for (auto& localEvent : localEvents)
-      *localEvent.owner -= localEvent;
+    for (auto& localEvent : localEvents) {
+      *localEvent.owner-=localEvent;
+    }
 
     // Linked list unwind deletion:
     for (
