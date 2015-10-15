@@ -391,7 +391,7 @@ namespace {
 }
 
 TEST_F(PostConstructTest, StrictNotificationArrangement) {
-  size_t call[3] = {-1, -1, -1};
+  size_t call[3] = {0, 0, 0};
   size_t callIdx = 1;
 
   AutoCurrentContext ctxt;
