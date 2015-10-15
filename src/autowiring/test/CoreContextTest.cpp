@@ -543,3 +543,27 @@ TEST_F(CoreContextTest, InitiateAssertsSignals) {
   }
   ASSERT_TRUE(*teardown) << "Teardown handler not correctly notified on context teardown";
 }
+
+namespace {
+  class TriesToCreateChild :
+    public CoreThread
+  {
+  public:
+    TriesToCreateChild(void) :
+      CoreThread("TriesToCreateChild")
+    {}
+
+    void Run(void) override {
+      while (!ShouldStop());
+      AutoCreateContext();
+    }
+  };
+}
+
+TEST_F(CoreContextTest, TerminatedContextHarmless) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+  AutoRequired<TriesToCreateChild>{};
+  ctxt->SignalShutdown();
+  ASSERT_THROW(ctxt->Create<void>(), dispatch_aborted_exception) << "An exception should have been thrown when attempting to create a child from a terminated context";
+}
