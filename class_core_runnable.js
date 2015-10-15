@@ -9,6 +9,7 @@ var class_core_runnable =
     [ "ShouldStop", "class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994", null ],
     [ "Start", "class_core_runnable.html#a4f5e7e482f70200b82d8f0d489eedd12", null ],
     [ "Stop", "class_core_runnable.html#a41c3338adf9bf7222b13bbafb564dabb", null ],
+    [ "ThreadSleep", "class_core_runnable.html#a0aaa1a6490b1b7d16fa63b64a012a9f0", null ],
     [ "Wait", "class_core_runnable.html#acb3c019cfe57942e293c9cec805828e7", null ],
     [ "WaitFor", "class_core_runnable.html#a4856481bde70b25d28bac86876cadf88", null ],
     [ "WaitUntil", "class_core_runnable.html#aa8b6ac4ade1032ea1411680a04592d87", null ],

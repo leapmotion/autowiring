@@ -32,7 +32,6 @@ var dir_2e38afdc5a4015337247db13c49755ec =
       [ "auto_arg", "classauto__arg.html", null ],
       [ "auto_prev", "structauto__prev.html", null ]
     ] ],
-    [ "AutoConfig.h", "_auto_config_8h.html", "_auto_config_8h" ],
     [ "AutoNetServer.h", "_auto_net_server_8h.html", "_auto_net_server_8h" ],
     [ "AutoPacket.h", "_auto_packet_8h.html", [
       [ "auto_arg", "classauto__arg.html", null ],
@@ -66,7 +65,7 @@ var dir_2e38afdc5a4015337247db13c49755ec =
     [ "ContextEnumerator.h", "_context_enumerator_8h.html", [
       [ "ContextEnumerator", "class_context_enumerator.html", "class_context_enumerator" ],
       [ "ContextEnumeratorT", "class_context_enumerator_t.html", "class_context_enumerator_t" ],
-      [ "CoreContextT", "class_core_context_t.html", "class_core_context_t" ],
+      [ "CoreContextT", "class_core_context_t.html", null ],
       [ "CurrentContextEnumerator", "class_current_context_enumerator.html", "class_current_context_enumerator" ],
       [ "iterator", "class_context_enumerator_t_1_1iterator.html", null ],
       [ "iterator", "class_context_enumerator_1_1iterator.html", null ]

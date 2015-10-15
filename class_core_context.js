@@ -31,7 +31,7 @@ var class_core_context =
     [ "GetMemberCount", "class_core_context.html#ad725f1858d6305af6721e575bb312674", null ],
     [ "GetParentContext", "class_core_context.html#a3783fd45517f23b6f070e0b06e916440", null ],
     [ "GetRunnables", "class_core_context.html#a93a15fed7006535074ba0cad22734300", null ],
-    [ "GetSigilType", "class_core_context.html#ade47dbbce0459be911a70c1d1bbfc0eb", null ],
+    [ "GetSigilType", "class_core_context.html#a000005b5f276de444327cab8ccc2a785", null ],
     [ "GetThreadPool", "class_core_context.html#a7646ea17e7eb961c2193485926af7965", null ],
     [ "Has", "class_core_context.html#aff72e44be09394686d51a367a6ff9e23", null ],
     [ "Initiate", "class_core_context.html#aec4c58c375caaeb70d20807cd4029657", null ],

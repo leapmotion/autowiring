@@ -36,6 +36,7 @@ var class_auto_packet =
     [ "HasSubscribers", "class_auto_packet.html#a520b94e0c318d3fb57b921aa4c0fe55d", null ],
     [ "HasSubscribers", "class_auto_packet.html#a76af6d953ba5968fffd20cb736ad0cbc", null ],
     [ "HasUnsafe", "class_auto_packet.html#a0758dc93f396121900cc5de17f46dcbf", null ],
+    [ "IsUnsatisfiable", "class_auto_packet.html#a37079ae44f1bea32350e8ea93b12ec28", null ],
     [ "MarkSuccessorsUnsatisfiable", "class_auto_packet.html#a64bf152b18a9e20c701661706fcce9c9", null ],
     [ "MarkUnsatisfiable", "class_auto_packet.html#a29f7dcf03fe916c5566ca61afcc19782", null ],
     [ "MarkUnsatisfiable", "class_auto_packet.html#a48c97deb0563443453c6c0407a13a525", null ],

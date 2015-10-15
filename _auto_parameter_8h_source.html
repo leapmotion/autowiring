@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.3</span>
+   &#160;<span id="projectnumber">0.7.5</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -111,7 +111,7 @@ $(document).ready(function(){initNavTree('_auto_parameter_8h_source.html','');})
 <div class="contents">
 <a href="_auto_parameter_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="_auto_config_8h.html">AutoConfig.h</a>&quot;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;AutoConfig.h&quot;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;has_validate.h&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include TYPE_TRAITS_HEADER</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;</div>
@@ -119,13 +119,13 @@ $(document).ready(function(){initNavTree('_auto_parameter_8h_source.html','');})
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T, <span class="keyword">class</span> TKey&gt;</div>
 <div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="class_auto_parameter.html">   19</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_auto_parameter.html">AutoParameter</a>:</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <span class="keyword">public</span> <a class="code" href="class_auto_config.html">AutoConfig</a>&lt;T, AutoParam, TKey&gt;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <span class="keyword">public</span> AutoConfig&lt;T, AutoParam, TKey&gt;</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;{</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  static_assert(std::is_constructible&lt;TKey&gt;::value, <span class="stringliteral">&quot;Cannot use the default keys provided. You must subclass and use your own&quot;</span>);</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  </div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <a class="code" href="class_auto_parameter.html">AutoParameter</a>() :</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <a class="code" href="class_auto_config.html">AutoConfig&lt;T, AutoParam, TKey&gt;</a>(),</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    AutoConfig&lt;T, AutoParam, TKey&gt;(),</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    m_default(TKey::Default())</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  {</div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keywordflow">if</span> (!isValid(m_default)) {</div>
@@ -136,13 +136,13 @@ $(document).ready(function(){initNavTree('_auto_parameter_8h_source.html','');})
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  <span class="keyword">const</span> T&amp; operator*()<span class="keyword"> const </span>{</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="keywordflow">return</span></div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;      this-&gt;IsConfigured() ?</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;      <a class="code" href="class_auto_config.html">AutoConfig&lt;T, AutoParam, TKey&gt;::operator*</a>() :</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;      AutoConfig&lt;T, AutoParam, TKey&gt;::operator*() :</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;      m_default;</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  }</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  </div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <span class="keyword">const</span> T* operator-&gt;(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keywordflow">return</span> this-&gt;IsConfigured() ?</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;      this-&gt;<span class="keyword">template</span> <a class="code" href="class_auto_config.html">AutoConfig&lt;T, AutoParam, TKey&gt;::operator-&gt;</a>() :</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;      this-&gt;<span class="keyword">template</span> AutoConfig&lt;T, AutoParam, TKey&gt;::operator-&gt;() :</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;      &amp;m_default;</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  }</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  </div>
@@ -187,16 +187,14 @@ $(document).ready(function(){initNavTree('_auto_parameter_8h_source.html','');})
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <span class="keyword">virtual</span> ~DefaultMinMaxKey() = 0;</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;};</div>
 <div class="ttc" id="class_auto_parameter_html"><div class="ttname"><a href="class_auto_parameter.html">AutoParameter</a></div><div class="ttdoc">Register an AutoParameter with "AutoParam" namespace in AutoConfigListing. In addition to being the l...</div><div class="ttdef"><b>Definition:</b> AutoParameter.h:19</div></div>
-<div class="ttc" id="class_auto_config_html"><div class="ttname"><a href="class_auto_config.html">AutoConfig</a></div><div class="ttdoc">Register an attribute with the AutoConfig system. For example </div><div class="ttdef"><b>Definition:</b> AutoConfig.h:146</div></div>
 <div class="ttc" id="_basic_thread_8h_html_ac21de3041b361912460403d2649eaa0ea7a1920d61156abc05a60135aefe8bc67"><div class="ttname"><a href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0ea7a1920d61156abc05a60135aefe8bc67">ThreadPriority::Default</a></div></div>
-<div class="ttc" id="_auto_config_8h_html"><div class="ttname"><a href="_auto_config_8h.html">AutoConfig.h</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_auto_parameter_8h.html">AutoParameter.h</a></li>
-    <li class="footer">Generated on Mon Aug 17 2015 09:17:40 for Autowiring by
+    <li class="footer">Generated on Thu Oct 15 2015 13:21:46 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

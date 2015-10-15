@@ -18,6 +18,5 @@ var class_basic_thread =
     [ "PerformStatusUpdate", "class_basic_thread.html#ac6fa3d56f8a17a6a8244aeab10fff577", null ],
     [ "Run", "class_basic_thread.html#aca183b811e4f93dfce70a449649b3033", null ],
     [ "SetCurrentThreadName", "class_basic_thread.html#aa6d8803cdc6ab28b1d79740b115487c5", null ],
-    [ "ThreadSleep", "class_basic_thread.html#a70536c1d5295d4f7457b4405f6b5e9f6", null ],
     [ "WaitForStateUpdate", "class_basic_thread.html#a4b8057883725bfbfedd44b2f4ab471a6", null ]
 ];

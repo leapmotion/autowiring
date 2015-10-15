@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.3</span>
+   &#160;<span id="projectnumber">0.7.5</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -118,24 +118,8 @@ $(document).ready(function(){initNavTree('class_auto_parameter.html','');});
  <a href="class_auto_parameter.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="_auto_parameter_8h_source.html">AutoParameter.h</a>&gt;</code></p>
-<div class="dynheader">
-Inheritance diagram for AutoParameter&lt; T, TKey &gt;:</div>
-<div class="dyncontent">
- <div class="center">
-  <img src="class_auto_parameter.png" usemap="#AutoParameter&lt; T, TKey &gt;_map" alt=""/>
-  <map id="AutoParameter&lt; T, TKey &gt;_map" name="AutoParameter&lt; T, TKey &gt;_map">
-<area href="class_auto_config.html" alt="AutoConfig&lt; T, AutoParam, TKey &gt;" shape="rect" coords="0,56,283,80"/>
-<area href="class_auto_required.html" alt="AutoRequired&lt; AutoConfigVar&lt; T, TKeys... &gt; &gt;" shape="rect" coords="0,0,283,24"/>
-</map>
- </div></div>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
-Additional Inherited Members</h2></td></tr>
-<tr class="inherit_header pub_methods_class_auto_required"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_class_auto_required')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="class_auto_required.html">AutoRequired&lt; AutoConfigVar&lt; T, TKeys... &gt; &gt;</a></td></tr>
-<tr class="memitem:a64e2c65e4a28a6a28c0ba96a11d94e33 inherit pub_methods_class_auto_required"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_required.html#a64e2c65e4a28a6a28c0ba96a11d94e33">AutoRequired</a> (const std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt; &amp;ctxt, Args &amp;&amp;...args)</td></tr>
-<tr class="memdesc:a64e2c65e4a28a6a28c0ba96a11d94e33 inherit pub_methods_class_auto_required"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="class_auto_required.html" title="Autowires the specified dependency, creating a new instance if one does not already exist...">AutoRequired</a> overload that forwards constructor arguments to the type being wired.  <a href="#a64e2c65e4a28a6a28c0ba96a11d94e33">More...</a><br /></td></tr>
-<tr class="separator:a64e2c65e4a28a6a28c0ba96a11d94e33 inherit pub_methods_class_auto_required"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
+
+<p>Inherits AutoConfig&lt; T, AutoParam, TKey &gt;.</p>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;class T, class TKey&gt;<br />
 class AutoParameter&lt; T, TKey &gt;</h3>
@@ -145,7 +129,7 @@ class AutoParameter&lt; T, TKey &gt;</h3>
 <li>static constexpr T <a class="el" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0ea7a1920d61156abc05a60135aefe8bc67">Default()</a></li>
 <li>(optional) static bool Validate(const T&amp;)</li>
 </ul>
-<p><a class="el" href="class_auto_parameter.html" title="Register an AutoParameter with &quot;AutoParam&quot; namespace in AutoConfigListing. In addition to being the l...">AutoParameter</a> uses <a class="el" href="class_auto_config.html" title="Register an attribute with the AutoConfig system. For example ">AutoConfig</a> under the hood and will use "AutoParam" as its namespace </p>
+<p><a class="el" href="class_auto_parameter.html" title="Register an AutoParameter with &quot;AutoParam&quot; namespace in AutoConfigListing. In addition to being the l...">AutoParameter</a> uses AutoConfig under the hood and will use "AutoParam" as its namespace </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>autowiring/<a class="el" href="_auto_parameter_8h_source.html">AutoParameter.h</a></li>
 </ul>
@@ -155,7 +139,7 @@ class AutoParameter&lt; T, TKey &gt;</h3>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_auto_parameter.html">AutoParameter</a></li>
-    <li class="footer">Generated on Mon Aug 17 2015 09:17:41 for Autowiring by
+    <li class="footer">Generated on Thu Oct 15 2015 13:21:46 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

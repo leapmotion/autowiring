@@ -27,7 +27,7 @@ var searchData=
   ['getsatisfaction',['GetSatisfaction',['../class_auto_packet.html#af7ae91a9e5cffb39e45ca872a380d68f',1,'AutoPacket::GetSatisfaction(auto_id subscriber) const '],['../class_auto_packet.html#a1e8152052798e49283c8297886c62ffe',1,'AutoPacket::GetSatisfaction(void) const ']]],
   ['getself',['GetSelf',['../class_context_member.html#ac57af82464416e1763e1d04c50b4c89c',1,'ContextMember']]],
   ['getshared',['GetShared',['../class_auto_packet.html#a5467f83887d63a602cb05d88c6893bc0',1,'AutoPacket']]],
-  ['getsigiltype',['GetSigilType',['../class_core_context.html#ade47dbbce0459be911a70c1d1bbfc0eb',1,'CoreContext::GetSigilType()'],['../class_core_context_t.html#a2e0db791758e976c7ce5d4b0563ba97c',1,'CoreContextT::GetSigilType()']]],
+  ['getsigiltype',['GetSigilType',['../class_core_context.html#a000005b5f276de444327cab8ccc2a785',1,'CoreContext']]],
   ['getthreadpool',['GetThreadPool',['../class_core_context.html#a7646ea17e7eb961c2193485926af7965',1,'CoreContext']]],
   ['getthreadtimes',['GetThreadTimes',['../class_basic_thread.html#a643d476885ee38306b061d7fb37c126f',1,'BasicThread']]],
   ['gettotalpacketcount',['GetTotalPacketCount',['../class_auto_packet_factory.html#a002ce21f9b397665baa809d20fcdb6eb',1,'AutoPacketFactory']]],
