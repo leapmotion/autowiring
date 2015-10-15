@@ -84,3 +84,15 @@ TEST_F(ParallelTest, VoidReturnAll) {
   ASSERT_EQ(100UL, i) << "A sufficient number of empty lambdas were not encountered";
   ASSERT_EQ(100, *val) << "Not all pended lambda functions were called as expected";
 }
+
+TEST_F(ParallelTest, Barrier) {
+  AutoCurrentContext()->Initiate();
+  autowiring::parallel p;
+  
+  std::atomic<size_t> x{ 0 };
+  for (size_t i = 0; i < 1000; i++)
+    p += [&x] { x++; };
+
+  p.barrier();
+  ASSERT_EQ(1000, x) << "Not all parallel watchers were completed on return from join";
+}
