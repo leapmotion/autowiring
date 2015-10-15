@@ -385,3 +385,22 @@ TEST_F(PostConstructTest, PostConstructCanSafelyThrow) {
   Autowired<PostConstructThrowsException> pcte;
   ASSERT_FALSE(pcte.IsAutowired()) << "A context member which threw an exception post-construction was incorrectly introduced into a context";
 }
+
+namespace {
+  class EmptyType : public CoreObject {};
+}
+
+TEST_F(PostConstructTest, StrictNotificationArrangement) {
+  size_t call[3] = {-1, -1, -1};
+  size_t callIdx = 1;
+
+  AutoCurrentContext ctxt;
+  Autowired<EmptyType> obj;
+  obj.NotifyWhenAutowired([&] { call[0] = callIdx++; });
+  ctxt->NotifyWhenAutowired<EmptyType>([&] { call[1] = callIdx++; });
+  obj.NotifyWhenAutowired([&] { call[2] = callIdx++; });
+  ctxt->Inject<EmptyType>();
+
+  for (size_t i = 0; i < 3; i++)
+    ASSERT_EQ(i + 1, call[i]) << "Registered autowired handler was not called in the correct order";
+}
