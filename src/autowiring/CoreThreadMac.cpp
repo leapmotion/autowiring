@@ -19,7 +19,7 @@
 #define PTHREAD_MIN_PRIORITY  0
 #endif
 #if !defined(PTHREAD_MAX_PRIORITY)
-#define PTHREAD_MAX_PRIORITY 31
+#define PTHREAD_MAX_PRIORITY 63
 #endif
 
 using std::chrono::milliseconds;
