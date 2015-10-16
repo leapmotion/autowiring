@@ -31,12 +31,6 @@ else()
 endif()
 message(STATUS "Using architecture: ${autowiring_BUILD_ARCHITECTURES}")
 
-# If there's an external libraries directory path, use it as a search prefix
-if(EXTERNAL_LIBRARY_DIR)
-  list(APPEND CMAKE_PREFIX_PATH ${EXTERNAL_LIBRARY_DIR})
-  list(APPEND CMAKE_INCLUDE_PATH ${EXTERNAL_LIBRARY_DIR})
-endif()
-
 if(CMAKE_COMPILER_IS_GNUCC)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8")
     message(FATAL_ERROR "GCC version 4.8 minimum is required to build Autowiring")
