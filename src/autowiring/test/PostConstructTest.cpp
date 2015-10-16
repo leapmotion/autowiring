@@ -11,19 +11,6 @@ class PostConstructTest:
 
 using namespace std;
 
-class ContextExposer:
-  public CoreContext
-{
-public:
-  size_t DeferredCount(void) const {
-    size_t ct = 0;
-    for(const auto& entry : CoreContext::m_typeMemos)
-      for(auto cur = entry.second.pFirst; cur; cur = cur->GetFlink())
-        ct++;
-    return ct;
-  }
-};
-
 // Two classes to make up the cyclic dependency:
 class A:
   public ContextMember
@@ -97,19 +84,6 @@ TEST_F(PostConstructTest, VerifyNaiveBehavior) {
   // Create a context and add just the naive class, to verify the problematic behavior:
   AutoCurrentContext ctxt;
   ASSERT_THROW(ctxt->Inject<Naive>(), std::exception) << "Naive class didn't throw an exception as expected";
-}
-
-TEST_F(PostConstructTest, VerifyExpectedDeferrmentCount) {
-  AutoCurrentContext ctxt;
-
-  // Add the smart class, which should introduce a single deferred count:
-  ctxt->Inject<Smarter>();
-
-  // Now test the count:
-  ASSERT_EQ(
-    1UL,
-    ((ContextExposer&)*ctxt).DeferredCount()
-  ) << "Unexpected number of deferred initializers";
 }
 
 TEST_F(PostConstructTest, VerifySmartBehavior) {
