@@ -1,4 +1,3 @@
-add_googletest(test)
 include_directories(
   ${PROJECT_SOURCE_DIR}/contrib/autoboost
 )
@@ -21,6 +20,8 @@ add_pch(AutoNet_SRCS "stdafx.h" "stdafx.cpp")
 add_library(AutoNet STATIC ${AutoNet_SRCS})
 target_link_libraries(AutoNet PRIVATE Autowiring)
 set_target_properties(AutoNet PROPERTIES INTERFACE_LINK_LIBRARIES Autowiring)
+
+add_subdirectory(test)
 
 #
 # Install library
