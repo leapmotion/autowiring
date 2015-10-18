@@ -751,41 +751,6 @@ std::shared_ptr<ThreadPool> CoreContext::GetThreadPool(void) const {
   return (std::lock_guard<std::mutex>)m_stateBlock->m_lock, m_threadPool;
 }
 
-void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable) {
-  if (!pDeferrable)
-    return;
-
-  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-  auto q = m_typeMemos.find(pDeferrable->GetType());
-  if(q == m_typeMemos.end())
-    return;
-
-  // Always finalize this entry:
-  auto strategy = pDeferrable->GetStrategy();
-  if(strategy)
-    strategy->Finalize();
-
-  // Stores the immediate predecessor of the node we will linearly scan for in our
-  // linked list.
-  DeferrableAutowiring* prior = nullptr;
-
-  // Now remove the entry from the list:
-  // NOTE:  If a performance bottleneck is tracked to here, the solution is to use
-  // a doubly-linked list.
-  for(auto cur = q->second.pFirst; cur && cur != pDeferrable; prior = cur, cur = cur->GetFlink())
-    if(!cur)
-      // Ran off the end of the list, nothing we can do here
-      return;
-
-  if(prior)
-    // Erase the entry by using link elision:
-    prior->SetFlink(pDeferrable->GetFlink());
-
-  if(pDeferrable == q->second.pFirst)
-    // Current deferrable is at the head, update the flink:
-    q->second.pFirst = pDeferrable->GetFlink();
-}
-
 void CoreContext::Dump(std::ostream& os) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   
@@ -852,39 +817,9 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
 void CoreContext::SatisfyAutowiring(std::unique_lock<std::mutex>& lk, MemoEntry& entry) {
   std::vector<DeferrableUnsynchronizedStrategy*> requiresFinalize;
 
-  // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
-  // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
-  // release the lock.
-  std::vector<DeferrableAutowiring*> stk;
-  stk.push_back(entry.pFirst);
-  entry.pFirst = nullptr;
-
-  // Depth-first search
-  while (!stk.empty()) {
-    auto top = stk.back();
-    stk.pop_back();
-
-    for (DeferrableAutowiring* pCur = top; pCur; pCur = pCur->GetFlink()) {
-      pCur->SatisfyAutowiring(entry.m_value);
-
-      // See if there's another chain we need to process:
-      auto child = pCur->ReleaseDependentChain();
-      if (child)
-        stk.push_back(child);
-
-      // Not everyone needs to be finalized.  The entities that don't require finalization
-      // are identified by an empty strategy, and we just skip them.
-      auto strategy = pCur->GetStrategy();
-      if (strategy)
-        requiresFinalize.push_back(strategy);
-    }
-  }
-
+  // Now we need to take on the responsibility of satisfying this deferral.
+  entry.m_sig();
   lk.unlock();
-
-  // Run through everything else and finalize it all:
-  for (const auto& cur : requiresFinalize)
-    cur->Finalize();
 }
 
 void CoreContext::UpdateDeferredElement(std::unique_lock<std::mutex>&& lk, MemoEntry& entry) {
@@ -916,19 +851,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     std::vector<DeferrableUnsynchronizedStrategy*> delayedFinalize;
 
     // Notify any autowired field whose autowiring was deferred.  We do this by processing each entry
-    // in the entire type memos collection.  These entries are keyed on the type of the memo, and the
-    // value is a linked list of trees of deferred autowiring instances that will need to be called
-    // if the corresponding memo type has been satisfied.
-    //
-    // A tree data structure is used, here, specifically because there are cases where child nodes
-    // on a tree should only be called if and only if the root node is still present.  For instance,
-    // creating an Autowired field adds a tree to this list with the root node referring to the
-    // Autowired field itself, and then invoking Autowired::NotifyWhenAutowired attaches a child to
-    // this tree.  If the Autowired instance is destroyed, the lambda registered for notification is
-    // also removed at the same time.
-    //
-    // Each connected nonroot deferrable autowiring is referred to as a "dependant chain".
-    std::vector<DeferrableAutowiring*> stk;
+    // in the entire type memos collection.
     for (auto& cur : m_typeMemos) {
       MemoEntry& value = cur.second;
 
@@ -948,38 +871,10 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
       // Store if it was injected from the local context or not
       value.m_local = local;
 
-      // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
-      // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
-      // release the lock.
-      stk.push_back(value.pFirst);
-      value.pFirst = nullptr;
+      value.m_sig();
 
-      // Finish satisfying the remainder of the chain while we hold the lock:
-      while (!stk.empty()) {
-        auto top = stk.back();
-        stk.pop_back();
-
-        for (DeferrableAutowiring* pNext = top; pNext; pNext = pNext->GetFlink()) {
-          pNext->SatisfyAutowiring(value.m_value);
-
-          // See if there's another chain we need to process:
-          auto child = pNext->ReleaseDependentChain();
-          if (child)
-            stk.push_back(child);
-
-          // Not everyone needs to be finalized.  The entities that don't require finalization
-          // are identified by an empty strategy, and we just skip them.
-          auto strategy = pNext->GetStrategy();
-          if (strategy)
-            delayedFinalize.push_back(strategy);
-        }
-      }
     }
     lk.unlock();
-
-    // Run through everything else and finalize it all:
-    for (const auto& cur : delayedFinalize)
-      cur->Finalize();
   }
 
   // Give children a chance to also update their deferred elements:
@@ -1144,7 +1039,7 @@ void CoreContext::RemoveSnooper(const CoreObjectDescriptor& traits) {
     UnsnoopAutoPacket(traits);
 }
 
-void CoreContext::AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
+void CoreContext::AddDeferredAutowireUnsafe(DeferrableAutowiring* deferrable) {
   // Determine whether a type memo exists right now for the thing we're trying to defer.  If it doesn't
   // exist, we need to inject one in order to allow deferred satisfaction to know what kind of type we
   // are trying to satisfy at this point.
@@ -1157,9 +1052,12 @@ void CoreContext::AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
   // Obtain the entry (potentially a second time):
   MemoEntry& entry = m_typeMemos[deferrable->GetType()];
 
-  // Chain forward the linked list:
-  deferrable->SetFlink(entry.pFirst);
-  entry.pFirst = deferrable;
+  auto strategy = deferrable->GetStrategy();
+  if (strategy) {
+    entry.m_sig += [strategy] {
+      strategy->Finalize();
+    };
+  }
 }
 
 void CoreContext::InsertSnooper(const AnySharedPointer& snooper) {

@@ -4,12 +4,10 @@
 #include "auto_signal.h"
 #include "AutowiringDebug.h"
 #include "AutowirableSlot.h"
+#include "CoreContext.h"
 #include "GlobalCoreContext.h"
 #include MEMORY_HEADER
 #include ATOMIC_HEADER
-
-class CoreContext;
-class GlobalCoreContext;
 
 /// <summary>
 /// Provides a reference to the current context.
@@ -112,12 +110,9 @@ public:
   }
 
 private:
-  // The first deferred child known to need registration.  This is distinct from the m_pFlink entry in
-  // the base class, which refers to the _next sibling_; by contrast, this type refers to the _first child_
-  // which will be the first member registered via NotifyWhenAutowired.
-  std::atomic<AutowirableSlot<T>*> m_pFirstChild{nullptr};
-
   std::vector<autowiring::registration_t> m_events;
+
+  std::vector<autowiring::registration_t> m_autowired_notifications;
 
 public:
   operator const std::shared_ptr<T>&(void) const {
@@ -168,13 +163,10 @@ public:
     for (auto& localEvent : localEvents)
       *localEvent.owner -= localEvent;
 
-    // Linked list unwind deletion:
-    for (
-      DeferrableAutowiring *prior, *cur = ReleaseDependentChain();
-      cur;
-      cur = cur->GetFlink(), delete prior
-    )
-      prior = cur;
+     // Remove any autowiring notification handlers regsitered for this autowired field
+    auto localNotifications = std::move(m_autowired_notifications);
+    for (auto& localNotification: localNotifications)
+      *localNotification.owner -= localNotification;
 
     // Base type completes the reset behavior
     AutowirableSlot<T>::reset();
@@ -207,40 +199,10 @@ public:
       return;
     }
 
-    // We pass a null shared_ptr, because we do not want this slot to attempt any kind of unregistration when
-    // it goes out of scope.  Instead, we will manage its entire registration lifecycle, and
-    // retain full ownership over the object until we need to destroy it.
-    auto newHead = new AutowirableSlotFn<T, Fn>(std::shared_ptr<CoreContext>(), std::forward<Fn>(fn));
-
-    // Append to our list in a lock-free way.  This is a fairly standard way to do a lock-free append to
-    // a singly linked list; the only unusual aspect is the use of "this" as a tombstone indicator (IE,
-    // to signify that the list should no longer be used).
-    AutowirableSlot<T>* pFirstChild;
-    do {
-      // Obtain the current first child, and keep it here so we know what to exchange out with later:
-      pFirstChild = m_pFirstChild;
-
-      // Determine if we've been tombstoned at this piont:
-      if(pFirstChild == this) {
-        // Trivially satisfy, and then return.  This might look like a leak, but it's not, because we know
-        // that Finalize is going to destroy the object.
-        newHead->SatisfyAutowiring(this->m_ptr);
-        newHead->Finalize();
-        return;
-      }
-
-      // Try to set the forward link to the current head, and then update our own flink;
-      newHead->SetFlink(pFirstChild);
-    } while(!m_pFirstChild.compare_exchange_weak(pFirstChild, newHead, std::memory_order_acquire));
-  }
-
-  // Base overrides:
-  DeferrableAutowiring* ReleaseDependentChain(void) override {
-    // Rip the head off the list, replace it with a tombstone:
-    auto pFirstChild = m_pFirstChild.exchange(this, std::memory_order_relaxed);
-
-    // If we got the tombstone back, we have nothing to return.  Otherwise return the element.
-    return pFirstChild == this ? nullptr : pFirstChild;
+    if (std::shared_ptr<CoreContext> context = DeferrableAutowiring::m_context.lock()) {
+      auto reg = context->NotifyWhenAutowired<T>(std::forward<Fn&&>(fn));
+      m_autowired_notifications.push_back(std::move(reg));
+    }
   }
 };
 

@@ -431,7 +431,26 @@ protected:
   /// <summary>
   /// Adds the specified deferrable autowiring to be satisfied at a later date when its matched type is inserted
   /// </summary>
-  void AddDeferredUnsafe(DeferrableAutowiring* deferrable);
+  void AddDeferredAutowireUnsafe(DeferrableAutowiring* deferrable);
+
+  /// \internal
+  /// <summary>
+  /// Adds a notification handler which will be called when the type matching reference is inserted
+  /// </summary>
+  template<typename Fn>
+  autowiring::registration_t AddNotificationHandlerUnsafe(AnySharedPointer& reference, Fn& handler) {
+    size_t found = m_typeMemos.count(reference.type());
+
+    if(!found) {
+      // the passed slot was not created in this context or a parent context
+      // TODO: check if m_typememos include parent context autowired slot
+      throw autowiring_error("Attempt to register an autowiring notification for slot not created in the specified context or its parent context");
+    }
+
+    MemoEntry& entry = m_typeMemos[reference.type()];
+
+    return entry.m_sig += handler;
+  }
 
   /// \internal
   /// <summary>
@@ -1145,7 +1164,7 @@ public:
     void operator()() const override {
       // If the slot wasn't autowired, complete the satisfaction here
       if(!ref)
-        ctxt.AddDeferredUnsafe(&defer);
+        ctxt.AddDeferredAutowireUnsafe(&defer);
     }
   };
 
@@ -1163,32 +1182,6 @@ public:
       AutoSearchLambdaAutowire<T>(*this, ref, defer)
     );
   }
-
-  template<class T, class Fn>
-  class AutoSearchLambdaNotifyWhenAutowired:
-    public AutoSearchLambda,
-    public AnySharedPointerT<T>
-  {
-  public:
-    AutoSearchLambdaNotifyWhenAutowired(CoreContext& ctxt, Fn& fn) :
-      ctxt(ctxt),
-      fn(fn),
-      resultSlot(nullptr)
-    {}
-
-    CoreContext& ctxt;
-    Fn& fn;
-    mutable AutowirableSlotFn<T, Fn>* resultSlot;
-
-    void operator()() const override {
-      if(*this)
-        // Matched successfully, do not attempt to defer
-        return;
-
-      resultSlot = new AutowirableSlotFn<T, Fn>(ctxt.shared_from_this(), std::forward<Fn>(fn));
-      ctxt.AddDeferredUnsafe(resultSlot);
-    }
-  };
 
   /// <summary>
   /// Assigns the thread pool handler for this context
@@ -1239,7 +1232,7 @@ public:
   /// </summary>
   /// <returns>
   /// A pointer to a deferrable autowiring function which the caller may safely ignore if it's not needed.
-  /// Returns nullptr if the call was made immediately.
+  /// The returned registration_t will eveluate to false if the call was made immediately.
   /// </returns>
   /// <remarks>
   /// This method will succeed if slot was constructed in this context or any parent context.  If the
@@ -1253,20 +1246,18 @@ public:
   /// not be holding any locks when this method is invoked, or the caller should design the listener
   /// method such that it may be substitutde in place for the notification routine.
   ///
-  /// The returned value may be used later in CancelAutowiringNotification in order to explicitly clean
-  /// up memory.
+  /// The returned value may be used later to unregister the listener.
   /// </remarks>
   template<class T, class Fn>
-  const AutowirableSlotFn<T, Fn>* NotifyWhenAutowired(Fn&& listener) {
-    AutoSearchLambdaNotifyWhenAutowired<T, Fn> searchFn(*this, listener);
-    FindByTypeRecursive(searchFn, searchFn);
-
-    if(searchFn)
-      // Success!  We can satisfy the listener call right away, and be assured that the listener
-      // will be able to find what it's looking for in this context without holding down a lock,
-      // because entities can't be removed from a context.
+  autowiring::registration_t NotifyWhenAutowired(Fn&& listener) {
+    AnySharedPointerT<T> reference;
+    FindByTypeRecursive(reference, AutoSearchLambdaDefault());
+    if(reference) {
+      // The passed slot is already autowired
       listener();
-    return searchFn.resultSlot;
+      return autowiring::registration_t(nullptr, nullptr);
+    }
+    return this->AddNotificationHandlerUnsafe<Fn>(reference, listener);
   }
 
   /// <summary>
@@ -1274,11 +1265,6 @@ public:
   /// </summary>
   template<class Fx>
   void DEPRECATED(AddTeardownListener(Fx&& fx), "Superceded by onTeardown");
-
-  /// <summary>
-  /// Unregisters a slot as a recipient of potential autowiring
-  /// </summary>
-  void CancelAutowiringNotification(DeferrableAutowiring* pDeferrable);
 
   /// <summary>
   /// Utility debug method for writing a snapshot of this context to the specified output stream

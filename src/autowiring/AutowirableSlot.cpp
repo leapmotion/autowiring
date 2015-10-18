@@ -34,8 +34,10 @@ void DeferrableAutowiring::CancelAutowiring(void) {
   // Reset our hold on the weak pointer to prevent repeated cancellation:
   m_context.reset();
 
-  // Tell our context we are going away:
-  context->CancelAutowiringNotification(this);
+  // Always finalize this entry:
+  auto strategy = GetStrategy();
+  if(strategy)
+    strategy->Finalize();
 }
 
 void DeferrableAutowiring::SatisfyAutowiring(const AnySharedPointer& ptr) {
