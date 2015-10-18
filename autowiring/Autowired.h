@@ -192,7 +192,7 @@ public:
   /// \include snippets/Autowired_Notify.txt
   /// </remarks>
   template<class Fn>
-  void NotifyWhenAutowired(Fn fn) {
+  void NotifyWhenAutowired(Fn&& fn) {
     // Trivial initial check:
     if(*this) {
       fn();
@@ -200,7 +200,7 @@ public:
     }
 
     if (std::shared_ptr<CoreContext> context = DeferrableAutowiring::m_context.lock()) {
-      auto reg = context->NotifyWhenAutowired<T>(std::forward<Fn&&>(fn));
+      auto reg = context->NotifyWhenAutowired<T>(std::forward<Fn>(fn));
       m_autowired_notifications.push_back(std::move(reg));
     }
   }

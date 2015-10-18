@@ -438,7 +438,7 @@ protected:
   /// Adds a notification handler which will be called when the type matching reference is inserted
   /// </summary>
   template<typename Fn>
-  autowiring::registration_t AddNotificationHandlerUnsafe(AnySharedPointer& reference, Fn& handler) {
+  autowiring::registration_t AddNotificationHandlerUnsafe(AnySharedPointer& reference, Fn&& handler) {
     size_t found = m_typeMemos.count(reference.type());
 
     if(!found) {
@@ -1257,7 +1257,7 @@ public:
       listener();
       return autowiring::registration_t(nullptr, nullptr);
     }
-    return this->AddNotificationHandlerUnsafe<Fn>(reference, listener);
+    return this->AddNotificationHandlerUnsafe<Fn>(reference, std::forward<Fn>(listener));
   }
 
   /// <summary>

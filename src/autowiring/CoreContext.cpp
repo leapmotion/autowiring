@@ -814,20 +814,11 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     m_pParent->BroadcastContextCreationNotice(sigil);
 }
 
-void CoreContext::SatisfyAutowiring(std::unique_lock<std::mutex>& lk, MemoEntry& entry) {
-  std::vector<DeferrableUnsynchronizedStrategy*> requiresFinalize;
-
-  // Now we need to take on the responsibility of satisfying this deferral.
-  entry.m_sig();
-  lk.unlock();
-}
-
 void CoreContext::UpdateDeferredElement(std::unique_lock<std::mutex>&& lk, MemoEntry& entry) {
   // Satisfy what needs to be satisfied:
-  SatisfyAutowiring(lk, entry);
+  entry.m_sig();
 
   // Give children a chance to also update their deferred elements:
-  lk.lock();
   for (const auto& weak_child : m_children) {
     // Hold reference to prevent this iterator from becoming invalidated:
     auto ctxt = weak_child.lock();
@@ -847,9 +838,6 @@ void CoreContext::UpdateDeferredElement(std::unique_lock<std::mutex>&& lk, MemoE
 
 void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry, bool local) {
   {
-    // Collection of items needing finalization:
-    std::vector<DeferrableUnsynchronizedStrategy*> delayedFinalize;
-
     // Notify any autowired field whose autowiring was deferred.  We do this by processing each entry
     // in the entire type memos collection.
     for (auto& cur : m_typeMemos) {
@@ -1052,12 +1040,13 @@ void CoreContext::AddDeferredAutowireUnsafe(DeferrableAutowiring* deferrable) {
   // Obtain the entry (potentially a second time):
   MemoEntry& entry = m_typeMemos[deferrable->GetType()];
 
-  auto strategy = deferrable->GetStrategy();
-  if (strategy) {
-    entry.m_sig += [strategy] {
+  entry.m_sig += [deferrable, &entry] {
+    deferrable->SatisfyAutowiring(entry.m_value);
+    auto strategy = deferrable->GetStrategy();
+    if (strategy) {
       strategy->Finalize();
-    };
-  }
+    }
+  };
 }
 
 void CoreContext::InsertSnooper(const AnySharedPointer& snooper) {
