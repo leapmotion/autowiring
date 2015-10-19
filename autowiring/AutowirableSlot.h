@@ -70,11 +70,11 @@ protected:
 
   /// The unique ptr to the registration of the singal handler which is used to finish
   /// the autowiring. The registration can be used to cancel the signal handler.
-  std::unique_ptr<autowiring::registration_t> m_deferred_autowire;
+  std::unique_ptr<autowiring::registration_t> m_deferred_registration;
 
-  /// Cancel the signal handler regsitered in m_deferred_autowire. This is used when this
+  /// Cancel the signal handler regsitered in m_deferred_regsitration. This is used when this
   /// is already autowired or to cancel autowiring.
-  void UnRegisterDeferredAutowire(void);
+  void UnregisterDeferredAutowire(void);
 
   /// <summary>
   /// Causes this deferrable to unregister itself with the enclosing context
