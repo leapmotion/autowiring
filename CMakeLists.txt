@@ -151,7 +151,7 @@ export(EXPORT AutowiringTargets FILE AutowiringTargets.cmake NAMESPACE Autowirin
 install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/autowiring-config.cmake"
   "${CMAKE_CURRENT_BINARY_DIR}/autowiring-configVersion.cmake"
-  DESTINATION ${CMAKE_INSTALL_PREFIX}
+  DESTINATION "."
   COMPONENT autowiring
 )
 
