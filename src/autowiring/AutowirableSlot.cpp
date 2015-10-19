@@ -10,7 +10,8 @@ using namespace std;
 
 DeferrableAutowiring::DeferrableAutowiring(AnySharedPointer&& witness, const std::shared_ptr<CoreContext>& context) :
   m_ptr(std::move(witness)),
-  m_context(context)
+  m_context(context),
+  m_deferred_registration(autowiring::registration_t(nullptr, nullptr))
 {}
 
 DeferrableAutowiring::~DeferrableAutowiring(void) {
@@ -41,12 +42,11 @@ void DeferrableAutowiring::SatisfyAutowiring(const AnySharedPointer& ptr) {
 }
 
 void DeferrableAutowiring::RegisterDeferredAutowire(autowiring::registration_t&& reg) {
-  m_deferred_registration = std::make_unique<autowiring::registration_t>(std::move(reg));
+  m_deferred_registration = std::move(reg);
 }
 
-void DeferrableAutowiring::UnregisterDeferredAutowire(void) {
+void DeferrableAutowiring::UnregisterDeferredAutowire() {
   if (m_deferred_registration) {
-    *m_deferred_registration->owner -= *m_deferred_registration;
-    m_deferred_registration = nullptr;
+    *m_deferred_registration.owner -= m_deferred_registration;
   }
 }

@@ -68,9 +68,9 @@ protected:
   /// </remarks>
   std::weak_ptr<CoreContext> m_context;
 
-  /// The unique ptr to the registration of the singal handler which is used to finish
-  /// the autowiring. The registration can be used to cancel the signal handler.
-  std::unique_ptr<autowiring::registration_t> m_deferred_registration;
+  /// The registration of the singal handler which is used to finish the autowiring.
+  /// It can be used to cancel the signal handler.
+  autowiring::registration_t m_deferred_registration;
 
   /// Cancel the signal handler regsitered in m_deferred_regsitration. This is used when this
   /// is already autowired or to cancel autowiring.
