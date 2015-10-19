@@ -206,9 +206,12 @@ public:
       autowiring::registration_t reg =
         entry->m_sig += [this, fn] (autowiring::registration_t registration){
           fn();
-          m_autowired_notifications.erase(
-            std::remove(m_autowired_notifications.begin(), m_autowired_notifications.end(), registration),
-            m_autowired_notifications.end());
+          for(auto iter = m_autowired_notifications.begin(); iter != m_autowired_notifications.end(); ++iter) {
+            if( *iter == registration) {
+              m_autowired_notifications.erase(iter);
+              break;
+            }
+          }
           *registration.owner -= registration;
         };
       m_autowired_notifications.push_back(std::move(reg));
