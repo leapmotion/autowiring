@@ -4,6 +4,11 @@
 #include "Benchmark.h"
 #include <autowiring/CoreThread.h>
 #include <stdexcept>
+#include <thread>
+
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
 
 template<ThreadPriority priority>
 class JustIncrementsANumber:
@@ -30,9 +35,6 @@ public:
   }
 };
 
-#ifdef _MSC_VER
-#include "windows.h"
-
 Benchmark PriorityBoost::CanBoostPriority(void) {
   AutoCurrentContext ctxt;
 
@@ -41,6 +43,7 @@ Benchmark PriorityBoost::CanBoostPriority(void) {
   AutoRequired<JustIncrementsANumber<ThreadPriority::Normal>> higher;
   ctxt->Initiate();
 
+#ifdef _MSC_VER
   // We want all of our threads to run on ONE cpu for awhile, and then we want to put it back at exit
   DWORD_PTR originalAffinity, systemAffinity;
   GetProcessAffinityMask(GetCurrentProcess(), &originalAffinity, &systemAffinity);
@@ -48,6 +51,9 @@ Benchmark PriorityBoost::CanBoostPriority(void) {
   auto onreturn = MakeAtExit([originalAffinity] {
     SetProcessAffinityMask(GetCurrentProcess(), originalAffinity);
   });
+#else
+  // TODO:  Implement on Unix so that this benchmark is trustworthy
+#endif
 
   // Poke the conditional variable a lot:
   AutoRequired<std::mutex> contended;
@@ -80,11 +86,3 @@ Benchmark PriorityBoost::CanBoostPriority(void) {
     {"High priority CPU time", std::chrono::nanoseconds{higher->val}},
   };
 }
-
-#else
-Benchmark PriorityBoost::CanBoostPriority(void) {
-  throw std::runtime_error("Not implemented");
-}
-
-#pragma message "Warning:  SetThreadPriority not implemented on Unix"
-#endif
