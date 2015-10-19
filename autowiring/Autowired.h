@@ -200,8 +200,9 @@ public:
     }
 
     if (std::shared_ptr<CoreContext> context = DeferrableAutowiring::m_context.lock()) {
-      auto reg = context->NotifyWhenAutowired<T>(std::forward<Fn>(fn));
-      m_autowired_notifications.push_back(std::move(reg));
+      auto ptr = context->NotifyWhenAutowired<T>(std::forward<Fn>(fn));
+      if (ptr)
+        m_autowired_notifications.push_back(std::move(*ptr));
     }
   }
 };

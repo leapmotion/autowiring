@@ -22,7 +22,6 @@ DeferrableAutowiring::~DeferrableAutowiring(void) {
 void DeferrableAutowiring::reset(void) {
   m_ptr.reset();
   CancelAutowiring();
-  m_context.reset();
 }
 
 void DeferrableAutowiring::CancelAutowiring(void) {
@@ -31,15 +30,23 @@ void DeferrableAutowiring::CancelAutowiring(void) {
     // Nothing to do here, then
     return;
 
-  // Reset our hold on the weak pointer to prevent repeated cancellation:
   m_context.reset();
 
   // Always finalize this entry:
   auto strategy = GetStrategy();
   if(strategy)
     strategy->Finalize();
+
+  if (m_deferred_autowire) {
+   *m_deferred_autowire->owner -= *m_deferred_autowire;
+   m_deferred_autowire = nullptr;
+  }
 }
 
 void DeferrableAutowiring::SatisfyAutowiring(const AnySharedPointer& ptr) {
   m_ptr = ptr;
+}
+
+void DeferrableAutowiring::RegisterDeferredAutowire(autowiring::registration_t&& reg) {
+  m_deferred_autowire = std::make_unique<autowiring::registration_t>(std::move(reg));
 }

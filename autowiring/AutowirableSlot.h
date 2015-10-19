@@ -68,6 +68,9 @@ protected:
   /// </remarks>
   std::weak_ptr<CoreContext> m_context;
 
+  /// This is used to cancel autowiring
+  std::unique_ptr<autowiring::registration_t> m_deferred_autowire;
+
   /// <summary>
   /// Causes this deferrable to unregister itself with the enclosing context
   /// </summary>
@@ -113,6 +116,12 @@ public:
   /// Satisfies autowiring with a so-called "witness slot" which is guaranteed to be satisfied on the same type
   /// </summary>
   void SatisfyAutowiring(const AnySharedPointer& ptr);
+
+  /// <summary>
+  /// Remember the registration for the singal handler which is used to finish the autowiring
+  /// The registration can be used later to cancel autowiring
+  /// </summary>
+  void RegisterDeferredAutowire(autowiring::registration_t&& reg);
 
   bool operator!=(const AnySharedPointer& rhs) const { return m_ptr != rhs; }
   bool operator==(const AnySharedPointer& rhs) const { return m_ptr == rhs; }

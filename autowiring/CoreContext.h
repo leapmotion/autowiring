@@ -1231,8 +1231,8 @@ public:
   /// There is no guarantee for the context in which the listener will be called.
   /// </summary>
   /// <returns>
-  /// A pointer to a deferrable autowiring function which the caller may safely ignore if it's not needed.
-  /// The returned registration_t will eveluate to false if the call was made immediately.
+  /// A unique ptr to autowiring::registration_t which the caller may safely ignore if it's not needed.
+  /// The returned unique ptr will be nullptr if the call was made immediately.
   /// </returns>
   /// <remarks>
   /// This method will succeed if slot was constructed in this context or any parent context.  If the
@@ -1249,15 +1249,17 @@ public:
   /// The returned value may be used later to unregister the listener.
   /// </remarks>
   template<class T, class Fn>
-  autowiring::registration_t NotifyWhenAutowired(Fn&& listener) {
+  std::unique_ptr<autowiring::registration_t> NotifyWhenAutowired(Fn&& listener) {
     AnySharedPointerT<T> reference;
     FindByTypeRecursive(reference, AutoSearchLambdaDefault());
     if(reference) {
       // The passed slot is already autowired
       listener();
-      return autowiring::registration_t(nullptr, nullptr);
+      return nullptr;
     }
-    return this->AddNotificationHandlerUnsafe<Fn>(reference, std::forward<Fn>(listener));
+    autowiring::registration_t reg =
+      this->AddNotificationHandlerUnsafe<Fn>(reference, std::forward<Fn>(listener));
+    return std::make_unique<autowiring::registration_t>(std::move(reg));
   }
 
   /// <summary>
