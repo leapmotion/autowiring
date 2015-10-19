@@ -37,16 +37,23 @@ void DeferrableAutowiring::CancelAutowiring(void) {
   if(strategy)
     strategy->Finalize();
 
-  if (m_deferred_autowire) {
-   *m_deferred_autowire->owner -= *m_deferred_autowire;
-   m_deferred_autowire = nullptr;
-  }
+  UnRegisterDeferredAutowire();
 }
 
 void DeferrableAutowiring::SatisfyAutowiring(const AnySharedPointer& ptr) {
   m_ptr = ptr;
+  UnRegisterDeferredAutowire();
 }
 
 void DeferrableAutowiring::RegisterDeferredAutowire(autowiring::registration_t&& reg) {
   m_deferred_autowire = std::make_unique<autowiring::registration_t>(std::move(reg));
 }
+
+
+void DeferrableAutowiring::UnRegisterDeferredAutowire(void) {
+  if (m_deferred_autowire) {
+    *m_deferred_autowire->owner -= *m_deferred_autowire;
+    m_deferred_autowire = nullptr;
+  }
+}
+
