@@ -2,8 +2,8 @@
 # Setup testing
 #
 
-add_googletest(test)
-add_googletest(benchmark)
+add_subdirectory(test)
+add_subdirectory(benchmark)
 
 #
 # Configure source files
