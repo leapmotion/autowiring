@@ -32,11 +32,6 @@ void DeferrableAutowiring::CancelAutowiring(void) {
 
   m_context.reset();
 
-  // Always finalize this entry:
-  auto strategy = GetStrategy();
-  if(strategy)
-    strategy->Finalize();
-
   UnregisterDeferredAutowire();
 }
 

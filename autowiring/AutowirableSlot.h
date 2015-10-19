@@ -109,14 +109,6 @@ public:
   /// </remarks>
   virtual void reset(void);
 
-  /// <returns>
-  /// The strategy that should be used to satisfy this slot
-  /// </returns>
-  /// <remarks>
-  /// If no custom strategy is required, this method may return null
-  /// </remarks>
-  virtual DeferrableUnsynchronizedStrategy* GetStrategy(void) { return nullptr; }
-
   /// <summary>
   /// Satisfies autowiring with a so-called "witness slot" which is guaranteed to be satisfied on the same type
   /// </summary>
@@ -271,7 +263,5 @@ public:
       (Args) *this...
     );
   }
-
-  DeferrableUnsynchronizedStrategy* GetStrategy(void) override { return this; }
 };
 

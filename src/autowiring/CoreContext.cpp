@@ -1061,10 +1061,6 @@ void CoreContext::AddDeferredAutowireUnsafe(DeferrableAutowiring* deferrable) {
 
   autowiring::registration_t reg = entry.m_sig += [deferrable, &entry] {
     deferrable->SatisfyAutowiring(entry.m_value);
-    auto strategy = deferrable->GetStrategy();
-    if (strategy) {
-      strategy->Finalize();
-    }
   };
   deferrable->RegisterDeferredAutowire(std::move(reg));
 }
