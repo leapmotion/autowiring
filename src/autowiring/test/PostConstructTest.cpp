@@ -11,19 +11,6 @@ class PostConstructTest:
 
 using namespace std;
 
-class ContextExposer:
-  public CoreContext
-{
-public:
-  size_t DeferredCount(void) const {
-    size_t ct = 0;
-    for(const auto& entry : CoreContext::m_typeMemos)
-      for(auto cur = entry.second.pFirst; cur; cur = cur->GetFlink())
-        ct++;
-    return ct;
-  }
-};
-
 // Two classes to make up the cyclic dependency:
 class A:
   public ContextMember
@@ -97,19 +84,6 @@ TEST_F(PostConstructTest, VerifyNaiveBehavior) {
   // Create a context and add just the naive class, to verify the problematic behavior:
   AutoCurrentContext ctxt;
   ASSERT_THROW(ctxt->Inject<Naive>(), std::exception) << "Naive class didn't throw an exception as expected";
-}
-
-TEST_F(PostConstructTest, VerifyExpectedDeferrmentCount) {
-  AutoCurrentContext ctxt;
-
-  // Add the smart class, which should introduce a single deferred count:
-  ctxt->Inject<Smarter>();
-
-  // Now test the count:
-  ASSERT_EQ(
-    1UL,
-    ((ContextExposer&)*ctxt).DeferredCount()
-  ) << "Unexpected number of deferred initializers";
 }
 
 TEST_F(PostConstructTest, VerifySmartBehavior) {
@@ -384,4 +358,43 @@ TEST_F(PostConstructTest, PostConstructCanSafelyThrow) {
 
   Autowired<PostConstructThrowsException> pcte;
   ASSERT_FALSE(pcte.IsAutowired()) << "A context member which threw an exception post-construction was incorrectly introduced into a context";
+}
+
+namespace {
+  class EmptyType : public CoreObject {};
+}
+
+TEST_F(PostConstructTest, StrictNotificationArrangement) {
+  int call[7] = {-1, -1, -1, -1, -1, -1, -1};
+  int callIdx = 1;
+
+  AutoCurrentContext ctxt;
+  Autowired<EmptyType> obj1;
+  obj1.NotifyWhenAutowired([&] {
+    call[0] = callIdx++;
+  });
+  ctxt->NotifyWhenAutowired<EmptyType>([&] {
+    call[1] = callIdx++;
+  });
+  obj1.NotifyWhenAutowired([&] {
+    call[2] = callIdx++;
+  });
+  ctxt->NotifyWhenAutowired<EmptyType>([&] {
+    call[3] = callIdx++;
+  });
+  Autowired<EmptyType> obj2;
+  obj2.NotifyWhenAutowired([&] {
+    call[4] = callIdx++;
+  });
+  obj1.NotifyWhenAutowired([&] {
+    call[5] = callIdx++;
+  });
+  obj2.NotifyWhenAutowired([&] {
+    call[6] = callIdx++;
+  });
+
+  ctxt->Inject<EmptyType>();
+
+  for (int i = 0; i < 7; i++)
+    ASSERT_EQ(i + 1, call[i]) << "Registered autowired handler was not called in the correct order";
 }

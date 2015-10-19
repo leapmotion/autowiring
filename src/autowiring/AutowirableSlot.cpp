@@ -10,7 +10,8 @@ using namespace std;
 
 DeferrableAutowiring::DeferrableAutowiring(AnySharedPointer&& witness, const std::shared_ptr<CoreContext>& context) :
   m_ptr(std::move(witness)),
-  m_context(context)
+  m_context(context),
+  m_deferred_registration(autowiring::registration_t(nullptr, nullptr))
 {}
 
 DeferrableAutowiring::~DeferrableAutowiring(void) {
@@ -22,7 +23,6 @@ DeferrableAutowiring::~DeferrableAutowiring(void) {
 void DeferrableAutowiring::reset(void) {
   m_ptr.reset();
   CancelAutowiring();
-  m_context.reset();
 }
 
 void DeferrableAutowiring::CancelAutowiring(void) {
@@ -31,13 +31,22 @@ void DeferrableAutowiring::CancelAutowiring(void) {
     // Nothing to do here, then
     return;
 
-  // Reset our hold on the weak pointer to prevent repeated cancellation:
   m_context.reset();
 
-  // Tell our context we are going away:
-  context->CancelAutowiringNotification(this);
+  UnregisterDeferredAutowire();
 }
 
 void DeferrableAutowiring::SatisfyAutowiring(const AnySharedPointer& ptr) {
   m_ptr = ptr;
+  UnregisterDeferredAutowire();
+}
+
+void DeferrableAutowiring::RegisterDeferredAutowire(autowiring::registration_t&& reg) {
+  m_deferred_registration = std::move(reg);
+}
+
+void DeferrableAutowiring::UnregisterDeferredAutowire() {
+  if (m_deferred_registration) {
+    *m_deferred_registration.owner -= m_deferred_registration;
+  }
 }

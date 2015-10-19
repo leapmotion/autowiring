@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
+#include "auto_signal.h"
 #include "autowiring_error.h"
 #include "fast_pointer_cast.h"
 #include "SlotInformation.h"
@@ -16,8 +17,7 @@ class CoreObject;
 /// </summary>
 /// <remarks>
 /// The DeferrableAutowiring base class' SatisfyAutowiring routine is  guaranteed to be run in a
-/// synchronized context--IE, a call to CancelAutowiringNotification will block until the above
-/// routine returns.  Unfortunately, this lock also excludes many other types of operations, such
+/// synchronized context.  Unfortunately, this lock also excludes many other types of operations, such
 /// as CoreContext::Inject and CoreContext::FindByType, which means that handing control to a user
 /// specified callback is unsafe.
 ///
@@ -68,8 +68,13 @@ protected:
   /// </remarks>
   std::weak_ptr<CoreContext> m_context;
 
-  // The next entry to be autowired in this sequence
-  DeferrableAutowiring* m_pFlink = nullptr;
+  /// The registration of the singal handler which is used to finish the autowiring.
+  /// It can be used to cancel the signal handler.
+  autowiring::registration_t m_deferred_registration;
+
+  /// Cancel the signal handler regsitered in m_deferred_regsitration. This is used when this
+  /// is already autowired or to cancel autowiring.
+  void UnregisterDeferredAutowire(void);
 
   /// <summary>
   /// Causes this deferrable to unregister itself with the enclosing context
@@ -77,14 +82,8 @@ protected:
   void CancelAutowiring(void);
 
 public:
-  // Accessor methods:
-  DeferrableAutowiring* GetFlink(void) { return m_pFlink; }
+  // Accessor method:
   const AnySharedPointer& GetSharedPointer(void) const { return m_ptr; }
-
-  // Mutator methods:
-  void SetFlink(DeferrableAutowiring* pFlink) {
-    m_pFlink = pFlink;
-  }
 
   /// <returns>
   /// True if the underlying field is autowired
@@ -110,29 +109,15 @@ public:
   /// </remarks>
   virtual void reset(void);
 
-  /// <returns>
-  /// The strategy that should be used to satisfy this slot
-  /// </returns>
-  /// <remarks>
-  /// If no custom strategy is required, this method may return null
-  /// </remarks>
-  virtual DeferrableUnsynchronizedStrategy* GetStrategy(void) { return nullptr; }
-
-  /// <summary>
-  /// Releases autowiring objects that are associated with the current slot
-  /// </summary>
-  /// <remarks>
-  /// These objects are generally all objects that have been registered on this slot to receive notifications of
-  /// some kind when the slot itself is satisfied.  When the context is tearing down, there is potentially an
-  /// ownership and responsibility race on this datatype--should the dependant chain be executed on the objects
-  /// that have been satisfied, or should it be destroyed?
-  /// </remarks>
-  virtual DeferrableAutowiring* ReleaseDependentChain(void) { return nullptr; }
-
   /// <summary>
   /// Satisfies autowiring with a so-called "witness slot" which is guaranteed to be satisfied on the same type
   /// </summary>
   void SatisfyAutowiring(const AnySharedPointer& ptr);
+
+  /// <summary>
+  /// Register the singal handler which is used to finish the autowiring
+  /// </summary>
+  void RegisterDeferredAutowire(autowiring::registration_t&& reg);
 
   bool operator!=(const AnySharedPointer& rhs) const { return m_ptr != rhs; }
   bool operator==(const AnySharedPointer& rhs) const { return m_ptr == rhs; }
@@ -278,7 +263,5 @@ public:
       (Args) *this...
     );
   }
-
-  DeferrableUnsynchronizedStrategy* GetStrategy(void) override { return this; }
 };
 
