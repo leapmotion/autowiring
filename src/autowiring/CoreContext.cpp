@@ -816,9 +816,11 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
 
 void CoreContext::UpdateDeferredElement(std::unique_lock<std::mutex>&& lk, MemoEntry& entry) {
   // Satisfy what needs to be satisfied:
+  lk.unlock();
   entry.m_sig();
 
   // Give children a chance to also update their deferred elements:
+  lk.lock();
   for (const auto& weak_child : m_children) {
     // Hold reference to prevent this iterator from becoming invalidated:
     auto ctxt = weak_child.lock();
@@ -838,6 +840,8 @@ void CoreContext::UpdateDeferredElement(std::unique_lock<std::mutex>&& lk, MemoE
 
 void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry, bool local) {
   {
+    std::vector<MemoEntry *> entries;
+
     // Notify any autowired field whose autowiring was deferred.  We do this by processing each entry
     // in the entire type memos collection.
     for (auto& cur : m_typeMemos) {
@@ -853,16 +857,19 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
       if (!value.m_value.try_assign(entry.pCoreObject))
         continue;
 
+      entries.push_back(&value);
+
       // Success, assign the traits
       value.pObjTraits = &entry;
 
       // Store if it was injected from the local context or not
       value.m_local = local;
-
-      value.m_sig();
-
     }
     lk.unlock();
+
+    for (auto e: entries) {
+      e->m_sig();
+    }
   }
 
   // Give children a chance to also update their deferred elements:
