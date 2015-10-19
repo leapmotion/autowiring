@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "CoreContext.h"
 #include "AutoPacketFactory.h"
-#include "CoreContextStateBlock.h"
 #include "CoreThread.h"
 #include "demangle.h"
 #include "GlobalCoreContext.h"
@@ -309,9 +308,9 @@ void CoreContext::AddInternal(const AnySharedPointer& ptr) {
   UpdateDeferredElement(std::move(lk), entry);
 }
 
-void CoreContext::FindByType(AnySharedPointer& reference, bool localOnly) const {
+MemoEntry& CoreContext::FindByType(AnySharedPointer& reference, bool localOnly) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-  FindByTypeUnsafe(reference, localOnly);
+  return FindByTypeUnsafe(reference, localOnly);
 }
 
 MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference, bool localOnly) const {
@@ -362,6 +361,19 @@ void CoreContext::FindByTypeRecursive(AnySharedPointer& reference, const AutoSea
   // time, a strict locking heirarchy is inferred, and a deadlock therefore impossible.
   m_pParent->FindByTypeRecursive(reference, searchFn);
 }
+
+MemoEntry& CoreContext::FindByDeferrableAutowiring(DeferrableAutowiring* deferred) {
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+  size_t found = m_typeMemos.count(deferred->GetType());
+
+  if(!found) {
+    // the passed slot was not created in this context or a parent context
+    throw autowiring_error("Attempt to register an autowiring notification for slot not created in the specified context or its parent context");
+  }
+
+  return m_typeMemos[deferred->GetType()];
+}
+
 
 std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());

@@ -200,9 +200,18 @@ public:
     }
 
     if (std::shared_ptr<CoreContext> context = DeferrableAutowiring::m_context.lock()) {
-      auto ptr = context->NotifyWhenAutowired<T>(std::forward<Fn>(fn));
-      if (ptr)
-        m_autowired_notifications.push_back(std::move(*ptr));
+      AnySharedPointerT<T> reference;
+      MemoEntry* entry = &context->FindByDeferrableAutowiring(this);
+
+      autowiring::registration_t reg =
+        entry->m_sig += [this, fn] (autowiring::registration_t registration){
+          fn();
+          m_autowired_notifications.erase(
+            std::remove(m_autowired_notifications.begin(), m_autowired_notifications.end(), registration),
+            m_autowired_notifications.end());
+          *registration.owner -= registration;
+        };
+      m_autowired_notifications.push_back(std::move(reg));
     }
   }
 };

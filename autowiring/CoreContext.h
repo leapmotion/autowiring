@@ -10,6 +10,7 @@
 #include "CallExtractor.h"
 #include "CoreRunnable.h"
 #include "ContextMember.h"
+#include "CoreContextStateBlock.h"
 #include "CoreObjectDescriptor.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
@@ -413,7 +414,7 @@ protected:
   /// The memo entry where this type was found
   /// </returns>
   /// <param name="reference">An initialized shared pointer slot which may be used in type detection</param>
-  void FindByType(AnySharedPointer& reference, bool localOnly = false) const;
+  MemoEntry& FindByType(AnySharedPointer& reference, bool localOnly = false) const;
 
   /// \internal
   /// <summary>
@@ -432,25 +433,6 @@ protected:
   /// Adds the specified deferrable autowiring to be satisfied at a later date when its matched type is inserted
   /// </summary>
   void AddDeferredAutowireUnsafe(DeferrableAutowiring* deferrable);
-
-  /// \internal
-  /// <summary>
-  /// Adds a notification handler which will be called when the type matching reference is inserted
-  /// </summary>
-  template<typename Fn>
-  autowiring::registration_t AddNotificationHandlerUnsafe(AnySharedPointer& reference, Fn&& handler) {
-    size_t found = m_typeMemos.count(reference.type());
-
-    if(!found) {
-      // the passed slot was not created in this context or a parent context
-      // TODO: check if m_typememos include parent context autowired slot
-      throw autowiring_error("Attempt to register an autowiring notification for slot not created in the specified context or its parent context");
-    }
-
-    MemoEntry& entry = m_typeMemos[reference.type()];
-
-    return entry.m_sig += handler;
-  }
 
   /// \internal
   /// <summary>
@@ -1146,6 +1128,15 @@ public:
     FindByTypeRecursive(slot, AutoSearchLambdaDefault());
   }
 
+  /// <summary>
+  /// Scans the memo collection for the specified entry
+  /// </summary>
+  /// <returns>
+  /// The memo entry where this type was found
+  /// </returns>
+  /// <param name="reference">A deferrable autowiring which may be used in type detection</param>
+  MemoEntry& FindByDeferrableAutowiring(DeferrableAutowiring* deferred);
+
   template<class T>
   class AutoSearchLambdaAutowire:
     public AutoSearchLambda
@@ -1182,6 +1173,38 @@ public:
       AutoSearchLambdaAutowire<T>(*this, ref, defer)
     );
   }
+
+  template<class T>
+  class AutoSearchLambdaNotifyWhenAutowired:
+  public AutoSearchLambda
+  {
+  public:
+    AutoSearchLambdaNotifyWhenAutowired(CoreContext& ctxt, AnySharedPointerT<T>& ref) :
+      ctxt(ctxt),
+      ref(ref),
+      entry(nullptr)
+    {}
+
+    CoreContext& ctxt;
+    AnySharedPointerT<T>& ref;
+    mutable MemoEntry* entry;
+
+    void operator()() const override {
+      if(ref)
+        // Matched successfully, do not attempt to defer
+        return;
+
+      size_t found = ctxt.m_typeMemos.count(ref.type());
+
+      if(!found) {
+        // the passed slot was not created in this context or a parent context
+        throw autowiring_error("Attempt to register an autowiring notification for slot not created in the specified context or its parent context");
+      }
+
+      entry = &ctxt.m_typeMemos[ref.type()];
+    }
+  };
+
 
   /// <summary>
   /// Assigns the thread pool handler for this context
@@ -1230,10 +1253,6 @@ public:
   /// Adds a post-attachment listener in this context for a particular autowired member.
   /// There is no guarantee for the context in which the listener will be called.
   /// </summary>
-  /// <returns>
-  /// A unique ptr to autowiring::registration_t which the caller may safely ignore if it's not needed.
-  /// The returned unique ptr will be nullptr if the call was made immediately.
-  /// </returns>
   /// <remarks>
   /// This method will succeed if slot was constructed in this context or any parent context.  If the
   /// passed slot was not created in this context or a parent context, an exception will be thrown.
@@ -1245,21 +1264,28 @@ public:
   /// body of this method.  Care should be taken to avoid deadlocks in this case--either the caller must
   /// not be holding any locks when this method is invoked, or the caller should design the listener
   /// method such that it may be substitutde in place for the notification routine.
-  ///
-  /// The returned value may be used later to unregister the listener.
   /// </remarks>
   template<class T, class Fn>
-  std::unique_ptr<autowiring::registration_t> NotifyWhenAutowired(Fn&& listener) {
+  void NotifyWhenAutowired(Fn&& listener) {
     AnySharedPointerT<T> reference;
-    FindByTypeRecursive(reference, AutoSearchLambdaDefault());
-    if(reference) {
-      // The passed slot is already autowired
+    auto searchFn = AutoSearchLambdaNotifyWhenAutowired<T>(*this, reference);
+    FindByTypeRecursive(reference, searchFn);
+
+    if (reference) {
+      // Success!  We can satisfy the listener call right away, and be assured that the listener
+      // will be able to find what it's looking for in this context without holding down a lock,
+      // because entities can't be removed from a context.
       listener();
-      return nullptr;
+      return;
     }
-    autowiring::registration_t reg =
-      this->AddNotificationHandlerUnsafe<Fn>(reference, std::forward<Fn>(listener));
-    return std::make_unique<autowiring::registration_t>(std::move(reg));
+
+    // It is safe to use the entry without holding down a lock also because entities can't be removed
+    // from a context.
+    if (searchFn.entry)
+      searchFn.entry->m_sig += [listener] (autowiring::registration_t reg) {
+        listener();
+        *reg.owner -= reg;
+      };
   }
 
   /// <summary>
