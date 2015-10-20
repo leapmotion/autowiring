@@ -75,6 +75,29 @@ public:
 };
 
 /// <summary>
+/// Specialization for "T&&" ~ auto_in<T&&>.  T must be const-qualified in order to be an input parameter.
+/// </summary>
+template<class T>
+class auto_arg<T&&>
+{
+public:
+  typedef T&& type;
+  typedef type arg_type;
+  typedef auto_id_t<T> id_type;
+  static const bool is_input = true;
+  static const bool is_output = false;
+  static const bool is_shared = false;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+
+  template<class C>
+  static T&& arg(C& packet) {
+    (void) auto_id_t_init<T, false>::init;
+    return packet.template GetRvalue<T>();
+  }
+};
+
+/// <summary>
 /// Specialization for "std::shared_ptr<const T>" ~ auto_in<T>
 /// </summary>
 template<class T>

@@ -357,6 +357,19 @@ public:
     return retVal;
   }
 
+  /// <returns>
+  /// The Rvalue decoration for the specified type and time shift, or throws an exception if such a type cannot be found
+  /// </returns>
+  template<class T>
+  T&& GetRvalue(int tshift = 0) const {
+    static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
+
+    const T* retVal;
+    if (!Get(retVal, tshift))
+      ThrowNotDecoratedException(DecorationKey(auto_id_t<T>{}, tshift));
+    return std::move(const_cast<T&>(*retVal));
+  }
+
   /// <summary>
   /// Returns a null-terminated buffer containing all decorations
   /// </summary>
