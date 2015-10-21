@@ -27,7 +27,7 @@ template<class T>
 class auto_arg
 {
 public:
-  typedef const T& type;
+  typedef const T type;
   typedef type arg_type;
   typedef auto_id_t<T> id_type;
   static const bool is_input = true;
@@ -37,7 +37,7 @@ public:
   static const int tshift = 0;
 
   template<class C>
-  static const T& arg(C& packet) {
+  static const T arg(C& packet) {
     (void) auto_id_t_init<T, true>::init;
     return packet.template Get<T>();
   }
