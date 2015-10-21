@@ -34,7 +34,10 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
 
   switch (threadPriority) {
   case ThreadPriority::Idle:
+//Android kernel(3.10.x) has not implemented SCHED_IDLE yet.
+#ifndef __ANDROID__
     policy = SCHED_IDLE;
+#endif
     percent = 0;
     break;
   case ThreadPriority::Lowest:
