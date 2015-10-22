@@ -111,7 +111,6 @@ public:
 
 private:
   std::vector<autowiring::registration_t> m_events;
-
   std::vector<autowiring::registration_t> m_autowired_notifications;
 
 public:
@@ -129,18 +128,36 @@ public:
 
   template<typename Fn, typename... Args>
   struct wrapper {
-    wrapper(Autowired<T>* field, Fn&& fn) :
-      field(field),
+    wrapper(const std::weak_ptr<CoreContext>& ctxtWeak, Fn&& fn) :
+      ctxtWeak(ctxtWeak),
       fn(std::forward<Fn&&>(fn))
     {}
 
-    Autowired<T>* field;
+    std::weak_ptr<CoreContext> ctxtWeak;
     Fn fn;
 
     void operator()(const Args&... args) {
-      if (field->IsAutowired()) {
+      if (auto ctxt = ctxtWeak.lock())
         fn(args...);
-      }
+    }
+  };
+
+  template<typename U, typename Fn, typename... Args>
+  struct wrapper_delayed {
+    wrapper_delayed(Autowired<T>& field, autowiring::signal<void(Args...)> U::*member, Fn&& fn) :
+      m_field(field),
+      member(member),
+      m_wrapper(field.m_context, std::forward<Fn&&>(fn))
+    {}
+
+    Autowired<T>& m_field;
+    wrapper<Fn, Args...> m_wrapper;
+    autowiring::signal<void(Args...)> U::*member;
+
+    void operator()(void) const {
+      m_field.m_events.push_back(
+        m_field->*member += std::move(m_wrapper)
+      );
     }
   };
 
@@ -149,7 +166,8 @@ public:
   template<typename U, typename... Args>
   struct signal_relay {
     signal_relay(Autowired<T>& f, autowiring::signal<void(Args...)> U::*m) :
-      field(&f), member(m) 
+      field(&f),
+      member(m) 
     {}
 
     Autowired<T>* field;
@@ -157,14 +175,9 @@ public:
 
     template<typename Fn>
     void operator+=(Fn&& rhs) {
-      auto wrapped = wrapper<Fn, Args...>(field, std::forward<Fn&&>(rhs));
-      autowiring::signal<void(Args...)> U::* l_member = member;
-
-      field->NotifyWhenAutowired([wrapped, l_member] {
-        auto& field = *wrapped.field;
-        auto& sig = static_cast<U*>(field.get())->*l_member;
-        field.m_events.push_back(sig += wrapped);
-      });
+      field->NotifyWhenAutowired(
+        wrapper_delayed<U, Fn, Args...>{ *field, member, std::forward<Fn&&>(rhs) }
+      );
     }
   };
   
