@@ -628,10 +628,7 @@ namespace {
     WiresInOuterScope(void) {
       s_wasHit = false;
       s_isConstructed = true;
-      outer(&OuterType::sig) += [this] {
-        s_wasHit = true;
-        ASSERT_TRUE(s_isConstructed) << "Signal handler invoked on an object that was already destroyed";
-      };
+      outer(&OuterType::sig) += [this] { s_wasHit = true; };
     }
 
     ~WiresInOuterScope(void) {
