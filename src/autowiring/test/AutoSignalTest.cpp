@@ -626,8 +626,10 @@ namespace {
   class WiresInOuterScope {
   public:
     WiresInOuterScope(void) {
+      s_wasHit = false;
       s_isConstructed = true;
       outer(&OuterType::sig) += [this] {
+        s_wasHit = true;
         ASSERT_TRUE(s_isConstructed) << "Signal handler invoked on an object that was already destroyed";
       };
     }
@@ -637,9 +639,11 @@ namespace {
     }
 
     Autowired<OuterType> outer;
+    static bool s_wasHit;
     static bool s_isConstructed;
   };
 
+  bool WiresInOuterScope::s_wasHit = false;
   bool WiresInOuterScope::s_isConstructed = false;
 }
 
@@ -662,6 +666,7 @@ TEST_F(AutoSignalTest, OuterPostDereference) {
   // This should trigger an exception:
   outer->sig();
   ASSERT_FALSE(WiresInOuterScope::s_isConstructed) << "An object registered with a signal handle was unexpectedly leaked";
+  ASSERT_FALSE(WiresInOuterScope::s_wasHit) << "Signal handler was invoked even though its enclosing object should have been destroyed";
 }
 
 namespace {
