@@ -111,7 +111,6 @@ public:
 
 private:
   std::vector<autowiring::registration_t> m_events;
-
   std::vector<autowiring::registration_t> m_autowired_notifications;
 
 public:
@@ -129,18 +128,36 @@ public:
 
   template<typename Fn, typename... Args>
   struct wrapper {
-    wrapper(Autowired<T>* field, Fn&& fn) :
-      field(field),
+    wrapper(const std::weak_ptr<CoreContext>& ctxtWeak, Fn&& fn) :
+      ctxtWeak(ctxtWeak),
       fn(std::forward<Fn&&>(fn))
     {}
 
-    Autowired<T>* field;
+    std::weak_ptr<CoreContext> ctxtWeak;
     Fn fn;
 
     void operator()(const Args&... args) {
-      if (field->IsAutowired()) {
+      if (auto ctxt = ctxtWeak.lock())
         fn(args...);
-      }
+    }
+  };
+
+  template<typename U, typename Fn, typename... Args>
+  struct wrapper_delayed {
+    wrapper_delayed(Autowired<T>& field, autowiring::signal<void(Args...)> U::*member, Fn&& fn) :
+      m_field(field),
+      member(member),
+      m_wrapper(field.m_context, std::forward<Fn&&>(fn))
+    {}
+
+    Autowired<T>& m_field;
+    wrapper<Fn, Args...> m_wrapper;
+    autowiring::signal<void(Args...)> U::*member;
+
+    void operator()(void) const {
+      m_field.m_events.push_back(
+        m_field->*member += std::move(m_wrapper)
+      );
     }
   };
 
@@ -148,23 +165,19 @@ public:
   //with a member signal on an autowired field.
   template<typename U, typename... Args>
   struct signal_relay {
+    signal_relay(Autowired<T>& f, autowiring::signal<void(Args...)> U::*m) :
+      field(&f),
+      member(m) 
+    {}
+
     Autowired<T>* field;
     autowiring::signal<void(Args...)> U::*member;
 
-    signal_relay(Autowired<T>& f, autowiring::signal<void(Args...)> U::*m) :
-      field(&f), member(m) 
-    {}
-
     template<typename Fn>
     void operator+=(Fn&& rhs) {
-      Autowired<T>* l_field = field; //lambda capture of references doesn't work right.
-      autowiring::signal<void(Args...)> U::* l_member = member;
-      auto wrapped = wrapper<Fn, Args...>(l_field, std::forward<Fn&&>(rhs));
-
-      field->NotifyWhenAutowired([l_field, l_member, wrapped] {
-        auto& sig = static_cast<U*>(l_field->get())->*l_member;
-        l_field->m_events.push_back(sig += wrapped);
-      });
+      field->NotifyWhenAutowired(
+        wrapper_delayed<U, Fn, Args...>{ *field, member, std::forward<Fn&&>(rhs) }
+      );
     }
   };
   
@@ -223,7 +236,7 @@ public:
       MemoEntry* entry = &context->FindByDeferrableAutowiring(this);
 
       autowiring::registration_t reg =
-        entry->m_sig += [this, fn] (autowiring::registration_t registration){
+        entry->m_sig += [this, fn] (autowiring::registration_t registration) mutable {
           fn();
           for(auto iter = m_autowired_notifications.begin(); iter != m_autowired_notifications.end(); ++iter) {
             if( *iter == registration) {

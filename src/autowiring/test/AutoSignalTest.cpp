@@ -626,18 +626,22 @@ namespace {
   class WiresInOuterScope {
   public:
     WiresInOuterScope(void) {
-      outer(&OuterType::sig) += [this] {
-        ASSERT_EQ(0xDEADBEEFC0FECAFE, magic);
-      };
+      s_wasHit = false;
+      s_isConstructed = true;
+      outer(&OuterType::sig) += [this] { s_wasHit = true; };
     }
 
     ~WiresInOuterScope(void) {
-      magic = 0xEEEE0000FFFF0000;
+      s_isConstructed = false;
     }
 
     Autowired<OuterType> outer;
-    uint64_t magic = 0xDEADBEEFC0FECAFE;
+    static bool s_wasHit;
+    static bool s_isConstructed;
   };
+
+  bool WiresInOuterScope::s_wasHit = false;
+  bool WiresInOuterScope::s_isConstructed = false;
 }
 
 TEST_F(AutoSignalTest, OuterPostDereference) {
@@ -648,8 +652,9 @@ TEST_F(AutoSignalTest, OuterPostDereference) {
     // This will cause the outer context to be destroyed, which will cause one
     // of the signal handlers to be reset.  Unfortunatley, however, we aren't yet
     // done hitting all signal handlers, so this statement will cause the very next
-    // invoked signal--registered in WiresInOuterScope's ctor--to possibly be
-    // called even though its context is gone.
+    // invoked signal--registered in WiresInOuterScope's ctor--to be called even
+    // though its context is gone.
+    // This is the desired behavior.
     ctxt.reset();
   };
 
@@ -657,6 +662,8 @@ TEST_F(AutoSignalTest, OuterPostDereference) {
 
   // This should trigger an exception:
   outer->sig();
+  ASSERT_FALSE(WiresInOuterScope::s_isConstructed) << "An object registered with a signal handle was unexpectedly leaked";
+  ASSERT_FALSE(WiresInOuterScope::s_wasHit) << "Signal handler was invoked even though its enclosing object should have been destroyed";
 }
 
 namespace {

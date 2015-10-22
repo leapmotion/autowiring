@@ -230,7 +230,7 @@ namespace autowiring {
         fn(std::forward<_Fn>(fn))
       {}
       signal& owner;
-      const Fn fn;
+      Fn fn;
       void operator()(const Args&... args) override { fn(registration_t{ &owner, this }, args...); }
     };
 
