@@ -661,6 +661,7 @@ TEST_F(AutoSignalTest, OuterPostDereference) {
 
   // This should trigger an exception:
   outer->sig();
+  ASSERT_FALSE(WiresInOuterScope::s_isConstructed) << "An object registered with a signal handle was unexpectedly leaked";
 }
 
 namespace {
