@@ -223,7 +223,7 @@ public:
       MemoEntry* entry = &context->FindByDeferrableAutowiring(this);
 
       autowiring::registration_t reg =
-        entry->m_sig += [this, fn] (autowiring::registration_t registration){
+        entry->m_sig += [this, fn] (autowiring::registration_t registration) mutable {
           fn();
           for(auto iter = m_autowired_notifications.begin(); iter != m_autowired_notifications.end(); ++iter) {
             if( *iter == registration) {
