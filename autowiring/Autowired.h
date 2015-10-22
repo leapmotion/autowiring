@@ -148,22 +148,22 @@ public:
   //with a member signal on an autowired field.
   template<typename U, typename... Args>
   struct signal_relay {
-    Autowired<T>* field;
-    autowiring::signal<void(Args...)> U::*member;
-
     signal_relay(Autowired<T>& f, autowiring::signal<void(Args...)> U::*m) :
       field(&f), member(m) 
     {}
 
+    Autowired<T>* field;
+    autowiring::signal<void(Args...)> U::*member;
+
     template<typename Fn>
     void operator+=(Fn&& rhs) {
-      Autowired<T>* l_field = field; //lambda capture of references doesn't work right.
+      auto wrapped = wrapper<Fn, Args...>(field, std::forward<Fn&&>(rhs));
       autowiring::signal<void(Args...)> U::* l_member = member;
-      auto wrapped = wrapper<Fn, Args...>(l_field, std::forward<Fn&&>(rhs));
 
-      field->NotifyWhenAutowired([l_field, l_member, wrapped] {
-        auto& sig = static_cast<U*>(l_field->get())->*l_member;
-        l_field->m_events.push_back(sig += wrapped);
+      field->NotifyWhenAutowired([wrapped, l_member] {
+        auto& field = *wrapped.field;
+        auto& sig = static_cast<U*>(field.get())->*l_member;
+        field.m_events.push_back(sig += wrapped);
       });
     }
   };
