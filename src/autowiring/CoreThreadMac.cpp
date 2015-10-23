@@ -11,7 +11,16 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <iostream>
+#include <pthread.h>
 #include THREAD_HEADER
+
+// Missing definitions from pthreads.h
+#if !defined(PTHREAD_MIN_PRIORITY)
+#define PTHREAD_MIN_PRIORITY  0
+#endif
+#if !defined(PTHREAD_MAX_PRIORITY)
+#define PTHREAD_MAX_PRIORITY 63
+#endif
 
 using std::chrono::milliseconds;
 using std::chrono::nanoseconds;
@@ -41,4 +50,39 @@ void BasicThread::GetThreadTimes(std::chrono::milliseconds& kernelTime, std::chr
   // User time is in ns increments
   kernelTime = std::chrono::duration_cast<milliseconds>(nanoseconds(info.pth_system_time));
   userTime = std::chrono::duration_cast<milliseconds>(nanoseconds(info.pth_user_time));
+}
+
+void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
+  struct sched_param param = { 0 };
+  int policy = SCHED_RR;
+  int percent = 0;
+
+  switch (threadPriority) {
+  case ThreadPriority::Idle:
+    percent = 0;
+    break;
+  case ThreadPriority::Lowest:
+    percent = 1;
+    break;
+  case ThreadPriority::BelowNormal:
+    percent = 20;
+    break;
+  case ThreadPriority::Normal:
+    percent = 50;
+    break;
+  case ThreadPriority::AboveNormal:
+    percent = 66;
+    break;
+  case ThreadPriority::Highest:
+    percent = 83;
+    break;
+  case ThreadPriority::TimeCritical:
+    percent = 100;
+    break;
+  default:
+    throw std::runtime_error("Attempted to assign an unrecognized thread priority");
+  }
+  param.sched_priority = PTHREAD_MIN_PRIORITY + (percent*(PTHREAD_MAX_PRIORITY - PTHREAD_MIN_PRIORITY) + 50) / 100;
+
+  pthread_setschedparam(m_state->m_thisThread.native_handle(), policy, &param);
 }

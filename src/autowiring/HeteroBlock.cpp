@@ -50,7 +50,7 @@ HeteroBlock::HeteroBlock(const HeteroBlockEntry* pFirst, const HeteroBlockEntry*
     //  size_t slack = (align - slop) % align;
     //  ncb += slack;
     //
-    // Written in one line, this is jsut:
+    // Written in one line, this is just:
     //
     //  ncb += (align - (ncb % align)) % align;
     //

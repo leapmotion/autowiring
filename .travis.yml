@@ -46,11 +46,11 @@ before_script:
   - export LD_LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.8:$LD_LIBRARY_PATH
 
 script:
-  # Build Autowriring, run unit tests, and install
+  # Build Autowiring, run unit tests, and install
   - $CMAKE_DIRNAME/bin/cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=~/autowiring/
   - make -j 4 || make
   - ctest --output-on-failure
-  - make install
+  - make install > logfile || cat logfile
   - cpack || (cat _CPack_Packages/Linux/TGZ/InstallOutput.log; exit 3)
   - cd examples
   - ../$CMAKE_DIRNAME/bin/cmake . -DCMAKE_PREFIX_PATH:PATH=~

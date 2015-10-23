@@ -4,12 +4,10 @@
 #include "auto_signal.h"
 #include "AutowiringDebug.h"
 #include "AutowirableSlot.h"
+#include "CoreContext.h"
 #include "GlobalCoreContext.h"
 #include MEMORY_HEADER
 #include ATOMIC_HEADER
-
-class CoreContext;
-class GlobalCoreContext;
 
 /// <summary>
 /// Provides a reference to the current context.
@@ -112,12 +110,8 @@ public:
   }
 
 private:
-  // The first deferred child known to need registration.  This is distinct from the m_pFlink entry in
-  // the base class, which refers to the _next sibling_; by contrast, this type refers to the _first child_
-  // which will be the first member registered via NotifyWhenAutowired.
-  std::atomic<AutowirableSlot<T>*> m_pFirstChild{nullptr};
-
   std::vector<autowiring::registration_t> m_events;
+  std::vector<autowiring::registration_t> m_autowired_notifications;
 
 public:
   operator const std::shared_ptr<T>&(void) const {
@@ -132,26 +126,58 @@ public:
     return this->operator const std::shared_ptr<T>&().get();
   }
 
+  template<typename Fn, typename... Args>
+  struct wrapper {
+    wrapper(const std::weak_ptr<CoreContext>& ctxtWeak, Fn&& fn) :
+      ctxtWeak(ctxtWeak),
+      fn(std::forward<Fn&&>(fn))
+    {}
+
+    std::weak_ptr<CoreContext> ctxtWeak;
+    Fn fn;
+
+    void operator()(const Args&... args) {
+      if (auto ctxt = ctxtWeak.lock())
+        fn(args...);
+    }
+  };
+
+  template<typename U, typename Fn, typename... Args>
+  struct wrapper_delayed {
+    wrapper_delayed(Autowired<T>& field, autowiring::signal<void(Args...)> U::*member, Fn&& fn) :
+      m_field(field),
+      member(member),
+      m_wrapper(field.m_context, std::forward<Fn&&>(fn))
+    {}
+
+    Autowired<T>& m_field;
+    wrapper<Fn, Args...> m_wrapper;
+    autowiring::signal<void(Args...)> U::*member;
+
+    void operator()(void) const {
+      m_field.m_events.push_back(
+        m_field->*member += std::move(m_wrapper)
+      );
+    }
+  };
+
   //A small temporary structure for the info required to register an event
   //with a member signal on an autowired field.
   template<typename U, typename... Args>
   struct signal_relay {
+    signal_relay(Autowired<T>& f, autowiring::signal<void(Args...)> U::*m) :
+      field(&f),
+      member(m) 
+    {}
+
     Autowired<T>* field;
     autowiring::signal<void(Args...)> U::*member;
 
-    signal_relay(Autowired<T>& f, autowiring::signal<void(Args...)> U::*m) :
-      field(&f), member(m) 
-    {}
-
     template<typename Fn>
     void operator+=(Fn&& rhs) {
-      Autowired<T>* l_field = field; //lambda capture of references doesn't work right.
-      autowiring::signal<void(Args...)> U::* l_member = member;
-
-      field->NotifyWhenAutowired([l_field, l_member, rhs] {
-        auto& sig = static_cast<U*>(l_field->get())->*l_member;
-        l_field->m_events.push_back(sig += rhs);
-      });
+      field->NotifyWhenAutowired(
+        wrapper_delayed<U, Fn, Args...>{ *field, member, std::forward<Fn&&>(rhs) }
+      );
     }
   };
   
@@ -165,16 +191,14 @@ public:
   void reset(void) override {
     // And remove any events that were added to the object by this autowired field
     auto localEvents = std::move(m_events);
-    for (auto& localEvent : localEvents)
-      *localEvent.owner -= localEvent;
+    for (auto& localEvent : localEvents) {
+      *localEvent.owner-=localEvent;
+    }
 
-    // Linked list unwind deletion:
-    for (
-      DeferrableAutowiring *prior, *cur = ReleaseDependentChain();
-      cur;
-      cur = cur->GetFlink(), delete prior
-    )
-      prior = cur;
+     // Remove any autowiring notification handlers regsitered for this autowired field
+    auto localNotifications = std::move(m_autowired_notifications);
+    for (auto& localNotification: localNotifications)
+      *localNotification.owner -= localNotification;
 
     // Base type completes the reset behavior
     AutowirableSlot<T>::reset();
@@ -200,47 +224,30 @@ public:
   /// \include snippets/Autowired_Notify.txt
   /// </remarks>
   template<class Fn>
-  void NotifyWhenAutowired(Fn fn) {
+  void NotifyWhenAutowired(Fn&& fn) {
     // Trivial initial check:
     if(*this) {
       fn();
       return;
     }
 
-    // We pass a null shared_ptr, because we do not want this slot to attempt any kind of unregistration when
-    // it goes out of scope.  Instead, we will manage its entire registration lifecycle, and
-    // retain full ownership over the object until we need to destroy it.
-    auto newHead = new AutowirableSlotFn<T, Fn>(std::shared_ptr<CoreContext>(), std::forward<Fn>(fn));
+    if (std::shared_ptr<CoreContext> context = DeferrableAutowiring::m_context.lock()) {
+      AnySharedPointerT<T> reference;
+      MemoEntry* entry = &context->FindByDeferrableAutowiring(this);
 
-    // Append to our list in a lock-free way.  This is a fairly standard way to do a lock-free append to
-    // a singly linked list; the only unusual aspect is the use of "this" as a tombstone indicator (IE,
-    // to signify that the list should no longer be used).
-    AutowirableSlot<T>* pFirstChild;
-    do {
-      // Obtain the current first child, and keep it here so we know what to exchange out with later:
-      pFirstChild = m_pFirstChild;
-
-      // Determine if we've been tombstoned at this piont:
-      if(pFirstChild == this) {
-        // Trivially satisfy, and then return.  This might look like a leak, but it's not, because we know
-        // that Finalize is going to destroy the object.
-        newHead->SatisfyAutowiring(this->m_ptr);
-        newHead->Finalize();
-        return;
-      }
-
-      // Try to set the forward link to the current head, and then update our own flink;
-      newHead->SetFlink(pFirstChild);
-    } while(!m_pFirstChild.compare_exchange_weak(pFirstChild, newHead, std::memory_order_acquire));
-  }
-
-  // Base overrides:
-  DeferrableAutowiring* ReleaseDependentChain(void) override {
-    // Rip the head off the list, replace it with a tombstone:
-    auto pFirstChild = m_pFirstChild.exchange(this, std::memory_order_relaxed);
-
-    // If we got the tombstone back, we have nothing to return.  Otherwise return the element.
-    return pFirstChild == this ? nullptr : pFirstChild;
+      autowiring::registration_t reg =
+        entry->m_sig += [this, fn] (autowiring::registration_t registration) mutable {
+          fn();
+          for(auto iter = m_autowired_notifications.begin(); iter != m_autowired_notifications.end(); ++iter) {
+            if( *iter == registration) {
+              m_autowired_notifications.erase(iter);
+              break;
+            }
+          }
+          *registration.owner -= registration;
+        };
+      m_autowired_notifications.push_back(std::move(reg));
+    }
   }
 };
 

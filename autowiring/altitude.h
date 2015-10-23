@@ -29,7 +29,7 @@ enum class altitude {
 
   // Instrumentation level, for use with instrumentation code.  Instrumentation code often needs to
   // observe the inputs to its AutoFilter before any other code has an opportunity to observe it,
-  // because this code needs information about 
+  // because this code needs information about exactly when a decoration was first available.
   Instrumentation = 0x8000,
 
   // Default altitude for Deferred autofilters.  Deferred autofilters are guaranteed to return very
