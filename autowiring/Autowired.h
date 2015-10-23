@@ -146,8 +146,8 @@ public:
   struct wrapper_delayed {
     wrapper_delayed(Autowired<T>& field, autowiring::signal<void(Args...)> U::*member, Fn&& fn) :
       m_field(field),
-      member(member),
-      m_wrapper(field.m_context, std::forward<Fn&&>(fn))
+      m_wrapper(field.m_context, std::forward<Fn&&>(fn)),
+      member(member)
     {}
 
     Autowired<T>& m_field;
