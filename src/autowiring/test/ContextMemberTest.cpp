@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "TestFixtures/SimpleObject.hpp"
 #include "TestFixtures/SimpleThreaded.hpp"
+#include <thread>
 
 class ContextMemberTest:
   public testing::Test
@@ -168,4 +169,48 @@ TEST_F(ContextMemberTest, ComplexResetCase) {
   ASSERT_TRUE(ctxtWeak.expired()) << "Context was leaked even after a local cycle was reset";
   ASSERT_TRUE(dumWeak.expired()) << "Leak detected of a member that was explicitly released";
   ASSERT_TRUE(deeWeak.expired()) << "Leak detected of a member that was not explicitly released";
+}
+
+namespace {
+  class TypeThatIsNotInjected {};
+}
+
+TEST_F(ContextMemberTest, PathologicalResetCase) {
+  Autowired<TypeThatIsNotInjected>* pv;
+  volatile std::atomic<size_t> nBarr{ 0 };
+  volatile bool proceed = true;
+  volatile bool go = false;
+
+  auto resetsV = [&] {
+    while(proceed) {
+      ++nBarr;
+      while (proceed && !go);
+      if (!proceed)
+        break;
+
+      pv->reset();
+      --nBarr;
+      while (proceed && go);
+    }
+  };
+
+  std::thread a{ resetsV };
+  std::thread b{ resetsV };
+
+  for (size_t i = 1000; i--;) {
+    Autowired<TypeThatIsNotInjected> v;
+    pv = &v;
+    for (size_t j = 10; j--;)
+      v.NotifyWhenAutowired([] {});
+
+    // Bump the threads to spin around:
+    while (nBarr != 2);
+    go = true;
+    while (nBarr);
+    go = false;
+  }
+
+  proceed = false;
+  a.join();
+  b.join();
 }

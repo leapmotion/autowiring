@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "CoreContext.h"
 #include "AutoPacketFactory.h"
+#include "AutowirableSlot.h"
 #include "CoreThread.h"
 #include "demangle.h"
 #include "GlobalCoreContext.h"
@@ -106,23 +107,23 @@ CoreContext::~CoreContext(void) {
           // AutoRequired to enforce the relationship.
           continue;
 
-        auto& da = *reinterpret_cast<DeferrableAutowiring*>(pBase + cur->slotOffset);
-        if (!da.IsAutowired())
+        auto& slot = *reinterpret_cast<DeferrableAutowiring*>(pBase + cur->slotOffset);
+        if (!slot.IsAutowired())
           // Nothing to do here, just short-circuit
           continue;
 
-        auto q = m_typeMemos.find(da.GetType());
+        auto q = m_typeMemos.find(slot.GetType());
         if (q == m_typeMemos.end())
-          // Weird.  Not in the context.  Circle around.
+          // Weird.  A slot is present on a member of this context, but the wired type doesn't
+          // have a memo entry anywhere.
           continue;
 
-        if (da != q->second.m_value)
-          // Not equal to the entry already here, came from an ancestor context or somewhere else.
-          // Circle around.
+        if (!q->second.m_local)
+          // Entry exists, but was not locally satisfied.  We can circle around.
           continue;
 
         // OK, interior pointer and context teardown is underway, clear it out
-        da.reset();
+        slot.reset();
       }
     }
 }
@@ -300,80 +301,77 @@ void CoreContext::AddInternal(const AnySharedPointer& ptr) {
 
   // Verify that this type isn't already satisfied
   MemoEntry& entry = m_typeMemos[ptr.type()];
-  if (entry.m_value)
+  if (entry.m_local && entry.m_value)
     throw autowiring_error("This interface is already present in the context");
 
   // Now we can satisfy it:
+  entry.m_local = true;
   entry.m_value = ptr;
   UpdateDeferredElement(std::move(lk), entry);
 }
 
-MemoEntry& CoreContext::FindByType(AnySharedPointer& reference, bool localOnly) const {
+MemoEntry& CoreContext::FindByType(auto_id type, bool nonrecursive) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-  return FindByTypeUnsafe(reference, localOnly);
+  return FindByTypeUnsafe(type, nonrecursive);
 }
 
-MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference, bool localOnly) const {
-  auto_id type = reference.type();
-
+MemoEntry& CoreContext::FindByTypeUnsafe(auto_id type, bool nonrecursive) const {
   // If we've attempted to search for this type before, we will return the value of the memo immediately:
   auto q = m_typeMemos.find(type);
-  if(q != m_typeMemos.end()) {
-    // We can copy over and return here
-    if (!localOnly || q->second.m_local){
-      reference = q->second.m_value;
-    }
+  if(q != m_typeMemos.end())
+    // Done, can return here
     return q->second;
-  }
+
+  // Ensure the memo at least receives a default value:
+  MemoEntry& retVal = m_typeMemos[type];
+  retVal.m_value = type;
 
   // Resolve based on iterated dynamic casts for each concrete type:
-  const CoreObjectDescriptor* pObjTraits = nullptr;
-  for(const auto& type : m_concreteTypes) {
-    if(!reference.try_assign(type.value))
-      // No match, try the next entry
+  for(const auto& concreteType : m_concreteTypes) {
+    if (type == concreteType.type)
+      // Exact match, no dynamic casting required:
+      retVal.m_value = concreteType.value;
+    else if(type.block->pFromObj) {
+      // Dynamic match next
+      auto fromObj = type.block->pFromObj(concreteType.pCoreObject);
+      if (!fromObj)
+        // No match, try the next entry
+        continue;
+
+      // Match!  Assign, and signal this entry preemptively
+      retVal.onSatisfied = true;
+      retVal.m_value = fromObj;
+      retVal.m_local = true;
+    }
+    else
+      // No caster available, we need to recycle
       continue;
 
-    if (pObjTraits)
+    if (retVal.pObjTraits)
       // Resolution ambiguity, cannot proceed
       throw autowiring_error("An attempt was made to resolve a type which has multiple possible clients");
 
     // Update the object traits reference:
-    pObjTraits = &type;
+    retVal.pObjTraits = &concreteType;
   }
 
-  // This entry was not formerly memoized.  Memoize unconditionally.
-  MemoEntry& retVal = m_typeMemos[type];
-  retVal.m_value = reference;
-  retVal.pObjTraits = pObjTraits;
+  if (nonrecursive || !m_pParent || retVal.m_value)
+    return retVal;
+
+  // Recurse to parent while holding lock
+  auto& parentEntry = m_pParent->FindByType(type, nonrecursive);
+  if (parentEntry.m_value) {
+    // Memoize, nonlocal satisfaction
+    retVal.m_value = parentEntry.m_value;
+    retVal.pObjTraits = parentEntry.pObjTraits;
+    retVal.m_local = false;
+    retVal.onSatisfied = true;
+    return parentEntry;
+  }
+
+  // Failure, return our own entry, the signal defined here will be satisfied
   return retVal;
 }
-
-void CoreContext::FindByTypeRecursive(AnySharedPointer& reference, const AutoSearchLambda& searchFn) const {
-  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-  FindByTypeUnsafe(reference);
-  if(!m_pParent || reference)
-    // Type satisfied in current context, or there is nowhere to recurse to--call the terminal function in any case
-    return searchFn();
-
-  // Recurse while holding lock on this context
-  // NOTE: Racing Deadlock is only possible if there is an ambiguity or cycle in the traversal order
-  // of contexts.  Because context trees are guaranteed to be acyclical and are also fixed at construction
-  // time, a strict locking heirarchy is inferred, and a deadlock therefore impossible.
-  m_pParent->FindByTypeRecursive(reference, searchFn);
-}
-
-MemoEntry& CoreContext::FindByDeferrableAutowiring(DeferrableAutowiring* deferred) {
-  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-  size_t found = m_typeMemos.count(deferred->GetType());
-
-  if(!found) {
-    // the passed slot was not created in this context or a parent context
-    throw autowiring_error("Attempt to register an autowiring notification for slot not created in the specified context or its parent context");
-  }
-
-  return m_typeMemos[deferred->GetType()];
-}
-
 
 std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
@@ -797,8 +795,7 @@ void CoreContext::UnregisterEventReceiversUnsafe(void) {
     m_pParent->RemoveEventReceivers(m_eventReceivers);
 
   // Recursively unregister packet factory subscribers:
-  AnySharedPointerT<AutoPacketFactory> pf;
-  FindByTypeUnsafe(pf);
+  FindByTypeUnsafe(auto_id_t<AutoPacketFactory>{});
 
   // Wipe out all collections so we don't try to free these multiple times:
   m_eventReceivers.clear();
@@ -829,7 +826,7 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
 void CoreContext::UpdateDeferredElement(std::unique_lock<std::mutex>&& lk, MemoEntry& entry) {
   // Satisfy what needs to be satisfied:
   lk.unlock();
-  entry.m_sig();
+  entry.onSatisfied();
 
   // Give children a chance to also update their deferred elements:
   lk.lock();
@@ -879,9 +876,8 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     }
     lk.unlock();
 
-    for (auto e: entries) {
-      e->m_sig();
-    }
+    for (auto e: entries)
+      e->onSatisfied();
   }
 
   // Give children a chance to also update their deferred elements:
@@ -1044,25 +1040,6 @@ void CoreContext::RemoveSnooper(const CoreObjectDescriptor& traits) {
   // Cleanup if its a packet listener
   if (!traits.subscriber.empty())
     UnsnoopAutoPacket(traits);
-}
-
-void CoreContext::AddDeferredAutowireUnsafe(DeferrableAutowiring* deferrable) {
-  // Determine whether a type memo exists right now for the thing we're trying to defer.  If it doesn't
-  // exist, we need to inject one in order to allow deferred satisfaction to know what kind of type we
-  // are trying to satisfy at this point.
-  size_t found = m_typeMemos.count(deferrable->GetType());
-
-  if(!found)
-    // Slot not presently initialized, need to initialize it:
-    m_typeMemos[deferrable->GetType()].m_value = deferrable->GetSharedPointer();
-
-  // Obtain the entry (potentially a second time):
-  MemoEntry& entry = m_typeMemos[deferrable->GetType()];
-
-  autowiring::registration_t reg = entry.m_sig += [deferrable, &entry] {
-    deferrable->SatisfyAutowiring(entry.m_value);
-  };
-  deferrable->RegisterDeferredAutowire(std::move(reg));
 }
 
 void CoreContext::InsertSnooper(const AnySharedPointer& snooper) {

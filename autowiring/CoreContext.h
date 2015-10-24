@@ -3,7 +3,6 @@
 #include "AnySharedPointer.h"
 #include "auto_signal.h"
 #include "AutoFilterDescriptor.h"
-#include "AutowirableSlot.h"
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
@@ -36,13 +35,9 @@ struct CoreContextStateBlock;
 class BasicThread;
 class BoltBase;
 class CoreContext;
-class DeferrableAutowiring;
 class GlobalCoreContext;
 class JunctionBoxBase;
 class OutstandingCountTracker;
-
-template<class T, class Fn>
-class AutowirableSlotFn;
 
 template<typename T>
 class Autowired;
@@ -72,27 +67,6 @@ namespace autowiring {
 enum class ShutdownMode {
   Graceful,   ///< Shut down gracefully by allowing threads to run down dispatch queues.
   Immediate   ///< Shut down immediately, do not attempt to run down thread dispatch queues.
-};
-
-class AutoSearchLambda {
-public:
-  /// <summary>
-  /// Invoked at the conclusion of a FindByTypeRecursive search operation
-  /// </summary>
-  /// <remarks>
-  /// No information is passed about the success or failure of the search operation.  Implementors of this interface are
-  /// required to store enough context about the AnySharedPointer passed as the first argument to FindByTypeRecursive to
-  /// determine the status of this operation, if that status is interesting.
-  /// </remarks>
-  virtual void operator()() const = 0;
-};
-
-class AutoSearchLambdaDefault:
-  public AutoSearchLambda
-{
-public:
-  // AutoSearchLambda overrides:
-  void operator()() const override {}
 };
 
 /// <summary>
@@ -408,31 +382,9 @@ protected:
 
   /// \internal
   /// <summary>
-  /// Scans the memo collection for the specified entry, or adds a deferred resolution marker if resolution was not possible
-  /// </summary>
-  /// <returns>
-  /// The memo entry where this type was found
-  /// </returns>
-  /// <param name="reference">An initialized shared pointer slot which may be used in type detection</param>
-  MemoEntry& FindByType(AnySharedPointer& reference, bool localOnly = false) const;
-
-  /// \internal
-  /// <summary>
   /// Unsynchronized version of FindByType
   /// </summary>
-  MemoEntry& FindByTypeUnsafe(AnySharedPointer& reference, bool localOnly = false) const;
-
-  /// \internal
-  /// <summary>
-  /// Recursive locking for Autowire satisfaction search
-  /// </summary>
-  void FindByTypeRecursive(AnySharedPointer& reference, const AutoSearchLambda& searchFn) const;
-
-  /// \internal
-  /// <summary>
-  /// Adds the specified deferrable autowiring to be satisfied at a later date when its matched type is inserted
-  /// </summary>
-  void AddDeferredAutowireUnsafe(DeferrableAutowiring* deferrable);
+  MemoEntry& FindByTypeUnsafe(auto_id type, bool nonrecursive = false) const;
 
   /// \internal
   /// <summary>
@@ -670,6 +622,16 @@ public:
     m_unlinkOnTeardown = unlinkOnTeardown;
   }
 
+  /// \internal
+  /// <summary>
+  /// Scans the memo collection for the specified entry, or adds a deferred resolution marker if resolution was not possible
+  /// </summary>
+  /// <returns>
+  /// The memo entry where this type was found
+  /// </returns>
+  /// <param name="id">The type to be located</param>
+  MemoEntry& FindByType(auto_id type, bool nonrecursive = false) const;
+
   /// <summary>
   /// Injects the specified types into this context.
   /// </summary>
@@ -690,10 +652,9 @@ public:
     // ensure that a memo slot is created for the type by itself, in cases where the injected
     // member does not inherit CoreObject and this member is eventually satisfied by one that does.
     {
-      std::shared_ptr<T> pure;
-      FindByType(pure, true); //skip non-local slots.
-      if (pure)
-        return pure;
+      const auto& memo = FindByType(auto_id_t<T>{}, true); // Do not recurse
+      if (memo.m_value && memo.m_local)
+        return memo.m_value.template as<T>();
     }
 
     // We must make ourselves current for the remainder of this call:
@@ -715,7 +676,8 @@ public:
       // we will simply eat this exception, and handle it silently by returning the type that
       // someone else has already attempted to construct, as per the documented behavior of
       // Construct.
-      FindByType(retVal);
+      auto& memo = FindByType(auto_id_t<typename CreationRules::TActual>{}, true);
+      retVal = memo.m_value.template as<typename CreationRules::TActual>();
     }
 
     // Factory registration if sensible to do so, but only after the underlying type has been added
@@ -1098,115 +1060,6 @@ public:
   }
 
   /// <summary>
-  /// Remove EventReceiver from parents unless its a member of the parent
-  /// </summary>
-  /// <summary>
-  /// Locates an available context member in this context
-  /// </summary>
-  template<class T>
-  void FindByType(std::shared_ptr<T>& slot, bool localOnly = false) const {
-    AnySharedPointerT<T> reference;
-    FindByType(reference, localOnly);
-    slot = reference.template as<T>();
-  }
-
-  /// <summary>
-  /// Identical to Autowire, but will not register the passed slot for deferred resolution
-  /// </summary>
-  template<class T>
-  void FindByTypeRecursive(std::shared_ptr<T>& ptr) const {
-    AnySharedPointerT<T> slot;
-    FindByTypeRecursive(slot, AutoSearchLambdaDefault());
-    ptr = slot.get();
-  }
-
-  /// <summary>
-  /// Identical to Autowire, but will not register the passed slot for deferred resolution
-  /// </summary>
-  template<class T>
-  void FindByTypeRecursive(AnySharedPointerT<T>& slot) const {
-    FindByTypeRecursive(slot, AutoSearchLambdaDefault());
-  }
-
-  /// <summary>
-  /// Scans the memo collection for the specified entry
-  /// </summary>
-  /// <returns>
-  /// The memo entry where this type was found
-  /// </returns>
-  /// <param name="reference">A deferrable autowiring which may be used in type detection</param>
-  MemoEntry& FindByDeferrableAutowiring(DeferrableAutowiring* deferred);
-
-  template<class T>
-  class AutoSearchLambdaAutowire:
-    public AutoSearchLambda
-  {
-  public:
-    AutoSearchLambdaAutowire(CoreContext& ctxt, AnySharedPointerT<T>& ref, DeferrableAutowiring& defer) :
-      ctxt(ctxt),
-      ref(ref),
-      defer(defer)
-    {}
-
-    CoreContext& ctxt;
-    AnySharedPointerT<T>& ref;
-    DeferrableAutowiring& defer;
-
-    void operator()() const override {
-      // If the slot wasn't autowired, complete the satisfaction here
-      if(!ref)
-        ctxt.AddDeferredAutowireUnsafe(&defer);
-    }
-  };
-
-  /// <summary>
-  /// Registers a slot to be autowired
-  /// </summary>
-  /// <param name="ref">The space where the resolved shared pointer will be stored</param>
-  /// <param name="defer">
-  /// In the event that resolution was not successful, the deferrable that will be used to perform delayed satisfaction
-  /// </param>
-  template<class T>
-  void Autowire(AnySharedPointerT<T>& ref, DeferrableAutowiring& defer) {
-    FindByTypeRecursive(
-      ref,
-      AutoSearchLambdaAutowire<T>(*this, ref, defer)
-    );
-  }
-
-  template<class T>
-  class AutoSearchLambdaNotifyWhenAutowired:
-  public AutoSearchLambda
-  {
-  public:
-    AutoSearchLambdaNotifyWhenAutowired(CoreContext& ctxt, AnySharedPointerT<T>& ref) :
-      ctxt(ctxt),
-      ref(ref),
-      entry(nullptr)
-    {}
-
-    CoreContext& ctxt;
-    AnySharedPointerT<T>& ref;
-    mutable MemoEntry* entry;
-
-    void operator()() const override {
-      if(ref)
-        // Matched successfully, do not attempt to defer
-        return;
-
-      size_t found = ctxt.m_typeMemos.count(ref.type());
-
-      if(!found) {
-        // the passed slot was not created in this context or a parent context
-        throw autowiring_error("Attempt to register an autowiring notification for slot not created in the specified context or its parent context");
-      }
-
-      entry = &ctxt.m_typeMemos[ref.type()];
-    }
-  };
-
-
-  /// <summary>
   /// Assigns the thread pool handler for this context
   /// </summary>
   /// <remarks>
@@ -1267,25 +1120,8 @@ public:
   /// </remarks>
   template<class T, class Fn>
   void NotifyWhenAutowired(Fn&& listener) {
-    AnySharedPointerT<T> reference;
-    auto searchFn = AutoSearchLambdaNotifyWhenAutowired<T>(*this, reference);
-    FindByTypeRecursive(reference, searchFn);
-
-    if (reference) {
-      // Success!  We can satisfy the listener call right away, and be assured that the listener
-      // will be able to find what it's looking for in this context without holding down a lock,
-      // because entities can't be removed from a context.
-      listener();
-      return;
-    }
-
-    // It is safe to use the entry without holding down a lock also because entities can't be removed
-    // from a context.
-    if (searchFn.entry)
-      searchFn.entry->m_sig += [listener] (autowiring::registration_t reg) {
-        listener();
-        *reg.owner -= reg;
-      };
+    MemoEntry& memo = FindByType(auto_id_t<T>{});
+    memo.onSatisfied += std::forward<Fn&&>(listener);
   }
 
   /// <summary>

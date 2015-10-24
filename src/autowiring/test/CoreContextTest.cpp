@@ -482,13 +482,16 @@ TEST_F(CoreContextTest, UnlinkOnTeardown) {
     weakA = a;
     strongB = b;
     
+    ASSERT_TRUE(a->so.IsAutowired()) << "Root object pointer not correctly obtained";
+    ASSERT_TRUE(b->so.IsAutowired()) << "Root object pointer not correctly obtained";
+
     ctxt->AddTeardownListener(
       [weakA, strongB] {
         // Verify that nothing got screwed up at this point:
         auto a = weakA.lock();
         ASSERT_FALSE(weakA.expired()) << "Weak pointer expired prematurely";
         ASSERT_EQ(strongB, a->b) << "Unlink occurred prematurely";
-        ASSERT_EQ(a, strongB->a) << "Unlink occurred prematurely";
+        ASSERT_EQ(a, strongB->a) << "Unlink occured prematurely";
       }
     );
 

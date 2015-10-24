@@ -98,22 +98,15 @@ class Autowired:
   public AutowirableSlot<T>
 {
 public:
+  Autowired(Autowired&&) = delete;
+  Autowired(const Autowired& rhs) :
+    AutowirableSlot<T>(static_cast<AutowirableSlot<T>&>(rhs))
+  {}
+
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
     AutowirableSlot<T>(ctxt)
-  {
-    if (ctxt)
-      ctxt->Autowire(static_cast<AnySharedPointerT<T>&>(this->m_ptr), *this);
-  }
+  {}
 
-  ~Autowired(void) {
-    reset();
-  }
-
-private:
-  std::vector<autowiring::registration_t> m_events;
-  std::vector<autowiring::registration_t> m_autowired_notifications;
-
-public:
   operator const std::shared_ptr<T>&(void) const {
     return static_cast<const AnySharedPointerT<T>&>(this->m_ptr).get();
   }
@@ -155,9 +148,9 @@ public:
     autowiring::signal<void(Args...)> U::*member;
 
     void operator()(void) const {
-      m_field.m_events.push_back(
-        m_field->*member += std::move(m_wrapper)
-      );
+      auto reg = m_field->*member += std::move(m_wrapper);
+      std::lock_guard<autowiring::spin_lock> lk(m_field.m_lock);
+      m_field.m_autowired_notifications.push_back(std::move(reg));
     }
   };
 
@@ -187,67 +180,9 @@ public:
     return signal_relay<U, Args... >(*this, sig);
   }
 
-  // AutowirableSlot overrides:
-  void reset(void) override {
-    // And remove any events that were added to the object by this autowired field
-    auto localEvents = std::move(m_events);
-    for (auto& localEvent : localEvents) {
-      *localEvent.owner-=localEvent;
-    }
-
-     // Remove any autowiring notification handlers regsitered for this autowired field
-    auto localNotifications = std::move(m_autowired_notifications);
-    for (auto& localNotification: localNotifications)
-      *localNotification.owner -= localNotification;
-
-    // Base type completes the reset behavior
-    AutowirableSlot<T>::reset();
-  }
-
-  /// <summary>
-  /// Assigns a lambda function to be called when the dependency for this slot is autowired.
-  /// </summary>
-  /// <remarks>
-  /// In contrast with CoreContext::NotifyWhenAutowired, the specified lambda is only
-  /// called as long as this Autowired slot has not been destroyed.  If this slot is destroyed
-  /// before the dependency is satisfied, i.e. because the owning context shuts down, the
-  /// lambda is cancelled.
-  ///
-  /// Note that, if T is injected at about the same time as this object is destroyed, then cancellation
-  /// of the autowired lambda could potentially race with satisfaction of that same lambda.  This type
-  /// of race is called a cancellation race, and can result in the lambda being invoked even though this
-  /// object has been destroyed.
-  ///
-  /// Users who use Autowired as a member of their class do not need to consider this case.  Autowired
-  /// fields declared as class members are always cancelled before the enclosing object is destroyed.
-  ///
-  /// \include snippets/Autowired_Notify.txt
-  /// </remarks>
-  template<class Fn>
-  void NotifyWhenAutowired(Fn&& fn) {
-    // Trivial initial check:
-    if(*this) {
-      fn();
-      return;
-    }
-
-    if (std::shared_ptr<CoreContext> context = DeferrableAutowiring::m_context.lock()) {
-      AnySharedPointerT<T> reference;
-      MemoEntry* entry = &context->FindByDeferrableAutowiring(this);
-
-      autowiring::registration_t reg =
-        entry->m_sig += [this, fn] (autowiring::registration_t registration) mutable {
-          fn();
-          for(auto iter = m_autowired_notifications.begin(); iter != m_autowired_notifications.end(); ++iter) {
-            if( *iter == registration) {
-              m_autowired_notifications.erase(iter);
-              break;
-            }
-          }
-          *registration.owner -= registration;
-        };
-      m_autowired_notifications.push_back(std::move(reg));
-    }
+  void operator=(Autowired<T>&& rhs) = delete;
+  void operator=(const Autowired<T>& rhs) {
+    *this = *static_cast<AutowirableSlot<T>*>(this);
   }
 };
 
@@ -352,19 +287,16 @@ public:
   using std::shared_ptr<T>::operator=;
 
   // !!!!! Read comment in AutoRequired if you get a compiler error here !!!!!
-  AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) {
-    (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
-    (void) auto_id_t_init<T>::init;
-
-    if (ctxt)
-      ctxt->FindByTypeRecursive(*this);
-  }
+  AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
+    AutowiredFast(ctxt.get())
+  {}
 
   AutowiredFast(const CoreContext* pCtxt) {
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
     (void) auto_id_t_init<T>::init;
 
-    pCtxt->FindByTypeRecursive(*this);
+    const auto& entry = pCtxt->FindByType(auto_id_t<T>{});
+    *this = entry.m_value.template as<T>();
   }
 
   operator bool(void) const {
