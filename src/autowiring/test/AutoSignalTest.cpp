@@ -607,7 +607,10 @@ TEST_F(AutoSignalTest, PathologicalSyncTest) {
   };
 
   // Register and unregister the same listener in a tight loop, this should create chaos
-  while (nAssertions < 1000) {
+  // We don't want to run this loop for an indefinite number of iterations because it
+  // creates a lot of work for the other thread, and the other thread may never be able
+  // to escape.
+  for (size_t nLoops = 0; nLoops < 10000; nLoops++) {
     auto x = std::make_shared<bool>(false);
     auto r = sig += [x] {
       *x = x.unique();
@@ -615,6 +618,10 @@ TEST_F(AutoSignalTest, PathologicalSyncTest) {
     sig -= r;
     ASSERT_FALSE(*x) << "Lambda was invoked after it was destroyed";
   }
+
+  // Delay until the thread finishes its work:
+  while (nAssertions < 1000)
+    std::this_thread::yield();
 }
 
 namespace {
