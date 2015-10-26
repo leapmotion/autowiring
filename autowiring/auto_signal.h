@@ -2,6 +2,7 @@
 #pragma once
 #include "auto_tuple.h"
 #include "autowiring_error.h"
+#include "callable.h"
 #include "Decompose.h"
 #include "index_tuple.h"
 #include "noop.h"
@@ -74,22 +75,6 @@ namespace autowiring {
       dereferencer(const T& val) : val(val) {}
       T val;
       const T& operator*(void) const { return val; }
-    };
-
-    // Callable wrapper type, always invoked in a synchronized context
-    struct callable_base {
-      virtual ~callable_base(void) {}
-      virtual void operator()() = 0;
-      callable_base* m_pFlink = nullptr;
-    };
-
-    template<typename Fn>
-    struct callable :
-      callable_base
-    {
-      callable(Fn&& fn) : fn(std::move(fn)) {}
-      Fn fn;
-      void operator()() override { fn(); }
     };
   }
 
