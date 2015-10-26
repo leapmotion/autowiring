@@ -47,6 +47,9 @@ namespace autowiring {
     std::vector<std::unique_ptr<detail::callable_base>> m_fns;
 
   public:
+    // Getter methods:
+    bool get(void) const { return flag; }
+
     template<typename Fn>
     registration_t operator+=(Fn&& rhs) {
       // Initial check of the flag, we don't even want to bother with the rest
@@ -80,6 +83,11 @@ namespace autowiring {
 
     // Unlink function
     void operator-=(registration_t& rhs) override final;
+
+    /// <returns>
+    /// True if the flag has been set
+    /// </returns>
+    operator bool(void) const { return flag; }
 
     /// <summary>
     /// Sets the control flag

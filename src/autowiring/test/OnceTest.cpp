@@ -78,6 +78,14 @@ public:
   }
 };
 
+TEST(OnceTest, SignalSetWhileCalling) {
+  autowiring::once sig;
+  sig += [&] {
+    ASSERT_TRUE(sig) << "Flag was not set while handler was being invoked";
+  };
+  sig = true;
+}
+
 TEST(OnceTest, OwnedSignal) {
   PrivateSignal priv;
 
