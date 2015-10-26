@@ -6,6 +6,7 @@
 #include "Decompose.h"
 #include "index_tuple.h"
 #include "noop.h"
+#include "registration.h"
 #include "signal_base.h"
 #include "spin_lock.h"
 #include <atomic>
@@ -22,8 +23,6 @@
 namespace autowiring {
   template<typename T>
   struct signal;
-
-  struct registration_t;
 
   namespace detail {
     // Holds true if type T can be copied safely
@@ -78,37 +77,6 @@ namespace autowiring {
       const T& operator*(void) const { return val; }
     };
   }
-
-  struct registration_t {
-    registration_t(void) = default;
-
-    registration_t(signal_base* owner, void* pobj) :
-      owner(owner),
-      pobj(pobj)
-    {}
-
-    registration_t(registration_t&& rhs) :
-      owner(rhs.owner),
-      pobj(rhs.pobj)
-    {
-      rhs.pobj = nullptr;
-    }
-
-    registration_t(const registration_t& rhs) = delete;
-
-    signal_base* owner;
-    void* pobj;
-
-    bool operator==(const registration_t& rhs) const { return pobj == rhs.pobj; }
-
-    void operator=(registration_t&& rhs) {
-      owner = rhs.owner;
-      pobj = rhs.pobj;
-      rhs.pobj = nullptr;
-    }
-
-    operator bool(void) const { return pobj != nullptr; }
-  };
 
   // Current state of the signal, used as a type of lock.
   enum class SignalState {

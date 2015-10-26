@@ -143,6 +143,7 @@ set(Autowiring_SRCS
   once.cpp
   Parallel.h
   Parallel.cpp
+  registration.h
   SatCounter.h
   SatCounter.cpp
   signal_base.h
