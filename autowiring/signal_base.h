@@ -5,6 +5,8 @@ namespace autowiring {
   struct registration_t;
 
   struct signal_base {
+    virtual ~signal_base(void) {}
+
     /// <summary>
     /// Removes the signal node identified on the rhs without requiring full type information
     /// </summary>
