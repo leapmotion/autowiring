@@ -98,6 +98,12 @@ public:
   bool operator<(const AnySharedPointer& rhs) const { return m_ptr < rhs.m_ptr;}
   bool operator!=(const AnySharedPointer& rhs) const { return !(*this == rhs); }
 
+  void operator=(AnySharedPointer&& rhs) {
+    m_ti = rhs.m_ti;
+    m_ptr = std::move(rhs.m_ptr);
+    rhs.m_ptr.reset();
+  }
+
   void operator=(const AnySharedPointer& rhs) {
     m_ti = rhs.m_ti;
     m_ptr = rhs.m_ptr;
