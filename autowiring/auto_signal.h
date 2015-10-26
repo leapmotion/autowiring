@@ -6,6 +6,7 @@
 #include "Decompose.h"
 #include "index_tuple.h"
 #include "noop.h"
+#include "signal_base.h"
 #include "spin_lock.h"
 #include <atomic>
 #include <functional>
@@ -77,17 +78,6 @@ namespace autowiring {
       const T& operator*(void) const { return val; }
     };
   }
-
-  struct signal_base {
-    /// <summary>
-    /// Removes the signal node identified on the rhs without requiring full type information
-    /// </summary>
-    /// <remarks>
-    /// This operation invalidates the specified unique pointer.  If the passed unique pointer is
-    /// already nullptr, this operation has no effect.
-    /// </remarks>
-    virtual void operator-=(registration_t& rhs) = 0;
-  };
 
   struct registration_t {
     registration_t(void) = default;
