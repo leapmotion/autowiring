@@ -29,8 +29,32 @@ namespace autowiring {
   /// Implements an observable boolean variable that can only be set to true once
   /// </summary>
   /// <remarks>
-  /// There are many one-way state transitions in Autowiring which may require that
-  /// specific 
+  /// There are many one-way state transitions in Autowiring which much implement the
+  /// observable pattern.  Uers should be able to register a callback that will be
+  /// invoked when a state transition occurs.  If the state transition has already
+  /// occurred, then the callback must be made immediately.
+  ///
+  /// Once the state transition takes place, this type releases all memory associated
+  /// with registered callbacks.
+  ///
+  /// There are a few thread contexts from which the callback may be made:
+  ///
+  /// 1. If the signal is already set, the callback is made immediately in the current
+  ///    thread context.
+  /// 2. If the signal has not yet been set, the callback is registered to be executed
+  ///    later.  The callback will be invoked from the thread that eventually sets the
+  ///    flag.
+  ///
+  /// If a callback is being registered at about the same time as the flag is being
+  /// set, there is an ambiguity as to who will be responsible for making the call,
+  /// but that ambiguity will always be resolved and the callback will be invoked at
+  /// some point.
+  ///
+  /// There are no sequentiality or concurrency guarantees made with respect to
+  /// registered listeners.  The last registered listener could potentially be the
+  /// first one invoked, and may be executed concurrently with any other listener.
+  /// This behavior represents a substantial departure from the behavior of the plain
+  /// autowiring signal datatype.
   /// </remarks>
   struct once
   {
