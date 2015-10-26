@@ -20,8 +20,8 @@ namespace autowiring {
 
     registration_t(const registration_t& rhs) = delete;
 
-    signal_base* owner;
-    void* pobj;
+    signal_base* owner = nullptr;
+    void* pobj = nullptr;
 
     bool operator==(const registration_t& rhs) const { return pobj == rhs.pobj; }
 
