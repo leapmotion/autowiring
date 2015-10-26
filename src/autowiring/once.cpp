@@ -9,7 +9,7 @@ void once::signal(void) {
   if (flag)
     return;
 
-  std::vector<std::unique_ptr<detail::once_fn>> fns;
+  std::vector<std::unique_ptr<detail::callable_base>> fns;
   {
     std::lock_guard<autowiring::spin_lock> lk(m_spin);
     if (flag)

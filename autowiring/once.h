@@ -5,26 +5,6 @@
 #include <vector>
 
 namespace autowiring {
-  namespace detail {
-    struct once_fn {
-      virtual ~once_fn(void) {}
-      virtual void operator()() = 0;
-    };
-
-    template<typename Fn>
-    struct once_fn_t :
-      once_fn
-    {
-      once_fn_t(Fn&& fn) :
-        fn(std::forward<Fn&&>(fn))
-      {}
-
-      const Fn fn;
-
-      void operator()() override final { fn(); }
-    };
-  }
-
   /// <summary>
   /// Implements an observable boolean variable that can only be set to true once
   /// </summary>
@@ -61,7 +41,7 @@ namespace autowiring {
   protected:
     bool flag = false;
     autowiring::spin_lock m_spin;
-    std::vector<std::unique_ptr<detail::once_fn>> m_fns;
+    std::vector<std::unique_ptr<detail::callable_base>> m_fns;
 
   public:
     template<typename Fn>
@@ -75,8 +55,8 @@ namespace autowiring {
 
       // Move the lambda into our unique pointer outside of the lock to reduce
       // total contention time
-      std::unique_ptr<detail::once_fn_t<Fn>> fn{
-        new detail::once_fn_t<Fn>{ std::forward<Fn&&>(rhs) }
+      std::unique_ptr<detail::callable<Fn>> fn{
+        new detail::callable<Fn>{ std::forward<Fn&&>(rhs) }
       };
 
       // Double-check the flag under lock:
