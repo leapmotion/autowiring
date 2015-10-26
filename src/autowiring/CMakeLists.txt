@@ -64,6 +64,7 @@ set(Autowiring_SRCS
   Bolt.h
   BoltBase.cpp
   BoltBase.h
+  callable.h
   CallExtractor.h
   CallExtractor.cpp
   ContextEnumerator.cpp
@@ -79,6 +80,7 @@ set(Autowiring_SRCS
   CoreJob.h
   CoreObject.cpp
   CoreObject.h
+  CoreObjectDescriptor.h
   CoreRunnable.cpp
   CoreRunnable.h
   CoreThread.cpp
@@ -141,9 +143,10 @@ set(Autowiring_SRCS
   once.cpp
   Parallel.h
   Parallel.cpp
-  CoreObjectDescriptor.h
+  registration.h
   SatCounter.h
   SatCounter.cpp
+  signal_base.h
   SlotInformation.cpp
   SlotInformation.h
   spin_lock.h

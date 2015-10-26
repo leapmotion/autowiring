@@ -2,9 +2,12 @@
 #pragma once
 #include "auto_tuple.h"
 #include "autowiring_error.h"
+#include "callable.h"
 #include "Decompose.h"
 #include "index_tuple.h"
 #include "noop.h"
+#include "registration.h"
+#include "signal_base.h"
 #include "spin_lock.h"
 #include <atomic>
 #include <functional>
@@ -20,8 +23,6 @@
 namespace autowiring {
   template<typename T>
   struct signal;
-
-  struct registration_t;
 
   namespace detail {
     // Holds true if type T can be copied safely
@@ -75,65 +76,7 @@ namespace autowiring {
       T val;
       const T& operator*(void) const { return val; }
     };
-
-    // Callable wrapper type, always invoked in a synchronized context
-    struct callable_base {
-      virtual ~callable_base(void) {}
-      virtual void operator()() = 0;
-      callable_base* m_pFlink = nullptr;
-    };
-
-    template<typename Fn>
-    struct callable :
-      callable_base
-    {
-      callable(Fn&& fn) : fn(std::move(fn)) {}
-      Fn fn;
-      void operator()() override { fn(); }
-    };
   }
-
-  struct signal_base {
-    /// <summary>
-    /// Removes the signal node identified on the rhs without requiring full type information
-    /// </summary>
-    /// <remarks>
-    /// This operation invalidates the specified unique pointer.  If the passed unique pointer is
-    /// already nullptr, this operation has no effect.
-    /// </remarks>
-    virtual void operator-=(registration_t& rhs) = 0;
-  };
-
-  struct registration_t {
-    registration_t(void) = default;
-
-    registration_t(signal_base* owner, void* pobj) :
-      owner(owner),
-      pobj(pobj)
-    {}
-
-    registration_t(registration_t&& rhs) :
-      owner(rhs.owner),
-      pobj(rhs.pobj)
-    {
-      rhs.pobj = nullptr;
-    }
-
-    registration_t(const registration_t& rhs) = delete;
-
-    signal_base* owner;
-    void* pobj;
-
-    bool operator==(const registration_t& rhs) const { return pobj == rhs.pobj; }
-
-    void operator=(registration_t&& rhs) {
-      owner = rhs.owner;
-      pobj = rhs.pobj;
-      rhs.pobj = nullptr;
-    }
-
-    operator bool(void) const { return pobj != nullptr; }
-  };
 
   // Current state of the signal, used as a type of lock.
   enum class SignalState {
