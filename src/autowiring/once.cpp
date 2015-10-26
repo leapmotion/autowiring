@@ -4,6 +4,25 @@
 
 using namespace autowiring;
 
+void once::operator-=(registration_t& rhs) {
+  // No unregistration supported after the flag is set--we assume a cancellation race
+  if (flag)
+    return;
+
+  // Double-check under lock
+  std::lock_guard<autowiring::spin_lock> lk(m_spin);
+  if (flag)
+    return;
+
+  for (size_t i = 0; i < m_fns.size(); i++)
+    if (m_fns[i].get() == rhs.pobj) {
+      m_fns[i] = std::move(m_fns.back());
+      m_fns.pop_back();
+      return;
+    }
+  throw std::runtime_error("Attempted to unregister a once signal that was not created on this object.");
+}
+
 void once::signal(void) {
   // Standard lock double-check
   if (flag)

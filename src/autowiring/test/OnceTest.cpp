@@ -86,3 +86,15 @@ TEST(OnceTest, OwnedSignal) {
   priv.signal();
   ASSERT_TRUE(hit) << "Private signal did not get set as expected";
 }
+
+TEST(OnceTest, UnregisterHandler) {
+  autowiring::once sig;
+
+  bool hit = false;
+  auto reg = sig += [&hit] {
+    hit = true;
+  };
+  sig -= reg;
+  sig();
+  ASSERT_FALSE(hit) << "Handler not unregistered as expected";
+}

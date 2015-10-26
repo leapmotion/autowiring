@@ -1,6 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "auto_signal.h"
+#include "callable.h"
+#include "signal_base.h"
 #include "spin_lock.h"
 #include <vector>
 
@@ -36,7 +38,8 @@ namespace autowiring {
   /// This behavior represents a substantial departure from the behavior of the plain
   /// autowiring signal datatype.
   /// </remarks>
-  struct once
+  struct once :
+    signal_base
   {
   protected:
     bool flag = false;
@@ -45,12 +48,12 @@ namespace autowiring {
 
   public:
     template<typename Fn>
-    void operator+=(Fn&& rhs) {
+    registration_t operator+=(Fn&& rhs) {
       // Initial check of the flag, we don't even want to bother with the rest
       // of this function if the flag is already set
       if (flag) {
         rhs();
-        return;
+        return{};
       }
 
       // Move the lambda into our unique pointer outside of the lock to reduce
@@ -64,7 +67,7 @@ namespace autowiring {
         std::lock_guard<autowiring::spin_lock> lk(m_spin);
         if (!flag) {
           m_fns.push_back(std::move(fn));
-          return;
+          return{ this, m_fns.back().get() };
         }
       }
 
@@ -72,7 +75,11 @@ namespace autowiring {
       // the lambda function, but unfortunately we've already moved it, so we
       // need to call the pointer version of the lambda.
       (*fn)();
+      return{};
     }
+
+    // Unlink function
+    void operator-=(registration_t& rhs) override final;
 
     /// <summary>
     /// Sets the control flag
@@ -111,7 +118,7 @@ namespace autowiring {
     friend T;
 
     template<typename Fn>
-    void operator+=(Fn&& fn) {
+    registration_t operator+=(Fn&& fn) {
       return once::operator+=<Fn>(std::forward<Fn&&>(fn));
     }
   };
