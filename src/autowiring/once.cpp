@@ -4,6 +4,13 @@
 
 using namespace autowiring;
 
+once::once(once&& rhs) :
+  flag(rhs.flag),
+  m_fns(std::move(rhs.m_fns))
+{
+  rhs.m_fns.clear();
+}
+
 void once::operator-=(registration_t& rhs) {
   // No unregistration supported after the flag is set--we assume a cancellation race
   if (flag)

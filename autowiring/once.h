@@ -41,6 +41,11 @@ namespace autowiring {
   struct once :
     signal_base
   {
+  public:
+    once(void) = default;
+    once(const once& rhs) = delete;
+    once(once&& rhs);
+
   protected:
     bool flag = false;
     autowiring::spin_lock m_spin;
