@@ -275,7 +275,7 @@ TEST_F(CoreThreadTest, VerifyTimedSort) {
   // To doubly verify this property, we don't trivially increment i from the minimum to the
   // maximum--rather, we use a simple PRNG called a linear congruential generator and hop around
   // the interval [1...12] instead.
-  auto base = std::chrono::high_resolution_clock::now();
+  auto base = std::chrono::steady_clock::now();
   for(size_t i = 1; i != 0; i = (i * 5 + 1) % 16)
     *t += (base + std::chrono::microseconds(i * 3)), [&v, i] { v.push_back(i); };
 
