@@ -36,8 +36,8 @@ namespace autowiring {
       pFromObj(NullFromObj)
     {}
 
-    static std::shared_ptr<CoreObject> NullToObj(const std::shared_ptr<void>&) { return nullptr; }
-    static std::shared_ptr<void> NullFromObj(const std::shared_ptr<CoreObject>&) { return nullptr; }
+    static std::shared_ptr<CoreObject> NullToObj(const std::shared_ptr<void>&);
+    static std::shared_ptr<void> NullFromObj(const std::shared_ptr<CoreObject>&);
 
     template<class T>
     auto_id_block(
