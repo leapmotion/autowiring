@@ -15,39 +15,6 @@ class DeferrableAutowiring;
 class GlobalCoreContext;
 
 /// <summary>
-/// Strategy class for performing unsynchronized operations on an autowirable slot
-/// </summary>
-/// <remarks>
-/// The DeferrableAutowiring base class' SatisfyAutowiring routine is  guaranteed to be run in a
-/// synchronized context.  Unfortunately, this lock also excludes many other types of operations, such
-/// as CoreContext::Inject and CoreContext::FindByType, which means that handing control to a user
-/// specified callback is unsafe.
-///
-/// Exacerbating the problem is the fact that the original DeferrableAutowiring may refer to an
-/// object on the stack or whose destruction cannot otherwise be delayed.  As soon as the synchronized
-/// context is exited, the object could already be in a teardown pathway, which means we can't invoke
-/// any kind of virtual function call on the object.
-///
-/// Thus, the Finalize operation is only supported on objects whose lifetimes can be externally
-/// guaranteed.  Currently, only AutowirableSlotFn supports this behavior, and it is accessable via
-/// CoreContext::NotifyWhenAutowired and Autowired::NotifyWhenAutowired.
-/// </remarks>
-class DeferrableUnsynchronizedStrategy {
-public:
-  ~DeferrableUnsynchronizedStrategy(void) {}
-
-  /// <summary>
-  /// Releases memory allocated by this object, where appropriate
-  /// </summary>
-  /// <summary>
-  /// Implementors of this method are permitted to delete "this" or perform any other work while
-  /// outside of the context of a lock.  Once this method returns, this object is guaranteed never
-  /// to be referred to again by CoreContext.
-  /// </remarks>
-  virtual void Finalize(void) = 0;
-};
-
-/// <summary>
 /// Utility class which represents any kind of autowiring entry that may be deferred to a later date
 /// </summary>
 class DeferrableAutowiring

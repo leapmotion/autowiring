@@ -37,7 +37,6 @@ class BoltBase;
 class CoreContext;
 class GlobalCoreContext;
 class JunctionBoxBase;
-class OutstandingCountTracker;
 
 template<typename T>
 class Autowired;
@@ -52,9 +51,6 @@ template<typename T>
 class JunctionBox;
 
 namespace autowiring {
-  template<typename... Args>
-  struct signal_relay_t;
-
   class ThreadPool;
 }
 
