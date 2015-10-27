@@ -51,7 +51,7 @@ protected:
   /// This is the context that was available at the time the autowiring was performed.
   /// </summary>
   /// <remarks>
-  /// A weak reference is held in hroder to ensure proper teardown, otherwise the
+  /// A weak reference is held in order to ensure proper teardown, otherwise the
   /// first created member of the context would generate a cyclic reference between
   /// this pointer and the context membership set.
   /// </remarks>
@@ -79,7 +79,7 @@ public:
   /// </summary>
   /// <remarks>
   /// This operation prevents the slot from being satisfied, if it hasn't already been satisfied, and causes
-  /// the pointed-to object to be set to null.  Any attached dependant chains are also destroyed.
+  /// the pointed-to object to be set to null.
   ///
   /// This method may not be safely called from an unsynchronized context.  Callers must ensure that
   /// this field is not in use during the call to reset or a data race will result.
