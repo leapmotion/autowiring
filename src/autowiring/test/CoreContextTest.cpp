@@ -557,7 +557,8 @@ namespace {
     {}
 
     void Run(void) override {
-      while (!ShouldStop());
+      while (!ShouldStop())
+        std::this_thread::yield();
       AutoCreateContext();
     }
   };

@@ -82,11 +82,11 @@ protected:
 public:
   // Accessor methods:
   /// Reports whether this runnable is currently running.
-  bool IsRunning(void) const { return (bool)m_outstanding; }
+  bool IsRunning(void) const;
   /// Reports whether this runnable was ever started.
-  bool WasStarted(void) const { return m_wasStarted; }
+  bool WasStarted(void) volatile const { return m_wasStarted; }
   /// Reports whether this runnable should stop.
-  bool ShouldStop(void) const { return m_shouldStop; }
+  bool ShouldStop(void) volatile const { return m_shouldStop; }
 
   /// <summary>
   /// Causes this runnable to begin processing.
