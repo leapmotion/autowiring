@@ -794,9 +794,6 @@ void CoreContext::UnregisterEventReceiversUnsafe(void) {
   if(m_pParent)
     m_pParent->RemoveEventReceivers(m_eventReceivers);
 
-  // Recursively unregister packet factory subscribers:
-  FindByTypeUnsafe(auto_id_t<AutoPacketFactory>{});
-
   // Wipe out all collections so we don't try to free these multiple times:
   m_eventReceivers.clear();
 }
