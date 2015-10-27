@@ -184,13 +184,15 @@ TEST_F(ContextMemberTest, PathologicalResetCase) {
   auto resetsV = [&] {
     while(proceed) {
       ++nBarr;
-      while (proceed && !go);
+      while (proceed && !go)
+        std::this_thread::yield();
       if (!proceed)
         break;
 
       pv->reset();
       --nBarr;
-      while (proceed && go);
+      while (proceed && go)
+        std::this_thread::yield();
     }
   };
 
@@ -204,9 +206,11 @@ TEST_F(ContextMemberTest, PathologicalResetCase) {
       v.NotifyWhenAutowired([] {});
 
     // Bump the threads to spin around:
-    while (nBarr != 2);
+    while (nBarr != 2)
+      std::this_thread::yield();
     go = true;
-    while (nBarr);
+    while (nBarr)
+      std::this_thread::yield();
     go = false;
   }
 
