@@ -75,6 +75,8 @@ namespace {
 }
 
 TEST_F(TupleTest, NoUnneededCopies) {
+  CountsCopies::nCopies = 0;
+
   CountsCopies isCopied;
   autowiring::tuple<CountsCopies> nCopies(isCopied);
 
