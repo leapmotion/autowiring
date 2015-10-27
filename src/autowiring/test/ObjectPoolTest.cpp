@@ -227,7 +227,7 @@ public:
   std::shared_ptr<int> m_ptr;
 
   void Run(void) override {
-    ThreadSleep(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     m_ptr.reset();
   }
 };
@@ -341,7 +341,7 @@ TEST_F(ObjectPoolTest, MovableObjectPool) {
 }
 
 TEST_F(ObjectPoolTest, MovableObjectPoolAysnc) {
-  static const size_t s_count = 10000;
+  static const size_t s_count = 1000;
   ObjectPool<int> from;
 
   {
