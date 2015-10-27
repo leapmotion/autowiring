@@ -49,7 +49,14 @@ DeferrableAutowiring::DeferrableAutowiring(AnySharedPointer&& witness, const std
 }
 
 DeferrableAutowiring::~DeferrableAutowiring(void) {
-  // BUG:  The reset call does not strictly prohibit 
+  // BUG:  The reset call does not strictly prohibit signal handlers defined on this type from
+  // being invoked after the destruction of this type.  We must rely on external synchronization
+  // strategies to prevent a use-after-free; in particular, users that are making use of
+  // Autowired<T> on the stack may be subject to race conditions under teardown.  There is no
+  // general solution to this problem that does not introduce the possibility of a deadlock.
+  //
+  // The only solution available may be to trigger a fatal exception when a cancellation race
+  // is detected.
   reset();
 }
 
