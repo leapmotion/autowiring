@@ -49,7 +49,7 @@ script:
   # Build Autowiring, run unit tests, and install
   - $CMAKE_DIRNAME/bin/cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=~/autowiring/
   - make -j 4 || make
-  - ctest --output-on-failure
+  - ctest --output-on-failure --timeout 30
   - make install > logfile || cat logfile
   - cpack || (cat _CPack_Packages/Linux/TGZ/InstallOutput.log; exit 3)
   - cd examples
