@@ -238,9 +238,11 @@ namespace autowiring {
           // Next try to transition from Free to Updating.
           state = SignalState::Free;
           if (m_state.compare_exchange_weak(state, SignalState::Updating)) {
-            if (m_chainID != id)
+            if (m_chainID != id) {
               // Dispatcher already got to this one, we don't need to do anything
+              m_state = SignalState::Free;
               return;
+            }
 
             // Success, cancel the operation and exit here.  We can't delete this link because
             // it has already been submitted to the queue, but calling it has no effect and it
@@ -310,11 +312,13 @@ namespace autowiring {
 
           state = SignalState::Free;
           if (m_state.compare_exchange_weak(state, SignalState::Updating)) {
-            if (chainID != m_chainID)
+            if (chainID != m_chainID) {
               // Dispatcher got here.  We weren't the party responsible for removing
               // this entry, but we can guarantee the postcondition, so we can return
               // true.
+              m_state = SignalState::Free;
               return true;
+            }
             e = std::move(link->entry);
             break;
           }
