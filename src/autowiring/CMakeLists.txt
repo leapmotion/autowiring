@@ -42,7 +42,6 @@ set(Autowiring_SRCS
   AutoPacketGraph.h
   AutoPacketProfiler.cpp
   AutoPacketProfiler.h
-  AutoParameter.h
   AutoSelfUpdate.h
   AutoTimeStamp.h
   AutowirableSlot.cpp
