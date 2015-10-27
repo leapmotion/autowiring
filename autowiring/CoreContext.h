@@ -629,7 +629,8 @@ public:
   /// <returns>
   /// The memo entry where this type was found
   /// </returns>
-  /// <param name="id">The type to be located</param>
+  /// <param name="type">The type to be located</param>
+  /// <param name="nonrecursive">False if ancestor contexts should not be searched</param>
   MemoEntry& FindByType(auto_id type, bool nonrecursive = false) const;
 
   /// <summary>
