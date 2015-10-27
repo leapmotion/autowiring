@@ -706,3 +706,23 @@ TEST_F(AutoSignalTest, ReallocationCheck) {
 
   ASSERT_EQ(1UL, hitCount) << "A signal handler was hit even though the base Autowired field was destroyed";
 }
+
+TEST_F(AutoSignalTest, IsExecuting) {
+  autowiring::signal<void()> sig;
+
+  std::shared_ptr<bool> checksSig(
+    new bool{ false },
+    [&sig](bool* ptr) {
+      delete ptr;
+      ASSERT_FALSE(sig.is_executing()) << "Signal handler should not be marked as executing while in unregistration";
+    }
+  );
+  sig += [&, checksSig] {
+    ASSERT_TRUE(sig.is_executing()) << "Signal was not properly marked as executing inside a signal handler";
+    if (!*checksSig) {
+      *checksSig = true;
+      sig();
+    }
+  };
+  ASSERT_FALSE(sig.is_executing()) << "Signal was incorrectly marked as executing even though nothing is happening";
+}
