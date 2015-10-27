@@ -222,6 +222,8 @@ namespace {
 }
 
 TEST_F(AutoPacketTest, NoUnneededOutputCopy) {
+  CountsCopies::s_nConstructions = 0;
+
   AutoRequired<AutoPacketFactory> factory;
   auto packet = factory->NewPacket();
 
