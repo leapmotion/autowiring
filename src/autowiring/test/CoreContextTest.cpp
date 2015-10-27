@@ -580,3 +580,11 @@ TEST_F(CoreContextTest, Has) {
   ASSERT_TRUE(ctxt->Has<SimpleObject>()) << "Context failed to detect an extant type";
   ASSERT_TRUE(subCtxt->Has<SimpleObject>()) << "Child context failed to detect an extant type";
 }
+
+TEST_F(CoreContextTest, FindByTypeTest) {
+  AutoCurrentContext ctxt;
+
+  std::shared_ptr<SimpleObject> so;
+  ctxt->FindByType(so);
+  ASSERT_FALSE(so) << "Found a type in a context that should not exist";
+}

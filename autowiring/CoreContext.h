@@ -629,6 +629,13 @@ public:
   /// <param name="nonrecursive">False if ancestor contexts should not be searched</param>
   MemoEntry& FindByType(auto_id type, bool nonrecursive = false) const;
 
+  template<typename T>
+  MemoEntry& FindByType(std::shared_ptr<T>& ptr, bool nonrecursive = false) const {
+    auto& retVal = FindByType(auto_id_t<T>{}, nonrecursive);
+    ptr = retVal.m_value.template as<T>();
+    return retVal;
+  }
+
   /// <summary>
   /// Injects the specified types into this context.
   /// </summary>
