@@ -688,19 +688,19 @@ TEST_F(AutoSignalTest, ReallocationCheck) {
     new Autowired<WithSignal>{}
   };
 
-  {
+  (*contrived)(&WithSignal::sig) += [&] {
+    hitCount++;
+
     // Delete the Autowired field while the signal handler is being called.  This is intended to simulate
     // a legal possible multithreaded scenario where a signal handler is being asserted at about the same
     // time as an Autowired field is being destroyed.
-    (*contrived)(&WithSignal::sig) += [&] {
-      hitCount++;
-      contrived.reset();
+    contrived.reset();
 
-      Autowired<WithSignal> ws;
-      ws->sig();
-    };
-    ctxt->Inject<WithSignal>();
-  }
+    Autowired<WithSignal> ws;
+    ws->sig();
+  };
+  ctxt->Inject<WithSignal>();
+
   Autowired<WithSignal> sig3;
   sig3->sig();
 

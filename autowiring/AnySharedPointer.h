@@ -109,6 +109,12 @@ public:
     m_ptr = rhs.m_ptr;
   }
 
+  // Allows dynamic assignment of the type directly from an auto_id field
+  void operator=(auto_id ti) {
+    m_ti = ti;
+    m_ptr.reset();
+  }
+
   /// <summary>
   /// Convenience overload for shared pointer assignment
   /// </summary>

@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
-#include "auto_signal.h"
+#include "once.h"
 
 struct CoreObjectDescriptor;
 class DeferrableAutowiring;
@@ -12,13 +12,14 @@ class DeferrableAutowiring;
 /// </summary>
 struct MemoEntry {
   MemoEntry(void);
+  MemoEntry(const MemoEntry& rhs) = delete;
 
   // A signal which would be fired on the satisfaction of this entry
-  autowiring::signal<void()> m_sig;
+  autowiring::once onSatisfied;
 
   // A back reference to the concrete type from which this memo was generated.  This field may be null
   // if there is no corresponding concrete type.
-  const CoreObjectDescriptor* pObjTraits;
+  const CoreObjectDescriptor* pObjTraits = nullptr;
 
   // Once this memo entry is satisfied, this will contain the AnySharedPointer instance that performs
   // the satisfaction

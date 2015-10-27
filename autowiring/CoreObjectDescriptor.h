@@ -6,11 +6,12 @@
 #include "AutowiringEvents.h"
 #include "BoltBase.h"
 #include "ContextMember.h"
+#include "CoreObject.h"
 #include "CoreRunnable.h"
 #include "BasicThread.h"
 #include "ExceptionFilter.h"
 #include "fast_pointer_cast.h"
-#include "CoreObject.h"
+#include "SlotInformation.h"
 #include <typeinfo>
 #include MEMORY_HEADER
 

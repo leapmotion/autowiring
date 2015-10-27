@@ -482,13 +482,16 @@ TEST_F(CoreContextTest, UnlinkOnTeardown) {
     weakA = a;
     strongB = b;
     
+    ASSERT_TRUE(a->so.IsAutowired()) << "Root object pointer not correctly obtained";
+    ASSERT_TRUE(b->so.IsAutowired()) << "Root object pointer not correctly obtained";
+
     ctxt->AddTeardownListener(
       [weakA, strongB] {
         // Verify that nothing got screwed up at this point:
         auto a = weakA.lock();
         ASSERT_FALSE(weakA.expired()) << "Weak pointer expired prematurely";
         ASSERT_EQ(strongB, a->b) << "Unlink occurred prematurely";
-        ASSERT_EQ(a, strongB->a) << "Unlink occurred prematurely";
+        ASSERT_EQ(a, strongB->a) << "Unlink occured prematurely";
       }
     );
 
@@ -566,4 +569,14 @@ TEST_F(CoreContextTest, TerminatedContextHarmless) {
   AutoRequired<TriesToCreateChild>{};
   ctxt->SignalShutdown();
   ASSERT_THROW(ctxt->Create<void>(), dispatch_aborted_exception) << "An exception should have been thrown when attempting to create a child from a terminated context";
+}
+
+TEST_F(CoreContextTest, Has) {
+  AutoCurrentContext ctxt;
+  AutoCreateContext subCtxt;
+  ASSERT_FALSE(ctxt->Has<SimpleObject>()) << "Context reported as owning a type that did not yet exist";
+  ASSERT_FALSE(subCtxt->Has<SimpleObject>()) << "Child context reported as owning a type that did not yet exist";
+  AutoRequired<SimpleObject> so;
+  ASSERT_TRUE(ctxt->Has<SimpleObject>()) << "Context failed to detect an extant type";
+  ASSERT_TRUE(subCtxt->Has<SimpleObject>()) << "Child context failed to detect an extant type";
 }
