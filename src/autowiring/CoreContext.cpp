@@ -852,7 +852,7 @@ void CoreContext::UpdateDeferredElement(std::unique_lock<std::mutex>&& lk, MemoE
 
 void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry, bool local) {
   {
-    std::vector<MemoEntry *> entries;
+    std::vector<MemoEntry*> entries;
 
     // Notify any autowired field whose autowiring was deferred.  We do this by processing each entry
     // in the entire type memos collection.

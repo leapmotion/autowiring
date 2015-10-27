@@ -46,20 +46,32 @@ namespace autowiring {
     once(const once& rhs) = delete;
     once(once&& rhs);
 
+    enum class state {
+      // Flag not set
+      unsignalled,
+
+      // Flag set, deferred handlers presently running
+      signalling,
+
+      // Flag set
+      signalled
+    };
+
   protected:
-    bool flag = false;
+    state m_state = state::unsignalled;
     autowiring::spin_lock m_spin;
     std::vector<std::unique_ptr<detail::callable_base>> m_fns;
 
   public:
     // Getter methods:
-    bool get(void) const { return flag; }
+    bool get(void) const { return m_state != state::unsignalled; }
+    bool is_executing(void) const override { return m_state == state::signalling; }
 
     template<typename Fn>
     registration_t operator+=(Fn&& rhs) {
       // Initial check of the flag, we don't even want to bother with the rest
       // of this function if the flag is already set
-      if (flag) {
+      if (m_state != state::unsignalled) {
         rhs();
         return{};
       }
@@ -73,7 +85,7 @@ namespace autowiring {
       // Double-check the flag under lock:
       {
         std::lock_guard<autowiring::spin_lock> lk(m_spin);
-        if (!flag) {
+        if (!get()) {
           m_fns.push_back(std::move(fn));
           return{ this, m_fns.back().get() };
         }
@@ -87,12 +99,12 @@ namespace autowiring {
     }
 
     // Unlink function
-    void operator-=(registration_t& rhs) override final;
+    bool operator-=(registration_t& rhs) override final;
 
     /// <returns>
     /// True if the flag has been set
     /// </returns>
-    operator bool(void) const { return flag; }
+    operator bool(void) const { return get(); }
 
     /// <summary>
     /// Sets the control flag

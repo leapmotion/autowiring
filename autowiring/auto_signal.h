@@ -287,7 +287,7 @@ namespace autowiring {
     /// <summary>
     /// Removes the specified entry from the set of listeners
     /// </summary>
-    void Unlink(std::unique_ptr<entry_base> e) {
+    bool Unlink(std::unique_ptr<entry_base> e) {
       // See discussion in Link
       SignalState state = SignalState::Free;
       if (!m_state.compare_exchange_weak(state, SignalState::Updating)) {
@@ -297,9 +297,9 @@ namespace autowiring {
         for (;;) {
           state = SignalState::Asserting;
           if (m_state.compare_exchange_weak(state, SignalState::Deferred))
-            return;
+            return false;
           if (state == SignalState::Deferred)
-            return;
+            return false;
 
           state = SignalState::Free;
           if (m_state.compare_exchange_weak(state, SignalState::Updating)) {
@@ -310,6 +310,7 @@ namespace autowiring {
       }
       UnlinkUnsafe(*e);
       m_state = SignalState::Free;
+      return true;
     }
 
     /// <summary>
@@ -361,6 +362,18 @@ namespace autowiring {
     }
 
   public:
+    bool is_executing(void) const override {
+      switch (m_state.load()) {
+      case SignalState::Free:
+      case SignalState::Updating:
+        return false;
+      case SignalState::Asserting:
+      case SignalState::Deferred:
+        return true;
+      }
+      throw std::runtime_error("Invalid state defined on signal type");
+    }
+
     /// <summary>
     /// Attaches the specified handler to this signal
     /// </summary>
@@ -390,14 +403,15 @@ namespace autowiring {
     /// this method returns in multithreaded cases.  The handler is only guaranteed not to be called
     /// if `rhs.unique()` is true.
     /// </remarks>
-    void operator-=(registration_t& rhs) override {
+    bool operator-=(registration_t& rhs) override {
       if (rhs.owner != this)
         throw autowiring_error("Attempted to unlink a registration on an unrelated signal");
       if (!rhs.pobj)
-        return;
+        return true;
 
-      Unlink(std::unique_ptr<entry_base>{ static_cast<entry_base*>(rhs.pobj) });
+      auto retVal = Unlink(std::unique_ptr<entry_base>{ static_cast<entry_base*>(rhs.pobj) });
       rhs.pobj = nullptr;
+      return retVal;
     }
 
     /// <summary>
