@@ -212,3 +212,8 @@ template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPa
 template class RegType<AutoPacketFactory>;
 template struct autowiring::fast_pointer_cast_blind<CoreObject, AutoPacketFactory>;
 template struct autowiring::fast_pointer_cast_initializer<CoreObject, AutoPacketFactory>;
+template struct autowiring::fast_pointer_cast_blind<AutoPacketFactory, CoreObject>;
+template struct autowiring::fast_pointer_cast_initializer<AutoPacketFactory, CoreObject>;
+template struct auto_id_t<AutoPacketFactory>;
+template class auto_id_t_init<AutoPacketFactory, false>;
+template class auto_id_t_init<AutoPacketFactory, true>;
