@@ -701,9 +701,8 @@ public:
   /// </summary>
   template<class T>
   bool Has(void) const {
-    std::shared_ptr<T> ptr;
-    FindByType(ptr);
-    return ptr != nullptr;
+    auto& reg = FindByType(auto_id_t<T>{});
+    return reg.m_value != nullptr;
   }
 
   /// <summary>
