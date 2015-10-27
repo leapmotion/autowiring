@@ -421,7 +421,6 @@ public:
 
   Deferred AutoFilter(std::shared_ptr<const int>) {
     callCount++;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     return Deferred(this);
   }
 };
@@ -635,7 +634,7 @@ TEST_F(AutoFilterTest, WaitWhilePacketOutstanding) {
 
   AutoCurrentContext ctxt;
   ctxt->SignalShutdown();
-  ASSERT_FALSE(ctxt->Wait(std::chrono::milliseconds(100))) << "Wait incorrectly returned while packets were outstanding";
+  ASSERT_FALSE(ctxt->Wait(std::chrono::milliseconds(1))) << "Wait incorrectly returned while packets were outstanding";
   packet.reset();
   ASSERT_TRUE(ctxt->Wait(std::chrono::milliseconds(1))) << "Wait incorrectly timed out when nothing should have been running";
 }

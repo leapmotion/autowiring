@@ -20,7 +20,7 @@ TEST_F(ParallelTest, Basic) {
   for (int i : {0,4,2,5,1,3}) {
     int sleepTime = dist(mt);
     p += [i, sleepTime] {
-      std::this_thread::sleep_for(sleepTime*std::chrono::milliseconds(1));
+      std::this_thread::sleep_for(sleepTime*std::chrono::microseconds(1));
       return i;
     };
   }

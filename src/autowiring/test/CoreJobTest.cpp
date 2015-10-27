@@ -68,16 +68,16 @@ TEST_F(CoreJobTest, VerifyTeardown) {
   bool check3 = false;
 
   *job += [&check1] {
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
     check1 = true;
   };
   *job += [&check2] {
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
     check2 = true;
   };
   ctxt->Initiate();
   *job += [&check3] {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     check3 = true;
   };
 

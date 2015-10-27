@@ -44,8 +44,10 @@ TEST_F(AutowiringUtilitiesTest, ThreadSpecificPtr) {
   
   ctxt->Initiate();
   
-  std::this_thread::sleep_for(std::chrono::milliseconds(50));
-  
-  ASSERT_EQ(5, *s_thread_specific_int);
-  AutoCurrentContext()->SignalShutdown(true);
+  auto limit = std::chrono::high_resolution_clock::now() + std::chrono::seconds(10);
+  while(std::chrono::high_resolution_clock::now() < limit)
+    if(5 == *s_thread_specific_int)
+      return;
+ 
+  FAIL() << "Thread specific pointer did not increment to the destination value in a timely fashion";
 }

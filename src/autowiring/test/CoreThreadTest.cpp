@@ -203,8 +203,9 @@ TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
   *t += std::chrono::hours(1), [x] { *x = true; };
   *t += [y] { *y = true; };
 
-  // Verify that, after 100ms, the first event is called and the second event is NOT called:
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  // Spin down until the number of ready dispatchers is one (the single delayed dispatcher):
+  while (t->GetDispatchQueueLength() > 1)
+    std::this_thread::yield();
   ASSERT_TRUE(*y) << "A simple ready call was not dispatched within 100ms of being pended";
   ASSERT_FALSE(*x) << "An event which should not have been executed for an hour was executed early";
 }
@@ -264,7 +265,6 @@ TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
 
 TEST_F(CoreThreadTest, VerifyTimedSort) {
   AutoCurrentContext ctxt;
-  ctxt->Initiate();
   AutoRequired<CoreThread> t;
 
   std::vector<size_t> v;
@@ -275,11 +275,14 @@ TEST_F(CoreThreadTest, VerifyTimedSort) {
   // To doubly verify this property, we don't trivially increment i from the minimum to the
   // maximum--rather, we use a simple PRNG called a linear congruential generator and hop around
   // the interval [1...12] instead.
+  auto base = std::chrono::high_resolution_clock::now();
   for(size_t i = 1; i != 0; i = (i * 5 + 1) % 16)
-    *t += std::chrono::milliseconds(i * 3), [&v, i] { v.push_back(i); };
+    *t += (base + std::chrono::microseconds(i * 3)), [&v, i] { v.push_back(i); };
 
-  // Delay 50ms for the thread to finish up.  Technically this is 11ms more than we need.
-  std::this_thread::sleep_for(std::chrono::milliseconds(75));
+  // Delay for the thread to finish up.  Technically this is 11ms more than we need.
+  ctxt->Initiate();
+  while(t->GetDispatchQueueLength())
+    std::this_thread::yield();
 
   // Verify that the resulting vector is sorted.
   ASSERT_TRUE(std::is_sorted(v.begin(), v.end())) << "A timed sort implementation did not generate a sorted sequence as expected";
