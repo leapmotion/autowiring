@@ -127,13 +127,6 @@
     </Expand>
   </Type>
 
-  <Type Name="auto_id">
-    <DisplayString>[ {block->ti} ]</DisplayString>
-    <Expand>
-      <Item Name="value">value</Item>
-    </Expand>
-  </Type>
-
   <Type Name="CoreObjectDescriptor">
     <DisplayString Condition="pCoreRunnable._Ptr->m_wasStarted">{type.block->ti->_M_d_name,sb}</DisplayString>
     <DisplayString>{type.block->ti->_M_d_name,sb}</DisplayString>
