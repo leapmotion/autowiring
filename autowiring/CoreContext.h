@@ -132,7 +132,7 @@ public:
   autowiring::once_signal<CoreContext> onShutdown;
 
   // Asserted when the context is tearing down but before members objects are destroyed or
-  // any contained AutoWired fields are unlinked
+  // any contained Autowired fields are unlinked
   autowiring::signal<void(const CoreContext&)> onTeardown;
 
   virtual ~CoreContext(void);
