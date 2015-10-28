@@ -100,6 +100,12 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
         ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->id);
         throw std::runtime_error(ss.str());
       }
+      if (entry.m_state == DispositionState::Complete) {
+        // Either decorations must be present, or the decoration type must be a shared_ptr.
+        if (!entry.m_decorations.empty() || pCur->is_shared) {
+          satCounter.Decrement();
+        }
+      }
     }
 
     if (pCur->is_rvalue) {
@@ -109,49 +115,32 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
         throw std::runtime_error(ss.str());
       }
       entry.m_pModifier = &satCounter;
-      return;
-    }
-
-    if (pCur->is_input) {
-      if (entry.m_publishers.size() > 1 && !pCur->is_multi) {
-        std::stringstream ss;
-        ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->id);
-        throw std::runtime_error(ss.str());
+    } else {
+      if (pCur->is_input) {
+          entry.m_subscribers.push_back({
+          pCur->is_shared,
+          pCur->is_multi ?
+          DecorationDisposition::Subscriber::Type::Multi :
+          pCur->is_shared ?
+          DecorationDisposition::Subscriber::Type::Optional :
+          DecorationDisposition::Subscriber::Type::Normal,
+          &satCounter
+        });
       }
 
-      entry.m_subscribers.push_back({
-        pCur->is_shared,
-        pCur->is_multi ?
-        DecorationDisposition::Subscriber::Type::Multi :
-        pCur->is_shared ?
-        DecorationDisposition::Subscriber::Type::Optional :
-        DecorationDisposition::Subscriber::Type::Normal,
-        &satCounter
-      });
-      switch (entry.m_state) {
-      case DispositionState::Complete:
-        // Either decorations must be present, or the decoration type must be a shared_ptr.
-        if (!entry.m_decorations.empty() || pCur->is_shared) {
-          satCounter.Decrement();
-        }
-        break;
-      default:
-        break;
-      }
-    }
-
-    if (pCur->is_output) {
-      if (!entry.m_publishers.empty())
-        for (const auto& subscriber : entry.m_subscribers)
-          for (auto pOther = subscriber.satCounter->GetAutoFilterArguments(); *pOther; pOther++) {
-            if (pOther->id == pCur->id && !pOther->is_multi) {
-              std::stringstream ss;
-              ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->id) << " with existing subscriber.";
-              throw std::runtime_error(ss.str());
+      if (pCur->is_output) {
+        if (!entry.m_publishers.empty())
+          for (const auto& subscriber : entry.m_subscribers)
+            for (auto pOther = subscriber.satCounter->GetAutoFilterArguments(); *pOther; pOther++) {
+              if (pOther->id == pCur->id && !pOther->is_multi) {
+                std::stringstream ss;
+                ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->id) << " with existing subscriber.";
+                throw std::runtime_error(ss.str());
+              }
             }
-          }
 
-      entry.m_publishers.push_back(&satCounter);
+        entry.m_publishers.push_back(&satCounter);
+      }
     }
   }
 }
