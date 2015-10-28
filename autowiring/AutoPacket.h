@@ -876,6 +876,7 @@ public:
   typedef auto_id_t<AutoPacket> id_type;
   static const bool is_input = false;
   static const bool is_output = false;
+  static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;
@@ -897,6 +898,7 @@ public:
   typedef AutoPacket id_type;
   static const bool is_input = false;
   static const bool is_output = false;
+  static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;

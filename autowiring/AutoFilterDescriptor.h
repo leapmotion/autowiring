@@ -273,26 +273,26 @@ public:
 };
 
 namespace autowiring {
-namespace detail {
-/// <summary>
-/// Alias for AutoFilterDescriptor(ptr)
-/// </summary>
-template<class T>
-AutoFilterDescriptor MakeAFDescriptor(const std::shared_ptr<T>& ptr, std::true_type) {
-  return AutoFilterDescriptor(ptr);
-}
+  namespace detail {
+    /// <summary>
+    /// Alias for AutoFilterDescriptor(ptr)
+    /// </summary>
+    template<class T>
+    AutoFilterDescriptor MakeAFDescriptor(const std::shared_ptr<T>& ptr, std::true_type) {
+      return AutoFilterDescriptor(ptr);
+    }
 
-/// <summary>
-/// Utility routine to support the creation of an AutoFilterDescriptor from T::AutoFilter
-/// </summary>
-/// <remarks>
-/// This method will return an empty descriptor in the case that T::AutoFilter is not defined
-/// </remarks>
-template<class T>
-AutoFilterDescriptor MakeAFDescriptor(const std::shared_ptr<T>&, std::false_type) {
-  return AutoFilterDescriptor();
-}
-}
+    /// <summary>
+    /// Utility routine to support the creation of an AutoFilterDescriptor from T::AutoFilter
+    /// </summary>
+    /// <remarks>
+    /// This method will return an empty descriptor in the case that T::AutoFilter is not defined
+    /// </remarks>
+    template<class T>
+    AutoFilterDescriptor MakeAFDescriptor(const std::shared_ptr<T>&, std::false_type) {
+      return AutoFilterDescriptor();
+    }
+  }
 }
 
 /// <summary>

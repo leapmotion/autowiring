@@ -64,6 +64,7 @@ struct DecorationDisposition
   DecorationDisposition(const DecorationDisposition& source) :
     m_decorations(source.m_decorations),
     m_pImmediate(source.m_pImmediate),
+    m_pModifier(source.m_pModifier),
     m_publishers(source.m_publishers),
     m_subscribers(source.m_subscribers),
     m_state(source.m_state)
@@ -81,6 +82,9 @@ struct DecorationDisposition
   // A pointer to the immediate decorations, if one is specified, or else nullptr.
   // Valid if and only if is_shared is true.
   const void* m_pImmediate = nullptr;
+
+  // Modifier for this decoration, if one is available, or else nullptr.
+  SatCounter* m_pModifier = nullptr;
 
   // Providers for this decoration, where it can be statically inferred.  Note that a provider for
   // this decoration may exist even if this value is null, in the event that dynamic decoration is

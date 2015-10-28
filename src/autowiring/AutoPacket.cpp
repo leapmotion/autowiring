@@ -89,7 +89,29 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
     DecorationKey key(pCur->id, pCur->tshift);
     DecorationDisposition& entry = m_decoration_map[key];
 
+    // Make sure decorations exist for timeshifts less that key's timeshift
+    for (int tshift = 0; tshift < key.tshift; ++tshift)
+      m_decoration_map[DecorationKey(key.id, tshift)];
+
     // Decide what to do with this entry:
+    if (pCur->is_input) {
+      if (entry.m_publishers.size() > 1 && !pCur->is_multi) {
+        std::stringstream ss;
+        ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->id);
+        throw std::runtime_error(ss.str());
+      }
+    }
+
+    if (pCur->is_rvalue) {
+      if (entry.m_pModifier) {
+        std::stringstream ss;
+        ss << "Added identical rvalue decorations for type " << autowiring::demangle(pCur->id);
+        throw std::runtime_error(ss.str());
+      }
+      entry.m_pModifier = &satCounter;
+      return;
+    }
+
     if (pCur->is_input) {
       if (entry.m_publishers.size() > 1 && !pCur->is_multi) {
         std::stringstream ss;
@@ -117,8 +139,9 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
         break;
       }
     }
+
     if (pCur->is_output) {
-      if(!entry.m_publishers.empty())
+      if (!entry.m_publishers.empty())
         for (const auto& subscriber : entry.m_subscribers)
           for (auto pOther = subscriber.satCounter->GetAutoFilterArguments(); *pOther; pOther++) {
             if (pOther->id == pCur->id && !pOther->is_multi) {
@@ -130,10 +153,6 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
 
       entry.m_publishers.push_back(&satCounter);
     }
-
-    // Make sure decorations exist for timeshifts less that key's timeshift
-    for (int tshift = 0; tshift < key.tshift; ++tshift)
-      m_decoration_map[DecorationKey(key.id, tshift)];
   }
 }
 
@@ -214,11 +233,17 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
     }
     break;
   case 1:
-    // One unique decoration available.  We should be able to call everyone.
-    for (auto subscriber : disposition.m_subscribers) {
-      auto& satCounter = *subscriber.satCounter;
-      if (satCounter.Decrement())
-        callQueue.push_back(&satCounter);
+    {
+      // One unique decoration available.  We should be able to call everyone.
+      if (disposition.m_pModifier) {
+        if (disposition.m_pModifier->Decrement())
+          callQueue.push_back(disposition.m_pModifier);
+      }
+      for (auto subscriber : disposition.m_subscribers) {
+        auto& satCounter = *subscriber.satCounter;
+        if (satCounter.Decrement())
+          callQueue.push_back(&satCounter);
+      }
     }
     break;
   default:

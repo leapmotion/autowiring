@@ -21,14 +21,14 @@ AutoFilterDescriptorStub::AutoFilterDescriptorStub(auto_id type, autowiring::alt
 bool AutoFilterDescriptorStub::Provides(const std::type_info& ti) const {
   for (size_t i = GetArity(); i--;)
     if (*m_pArgs[i].id.block->ti == ti)
-      return m_pArgs[i].is_output;
+      return (m_pArgs[i].is_output && !m_pArgs[i].is_rvalue);
   return false;
 }
 
 bool AutoFilterDescriptorStub::Consumes(const std::type_info& ti) const {
   for (size_t i = GetArity(); i--;)
     if (*m_pArgs[i].id.block->ti == ti)
-      return m_pArgs[i].is_output;
+      return (m_pArgs[i].is_input && !m_pArgs[i].is_rvalue);
   return false;
 }
 

@@ -44,6 +44,7 @@ public:
 
   static const bool is_input = true;
   static const bool is_output = false;
+  static const bool is_rvalue = false;
   static const bool is_shared = true;
   static const bool is_multi = false;
   static const int tshift = N;

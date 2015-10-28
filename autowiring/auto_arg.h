@@ -27,17 +27,18 @@ template<class T>
 class auto_arg
 {
 public:
-  typedef const T type;
+  typedef const T& type;
   typedef type arg_type;
   typedef auto_id_t<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
+  static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;
 
   template<class C>
-  static const T arg(C& packet) {
+  static const T& arg(C& packet) {
     (void) auto_id_t_init<T, true>::init;
     return packet.template Get<T>();
   }
@@ -63,6 +64,7 @@ public:
   typedef auto_id_t<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
+  static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;
@@ -75,7 +77,7 @@ public:
 };
 
 /// <summary>
-/// Specialization for "T&&" ~ auto_in<T&&>.  T must be const-qualified in order to be an input parameter.
+/// Specialization for "T&&" ~ auto_in<T&&> and auto_out<T&&>.
 /// </summary>
 template<class T>
 class auto_arg<T&&>
@@ -85,7 +87,8 @@ public:
   typedef type arg_type;
   typedef auto_id_t<T> id_type;
   static const bool is_input = true;
-  static const bool is_output = false;
+  static const bool is_output = true;
+  static const bool is_rvalue = true;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;
@@ -94,6 +97,11 @@ public:
   static T&& arg(C& packet) {
     (void) auto_id_t_init<T, false>::init;
     return packet.template GetRvalue<T>();
+  }
+
+  template<class C>
+  static void Commit(C& packet, T& val) {
+    // Do nothing. Modify val in place, no need to commit
   }
 };
 
@@ -109,6 +117,7 @@ public:
   typedef auto_id_t<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
+  static const bool is_rvalue = false;
   static const bool is_shared = true;
   static const bool is_multi = false;
   static const int tshift = 0;
@@ -146,6 +155,7 @@ public:
   typedef auto_id_t<T*> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
+  static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;
@@ -224,6 +234,7 @@ public:
   typedef auto_id_t<T> id_type;
   static const bool is_input = false;
   static const bool is_output = true;
+  static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;
@@ -236,7 +247,7 @@ public:
   }
 
   template<class C>
-  static void Commit (C& packet, type val) {
+  static void Commit(C& packet, type val) {
     packet.template Decorate<T>(val);
   }
 };
@@ -291,6 +302,7 @@ public:
   typedef auto_id_t<CoreContext> id_type;
   static const bool is_input = false;
   static const bool is_output = false;
+  static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;
@@ -310,6 +322,7 @@ public:
   typedef auto_id_t<CoreContext> id_type;
   static const bool is_input = false;
   static const bool is_output = false;
+  static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;
@@ -345,6 +358,7 @@ public:
   typedef auto_id_t<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
+  static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = true;
   static const int tshift = 0;
@@ -387,6 +401,7 @@ public:
   typedef auto_id_t<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
+  static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = true;
   static const int tshift = 0;

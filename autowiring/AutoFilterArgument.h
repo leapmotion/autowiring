@@ -13,6 +13,7 @@ protected:
   AutoFilterArgument(
     bool is_input,
     bool is_output,
+    bool is_rvalue,
     bool is_shared,
     bool is_multi,
     auto_id id,
@@ -20,6 +21,7 @@ protected:
   ) :
     is_input(is_input),
     is_output(is_output),
+    is_rvalue(is_rvalue),
     is_shared(is_shared),
     is_multi(is_multi),
     id(id),
@@ -29,6 +31,7 @@ protected:
 public:
   const bool is_input = false;
   const bool is_output = false;
+  const bool is_rvalue = false;
   const bool is_shared = false;
   const bool is_multi = false;
   const auto_id id = auto_id_t<void>{};
@@ -47,6 +50,7 @@ struct AutoFilterArgumentT:
     AutoFilterArgument(
       auto_arg<T>::is_input,
       auto_arg<T>::is_output,
+      auto_arg<T>::is_rvalue,
       auto_arg<T>::is_shared,
       auto_arg<T>::is_multi,
       typename auto_arg<T>::id_type(),
