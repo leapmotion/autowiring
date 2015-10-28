@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "atomic_list.h"
 #include "auto_tuple.h"
 #include "autowiring_error.h"
 #include "callable.h"
@@ -373,14 +374,14 @@ namespace autowiring {
         // We will sample the front of the linked list and the number of calls at
         // the same time.  The number of calls made is always updated before ownership
         // of the linked list is obtained,
-        newFlink = m_pFirstDelayedCall.load(std::memory_order_relaxed);
+        newFlink = m_pFirstDelayedCall.load(std::memory_order_acquire);
         pCallable->m_pFlink = newFlink;
-        chainID = m_chainID;
+        chainID = m_chainID.load(std::memory_order_acquire);
       } while (
         !m_pFirstDelayedCall.compare_exchange_weak(
           newFlink,
           pCallable,
-          std::memory_order_acq_rel,
+          std::memory_order_release,
           std::memory_order_relaxed
         )
       );
@@ -448,7 +449,7 @@ namespace autowiring {
     void operator()(FnArgs&&... args) const {
       for (;;) {
         SignalState state = SignalState::Free;
-        if (m_state.compare_exchange_weak(state, SignalState::Asserting, std::memory_order_release, std::memory_order_relaxed)) {
+        if (m_state.compare_exchange_weak(state, SignalState::Asserting, std::memory_order_acquire, std::memory_order_relaxed)) {
           // Can safely make this call under state because there are never any blocking
           // operations involving this lock.  We cannot let exceptions propagate out of
           // here because we might not actually be able to give up control.
@@ -512,9 +513,8 @@ namespace autowiring {
         // Failed to give up control.  Our state was deferred or the delayed call list was non-empty,
         // we need to transition to the Asserting state and empty our list before proceeding
         state = SignalState::Deferred;
-        m_state.compare_exchange_strong(state, SignalState::Asserting);
-        if (state == SignalState::Asserting)
-          // Spurious failure, circle around
+        if (!m_state.compare_exchange_strong(state, SignalState::Asserting))
+          // Circle around, maybe we had a spurious failure
           continue;
 
         // We're about to go through another list, update the chain identifier so everyone knows that
@@ -522,8 +522,8 @@ namespace autowiring {
         callable_base* pHead;
         do {
           pHead = m_pFirstDelayedCall.load(std::memory_order_acquire);
-          ++m_chainID;
-        } while (!m_pFirstDelayedCall.compare_exchange_weak(pHead, nullptr, std::memory_order_relaxed));
+          m_chainID.fetch_add(1, std::memory_order_acquire);
+        } while (!m_pFirstDelayedCall.compare_exchange_weak(pHead, nullptr, std::memory_order_release));
 
         // Take ownership of the dispatcher list and reverse this forward-linked list.
         callable_base* lastLink = nullptr;
@@ -538,7 +538,7 @@ namespace autowiring {
         for (std::unique_ptr<callable_base> cur{ lastLink }; cur; cur.reset(cur->m_pFlink))
           // Eat any exception that occurs
           try { (*cur)(); }
-          catch(...) {}
+          catch (...) {}
       }
     }
 
