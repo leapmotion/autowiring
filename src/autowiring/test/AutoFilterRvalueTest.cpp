@@ -53,4 +53,57 @@ TEST_F(AutoFilterRvalueTest, CallOrderCorrect) {
   packet->Decorate(Decoration<0>{100});
   for (const auto& observation : observations)
     ASSERT_EQ(9999, observation.second.i) << "AutoFilter " << observation.first << " ran before an r-value AutoFilter on the same altitude";
+
+}
+
+TEST_F(AutoFilterRvalueTest, CanUseInTheChain) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  *factory += [](Decoration<0> dec0, Decoration<1>& dec1) {
+    dec1.i = dec0.i;
+  };
+
+  // This is the filter that does the modification
+  *factory += [](Decoration<1>&& dec1) {
+    dec1.i = 999;
+  };
+
+  *factory += [](Decoration<1> dec1, Decoration<2>& dec2) {
+    dec2.i = dec1.i;
+  };
+
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>{100});
+  const Decoration<2>& dec2 = packet->Get<Decoration<2>>();
+  ASSERT_EQ(999, dec2.i) << "R-value AutoFilter was not able to modify a decoration value before passing on to the next Autofilter";
+}
+
+TEST_F(AutoFilterRvalueTest, DetectMultipleModifiers) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  *factory += [](Decoration<0>&& dec0) {
+    dec0.i = 999;
+  };
+
+  *factory += [](Decoration<1> dec1, Decoration<0>&& dec0) {
+    dec0.i = dec1.i;
+  };
+
+  *factory += [](Decoration<0> dec0) {};
+
+  ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "An exception should have been thrown when there are multiple r-value AutoFilter for an existing subscriber";
+}
+
+TEST_F(AutoFilterRvalueTest, DetectCycle) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  *factory += [](Decoration<0> dec0, Decoration<1>&& dec1) {
+    dec1.i = dec0.i;
+  };
+
+  *factory += [](Decoration<1> dec1, Decoration<0>&& dec0) {
+    dec0.i = dec1.i;
+  };
+
+  ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "An exception should have been thrown when there is a cycle in the AutoFilter graph";
 }
