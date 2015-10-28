@@ -140,6 +140,9 @@ namespace autowiring {
   private:
     mutable std::atomic<SignalState> m_state{ SignalState::Free };
 
+    // Current chain identifier
+    mutable std::atomic<uint32_t> m_chainID{ 0 };
+
     // Base type for listeners attached to this signal
     struct entry_base {
       virtual ~entry_base(void) {}
@@ -219,7 +222,7 @@ namespace autowiring {
       if (!m_state.compare_exchange_weak(state, SignalState::Updating)) {
         // Control is contended, we need to hand off linkage responsibility to someone else.
         auto link = new callable_link{ *this, e };
-        CallLater(link);
+        uint32_t id = CallLater(link);
 
         for (;;) {
           // Try to transition from Asserting to the Deferred state first, if we succeed here
@@ -235,6 +238,12 @@ namespace autowiring {
           // Next try to transition from Free to Updating.
           state = SignalState::Free;
           if (m_state.compare_exchange_weak(state, SignalState::Updating)) {
+            if (m_chainID != id) {
+              // Dispatcher already got to this one, we don't need to do anything
+              m_state = SignalState::Free;
+              return;
+            }
+
             // Success, cancel the operation and exit here.  We can't delete this link because
             // it has already been submitted to the queue, but calling it has no effect and it
             // will be cleaned up later.
@@ -291,8 +300,8 @@ namespace autowiring {
       // See discussion in Link
       SignalState state = SignalState::Free;
       if (!m_state.compare_exchange_weak(state, SignalState::Updating)) {
-        auto link = new callable_unlink(*this, std::move(e));
-        CallLater(link);
+        callable_unlink* link = new callable_unlink(*this, std::move(e));
+        uint32_t chainID = CallLater(link);
 
         for (;;) {
           state = SignalState::Asserting;
@@ -303,6 +312,13 @@ namespace autowiring {
 
           state = SignalState::Free;
           if (m_state.compare_exchange_weak(state, SignalState::Updating)) {
+            if (chainID != m_chainID) {
+              // Dispatcher got here.  We weren't the party responsible for removing
+              // this entry, but we can guarantee the postcondition, so we can return
+              // true.
+              m_state = SignalState::Free;
+              return true;
+            }
             e = std::move(link->entry);
             break;
           }
@@ -346,11 +362,20 @@ namespace autowiring {
     /// <summary>
     /// Appends a callable to be invoked later
     /// </summary>
-    void CallLater(detail::callable_base* pCallable) const {
+    /// <returns>
+    /// The number of calls that were made when the delegated entry was inserted
+    /// </returns>
+    uint32_t CallLater(detail::callable_base* pCallable) const {
       detail::callable_base* newFlink;
+
+      uint32_t chainID;
       do {
+        // We will sample the front of the linked list and the number of calls at
+        // the same time.  The number of calls made is always updated before ownership
+        // of the linked list is obtained,
         newFlink = m_pFirstDelayedCall.load(std::memory_order_relaxed);
         pCallable->m_pFlink = newFlink;
+        chainID = m_chainID;
       } while (
         !m_pFirstDelayedCall.compare_exchange_weak(
           newFlink,
@@ -359,6 +384,7 @@ namespace autowiring {
           std::memory_order_relaxed
         )
       );
+      return chainID;
     }
 
   public:
@@ -438,8 +464,8 @@ namespace autowiring {
           // Spurious failure, or insertion.
           // We cannot delegate control to insertion, and spurious failure should be retried.
           continue;
-          case SignalState::Asserting:
-          case SignalState::Deferred:
+        case SignalState::Asserting:
+        case SignalState::Deferred:
           // Some other thread is already asserting this signal, doing work, we need to ensure
           // that thread takes responsibility for this call.
           break;
@@ -491,10 +517,18 @@ namespace autowiring {
           // Spurious failure, circle around
           continue;
 
+        // We're about to go through another list, update the chain identifier so everyone knows that
+        // we are taking charge now.
+        detail::callable_base* pHead;
+        do {
+          pHead = m_pFirstDelayedCall.load(std::memory_order_acquire);
+          ++m_chainID;
+        } while (!m_pFirstDelayedCall.compare_exchange_weak(pHead, nullptr, std::memory_order_relaxed));
+
         // Take ownership of the dispatcher list and reverse this forward-linked list.
         detail::callable_base* lastLink = nullptr;
         for (
-          detail::callable_base* cur = m_pFirstDelayedCall.exchange(nullptr, std::memory_order_acquire);
+          detail::callable_base* cur = pHead;
           cur;
           std::swap(cur, lastLink)
         )
