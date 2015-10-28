@@ -181,8 +181,8 @@ namespace autowiring {
     };
 
     // Doubly linked list of all of our listeners
-    entry_base* m_pFirstListener = nullptr;
-    entry_base* m_pLastListener = nullptr;
+    entry_base* volatile m_pFirstListener = nullptr;
+    entry_base* volatile m_pLastListener = nullptr;
 
     // Calls that had to be delayed due to asynchronous issues
     mutable std::atomic<detail::callable_base*> m_pFirstDelayedCall{ nullptr };
