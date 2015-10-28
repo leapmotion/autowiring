@@ -15,6 +15,7 @@ set(Autowiring_SRCS
   atomic_object.h
   at_exit.h
   altitude.h
+  atomic_list.h
   auto_arg.h
   auto_arg.cpp
   auto_id.h
