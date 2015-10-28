@@ -6,6 +6,9 @@ namespace autowiring {
   template<typename T>
   struct atomic_list {
   public:
+    atomic_list(void) = default;
+    atomic_list(const atomic_list&) = delete;
+
     ~atomic_list(void) {
       entry* next;
       for (entry* cur = m_pHead.load(std::memory_order_relaxed); cur; cur = next) {
@@ -164,7 +167,7 @@ namespace autowiring {
       entry* lastLink = nullptr;
       for (; head; std::swap(head, lastLink))
         std::swap(lastLink, head->pFlink);
-      return lastLink;
+      return { lastLink };
     }
   };
 }
