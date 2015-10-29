@@ -9,7 +9,7 @@ class auto_arg;
 /// Identifier for AutoFilter inputs from the previous packet
 /// </summary>
 /// <remarks>
-/// When auto_prev is used as an AutoFilter argument, it's value will the value of 'T'
+/// When auto_prev is used as an AutoFilter argument, its value will be the value of 'T'
 /// from the previous packet. It's null for the the first packet
 /// </remarks>
 template<class T, int N = 1>

@@ -68,9 +68,7 @@ struct CE<RetType (*)(Args...), index_tuple<N...>>:
   Decompose<RetType(*)(Args...)>
 {
   typedef CESetup<Args...> t_ceSetup;
-  static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
   static const bool deferred = false;
-  static const bool stateless = true;
 
   // This is the true type of the input, it's the fnptr itself, not a function object
   typedef RetType(*t_pfn)(Args...);
@@ -98,8 +96,6 @@ struct CE<void (T::*)(Args...), index_tuple<N...>> :
   Decompose<void (T::*)(Args...)>
 {
   typedef CESetup<Args...> t_ceSetup;
-  static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
-  static const bool stateless = false;
   static const bool deferred = false;
 
   /// <summary>
@@ -124,8 +120,6 @@ struct CE<void (T::*)(Args...) const, index_tuple<N...>> :
   Decompose<void (T::*)(Args...)>
 {
   typedef CESetup<Args...> t_ceSetup;
-  static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
-  static const bool stateless = true;
   static const bool deferred = false;
   
   template<void(T::*memFn)(Args...) const>
@@ -147,8 +141,6 @@ struct CE<Deferred(T::*)(Args...), index_tuple<N...>> :
   Decompose<void (T::*)(Args...)>
 {
   typedef CESetup<Args...> t_ceSetup;
-  static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
-  static const bool stateless = false;
   static const bool deferred = true;
 
   template<Deferred(T::*memFn)(Args...)>
