@@ -46,8 +46,9 @@ TEST(AtomicListTest, IdIncrementPathological) {
   enum class Owner { None, Consumer, Producer };
 
   atomic_list l;
-  volatile int latest = -1;
-  volatile bool proceed = false;
+  std::atomic<int> latest{ -1 };
+  std::atomic<uint32_t> lastChain{ ~0U };
+  volatile bool proceed = true;
 
   // Initial owner is the consumer:
   std::atomic<Owner> owner{ Owner::Consumer };
@@ -61,6 +62,7 @@ TEST(AtomicListTest, IdIncrementPathological) {
       while(!owner.compare_exchange_weak(exp, Owner::Consumer));
       auto x = MakeAtExit([&owner] { owner = Owner::None; });
 
+      lastChain = l.chain_id();
       auto f = l.release<HoldsInt>();
       for (int value : f)
         latest = value;
@@ -81,9 +83,13 @@ TEST(AtomicListTest, IdIncrementPathological) {
     auto x = MakeAtExit([&owner] { owner = Owner::None; });
 
     auto curChainID = l.chain_id();
-    if (curChainID == insertedID)
+    if (curChainID == insertedID) {
+      // Consumer must not have reported that it saw this ID
+      ASSERT_NE(lastChain, curChainID) << "Consumer reported that it saw a chain ID that should still be open";
+
       // Still in the list, should not have been observed by the consumer yet
       ASSERT_LT(latest, i) << "Chain ID was not updated, but element was found in consumer set";
+    }
     else
       // Not in the list, must be in the set
       ASSERT_GE(latest, i) << "Chain ID was updated, but element was not found in consumer set";
