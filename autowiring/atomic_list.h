@@ -1,38 +1,27 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <atomic>
+#include <iterator>
+#include <type_traits>
+#include <utility>
 
 namespace autowiring {
-  template<typename T>
+  struct atomic_entry {
+    atomic_entry(void) = default;
+    virtual ~atomic_entry(void) {};
+
+    atomic_entry* pFlink = nullptr;
+  };
+
   struct atomic_list {
   public:
     atomic_list(void) = default;
     atomic_list(const atomic_list&) = delete;
-
-    ~atomic_list(void) {
-      entry* next;
-      for (entry* cur = m_pHead.load(std::memory_order_relaxed); cur; cur = next) {
-        next = cur->pFlink;
-        delete cur;
-      }
-    }
-
-    struct entry {
-      entry(void) = default;
-      entry(const T& value) :
-        value(value)
-      {}
-      entry(T&& value) :
-        value(std::move(value))
-      {}
-
-      entry* pFlink = nullptr;
-      T value;
-    };
+    ~atomic_list(void);
 
   private:
     // First entry in the atomic list
-    std::atomic<entry*> m_pHead{ nullptr };
+    std::atomic<atomic_entry*> m_pHead{ nullptr };
 
     // Current chain identifier
     std::atomic<uint32_t> m_chainID{ 0 };
@@ -50,30 +39,24 @@ namespace autowiring {
     /// <summary>
     /// Adds the already-constructed entry to the ist
     /// </summary>
-    uint32_t push(entry* e) throw() {
-      entry* pHead;
-      uint32_t retVal;
-      do {
-        pHead = m_pHead.load(std::memory_order_acquire);
-        retVal = m_chainID.load(std::memory_order_relaxed);
-        e->pFlink = pHead;
-      } while (
-        !m_pHead.compare_exchange_weak(
-          pHead,
-          e,
-          std::memory_order_release,
-          std::memory_order_relaxed
-        )
-      );
-      return retVal;
+    uint32_t push_entry(atomic_entry* e) throw();
+
+    template<typename T>
+    uint32_t push(T&& val) {
+      static_assert(std::is_base_of<atomic_entry, T>::value, "Can only push types which inherit from atomic_entry");
+      return push_entry(new T{ std::forward<T&&>(val) });
     }
 
-    uint32_t push(T&& rhs) { return push(new entry(std::move(rhs))); }
-    uint32_t push(const T& rhs) { return push(new entry(rhs)); }
+    template<typename T, typename... Args>
+    uint32_t emplace(Args... args) {
+      static_assert(std::is_base_of<atomic_entry, T>::value, "Can only push types which inherit from atomic_entry");
+      return push_entry(new T{ std::forward<Args>(args)... });
+    }
 
     /// <summary>
     /// Represents a single chain of elements added to the list
     /// </summary>
+    template<typename T>
     struct chain {
       chain(const chain&) = delete;
       chain(chain&& rhs) :
@@ -82,7 +65,7 @@ namespace autowiring {
         rhs.head = nullptr;
       }
 
-      chain(entry* head) :
+      chain(atomic_entry* head) :
         head(head)
       {}
       ~chain(void) {
@@ -94,7 +77,7 @@ namespace autowiring {
 
       struct iterator {
         iterator(void) = default;
-        iterator(entry*& e) :
+        iterator(atomic_entry*& e) :
           e(e)
         {}
 
@@ -105,7 +88,7 @@ namespace autowiring {
         typedef value_type reference;
 
       private:
-        entry*& e;
+        atomic_entry*& e;
 
       public:
         iterator& operator++(int) = delete;
@@ -117,8 +100,8 @@ namespace autowiring {
           return *this;
         }
 
-        T& operator*(void) const { return e->value; }
-        T* operator->(void) const { return &e->value; }
+        T& operator*(void) const { return static_cast<T&>(*e); }
+        T* operator->(void) const { return static_cast<T*>(e); }
         bool operator==(const iterator& rhs) const { return e == rhs.e; }
         bool operator!=(const iterator& rhs) const { return e != rhs.e; }
         bool operator==(const end_iterator& rhs) const { return !e; }
@@ -126,7 +109,7 @@ namespace autowiring {
       };
 
     private:
-      entry* head = nullptr;
+      atomic_entry* head = nullptr;
 
     public:
       iterator begin(void) {
@@ -134,7 +117,7 @@ namespace autowiring {
       }
 
       iterator end(void) {
-        static entry* np = nullptr;
+        static atomic_entry* np = nullptr;
         return{ np };
       }
 
@@ -151,8 +134,11 @@ namespace autowiring {
     /// <remarks>
     /// The caller is responsible for freeing the returned entry
     /// </remarks>
-    chain release(void) throw() {
-      entry* head = m_pHead.load(std::memory_order_relaxed);
+    template<typename T>
+    chain<T> release(void) throw() {
+      static_assert(std::is_base_of<atomic_entry, T>::value, "Can only obtain chains of types that inherit from atomic_entry");
+
+      atomic_entry* head = m_pHead.load(std::memory_order_relaxed);
       do m_chainID.fetch_add(1, std::memory_order_acq_rel);
       while (
         !m_pHead.compare_exchange_weak(
@@ -164,7 +150,7 @@ namespace autowiring {
       );
       
       // Take ownership of the dispatcher list and reverse this forward-linked list.
-      entry* lastLink = nullptr;
+      atomic_entry* lastLink = nullptr;
       for (; head; std::swap(head, lastLink))
         std::swap(lastLink, head->pFlink);
       return { lastLink };

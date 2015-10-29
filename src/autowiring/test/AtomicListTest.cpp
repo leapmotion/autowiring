@@ -7,17 +7,25 @@
 
 using autowiring::atomic_list;
 
+struct HoldsInt :
+  autowiring::atomic_entry
+{
+  HoldsInt(int value) : value(value) {}
+  int value;
+  operator int(void) const { return value; }
+};
+
 TEST(AtomicListTest, SimpleInsertion) {
-  atomic_list<int> l;
+  atomic_list l;
   uint32_t ids[] = {
-    l.push(55),
-    l.push(56),
-    l.push(57)
+    l.push<HoldsInt>(55),
+    l.push<HoldsInt>(56),
+    l.push<HoldsInt>(57)
   };
   ASSERT_EQ(ids[0], ids[1]);
   ASSERT_EQ(ids[0], ids[2]);
 
-  auto e = l.release();
+  auto e = l.release<HoldsInt>();
   auto q = e.begin();
 
   for (size_t i = 55; i <= 57; i++) {
@@ -28,17 +36,17 @@ TEST(AtomicListTest, SimpleInsertion) {
 }
 
 TEST(AtomicListTest, IdIncrement) {
-  atomic_list<int> l;
-  uint32_t id1 = l.push(101);
-  auto e = l.release();
-  uint32_t id2 = l.push(102);
+  atomic_list l;
+  uint32_t id1 = l.push<HoldsInt>(101);
+  auto e = l.release<HoldsInt>();
+  uint32_t id2 = l.push<HoldsInt>(102);
   ASSERT_NE(id1, id2) << "Identifier not incremented as expected";
 }
 
 TEST(AtomicListTest, IdIncrementPathological) {
   enum class Owner { None, Consumer, Producer };
 
-  atomic_list<int> l;
+  atomic_list l;
   std::unordered_set<int> S;
   volatile bool proceed = false;
 
@@ -54,7 +62,7 @@ TEST(AtomicListTest, IdIncrementPathological) {
       while(!owner.compare_exchange_weak(exp, Owner::Consumer));
       auto x = MakeAtExit([&owner] { owner = Owner::None; });
 
-      auto f = l.release();
+      auto f = l.release<HoldsInt>();
       for(int value : f)
         S.insert(value);
     }
@@ -66,7 +74,7 @@ TEST(AtomicListTest, IdIncrementPathological) {
 
   // Drive items into the list and see if we can rip them back:
   for (size_t i = 10000; i--;) {
-    uint32_t insertedID = l.push(i);
+    uint32_t insertedID = l.push<HoldsInt>(i);
 
     Owner exp;
     do exp = Owner::None;
