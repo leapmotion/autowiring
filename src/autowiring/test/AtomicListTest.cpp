@@ -3,7 +3,6 @@
 #include "at_exit.h"
 #include "atomic_list.h"
 #include <thread>
-#include <unordered_set>
 
 using autowiring::atomic_list;
 
@@ -47,7 +46,7 @@ TEST(AtomicListTest, IdIncrementPathological) {
   enum class Owner { None, Consumer, Producer };
 
   atomic_list l;
-  std::unordered_set<int> S;
+  volatile int latest = -1;
   volatile bool proceed = false;
 
   // Initial owner is the consumer:
@@ -63,8 +62,8 @@ TEST(AtomicListTest, IdIncrementPathological) {
       auto x = MakeAtExit([&owner] { owner = Owner::None; });
 
       auto f = l.release<HoldsInt>();
-      for(int value : f)
-        S.insert(value);
+      for (int value : f)
+        latest = value;
     }
   });
   auto x = MakeAtExit([&] {
@@ -73,7 +72,7 @@ TEST(AtomicListTest, IdIncrementPathological) {
   });
 
   // Drive items into the list and see if we can rip them back:
-  for (size_t i = 10000; i--;) {
+  for (int i = 0; i < 10000; i++) {
     uint32_t insertedID = l.push<HoldsInt>(i);
 
     Owner exp;
@@ -84,9 +83,9 @@ TEST(AtomicListTest, IdIncrementPathological) {
     auto curChainID = l.chain_id();
     if (curChainID == insertedID)
       // Still in the list, should not have been observed by the consumer yet
-      ASSERT_EQ(0UL, S.count(i)) << "Chain ID was not updated, but element was found in consumer set";
+      ASSERT_LT(latest, i) << "Chain ID was not updated, but element was found in consumer set";
     else
       // Not in the list, must be in the set
-      ASSERT_EQ(1UL, S.count(i)) << "Chain ID was updated, but element was not found in consumer set";
+      ASSERT_GE(latest, i) << "Chain ID was updated, but element was not found in consumer set";
   }
 }
