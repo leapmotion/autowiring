@@ -140,7 +140,7 @@ namespace autowiring {
     /// The caller is responsible for freeing the returned entry
     /// </remarks>
     template<typename T>
-    chain<T> release(void) throw() {
+    chain<T> release(void) volatile throw() {
       static_assert(std::is_base_of<callable_base, T>::value, "Can only obtain chains of types that inherit from callable_base");
 
       callable_base* head = m_pHead.load(std::memory_order_relaxed);
