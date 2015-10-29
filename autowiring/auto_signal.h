@@ -109,26 +109,17 @@ namespace autowiring {
       m_pFirstListener(rhs.m_pFirstListener),
       m_pLastListener(rhs.m_pLastListener)
     {
-      if (rhs.m_pFirstDelayedCall.load())
+      if (!rhs.m_delayedCalls.empty())
         throw autowiring_error("Attempted to move a signal where pended lambdas still exist");
       rhs.m_pFirstListener = nullptr;
       rhs.m_pLastListener = nullptr;
     }
 
     ~signal(void) {
-      {
-        callable_base* prior = nullptr;
-        for (callable_base* cur = m_pFirstDelayedCall; cur; cur = cur->m_pFlink) {
-          delete prior;
-          prior = cur;
-        }
-      }
-      {
-        entry_base* prior = nullptr;
-        for (entry_base* cur = m_pFirstListener; cur; cur = cur->pFlink) {
-          delete prior;
-          prior = cur;
-        }
+      entry_base* prior = nullptr;
+      for (entry_base* cur = m_pFirstListener; cur; cur = cur->pFlink) {
+        delete prior;
+        prior = cur;
       }
     }
 
@@ -141,8 +132,14 @@ namespace autowiring {
   private:
     mutable std::atomic<SignalState> m_state{ SignalState::Free };
 
-    // Current chain identifier
-    mutable std::atomic<uint32_t> m_chainID{ 0 };
+    struct entry_base;
+
+    // Doubly linked list of all of our listeners
+    entry_base* volatile m_pFirstListener = nullptr;
+    entry_base* volatile m_pLastListener = nullptr;
+
+    // Calls that had to be delayed due to asynchronous issues
+    mutable atomic_list m_delayedCalls;
 
     // Base type for listeners attached to this signal
     struct entry_base {
@@ -181,13 +178,6 @@ namespace autowiring {
       void operator()(const Args&... args) override { fn(registration_t{ &owner, this }, args...); }
     };
 
-    // Doubly linked list of all of our listeners
-    entry_base* volatile m_pFirstListener = nullptr;
-    entry_base* volatile m_pLastListener = nullptr;
-
-    // Calls that had to be delayed due to asynchronous issues
-    mutable std::atomic<callable_base*> m_pFirstDelayedCall{ nullptr };
-
     void LinkUnsafe(entry_base& e) {
       // Standard, boring linked list insertion:
       e.pBlink = m_pLastListener;
@@ -223,7 +213,7 @@ namespace autowiring {
       if (!m_state.compare_exchange_weak(state, SignalState::Updating)) {
         // Control is contended, we need to hand off linkage responsibility to someone else.
         auto link = new callable_link{ *this, e };
-        uint32_t id = CallLater(link);
+        uint32_t id = m_delayedCalls.push_entry(link);
 
         for (;;) {
           // Try to transition from Asserting to the Deferred state first, if we succeed here
@@ -239,7 +229,7 @@ namespace autowiring {
           // Next try to transition from Free to Updating.
           state = SignalState::Free;
           if (m_state.compare_exchange_weak(state, SignalState::Updating)) {
-            if (m_chainID != id) {
+            if (m_delayedCalls.chain_id() != id) {
               // Dispatcher already got to this one, we don't need to do anything
               m_state = SignalState::Free;
               return;
@@ -301,8 +291,8 @@ namespace autowiring {
       // See discussion in Link
       SignalState state = SignalState::Free;
       if (!m_state.compare_exchange_weak(state, SignalState::Updating)) {
-        callable_unlink* link = new callable_unlink(*this, std::move(e));
-        uint32_t chainID = CallLater(link);
+        auto link = new callable_unlink{ *this, std::move(e) };
+        uint32_t chainID = m_delayedCalls.push_entry(link);
 
         for (;;) {
           state = SignalState::Asserting;
@@ -313,7 +303,7 @@ namespace autowiring {
 
           state = SignalState::Free;
           if (m_state.compare_exchange_weak(state, SignalState::Updating)) {
-            if (chainID != m_chainID) {
+            if (chainID != m_delayedCalls.chain_id()) {
               // Dispatcher got here.  We weren't the party responsible for removing
               // this entry, but we can guarantee the postcondition, so we can return
               // true.
@@ -359,34 +349,6 @@ namespace autowiring {
         call(typename make_index_tuple<sizeof...(FnArgs)>::type{});
       }
     };
-
-    /// <summary>
-    /// Appends a callable to be invoked later
-    /// </summary>
-    /// <returns>
-    /// The number of calls that were made when the delegated entry was inserted
-    /// </returns>
-    uint32_t CallLater(callable_base* pCallable) const {
-      callable_base* newFlink;
-
-      uint32_t chainID;
-      do {
-        // We will sample the front of the linked list and the number of calls at
-        // the same time.  The number of calls made is always updated before ownership
-        // of the linked list is obtained,
-        newFlink = m_pFirstDelayedCall.load(std::memory_order_acquire);
-        pCallable->m_pFlink = newFlink;
-        chainID = m_chainID.load(std::memory_order_acquire);
-      } while (
-        !m_pFirstDelayedCall.compare_exchange_weak(
-          newFlink,
-          pCallable,
-          std::memory_order_release,
-          std::memory_order_relaxed
-        )
-      );
-      return chainID;
-    }
 
   public:
     bool is_executing(void) const override {
@@ -473,7 +435,7 @@ namespace autowiring {
         }
 
         // We failed to obtain control.  Create a thunk here.
-        CallLater(
+        m_delayedCalls.push_entry(
           new callable_signal<FnArgs...>{
             *this,
             std::forward<FnArgs&&>(args)...
@@ -517,28 +479,12 @@ namespace autowiring {
           // Circle around, maybe we had a spurious failure
           continue;
 
-        // We're about to go through another list, update the chain identifier so everyone knows that
-        // we are taking charge now.
-        callable_base* pHead;
-        do {
-          pHead = m_pFirstDelayedCall.load(std::memory_order_acquire);
-          m_chainID.fetch_add(1, std::memory_order_acquire);
-        } while (!m_pFirstDelayedCall.compare_exchange_weak(pHead, nullptr, std::memory_order_release));
-
-        // Take ownership of the dispatcher list and reverse this forward-linked list.
-        callable_base* lastLink = nullptr;
-        for (
-          callable_base* cur = pHead;
-          cur;
-          std::swap(cur, lastLink)
-        )
-          std::swap(lastLink, cur->m_pFlink);
-
         // Call all dispatchers in the right order
-        for (std::unique_ptr<callable_base> cur{ lastLink }; cur; cur.reset(cur->m_pFlink))
+        for (auto& cur : m_delayedCalls.release<callable_base>()) {
           // Eat any exception that occurs
-          try { (*cur)(); }
+          try { cur(); }
           catch (...) {}
+        }
       }
     }
 
