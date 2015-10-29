@@ -116,8 +116,8 @@ namespace autowiring {
 
     ~signal(void) {
       {
-        detail::callable_base* prior = nullptr;
-        for (detail::callable_base* cur = m_pFirstDelayedCall; cur; cur = cur->m_pFlink) {
+        callable_base* prior = nullptr;
+        for (callable_base* cur = m_pFirstDelayedCall; cur; cur = cur->m_pFlink) {
           delete prior;
           prior = cur;
         }
@@ -185,7 +185,7 @@ namespace autowiring {
     entry_base* volatile m_pLastListener = nullptr;
 
     // Calls that had to be delayed due to asynchronous issues
-    mutable std::atomic<detail::callable_base*> m_pFirstDelayedCall{ nullptr };
+    mutable std::atomic<callable_base*> m_pFirstDelayedCall{ nullptr };
 
     void LinkUnsafe(entry_base& e) {
       // Standard, boring linked list insertion:
@@ -198,7 +198,7 @@ namespace autowiring {
     }
 
     struct callable_link :
-      detail::callable_base
+      callable_base
     {
       callable_link(signal& owner, entry_base* entry) :
         owner(owner),
@@ -278,7 +278,7 @@ namespace autowiring {
     }
 
     struct callable_unlink :
-      detail::callable_base
+      callable_base
     {
       callable_unlink(signal& owner, std::unique_ptr<entry_base>&& entry) :
         owner(owner),
@@ -339,7 +339,7 @@ namespace autowiring {
 
     template<typename... FnArgs>
     struct callable_signal :
-      detail::callable_base
+      callable_base
     {
       callable_signal(const signal& owner, FnArgs&&... args) :
         owner(owner),
@@ -365,8 +365,8 @@ namespace autowiring {
     /// <returns>
     /// The number of calls that were made when the delegated entry was inserted
     /// </returns>
-    uint32_t CallLater(detail::callable_base* pCallable) const {
-      detail::callable_base* newFlink;
+    uint32_t CallLater(callable_base* pCallable) const {
+      callable_base* newFlink;
 
       uint32_t chainID;
       do {
@@ -519,23 +519,23 @@ namespace autowiring {
 
         // We're about to go through another list, update the chain identifier so everyone knows that
         // we are taking charge now.
-        detail::callable_base* pHead;
+        callable_base* pHead;
         do {
           pHead = m_pFirstDelayedCall.load(std::memory_order_acquire);
           ++m_chainID;
         } while (!m_pFirstDelayedCall.compare_exchange_weak(pHead, nullptr, std::memory_order_relaxed));
 
         // Take ownership of the dispatcher list and reverse this forward-linked list.
-        detail::callable_base* lastLink = nullptr;
+        callable_base* lastLink = nullptr;
         for (
-          detail::callable_base* cur = pHead;
+          callable_base* cur = pHead;
           cur;
           std::swap(cur, lastLink)
         )
           std::swap(lastLink, cur->m_pFlink);
 
         // Call all dispatchers in the right order
-        for (std::unique_ptr<detail::callable_base> cur{ lastLink }; cur; cur.reset(cur->m_pFlink))
+        for (std::unique_ptr<callable_base> cur{ lastLink }; cur; cur.reset(cur->m_pFlink))
           // Eat any exception that occurs
           try { (*cur)(); }
           catch(...) {}

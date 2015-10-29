@@ -8,7 +8,7 @@
 using autowiring::atomic_list;
 
 struct HoldsInt :
-  autowiring::atomic_entry
+  autowiring::callable_base
 {
   HoldsInt(int value) : value(value) {}
   int value;

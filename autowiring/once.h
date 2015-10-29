@@ -60,7 +60,7 @@ namespace autowiring {
   protected:
     state m_state = state::unsignalled;
     autowiring::spin_lock m_spin;
-    std::vector<std::unique_ptr<detail::callable_base>> m_fns;
+    std::vector<std::unique_ptr<callable_base>> m_fns;
 
   public:
     // Getter methods:
@@ -78,8 +78,8 @@ namespace autowiring {
 
       // Move the lambda into our unique pointer outside of the lock to reduce
       // total contention time
-      std::unique_ptr<detail::callable<Fn>> fn{
-        new detail::callable<Fn>{ std::forward<Fn&&>(rhs) }
+      std::unique_ptr<callable<Fn>> fn{
+        new callable<Fn>{ std::forward<Fn&&>(rhs) }
       };
 
       // Double-check the flag under lock:

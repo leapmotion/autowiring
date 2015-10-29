@@ -2,24 +2,24 @@
 #include "stdafx.h"
 #include "atomic_list.h"
 
-using autowiring::atomic_entry;
+using autowiring::callable_base;
 using autowiring::atomic_list;
 
 atomic_list::~atomic_list(void) {
-  atomic_entry* next;
-  for (atomic_entry* cur = m_pHead.load(std::memory_order_relaxed); cur; cur = next) {
-    next = cur->pFlink;
+  callable_base* next;
+  for (callable_base* cur = m_pHead.load(std::memory_order_relaxed); cur; cur = next) {
+    next = cur->m_pFlink;
     delete cur;
   }
 }
 
-uint32_t atomic_list::push_entry(atomic_entry* e) throw() {
-  atomic_entry* pHead;
+uint32_t atomic_list::push_entry(callable_base* e) throw() {
+  callable_base* pHead;
   uint32_t retVal;
   do {
     pHead = m_pHead.load(std::memory_order_acquire);
     retVal = m_chainID.load(std::memory_order_relaxed);
-    e->pFlink = pHead;
+    e->m_pFlink = pHead;
   } while (
     !m_pHead.compare_exchange_weak(
       pHead,
