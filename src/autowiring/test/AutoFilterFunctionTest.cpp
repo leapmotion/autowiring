@@ -107,6 +107,7 @@ TEST_F(AutoFilterFunctionalTest, RecipientRemovalTest) {
       }
     );
   packet->RemoveRecipient(*recipient);
+  packet->Decorate(Decoration<0>());
 
   ASSERT_FALSE(*called) << "A recipient that should have been removed was called";
 }
