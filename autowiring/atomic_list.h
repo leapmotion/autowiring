@@ -1,11 +1,9 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "callable.h"
-#include <atomic>
+#include "spin_lock.h"
 #include <iterator>
-#include <memory>
 #include <type_traits>
-#include <utility>
 
 namespace autowiring {
   /// <summary>
@@ -23,14 +21,16 @@ namespace autowiring {
     ~atomic_list(void);
 
   private:
-    // First entry in the atomic list
-    std::atomic<callable_base*> m_pHead{ nullptr };
+    autowiring::spin_lock lock;
 
-    // Current chain identifier
-    std::atomic<uint32_t> m_chainID{ 0 };
+    // First entry in the atomic list
+    callable_base* m_pHead = nullptr;
+
+    // Current chain identifier:
+    uint32_t m_chainID = 0;
 
   public:
-    bool empty(void) const { return m_pHead.load(std::memory_order_relaxed) == nullptr; }
+    bool empty(void) volatile const { return m_pHead == nullptr; }
 
     /// <returns>
     /// The current chain identifier
@@ -39,7 +39,7 @@ namespace autowiring {
     /// No guarantee is made about how long the returned value will be valid.  Calls to
     /// `release` will change the returned value.
     /// </remarks>
-    uint32_t chain_id(void) volatile const throw() { return m_chainID.load(std::memory_order_relaxed); }
+    uint32_t chain_id(void) volatile const throw() { return m_chainID; }
 
     /// <summary>
     /// Adds the already-constructed entry to the ist
@@ -128,7 +128,9 @@ namespace autowiring {
 
       chain& operator=(const chain& rhs) = delete;
       chain& operator=(chain&& rhs) {
-        std::swap(head, rhs.head);
+        auto temp = rhs.head;
+        rhs.head = head;
+        head = temp;
         return *this;
       }
     };
@@ -137,28 +139,17 @@ namespace autowiring {
     /// Retrieves a list of entries in the order of insertion
     /// </summary>
     /// <remarks>
-    /// The caller is responsible for freeing the returned entry
+    /// The caller is responsible for recursively freeing the returned entry
     /// </remarks>
-    template<typename T>
-    chain<T> release(void) volatile throw() {
-      static_assert(std::is_base_of<callable_base, T>::value, "Can only obtain chains of types that inherit from callable_base");
+    callable_base* release(void) throw();
 
-      callable_base* head = m_pHead.load(std::memory_order_relaxed);
-      do m_chainID.fetch_add(1, std::memory_order_acq_rel);
-      while (
-        !m_pHead.compare_exchange_weak(
-          head,
-          nullptr,
-          std::memory_order_release,
-          std::memory_order_relaxed
-        )
-      );
-      
-      // Take ownership of the dispatcher list and reverse this forward-linked list.
-      callable_base* lastLink = nullptr;
-      for (; head; std::swap(head, lastLink))
-        std::swap(lastLink, head->m_pFlink);
-      return { lastLink };
+    /// <summary>
+    /// Retrieves a list of entries in the order of insertion
+    /// </summary>
+    template<typename T>
+    chain<T> release(void) throw() {
+      static_assert(std::is_base_of<callable_base, T>::value, "Can only obtain chains of types that inherit from callable_base");
+      return { release() };
     }
   };
 }
