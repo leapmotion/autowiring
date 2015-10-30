@@ -37,7 +37,7 @@ TEST(AtomicListTest, SimpleInsertion) {
 TEST(AtomicListTest, IdIncrement) {
   atomic_list l;
   uint32_t id1 = l.push<HoldsInt>(101);
-  auto e = l.release<HoldsInt>();
+  l.release<HoldsInt>();
   uint32_t id2 = l.push<HoldsInt>(102);
   ASSERT_NE(id1, id2) << "Identifier not incremented as expected";
 }

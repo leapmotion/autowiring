@@ -11,6 +11,7 @@ atomic_list::~atomic_list(void) {
   while(m_pHead) {
     next = m_pHead->m_pFlink;
     delete m_pHead;
+    m_pHead = next;
   }
 }
 
