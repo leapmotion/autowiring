@@ -75,7 +75,9 @@ namespace autowiring {
       {}
       ~chain(void) {
         // Deletion convenience:
-        for(auto& x : *this) {}
+        for(auto& x : *this) {
+          (void)x;
+        }
       }
 
       struct end_iterator;
