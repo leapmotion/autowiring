@@ -210,7 +210,7 @@ namespace autowiring {
       // We don't mind rare failures, here, because our algorithm is correct regardless
       // of the return value of this comparison, it's just slightly more efficient if
       // there is no failure.
-      if (!m_state.compare_exchange_weak(state, SignalState::Updating)) {
+      if (!m_state.compare_exchange_weak(state, SignalState::Updating, std::memory_order_relaxed, std::memory_order_relaxed)) {
         // Control is contended, we need to hand off linkage responsibility to someone else.
         auto link = new callable_link{ *this, e };
         uint32_t id = m_delayedCalls.push_entry(link);
@@ -219,7 +219,7 @@ namespace autowiring {
           // Try to transition from Asserting to the Deferred state first, if we succeed here
           // then the call operator will take responsibility for our insertion request.
           state = SignalState::Asserting;
-          if (m_state.compare_exchange_weak(state, SignalState::Deferred))
+          if (m_state.compare_exchange_weak(state, SignalState::Deferred, std::memory_order_relaxed, std::memory_order_relaxed))
             return;
 
           // If we observed the state as being Deferred, then we can also short-circuit
@@ -228,7 +228,7 @@ namespace autowiring {
 
           // Next try to transition from Free to Updating.
           state = SignalState::Free;
-          if (m_state.compare_exchange_weak(state, SignalState::Updating)) {
+          if (m_state.compare_exchange_weak(state, SignalState::Updating, std::memory_order_acquire, std::memory_order_relaxed)) {
             if (m_delayedCalls.chain_id() != id) {
               // Dispatcher already got to this one, we don't need to do anything
               m_state = SignalState::Free;
@@ -290,19 +290,19 @@ namespace autowiring {
     bool Unlink(std::unique_ptr<entry_base> e) {
       // See discussion in Link
       SignalState state = SignalState::Free;
-      if (!m_state.compare_exchange_weak(state, SignalState::Updating)) {
+      if (!m_state.compare_exchange_weak(state, SignalState::Updating, std::memory_order_relaxed, std::memory_order_relaxed)) {
         auto link = new callable_unlink{ *this, std::move(e) };
         uint32_t chainID = m_delayedCalls.push_entry(link);
 
         for (;;) {
           state = SignalState::Asserting;
-          if (m_state.compare_exchange_weak(state, SignalState::Deferred))
+          if (m_state.compare_exchange_weak(state, SignalState::Deferred, std::memory_order_relaxed, std::memory_order_relaxed))
             return false;
           if (state == SignalState::Deferred)
             return false;
 
           state = SignalState::Free;
-          if (m_state.compare_exchange_weak(state, SignalState::Updating)) {
+          if (m_state.compare_exchange_weak(state, SignalState::Updating, std::memory_order_acquire, std::memory_order_relaxed)) {
             if (chainID != m_delayedCalls.chain_id()) {
               // Dispatcher got here.  We weren't the party responsible for removing
               // this entry, but we can guarantee the postcondition, so we can return
@@ -448,7 +448,7 @@ namespace autowiring {
         // race condition, whoever wins the race gets to return control to the caller.
         do {
           state = SignalState::Asserting;
-          if (m_state.compare_exchange_weak(state, SignalState::Deferred))
+          if (m_state.compare_exchange_weak(state, SignalState::Deferred, std::memory_order_relaxed, std::memory_order_relaxed))
             // Success, we have transferred responsibility for this call to the other entity.
             return;
 
@@ -457,7 +457,7 @@ namespace autowiring {
             return;
 
           state = SignalState::Free;
-        } while (!m_state.compare_exchange_weak(state, SignalState::Asserting));
+        } while (!m_state.compare_exchange_weak(state, SignalState::Asserting, std::memory_order_acquire, std::memory_order_relaxed));
 
         // Great.  If we got here it's because we were able to transition from Free to Asserting, which
         // means that everyone else has already returned to their callers.  We are the only ones still
@@ -475,7 +475,7 @@ namespace autowiring {
         // Failed to give up control.  Our state was deferred or the delayed call list was non-empty,
         // we need to transition to the Asserting state and empty our list before proceeding
         state = SignalState::Deferred;
-        if (!m_state.compare_exchange_strong(state, SignalState::Asserting))
+        if (!m_state.compare_exchange_weak(state, SignalState::Asserting))
           // Circle around, maybe we had a spurious failure
           continue;
 
