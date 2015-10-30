@@ -12,6 +12,8 @@ add_subdirectory(benchmark)
 set(Autowiring_SRCS
   AnySharedPointer.cpp
   AnySharedPointer.h
+  atomic_list.h
+  atomic_list.cpp
   atomic_object.h
   at_exit.h
   altitude.h

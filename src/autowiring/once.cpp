@@ -51,7 +51,7 @@ void once::signal(void) {
 
   // Completely clear the vector, releasing absolutely all memory.  We will never need it again.
   m_state = state::signalled;
-  m_fns = std::vector<std::unique_ptr<detail::callable_base>>{};
+  m_fns = std::vector<std::unique_ptr<callable_base>>{};
 }
 
 void once::operator=(bool rhs) {

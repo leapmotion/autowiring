@@ -1,6 +1,7 @@
 set(AutowiringTest_SRCS
   AnySharedPointerTest.cpp
   ArgumentTypeTest.cpp
+  AtomicListTest.cpp
   AutoConstructTest.cpp
   AutoFilterAltitudeTest.cpp
   AutoFilterCollapseRulesTest.cpp
