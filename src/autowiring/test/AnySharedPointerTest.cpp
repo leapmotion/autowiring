@@ -241,3 +241,13 @@ TEST_F(AnySharedPointerTest, CanCrossCast) {
   ASSERT_EQ(102, bASP.as<AnySharedPtrObjB>()->bVal);
   ASSERT_EQ(aASP, bASP) << "An aliased shared pointer was not detected as being equal";
 }
+
+TEST_F(AnySharedPointerTest, NullAfterMove) {
+  auto ptr = std::make_shared<bool>(false);
+  AnySharedPointer p1 = ptr;
+  AnySharedPointer p2 = std::move(p1);
+  ASSERT_FALSE(p1) << "Move construction of AnySharedPointer did not nullify rhs";
+  AnySharedPointer p3;
+  p3 = std::move(p2);
+  ASSERT_FALSE(p2) << "Move assignment of AnySharedPointer did not nullify rhs";
+}

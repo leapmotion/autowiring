@@ -272,14 +272,14 @@ TEST_F(EventReceiverTest, PathologicalChildContextTest) {
   AutoRequired<FiresManyEventsWhenRun> jammer;
 
   // This by itself is sufficient to cause problems:
-  for(size_t i = 0; i < 500; i++) {
+  for(size_t i = 0; i < 50; i++) {
     AutoCreateContext subCtxt;
     CurrentContextPusher pshr(subCtxt);
     AutoRequired<SimpleReceiver> recvr;
   }
 
   // Spin until the jammer has transmitted a thousand messages:
-  while(jammer->totalXmit < 1000);
+  while(jammer->totalXmit < 100);
   jammer->Stop();
   jammer->Wait();
 

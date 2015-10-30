@@ -22,27 +22,25 @@ class D : public ContextMember {};
 TEST_F(ScopeTest, VerifyInherit) {
   AutoCurrentContext ctxt;
 
-  //Add a member to the current context
+  // Add a member to the current context
   ctxt->Inject<A>();
 
+  // Create and switch to a sub-context
   AutoCreateContext pContext(ctxt);
-  //Create and switch to a sub-context
   {
-    CurrentContextPusher pusher;
-    pContext->SetCurrent();
-
-    ASSERT_TRUE(ctxt.get() != pContext.get()) << "Failed to create a sub-context";
+    CurrentContextPusher pusher(pContext);
+    ASSERT_NE(ctxt.get(), pContext.get()) << "Failed to create a sub-context";
 
     //try and autowire a member from the parent context
     Autowired<A> autoA;
-    ASSERT_FALSE(!autoA.get()) << "Autowired member not wired from parent context";
+    ASSERT_TRUE(autoA) << "Autowired member not wired from parent context";
 
     //add a member in the subcontext
     pContext->Inject<B>();
   }
 
   Autowired<B> autoB;
-  ASSERT_TRUE(!autoB.get()) << "Autowired member wired from sub-context";
+  ASSERT_FALSE(autoB.get()) << "Autowired member wired from sub-context";
 }
 
 struct NoSimpleConstructor:
@@ -191,8 +189,8 @@ TEST_F(ScopeTest, RequireVsWire) {
 
   //this overrides the slot in the middle context;
   AutoRequired<A> a_required_middle(ctxt_middle);
-  ASSERT_TRUE(a_required_middle.IsAutowired()) << "AutoRequired member not satisfied!";
-  ASSERT_EQ(a_required_middle->GetContext(), ctxt_middle) << "AutoRequired member not created in child context";
+  ASSERT_TRUE(a_required_middle) << "AutoRequired member not satisfied!";
+  ASSERT_EQ(ctxt_middle, a_required_middle->GetContext()) << "AutoRequired member not created in child context";
   ASSERT_NE(a_required_middle, a_required_outer) << "AutoRequired member not constructed in child context";
   
   Autowired<A> a_wired_inner2(ctxt_inner);

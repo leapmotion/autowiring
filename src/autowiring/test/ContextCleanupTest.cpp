@@ -144,7 +144,7 @@ TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
   // Just create a CoreThread directly and have it pend some lambdas that will take awhile to run:
   auto called = std::make_shared<bool>(false);
   *ct += [] {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   };
   *ct += [called] { *called = true; };
 
@@ -163,7 +163,7 @@ TEST_F(ContextCleanupTest, VerifyImmediateThreadCleanup) {
   // Just create a CoreThread directly and have it pend some lambdas that will take awhile to run:
   auto called = std::make_shared<bool>(false);
   *ct += [] {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   };
 
   // Pend another lambda which will wait longer, for systems which will not complete SignalTerminate in 100ms

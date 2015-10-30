@@ -12,6 +12,8 @@ add_subdirectory(benchmark)
 set(Autowiring_SRCS
   AnySharedPointer.cpp
   AnySharedPointer.h
+  atomic_list.h
+  atomic_list.cpp
   atomic_object.h
   at_exit.h
   altitude.h
@@ -42,7 +44,6 @@ set(Autowiring_SRCS
   AutoPacketGraph.h
   AutoPacketProfiler.cpp
   AutoPacketProfiler.h
-  AutoParameter.h
   AutoSelfUpdate.h
   AutoTimeStamp.h
   AutowirableSlot.cpp
@@ -64,6 +65,7 @@ set(Autowiring_SRCS
   Bolt.h
   BoltBase.cpp
   BoltBase.h
+  callable.h
   CallExtractor.h
   CallExtractor.cpp
   ContextEnumerator.cpp
@@ -79,6 +81,7 @@ set(Autowiring_SRCS
   CoreJob.h
   CoreObject.cpp
   CoreObject.h
+  CoreObjectDescriptor.h
   CoreRunnable.cpp
   CoreRunnable.h
   CoreThread.cpp
@@ -141,9 +144,10 @@ set(Autowiring_SRCS
   once.cpp
   Parallel.h
   Parallel.cpp
-  CoreObjectDescriptor.h
+  registration.h
   SatCounter.h
   SatCounter.cpp
+  signal_base.h
   SlotInformation.cpp
   SlotInformation.h
   spin_lock.h

@@ -78,6 +78,14 @@ public:
   }
 };
 
+TEST(OnceTest, SignalSetWhileCalling) {
+  autowiring::once sig;
+  sig += [&] {
+    ASSERT_TRUE(sig) << "Flag was not set while handler was being invoked";
+  };
+  sig = true;
+}
+
 TEST(OnceTest, OwnedSignal) {
   PrivateSignal priv;
 
@@ -85,4 +93,16 @@ TEST(OnceTest, OwnedSignal) {
   priv.sig += [&hit] { hit = true; };
   priv.signal();
   ASSERT_TRUE(hit) << "Private signal did not get set as expected";
+}
+
+TEST(OnceTest, UnregisterHandler) {
+  autowiring::once sig;
+
+  bool hit = false;
+  auto reg = sig += [&hit] {
+    hit = true;
+  };
+  sig -= reg;
+  sig();
+  ASSERT_FALSE(hit) << "Handler not unregistered as expected";
 }

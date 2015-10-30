@@ -607,7 +607,10 @@ TEST_F(AutoSignalTest, PathologicalSyncTest) {
   };
 
   // Register and unregister the same listener in a tight loop, this should create chaos
-  while (nAssertions < 1000) {
+  // We don't want to run this loop for an indefinite number of iterations because it
+  // creates a lot of work for the other thread, and the other thread may never be able
+  // to escape.
+  for (size_t nLoops = 0; nLoops < 10000; nLoops++) {
     auto x = std::make_shared<bool>(false);
     auto r = sig += [x] {
       *x = x.unique();
@@ -615,6 +618,10 @@ TEST_F(AutoSignalTest, PathologicalSyncTest) {
     sig -= r;
     ASSERT_FALSE(*x) << "Lambda was invoked after it was destroyed";
   }
+
+  // Delay until the thread finishes its work:
+  while (nAssertions < 1000)
+    std::this_thread::yield();
 }
 
 namespace {
@@ -681,21 +688,41 @@ TEST_F(AutoSignalTest, ReallocationCheck) {
     new Autowired<WithSignal>{}
   };
 
-  {
+  (*contrived)(&WithSignal::sig) += [&] {
+    hitCount++;
+
     // Delete the Autowired field while the signal handler is being called.  This is intended to simulate
     // a legal possible multithreaded scenario where a signal handler is being asserted at about the same
     // time as an Autowired field is being destroyed.
-    (*contrived)(&WithSignal::sig) += [&] {
-      hitCount++;
-      contrived.reset();
+    contrived.reset();
 
-      Autowired<WithSignal> ws;
-      ws->sig();
-    };
-    ctxt->Inject<WithSignal>();
-  }
+    Autowired<WithSignal> ws;
+    ws->sig();
+  };
+  ctxt->Inject<WithSignal>();
+
   Autowired<WithSignal> sig3;
   sig3->sig();
 
   ASSERT_EQ(1UL, hitCount) << "A signal handler was hit even though the base Autowired field was destroyed";
+}
+
+TEST_F(AutoSignalTest, IsExecuting) {
+  autowiring::signal<void()> sig;
+
+  std::shared_ptr<bool> checksSig(
+    new bool{ false },
+    [&sig](bool* ptr) {
+      delete ptr;
+      ASSERT_FALSE(sig.is_executing()) << "Signal handler should not be marked as executing while in unregistration";
+    }
+  );
+  sig += [&, checksSig] {
+    ASSERT_TRUE(sig.is_executing()) << "Signal was not properly marked as executing inside a signal handler";
+    if (!*checksSig) {
+      *checksSig = true;
+      sig();
+    }
+  };
+  ASSERT_FALSE(sig.is_executing()) << "Signal was incorrectly marked as executing even though nothing is happening";
 }

@@ -353,7 +353,9 @@ void AutoNetServerImpl::PollThreadUtilization(std::chrono::milliseconds period){
 
       // Broadcast current thread utilization
       int contextID = ResolveContextID(thread->GetContext().get());
-      std::string name = autowiring::demangle(typeid(*thread.get()));
+
+      auto& threadRef = *thread;
+      std::string name = autowiring::demangle(typeid(threadRef));
 
       std::chrono::duration<double> periodDbl = period;
       double kmPercent = 100.0 * (deltaRuntimeKM.count() / periodDbl.count());

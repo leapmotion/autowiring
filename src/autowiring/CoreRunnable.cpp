@@ -9,6 +9,10 @@ template<> bool CoreRunnable::WaitUntil(std::chrono::system_clock::time_point);
 CoreRunnable::CoreRunnable(void) {}
 CoreRunnable::~CoreRunnable(void) {}
 
+bool CoreRunnable::IsRunning(void) const {
+  return (bool)m_outstanding;
+}
+
 const std::shared_ptr<CoreObject>& CoreRunnable::GetOutstanding(void) const {
   return m_outstanding;
 }

@@ -239,4 +239,9 @@ extern template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast
 extern template class RegType<AutoPacketFactory>;
 extern template struct autowiring::fast_pointer_cast_blind<CoreObject, AutoPacketFactory>;
 extern template struct autowiring::fast_pointer_cast_initializer<CoreObject, AutoPacketFactory>;
+extern template struct autowiring::fast_pointer_cast_blind<AutoPacketFactory, CoreObject>;
+extern template struct autowiring::fast_pointer_cast_initializer<AutoPacketFactory, CoreObject>;
+extern template struct auto_id_t<AutoPacketFactory>;
+extern template class auto_id_t_init<AutoPacketFactory, false>;
+extern template class auto_id_t_init<AutoPacketFactory, true>;
 // @endcond
