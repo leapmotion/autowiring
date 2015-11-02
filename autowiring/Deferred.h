@@ -2,6 +2,7 @@
 #pragma once
 
 class CoreThread;
+class DispatchQueue;
 
 /// <summary>
 /// Marker return type for deferred calls
@@ -13,4 +14,5 @@ class CoreThread;
 class Deferred {
 public:
   Deferred(CoreThread* pThread) {}
+  Deferred(DispatchQueue* pQueue) {}
 };
