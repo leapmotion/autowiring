@@ -665,12 +665,9 @@ TEST_F(AutoFilterTest, DeferredDecorateOnly) {
 }
 
 class DQueueSharedPointer:
-public DispatchQueue
+  public DispatchQueue
 {
 public:
-  DQueueSharedPointer(void)
-  {}
-
   size_t callCount = 0;
 
   Deferred AutoFilter(std::shared_ptr<const int>) {
@@ -683,7 +680,7 @@ TEST_F(AutoFilterTest, DQueueAutoFilterTest) {
   AutoRequired<AutoPacketFactory> factory;
   auto ptr = std::make_shared<int>(1012);
 
-  auto dQueueSharedPtr = AutoRequired<DQueueSharedPointer>();
+  AutoRequired<DQueueSharedPointer> dQueueSharedPtr;
 
   // Generate a bunch of packets, all with the same shared pointer decoration:
   for(size_t i = 0; i < 100; i++) {
