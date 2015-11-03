@@ -143,6 +143,42 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
       }
     }
   }
+
+  auto tempVisited = std::unordered_set<SatCounter*>();
+  auto permVisited = std::unordered_set<SatCounter*>();
+  DetectCycle(satCounter, tempVisited, permVisited);
+}
+
+void AutoPacket::DetectCycle(SatCounter& satCounter, std::unordered_set<SatCounter*>& tempVisited, std::unordered_set<SatCounter*>& permVisited) {
+  if (tempVisited.count(&satCounter)) {
+    std::stringstream ss;
+    ss << "Detected cycle in the auto filter graph involving type " << autowiring::demangle(satCounter.GetType());
+    throw std::runtime_error(ss.str());
+  }
+
+  if (permVisited.count(&satCounter))
+    return;
+
+  std::unordered_set<SatCounter*> nextCounters;
+  for(auto pCur = satCounter.GetAutoFilterArguments(); *pCur; pCur++) {
+    if (!pCur->is_output) continue;
+
+    DecorationKey key(pCur->id, pCur->tshift);
+    DecorationDisposition& entry = m_decoration_map[key];
+    for (auto& subscriber : entry.m_subscribers) {
+      auto ptr = subscriber.satCounter;
+      nextCounters.insert(ptr);
+    }
+  }
+  if (nextCounters.empty())
+    return;
+
+  tempVisited.insert(&satCounter);
+  for (auto pCounter : nextCounters) {
+    DetectCycle(*pCounter, tempVisited, permVisited);
+  }
+  permVisited.insert(&satCounter);
+  tempVisited.erase(&satCounter);
 }
 
 void AutoPacket::RemoveSatCounterUnsafe(const SatCounter& satCounter) {

@@ -15,6 +15,7 @@
 #include "noop.h"
 #include "TeardownNotifier.h"
 #include <typeinfo>
+#include <unordered_set>
 #include CHRONO_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_MAP
@@ -128,6 +129,10 @@ protected:
   /// <summary>
   /// Remove all AutoFilter argument information for a recipient
   void RemoveSatCounterUnsafe(const SatCounter& satCounter);
+
+  /// <summary>
+  /// Detect cycle in the auto filter graph using DFS
+  void DetectCycle(SatCounter& satCounter, std::unordered_set<SatCounter*>& tempVisited, std::unordered_set<SatCounter*>& permVisited);
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
