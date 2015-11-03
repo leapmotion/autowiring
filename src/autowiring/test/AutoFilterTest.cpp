@@ -688,6 +688,9 @@ TEST_F(AutoFilterTest, DQueueAutoFilterTest) {
     auto packet = factory->NewPacket();
     packet->Decorate(ptr);
   }
+
+  ASSERT_EQ(0UL, dQueueSharedPtr->callCount);
+
   dQueueSharedPtr->DispatchAllEvents();
 
   // Ensure nothing got cached unexpectedly, and that the call count is precisely what we want
