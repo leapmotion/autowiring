@@ -1,14 +1,12 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "AnySharedPointer.h"
 #include "AutoFilterDescriptor.h"
-#include "demangle.h"
 
 /// <summary>
 /// A single subscription counter entry
 /// </summary>
 struct SatCounter:
-  public AutoFilterDescriptor
+  AutoFilterDescriptor
 {
   SatCounter(void) = default;
 
