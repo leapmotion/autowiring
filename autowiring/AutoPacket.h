@@ -126,6 +126,10 @@ protected:
   void AddSatCounterUnsafe(SatCounter& satCounter);
 
   /// <summary>
+  /// Remove all AutoFilter argument information for a recipient
+  void RemoveSatCounterUnsafe(const SatCounter& satCounter);
+
+  /// <summary>
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
   void MarkUnsatisfiable(const DecorationKey& key);

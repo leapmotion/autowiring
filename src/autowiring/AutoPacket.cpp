@@ -139,8 +139,38 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
                 throw std::runtime_error(ss.str());
               }
             }
-
         entry.m_publishers.push_back(&satCounter);
+      }
+    }
+  }
+}
+
+void AutoPacket::RemoveSatCounterUnsafe(const SatCounter& satCounter) {
+  for (auto pCur = satCounter.GetAutoFilterArguments(); *pCur; pCur++) {
+    DecorationKey key(pCur->id, pCur->tshift);
+    DecorationDisposition& entry = m_decoration_map[key];
+
+    if (pCur->is_rvalue && *entry.m_pModifier == satCounter) {
+      entry.m_pModifier = nullptr;
+    } else {
+      if (pCur->is_input) {
+        for (auto& sub : entry.m_subscribers) {
+          if (sub.satCounter && *sub.satCounter == satCounter) {
+            entry.m_subscribers.erase(sub);
+            break;
+          }
+        }
+      }
+      if (pCur->is_output) {
+        entry.m_publishers.erase(
+          std::remove_if(
+            entry.m_publishers.begin(),
+            entry.m_publishers.end(),
+            [&satCounter](SatCounter* publisher){
+              return publisher && *publisher == satCounter;
+            }),
+          entry.m_publishers.end()
+        );
       }
     }
   }
@@ -513,6 +543,8 @@ void AutoPacket::RemoveRecipient(const SatCounter& recipient) {
     recipient.blink->flink = recipient.flink;
   if (recipient.flink)
     recipient.flink->blink = recipient.blink;
+
+  RemoveSatCounterUnsafe(recipient);
 }
 
 std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
