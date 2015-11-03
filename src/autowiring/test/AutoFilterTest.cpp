@@ -664,6 +664,39 @@ TEST_F(AutoFilterTest, DeferredDecorateOnly) {
   ASSERT_EQ(105, dec->i) << "Deferred decorate-only AutoFilter did not properly attach before context termination";
 }
 
+class DQueueSharedPointer:
+  public DispatchQueue
+{
+public:
+  size_t callCount = 0;
+
+  Deferred AutoFilter(std::shared_ptr<const int>) {
+    callCount++;
+    return Deferred(this);
+  }
+};
+
+TEST_F(AutoFilterTest, DQueueAutoFilterTest) {
+  AutoRequired<AutoPacketFactory> factory;
+  auto ptr = std::make_shared<int>(1012);
+
+  AutoRequired<DQueueSharedPointer> dQueueSharedPtr;
+
+  // Generate a bunch of packets, all with the same shared pointer decoration:
+  for(size_t i = 0; i < 100; i++) {
+    // Decorate the packet, forget about it:
+    auto packet = factory->NewPacket();
+    packet->Decorate(ptr);
+  }
+
+  ASSERT_EQ(0UL, dQueueSharedPtr->callCount);
+
+  dQueueSharedPtr->DispatchAllEvents();
+
+  // Ensure nothing got cached unexpectedly, and that the call count is precisely what we want
+  ASSERT_EQ(100UL, dQueueSharedPtr->callCount) << "The expected number of calls to AutoFilter were not made";
+}
+
 class MyInheritingAutoFilter:
   public FilterGen<std::vector<int>>
 {};
