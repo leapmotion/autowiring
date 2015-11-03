@@ -29,13 +29,6 @@ struct SatCounter:
   // The number of inputs remaining to this counter:
   size_t remaining = 0;
 
-private:
-  /// <summary>
-  /// Throws a formatted exception if the underlying filter is called more than once
-  /// </summary>
-  void ThrowRepeatedCallException(void) const;
-
-public:
   /// <summary>
   /// Conditionally decrements AutoFilter argument satisfaction.
   /// </summary>
@@ -51,3 +44,13 @@ public:
     ++remaining;
   }
 };
+
+namespace std {
+  template<>
+  struct hash<SatCounter>
+  {
+    size_t operator()(const SatCounter& satCounter) const {
+      return (size_t)satCounter.GetAutoFilter().ptr();
+    }
+  };
+}
