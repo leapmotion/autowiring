@@ -117,15 +117,16 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
       entry.m_pModifier = &satCounter;
     } else {
       if (pCur->is_input) {
-          entry.m_subscribers.push_back({
+          entry.m_subscribers.emplace(
           pCur->is_shared,
           pCur->is_multi ?
           DecorationDisposition::Subscriber::Type::Multi :
           pCur->is_shared ?
           DecorationDisposition::Subscriber::Type::Optional :
           DecorationDisposition::Subscriber::Type::Normal,
+          satCounter.GetAltitude(),
           &satCounter
-        });
+        );
       }
 
       if (pCur->is_output) {

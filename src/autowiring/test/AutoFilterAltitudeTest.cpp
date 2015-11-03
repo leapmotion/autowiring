@@ -88,19 +88,19 @@ TEST_F(AutoFilterAltitudeTest, AltitudeOnPacket) {
   int ctr[4] = {-1, -1, -1, -1};
 
   *factory += autowiring::altitude::Standard, [&] (const Decoration<0>& dec) {
-    ctr[0] = ++ seq;
+    ctr[0] = ++seq;
   };
   *factory += autowiring::altitude::Lowest, [&] (const Decoration<0>& dec) {
-    ctr[1] = ++ seq;
+    ctr[1] = ++seq;
   };
 
   auto packet = factory->NewPacket();
 
-  packet->AddRecipient(AutoFilterDescriptor([&] {
-    ctr[2] = ++ seq;
+  packet->AddRecipient(AutoFilterDescriptor([&] (const Decoration<0>& dec) {
+    ctr[2] = ++seq;
   }, autowiring::altitude::Dispatch));
-  packet->AddRecipient(AutoFilterDescriptor([&] {
-    ctr[3] = ++ seq;
+  packet->AddRecipient(AutoFilterDescriptor([&] (const Decoration<0>& dec) {
+    ctr[3] = ++seq;
   }, autowiring::altitude::Passive));
 
   packet->Decorate(Decoration<0>());

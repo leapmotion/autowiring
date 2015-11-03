@@ -28,7 +28,7 @@ TEST_F(AutoFilterDiagnosticsTest, CanGetExpectedTrueType) {
   auto& disposition = decorations.begin()->second;
   ASSERT_EQ(1UL, disposition.m_subscribers.size()) << "Expected exactly one subscriber for the sole present type";
 
-  const SatCounter* descriptor = disposition.m_subscribers.front().satCounter;
+  const SatCounter* descriptor = disposition.m_subscribers.begin()->satCounter;
   AnySharedPointer asp(descriptor->GetAutoFilter());
 
   // Get more information about this object from the enclosing context:
