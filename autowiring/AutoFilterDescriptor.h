@@ -18,8 +18,6 @@ class Deferred;
 /// </summary>
 struct AutoFilterDescriptorStub {
   AutoFilterDescriptorStub(void) = default;
-  AutoFilterDescriptorStub(const AutoFilterDescriptorStub&) = default;
-  AutoFilterDescriptorStub& operator=(const AutoFilterDescriptorStub&) = default;
 
   /// <summary>
   /// Constructs a new packet subscriber entry based on the specified call extractor and call pointer
@@ -115,19 +113,7 @@ public:
 struct AutoFilterDescriptor:
   AutoFilterDescriptorStub
 {
-  AutoFilterDescriptor(void) {}
-  AutoFilterDescriptor(const AutoFilterDescriptor&) = default;
-  AutoFilterDescriptor& operator=(const AutoFilterDescriptor&) = default;
-  AutoFilterDescriptor(AutoFilterDescriptor&& rhs) :
-    AutoFilterDescriptorStub(std::move(rhs)),
-    m_autoFilter(std::move(rhs.m_autoFilter))
-  {}
-
-  AutoFilterDescriptor& operator=(AutoFilterDescriptor&& rhs) {
-    AutoFilterDescriptorStub::operator = (std::move(rhs));
-    m_autoFilter = std::move(rhs.m_autoFilter);
-    return *this;
-  }
+  AutoFilterDescriptor(void) = default;
 
   /// <summary>
   /// Utility constructor, used when there is no proffered AutoFilter method on a class
