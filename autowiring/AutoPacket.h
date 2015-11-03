@@ -590,8 +590,8 @@ public:
   /// Adds a recipient for data associated only with this issuance of the packet.
   /// </summary>
   /// <remarks>
-  /// This method is not idempotent.  The returned Recipient structure may be used to remove
-  /// the recipient safely at any point.  The caller MUST NOT attempt 
+  /// This method is idempotent. The returned Recipient structure may be used to remove
+  /// the recipient safely at any point.
   /// </remarks>
   const SatCounter* AddRecipient(const AutoFilterDescriptor& descriptor);
 

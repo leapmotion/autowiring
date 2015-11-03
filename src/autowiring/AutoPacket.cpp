@@ -519,6 +519,11 @@ const SatCounter* AutoPacket::AddRecipient(const AutoFilterDescriptor& descripto
   // Linked list insertion:
   {
     std::lock_guard<std::mutex> lk(m_lock);
+    for (auto cur = m_firstCounter; cur; cur=cur->flink) {
+      if (*cur == sat)
+        return cur;
+    }
+
     sat.flink = m_firstCounter;
     if (m_firstCounter)
       m_firstCounter->blink = &sat;
@@ -532,7 +537,6 @@ const SatCounter* AutoPacket::AddRecipient(const AutoFilterDescriptor& descripto
     // Filter is ready to be called, oblige it
     sat.GetCall()(sat.GetAutoFilter().ptr(), *this);
 
-  // Done
   return &sat;
 }
 

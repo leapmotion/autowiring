@@ -220,3 +220,26 @@ TEST_F(AutoFilterMultiDecorateTest, SingleFunctionDoubleOutput) {
   ASSERT_EQ(4UL, nArgs) << "Two filters that multiply attach decorations did not correctly do so";
 }
 
+TEST_F(AutoFilterMultiDecorateTest, AddRecipientIdempotentTest) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoCurrentContext()->Initiate();
+
+  int called = 0;
+  auto desc = AutoFilterDescriptor(
+    [&called](Decoration<0> one) {
+      called++;
+    }
+  );
+
+  factory->AddSubscriber(desc);
+  factory->AddSubscriber(desc);
+
+  auto packet = factory->NewPacket();
+
+  packet->AddRecipient(desc);
+  packet->AddRecipient(desc);
+
+  packet->Decorate(Decoration<0>());
+
+  ASSERT_EQ(1, called) << "Add receipient should be idempotent";
+}
