@@ -268,7 +268,7 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, CoreContext& ctxt) 
 
       // Add edge
       if (arg.is_rvalue) {
-        os << decorations[decoration] << " <-> " << filters[filter];
+        os << decorations[decoration] << " -> " << filters[filter] << " [dir=both]";
       } else if (arg.is_input) {
         os << decorations[decoration] << " -> " << filters[filter];
       } else {
