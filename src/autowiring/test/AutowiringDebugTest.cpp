@@ -17,23 +17,12 @@ TEST_F(AutowiringDebugTest, IsLambdaTest) {
   ASSERT_FALSE(autowiring::dbg::IsLambda(typeid(std::vector<int>))) << "Template class incorrectly identified as a lambda function";
 }
 
-class HasDebugInformation {
-public:
-  void AutoFilter(const Decoration<0>& dec, Decoration<1>&) {}
-};
-
-TEST_F(AutowiringDebugTest, FilterInfoTest) {
-  AutoRequired<HasDebugInformation> hdi;
-
-  auto text = autowiring::dbg::AutoFilterInfo("HasDebugInformation");
-  ASSERT_NE(std::string{"Filter not found"}, text) << "Debug helper routine did not find a named filter in the current context as expected";
-}
-
 TEST_F(AutowiringDebugTest, IdentifyRootType) {
   AutoRequired<AutoPacketFactory> factory;
 
   *factory += [](const Decoration<0>&, Decoration<1>&) {};
   *factory += [](const Decoration<1>&, Decoration<2>&) {};
+  *factory += [](Decoration<1>&&) {};
 
   auto entries = autowiring::dbg::ListRootDecorations();
   ASSERT_EQ(1UL, entries.size()) << "An incorrect number of unsatisfied decorations was detected";
@@ -93,6 +82,12 @@ struct IntOutputer {
   }
 };
 
+struct IntModifier {
+  void AutoFilter(int&& i) {
+    i = 5;
+  }
+};
+
 struct IntInFloatOut {
   void AutoFilter(const int& i, float& f) {
     f = static_cast<float>(i) + 3;
@@ -103,11 +98,25 @@ struct IntInFloatIn {
   void AutoFilter(const int& i, const float& f) {}
 };
 
+TEST_F(AutowiringDebugTest, FilterInfoTest) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<IntOutputer> filter1;
+  AutoRequired<IntInFloatOut> filter2;
+  AutoRequired<IntInFloatIn> filter3;
+  AutoRequired<IntModifier> filter4;
+
+  auto text = autowiring::dbg::AutoFilterInfo("IntInFloatIn");
+  std::cout << text << std::endl;
+  ASSERT_NE(std::string{"Filter not found"}, text) << "Debug helper routine did not find a named filter in the current context as expected";
+}
+
 TEST_F(AutowiringDebugTest, BasicAutoFilterGraph) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<IntOutputer> filter1;
   AutoRequired<IntInFloatOut> filter2;
   AutoRequired<IntInFloatIn> filter3;
+  AutoRequired<IntModifier> filter4;
 
   *factory += [](auto_prev<float> in, std::string& out) {
     out = "hello world";

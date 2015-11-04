@@ -12,9 +12,6 @@
 #include FUNCTIONAL_HEADER
 #include STL_UNORDERED_SET
 
-AutoPacketGraph::AutoPacketGraph() {
-}
-
 void AutoPacketGraph::LoadEdges() {
   std::lock_guard<std::mutex> lk(m_lock);
   

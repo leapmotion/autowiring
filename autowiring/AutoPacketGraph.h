@@ -54,8 +54,6 @@ class AutoPacketGraph:
   public CoreRunnable
 {
 public:
-  AutoPacketGraph();
-  
   typedef std::unordered_map<DeliveryEdge, size_t, std::hash<DeliveryEdge>> t_deliveryEdges;
   
 protected:

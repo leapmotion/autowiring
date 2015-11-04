@@ -5,6 +5,7 @@
 #include "TestFixtures/SimpleReceiver.hpp"
 #include <autowiring/Autowired.h>
 #include <autowiring/CoreThread.h>
+#include "AutowiringDebug.h"
 
 int main(int argc, const char* argv []) {
   autowiring::dbg::DebugInit();

@@ -159,9 +159,9 @@ std::string autowiring::dbg::AutoFilterInfo(const char* name) {
       // Who provides this input?
       for (const auto& providerDesc : descs) {
         auto providerArg = providerDesc.GetArgumentType(args[i].id);
-        if (providerArg && providerArg->is_output) {
+        if (providerArg && providerArg->is_output && !providerArg->is_rvalue) {
           // Need to print information about this provider:
-          os << demangle(args[i].id) << ' ' << std::string(nLevels, ' ') << demangle(providerDesc.GetType()) << std::endl;
+          os << std::string(nLevels, ' ') << demangle(args[i].id) << " " << demangle(providerDesc.GetType()) << std::endl;
 
           // The current descriptor provides an input to the parent, recurse
           fnCall(providerDesc, nLevels + 1);
@@ -192,8 +192,10 @@ std::vector<std::string> autowiring::dbg::ListRootDecorations(void) {
 
   for (const auto& desc : descs) {
     auto args = desc.GetAutoFilterArguments();
-    for (size_t i = 0; i < desc.GetArity(); i++)
-      (args[i].is_output ? outputs : inputs).insert(args[i].id);
+    for (size_t i = 0; i < desc.GetArity(); i++) {
+      if (!args[i].is_rvalue)
+        (args[i].is_output ? outputs : inputs).insert(args[i].id);
+    }
   }
 
   // Remove all inputs that exist in the outputs set:
@@ -265,7 +267,9 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, CoreContext& ctxt) 
       }
 
       // Add edge
-      if (arg.is_input) {
+      if (arg.is_rvalue) {
+        os << decorations[decoration] << " <-> " << filters[filter];
+      } else if (arg.is_input) {
         os << decorations[decoration] << " -> " << filters[filter];
       } else {
         os << filters[filter] << " -> " << decorations[decoration];
