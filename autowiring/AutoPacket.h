@@ -602,6 +602,8 @@ public:
 
   /// <summary>
   /// Removes a previously added packet recipient
+  /// The user is responsible to free the memeory for recipient.
+  /// TODO: seems like a bad design, need refactor
   /// </summary>
   void RemoveRecipient(const SatCounter& recipient);
 
