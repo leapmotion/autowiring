@@ -10,9 +10,6 @@
 #include "is_shared_ptr.h"
 #include MEMORY_HEADER
 
-class AutoPacket;
-class Deferred;
-
 /// <summary>
 /// The unbound part of an AutoFilter, includes everything except the AnySharedPointer representing the filter proper
 /// </summary>

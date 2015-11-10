@@ -34,7 +34,6 @@
 struct CoreContextStateBlock;
 class BasicThread;
 class BoltBase;
-class CoreContext;
 class GlobalCoreContext;
 class JunctionBoxBase;
 

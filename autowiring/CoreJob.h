@@ -4,8 +4,6 @@
 #include "CoreRunnable.h"
 #include "DispatchQueue.h"
 
-class CoreObject;
-
 class CoreJob:
   public ContextMember,
   public DispatchQueue,
