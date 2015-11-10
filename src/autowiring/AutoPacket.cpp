@@ -4,7 +4,6 @@
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketInternal.hpp"
-#include "AutoPacketProfiler.h"
 #include "AutoFilterDescriptor.h"
 #include "ContextEnumerator.h"
 #include "SatCounter.h"
