@@ -37,20 +37,3 @@ TEST_F(GlobalInitTest, VerifyGlobalExists) {
   // reference, and the thread-current reference
   ASSERT_EQ(global.use_count(), 3) << "Unexpected global use count after bare initialization";
 }
-
-struct Simple {
-  AutoRequired<SimpleObject> m_simple;
-};
-
-TEST_F(GlobalInitTest, VerifySimpleContext) {
-  // Set our global scope stuff:
-  GlobalContextDesignation<Simple> d;
-
-  // Obtain reference:
-  std::shared_ptr<GlobalCoreContext> global = GlobalCoreContext::Get();
-  ASSERT_TRUE(!!global.get());
-
-  // Verify that initialization happened as we expected:
-  Autowired<SimpleObject> simpleObj;
-  ASSERT_TRUE(!!simpleObj.get());
-}
