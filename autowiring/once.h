@@ -140,11 +140,26 @@ namespace autowiring {
     private once
   {
   public:
-    friend T;
+    once_signal(void) = default;
+
+    once_signal(once_signal&& rhs) :
+      once(std::move(rhs))
+    {}
 
     template<typename Fn>
     registration_t operator+=(Fn&& fn) {
       return once::operator+=<Fn>(std::forward<Fn&&>(fn));
     }
+
+    using once::get;
+    using once::is_executing;
+    using once::operator bool;
+    using once::operator-=;
+
+  private:
+    // We don't allow these to be called by just anyone, only by T
+    using once::operator=;
+    using once::operator();
+    friend T;
   };
 }
