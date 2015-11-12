@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "AutowiringDebug.h"
 #include "Autowired.h"
+#include "demangle.h"
 #include <algorithm>
 #include <iomanip>
 #include <iostream>

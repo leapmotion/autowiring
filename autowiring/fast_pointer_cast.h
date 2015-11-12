@@ -4,9 +4,6 @@
 #include MEMORY_HEADER
 #include TYPE_TRAITS_HEADER
 
-class AutoPacketFactory;
-class CoreObject;
-
 namespace autowiring {
   template<class T, class U>
   struct fast_pointer_cast_blind;

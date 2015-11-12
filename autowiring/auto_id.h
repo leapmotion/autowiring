@@ -4,6 +4,8 @@
 #include <functional>
 #include TYPE_INDEX_HEADER
 
+class CoreObject;
+
 namespace autowiring {
   template<typename> struct s {};
 

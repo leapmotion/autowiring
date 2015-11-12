@@ -8,7 +8,6 @@
 #include "AutoFilterArgument.h"
 #include "Decompose.h"
 #include "DecorationDisposition.h"
-#include "demangle.h"
 #include "is_any.h"
 #include "index_tuple.h"
 #include "is_shared_ptr.h"
@@ -27,9 +26,6 @@ struct AutoFilterDescriptor;
 
 template<class T>
 class auto_arg;
-
-template<class MemFn>
-struct Decompose;
 
 namespace autowiring {
   template<class MemFn, class Index>
