@@ -223,3 +223,29 @@ TEST_F(DispatchQueueTest, ZeroIdenticalToPend) {
   ASSERT_NE(1, observation) << "Zero-delay lambda was not executed";
   ASSERT_EQ(101, observation) << "Zero-delay lambda did not run in the order it was pended";
 }
+
+TEST_F(DispatchQueueTest, AbortObserver) {
+  DispatchQueue dq;
+  dq += [] {};
+
+  std::thread t{ [&dq] {
+    try {
+      for (;;)
+        dq.WaitForEvent();
+    }
+    catch (dispatch_aborted_exception&) {}
+  }};
+  auto x = MakeAtExit([&] {
+    dq.Abort();
+    t.join();
+  });
+
+  // Pend a few operations, barrier for their completion, and then cancel:
+  for (size_t i = 0; i < 100; i++)
+    dq += [i] {};
+
+  bool onAbortedCalled = false;
+  dq.onAborted += [&] { onAbortedCalled = true; };
+  dq.Abort();
+  ASSERT_TRUE(onAbortedCalled) << "Abort signal handler not asserted as expected";
+}

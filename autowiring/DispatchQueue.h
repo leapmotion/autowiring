@@ -2,6 +2,7 @@
 #pragma once
 #include "dispatch_aborted_exception.h"
 #include "DispatchThunk.h"
+#include "once.h"
 #include <atomic>
 #include <list>
 #include <queue>
@@ -33,6 +34,10 @@ public:
   /// </remarks>
   virtual ~DispatchQueue(void);
 
+  // True if DispatchQueue::Abort has been called.  This will cause the dispatch queue's remaining entries
+  // to be dumped and prevent the introduction of new entries to the queue.
+  autowiring::once_signal<DispatchQueue> onAborted;
+
 protected:
   // The maximum allowed number of pended dispatches before pended calls start getting dropped
   size_t m_dispatchCap = 1024;
@@ -55,10 +60,6 @@ protected:
 
   // Notice when the dispatch queue has been updated:
   std::condition_variable m_queueUpdated;
-
-  // True if DispatchQueue::Abort has been called.  This will cause the dispatch queue's remaining entries
-  // to be dumped and prevent the introduction of new entries to the queue.
-  bool m_aborted = false;
 
   /// <summary>
   /// Moves all ready events from the delayed queue into the dispatch queue
@@ -163,6 +164,9 @@ public:
   /// Waits until a lambda function is ready to run in this thread's dispatch queue,
   /// dispatches the function, and then returns.
   /// </summary>
+  /// <remarks>
+  /// This method will throw dispatch_aborted_exception if the queue has been aborted at the time of the call
+  /// </remarks>
   void WaitForEvent(void);
 
   /// <summary>
