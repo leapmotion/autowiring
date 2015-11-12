@@ -618,3 +618,27 @@ TEST_F(CoreThreadTest, QuiescentNotTerminated) {
   ASSERT_TRUE(ctxt->Quiescent(std::chrono::seconds(5))) << "Quiescence was not achieved in a thread that should have self-terminated";
   ASSERT_TRUE(ctxt->IsQuiescent()) << "Delayed for quiescence, but this was not the state entered when checked on return";
 }
+
+TEST_F(CoreThreadTest, LambdaHoldAfterTermination) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+
+  std::weak_ptr<CoreContext> childWeak;
+  {
+    AutoCreateContext child;
+    AutoRequired<CoreThread> mct{ child };
+
+    // This is the critical piece which generates a hold on `child` after teardown
+    mct->AddTeardownListener([mct, child] {
+      *mct += [child] {};
+    });
+
+    child->Initiate();
+    *mct += [] {};
+    mct->Barrier();
+    child->SignalShutdown();
+    childWeak = child;
+    child->Wait();
+  }
+  ASSERT_TRUE(childWeak.expired()) << "Child context leaked due to lambda pending in teardown";
+}
