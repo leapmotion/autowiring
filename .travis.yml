@@ -21,7 +21,7 @@ matrix:
     env:
     - _CC: clang
     - _CXX: clang++
-    - CMAKE_URL=http://cmake.org/files/v3.4/cmake-3.4.0-Darwin64.tar.gz
+    - CMAKE_URL=http://cmake.org/files/v3.4/cmake-3.4.0-Darwin-x86_64.tar.gz
     - CMAKE_DIRNAME=cmake-3.4.0-Darwin64/CMake.app/Contents
 
 before_install:
