@@ -59,3 +59,27 @@ TEST_F(AutoConstructTest, CanConstructRvalueCtor) {
 TEST_F(AutoConstructTest, CanCopyAutoConstruct) {
   AutoConstruct<HasDefaultCtorAndOthers> v(100);
 }
+
+namespace {
+  class MyPrivateCtorClass {
+    MyPrivateCtorClass(void):
+      ival(-10)
+    {}
+    MyPrivateCtorClass(int ival) :
+      ival(ival)
+    {}
+
+  public:
+    const int ival;
+
+    static MyPrivateCtorClass* New(int ival) {
+      return new MyPrivateCtorClass{ ival };
+    }
+  };
+}
+
+TEST_F(AutoConstructTest, FactoryNewPrivateCtor) {
+  AutoConstruct<MyPrivateCtorClass> mpcc{ 1002 };
+  ASSERT_NE(nullptr, mpcc.get()) << "Null not expected as a return type from a factory new construction";
+  ASSERT_EQ(1002, mpcc->ival) << "Correct ctor was not invoked on a type with a private ctor";
+}
