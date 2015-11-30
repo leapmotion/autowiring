@@ -91,7 +91,7 @@ TEST_F(AutoFilterRvalueTest, DetectMultipleModifiers) {
 
   *factory += [](Decoration<0> dec0) {};
 
-  ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "An exception should have been thrown when there are multiple r-value AutoFilter for an existing subscriber";
+  ASSERT_THROW(factory->NewPacket(), autowiring_error) << "An exception should have been thrown when there are multiple r-value AutoFilter for an existing subscriber";
 }
 
 TEST_F(AutoFilterRvalueTest, DetectCycle) {
@@ -105,5 +105,5 @@ TEST_F(AutoFilterRvalueTest, DetectCycle) {
     dec0.i = dec1.i;
   };
 
-  ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "An exception should have been thrown when there is a cycle in the AutoFilter graph";
+  ASSERT_THROW(factory->NewPacket(), autowiring_error) << "An exception should have been thrown when there is a cycle in the AutoFilter graph";
 }

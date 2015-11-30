@@ -6,7 +6,9 @@
 #include "AutoPacketInternal.hpp"
 #include "AutoPacketProfiler.h"
 #include "AutoFilterDescriptor.h"
+#include "autowiring_error.h"
 #include "ContextEnumerator.h"
+#include "demangle.h"
 #include "SatCounter.h"
 #include "thread_specific_ptr.h"
 #include <algorithm>
@@ -75,7 +77,7 @@ DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& 
     std::stringstream ss;
     ss << "Cannot perform immediate decoration with type " << autowiring::demangle(key.id)
        << ", the requested decoration already exists";
-    throw std::runtime_error(ss.str());
+    throw autowiring_error(ss.str());
   }
 
   // Mark the entry as appropriate:
@@ -98,7 +100,7 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
       if (entry.m_publishers.size() > 1 && !pCur->is_multi) {
         std::stringstream ss;
         ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->id);
-        throw std::runtime_error(ss.str());
+        throw autowiring_error(ss.str());
       }
       if (entry.m_state == DispositionState::Complete) {
         // Either decorations must be present, or the decoration type must be a shared_ptr.
@@ -112,7 +114,7 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
       if (entry.m_pModifier) {
         std::stringstream ss;
         ss << "Added identical rvalue decorations for type " << autowiring::demangle(pCur->id);
-        throw std::runtime_error(ss.str());
+        throw autowiring_error(ss.str());
       }
       entry.m_pModifier = &satCounter;
     } else {
@@ -136,7 +138,7 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
               if (pOther->id == pCur->id && !pOther->is_multi) {
                 std::stringstream ss;
                 ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->id) << " with existing subscriber.";
-                throw std::runtime_error(ss.str());
+                throw autowiring_error(ss.str());
               }
             }
         entry.m_publishers.push_back(&satCounter);
@@ -153,7 +155,7 @@ void AutoPacket::DetectCycle(SatCounter& satCounter, std::unordered_set<SatCount
   if (tempVisited.count(&satCounter)) {
     std::stringstream ss;
     ss << "Detected cycle in the auto filter graph involving type " << autowiring::demangle(satCounter.GetType());
-    throw std::runtime_error(ss.str());
+    throw autowiring_error(ss.str());
   }
 
   if (permVisited.count(&satCounter))
@@ -411,7 +413,7 @@ void AutoPacket::DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key
       else
         ss << "Cannot decorate this packet with type " << autowiring::demangle(ptr)
           << ", the requested decoration is already satisfied";
-      throw std::runtime_error(ss.str());
+      throw autowiring_error(ss.str());
     }
     break;
   default:
