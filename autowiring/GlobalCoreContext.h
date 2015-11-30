@@ -2,10 +2,6 @@
 #pragma once
 #include "CoreContext.h"
 
-/// \internal
-template<class T>
-struct EnableBoltInternal {};
-
 /// A special class designed to make it easier to detect when our context is the global context
 class GlobalCoreContext:
   public CoreContextT<GlobalCoreContext>
@@ -66,16 +62,3 @@ private:
 /// Obtains the global context, provided at global scope to allow forward declaration
 /// </summary>
 std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
-
-/// \internal
-/// <summary>
-/// Provides a declarative way to set the global context
-/// </summary>
-template<class W>
-struct GlobalContextDesignation {
-  GlobalContextDesignation(void) {
-    CurrentContextPusher pshr(GetGlobalContext());
-    W w;
-    GetGlobalContext()->Initiate();
-  }
-};

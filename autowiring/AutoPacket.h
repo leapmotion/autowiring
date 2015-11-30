@@ -28,9 +28,6 @@ struct AutoFilterDescriptor;
 template<class T>
 class auto_arg;
 
-template<class MemFn>
-struct Decompose;
-
 namespace autowiring {
   template<class MemFn, class Index>
   struct CE;

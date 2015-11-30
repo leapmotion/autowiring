@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-class CoreThread;
+class DispatchQueue;
 
 /// <summary>
 /// Marker return type for deferred calls
@@ -12,5 +12,5 @@ class CoreThread;
 /// </remarks>
 class Deferred {
 public:
-  Deferred(CoreThread* pThread) {}
+  Deferred(DispatchQueue* pQueue) {}
 };
