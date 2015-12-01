@@ -78,7 +78,7 @@ TEST_F(AutoFilterRvalueTest, CanUseInTheChain) {
   ASSERT_EQ(999, dec2.i) << "R-value AutoFilter was not able to modify a decoration value before passing on to the next Autofilter";
 }
 
-TEST_F(AutoFilterRvalueTest, DetectMultipleModifiers) {
+TEST_F(AutoFilterRvalueTest, MultipleModifiersWithSameAltitude) {
   AutoRequired<AutoPacketFactory> factory;
 
   *factory += [](Decoration<0>&& dec0) {
@@ -91,7 +91,43 @@ TEST_F(AutoFilterRvalueTest, DetectMultipleModifiers) {
 
   *factory += [](Decoration<0> dec0) {};
 
-  ASSERT_THROW(factory->NewPacket(), autowiring_error) << "An exception should have been thrown when there are multiple r-value AutoFilter for an existing subscriber";
+  ASSERT_THROW(factory->NewPacket(), autowiring_error) << "An exception should have been thrown when there are multiple r-value AutoFilter with the same altitude for an existing subscriber";
+}
+
+TEST_F(AutoFilterRvalueTest, MultipleModifiersWithDifferentAltitude) {
+  AutoRequired<AutoPacketFactory> factory;
+  int called = 0;
+
+  *factory += [&](Decoration<1> dec1, Decoration<0>& dec0) {
+    called++;
+    dec0.i = dec1.i;
+  };
+
+  *factory += [&](Decoration<0>&& dec0) {
+    called++;
+    dec0.i = 999;
+  };
+
+  *factory += autowiring::altitude::Lowest, [&](Decoration<0>&& dec0) {
+    called++;
+    dec0.i = 1000;
+  };
+
+  *factory += [&](Decoration<0> dec0) {
+    called++;
+  };
+
+  auto packet = factory->NewPacket();
+  packet->AddRecipient(AutoFilterDescriptor([&] (Decoration<0>&& dec0) {
+    called++;
+    dec0.i = 2000;
+  }, autowiring::altitude::Highest));
+
+  packet->Decorate(Decoration<1>{555});
+  ASSERT_EQ(5, called) << "AutoFilters was not called as expected when there are multiple R-value AutoFilter with different altitude ";
+
+  const Decoration<0>& dec0 = packet->Get<Decoration<0>>();
+  ASSERT_EQ(1000, dec0.i) << "AutoFilters was not called in the correct order when there are multiple R-value AutoFilter with different altitude";
 }
 
 TEST_F(AutoFilterRvalueTest, DetectCycle) {
