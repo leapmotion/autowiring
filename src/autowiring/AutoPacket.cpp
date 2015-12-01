@@ -110,12 +110,24 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
     }
 
     if (pCur->is_rvalue) {
-      if (entry.m_pModifier) {
-        std::stringstream ss;
-        ss << "Added identical rvalue decorations for type " << autowiring::demangle(pCur->id);
-        throw autowiring_error(ss.str());
+      // Throw exception when there is already a modifier with the same altitude,
+      // otherwise insert it to the right position so that the modifiers vector is sorted by altitude
+      auto it = entry.m_modifiers.begin();
+      while (it != entry.m_modifiers.end()) {
+        if (*it == nullptr)
+          continue;
+
+        if ((*it)->GetAltitude() == satCounter.GetAltitude()) {
+          std::stringstream ss;
+          ss << "Added multiple rvalue decorations with same altitudes for type " << autowiring::demangle(pCur->id);
+          throw autowiring_error(ss.str());
+        }
+
+        if ((*it)->GetAltitude() < satCounter.GetAltitude())
+          break;
+        it++;
       }
-      entry.m_pModifier = &satCounter;
+      entry.m_modifiers.insert(it, &satCounter);
     } else {
       if (pCur->is_input) {
           entry.m_subscribers.emplace(
@@ -187,8 +199,16 @@ void AutoPacket::RemoveSatCounterUnsafe(const SatCounter& satCounter) {
     DecorationKey key(pCur->id, pCur->tshift);
     DecorationDisposition& entry = m_decoration_map[key];
 
-    if (pCur->is_rvalue && *entry.m_pModifier == satCounter) {
-      entry.m_pModifier = nullptr;
+    if (pCur->is_rvalue) {
+      entry.m_modifiers.erase(
+        std::remove_if(
+          entry.m_modifiers.begin(),
+          entry.m_modifiers.end(),
+          [&satCounter](SatCounter* modifier){
+            return modifier && *modifier == satCounter;
+          }),
+        entry.m_modifiers.end()
+      );
     } else {
       if (pCur->is_input) {
         for (auto& sub : entry.m_subscribers) {
@@ -292,9 +312,10 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   case 1:
     {
       // One unique decoration available.  We should be able to call everyone.
-      if (disposition.m_pModifier) {
-        if (disposition.m_pModifier->Decrement())
-          callQueue.push_back(disposition.m_pModifier);
+      for (auto pMod : disposition.m_modifiers) {
+        if (pMod && pMod->Decrement()) {
+          callQueue.push_back(pMod);
+        }
       }
       for (auto subscriber : disposition.m_subscribers) {
         auto& satCounter = *subscriber.satCounter;

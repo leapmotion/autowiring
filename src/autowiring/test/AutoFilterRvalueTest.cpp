@@ -143,3 +143,21 @@ TEST_F(AutoFilterRvalueTest, DetectCycle) {
 
   ASSERT_THROW(factory->NewPacket(), autowiring_error) << "An exception should have been thrown when there is a cycle in the AutoFilter graph";
 }
+
+TEST_F(AutoFilterRvalueTest, RecipientRemovalTest) {
+  AutoRequired<AutoPacketFactory> factory;
+  auto called = std::make_shared<bool>(false);
+
+  // Add a recipient and then remove it, verify it doesn't get called
+  auto packet = factory->NewPacket();
+  const auto recipient =
+  (
+   *packet += [called] (Decoration<0>&&) {
+     *called = true;
+   }
+  );
+  packet->RemoveRecipient(*recipient);
+  packet->Decorate(Decoration<0>());
+
+  ASSERT_FALSE(*called) << "A recipient that should have been removed was called";
+}

@@ -69,8 +69,8 @@ struct DecorationDisposition
   // Valid if and only if is_shared is true.
   const void* m_pImmediate = nullptr;
 
-  // Modifier for this decoration, if one is available, or else nullptr.
-  SatCounter* m_pModifier = nullptr;
+  // Modifiers of this decoration, ordered by altitude.
+  std::vector<SatCounter*> m_modifiers;
 
   // Providers for this decoration, where it can be statically inferred.  Note that a provider for
   // this decoration may exist even if this value is null, in the event that dynamic decoration is
@@ -121,6 +121,7 @@ struct DecorationDisposition
     }
   };
 
+  // Subscribers of this decoration, sorted by altitude.
   std::set<Subscriber> m_subscribers;
 
   // The current state of this disposition
