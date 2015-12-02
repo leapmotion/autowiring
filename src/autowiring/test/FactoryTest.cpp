@@ -17,7 +17,7 @@ class ClassWithIntegralCtor
 public:
   ClassWithIntegralCtor(int) {}
 };
-static_assert(!has_simple_constructor<ClassWithIntegralCtor>::value, "A class without a simple constructor was incorrectly identified as having one");
+static_assert(!autowiring::has_simple_constructor<ClassWithIntegralCtor>::value, "A class without a simple constructor was incorrectly identified as having one");
 
 class ClassWithStaticNew:
   public CoreObject
@@ -35,7 +35,7 @@ public:
   }
 };
 
-static_assert(has_simple_constructor<ClassWithStaticNew>::value, "Class with default-argument constructor was not correctly detected as such ");
+static_assert(autowiring::has_simple_constructor<ClassWithStaticNew>::value, "Class with default-argument constructor was not correctly detected as such ");
 static_assert(autowiring::has_static_new<ClassWithStaticNew>::value, "Class with static allocator was not correctly detected as having one");
 static_assert(!autowiring::has_static_new<CoreObject>::value, "Static New detected on a class that does not have a static New");
 
