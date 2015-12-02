@@ -21,7 +21,6 @@ public:
   CurrentContextPusher(void);
 
   CurrentContextPusher(CoreContext& context);
-  CurrentContextPusher(std::shared_ptr<CoreContext>&& pContext);
   CurrentContextPusher(const std::shared_ptr<CoreContext>& pContext);
   CurrentContextPusher(const std::shared_ptr<GlobalCoreContext>& pContext);
   CurrentContextPusher(CoreContext* pContext);
