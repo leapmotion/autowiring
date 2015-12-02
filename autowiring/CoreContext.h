@@ -1122,6 +1122,9 @@ public:
   /// </remarks>
   template<class T, class Fn>
   void NotifyWhenAutowired(Fn&& listener) {
+    // Ensure we instantiate casters for type T, regardless of whether the listener intends to use it
+    autowiring::instantiate<T>();
+
     MemoEntry& memo = FindByType(auto_id_t<T>{});
     memo.onSatisfied += std::forward<Fn&&>(listener);
   }

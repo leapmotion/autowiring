@@ -4,7 +4,11 @@
 
 class MyForwardedType;
 
-class HasForwardOnlyType {
+class ForwardedOnlyBaseType {};
+
+class HasForwardOnlyType:
+  public ForwardedOnlyBaseType
+{
 public:
   HasForwardOnlyType(void);
 
@@ -12,3 +16,8 @@ public:
 
   void AutoFilter(std::shared_ptr<MyForwardedType>& output);
 };
+
+/// <summary>
+/// Injects the forward-only type into the passed context
+/// </summary>
+void InjectForwardOnlyType(CoreContext& ctxt);

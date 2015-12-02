@@ -15,6 +15,18 @@
 #include <typeinfo>
 #include MEMORY_HEADER
 
+namespace autowiring {
+  /// <summary>
+  /// Instantiates all casters and traits for type T
+  /// </summary>
+  template<typename T>
+  void instantiate(void) {
+    (void)fast_pointer_cast_initializer<CoreObject, T>::sc_init;
+    (void)fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void)auto_id_t_init<T>::init;
+  }
+}
+
 /// <summary>
 /// Mapping and extraction structure used to provide a runtime version of an Object-implementing shared pointer
 /// </summary>
@@ -61,12 +73,8 @@ struct CoreObjectDescriptor {
     )
   {
     // We can instantiate casts to CoreObject here at the point where object traits are being generated
-    (void) autowiring::fast_pointer_cast_initializer<CoreObject, TActual>::sc_init;
-    (void) autowiring::fast_pointer_cast_initializer<TActual, CoreObject>::sc_init;
-    (void) autowiring::fast_pointer_cast_initializer<CoreObject, T>::sc_init;
-    (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
-    (void) auto_id_t_init<TActual>::init;
-    (void) auto_id_t_init<T>::init;
+    autowiring::instantiate<T>();
+    autowiring::instantiate<TActual>();
   }
 
   /// <summary>

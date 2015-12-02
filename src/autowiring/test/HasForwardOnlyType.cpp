@@ -12,3 +12,7 @@ HasForwardOnlyType::HasForwardOnlyType(void) {}
 void HasForwardOnlyType::AutoFilter(std::shared_ptr<MyForwardedType>& output) {
 
 }
+
+void InjectForwardOnlyType(CoreContext& ctxt) {
+  ctxt.Inject<HasForwardOnlyType>();
+}
