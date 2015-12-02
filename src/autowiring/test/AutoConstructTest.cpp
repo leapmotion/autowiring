@@ -61,7 +61,9 @@ TEST_F(AutoConstructTest, CanCopyAutoConstruct) {
 }
 
 namespace {
-  class MyPrivateCtorClass {
+  class MyPrivateCtorClass:
+    public CoreObject
+  {
     MyPrivateCtorClass(void):
       ival(-10)
     {}
