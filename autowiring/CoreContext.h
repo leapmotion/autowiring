@@ -1123,6 +1123,7 @@ public:
   template<class T, class Fn>
   void NotifyWhenAutowired(Fn&& listener) {
     MemoEntry& memo = FindByType(auto_id_t<T>{});
+    CurrentContextPusher pshr(*this);
     memo.onSatisfied += std::forward<Fn&&>(listener);
   }
 
