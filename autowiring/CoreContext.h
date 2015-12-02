@@ -943,6 +943,11 @@ public:
   static std::shared_ptr<CoreContext> SetCurrent(const std::shared_ptr<CoreContext>& ctxt);
 
   /// <summary>
+  /// Move-optimized version of SetCurrent
+  /// </summary>
+  static std::shared_ptr<CoreContext> SetCurrent(std::shared_ptr<CoreContext>&& ctxt);
+
+  /// <summary>
   /// Makes this context the current context.
   /// </summary>
   /// <returns>The previously current context, or else nullptr if no context was current.</returns>

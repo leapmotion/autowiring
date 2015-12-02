@@ -1166,6 +1166,22 @@ std::shared_ptr<CoreContext> CoreContext::SetCurrent(const std::shared_ptr<CoreC
   return retVal;
 }
 
+std::shared_ptr<CoreContext> CoreContext::SetCurrent(std::shared_ptr<CoreContext>&& ctxt) {
+  const auto& currentContext = CurrentContextOrNull();
+
+  // Short-circuit test, no need to proceed if we aren't changing the context:
+  if (currentContext == ctxt)
+    return currentContext;
+
+  // Value is changing, update:
+  auto retVal = currentContext;
+  if (ctxt)
+    autoCurrentContext.reset(new std::shared_ptr<CoreContext>(std::move(ctxt)));
+  else
+    autoCurrentContext.reset();
+  return retVal;
+}
+
 std::shared_ptr<CoreContext> CoreContext::SetCurrent(void) {
   return CoreContext::SetCurrent(shared_from_this());
 }
