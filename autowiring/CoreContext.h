@@ -943,6 +943,11 @@ public:
   static std::shared_ptr<CoreContext> SetCurrent(const std::shared_ptr<CoreContext>& ctxt);
 
   /// <summary>
+  /// Move-optimized version of SetCurrent
+  /// </summary>
+  static std::shared_ptr<CoreContext> SetCurrent(std::shared_ptr<CoreContext>&& ctxt);
+
+  /// <summary>
   /// Makes this context the current context.
   /// </summary>
   /// <returns>The previously current context, or else nullptr if no context was current.</returns>
@@ -1122,6 +1127,9 @@ public:
   /// </remarks>
   template<class T, class Fn>
   void NotifyWhenAutowired(Fn&& listener) {
+    // Ensure we instantiate casters for type T, regardless of whether the listener intends to use it
+    autowiring::instantiate<T>();
+
     MemoEntry& memo = FindByType(auto_id_t<T>{});
     memo.onSatisfied += std::forward<Fn&&>(listener);
   }

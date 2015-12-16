@@ -133,7 +133,7 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate)
   // don't allow new children if shutting down
   if (IsShutdown())
     throw dispatch_aborted_exception("Cannot create a child context; this context is already shut down");
-    
+
   t_childList::iterator childIterator;
   {
     // Lock the child list while we insert
@@ -149,7 +149,7 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate)
 
   // Notify AutowiringEvents listeners
   GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*retVal);
-  
+
   // Remainder of operations need to happen with the created context made current
   CurrentContextPusher pshr(retVal);
 
@@ -271,7 +271,7 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
     // to be considered.
     UpdateDeferredElements(std::move(lk), m_concreteTypes.back(), true);
   }
-  
+
   // Moving this outside the lock because AddCoreRunnable will perform the checks inside its function
   if(traits.pCoreRunnable)
     AddCoreRunnable(traits.pCoreRunnable);
@@ -476,7 +476,7 @@ void CoreContext::Initiate(void) {
   // reference has not changed.  The next pool could potentially be nullptr if the parent is going
   // down while we are going up.
   if (threadPool) {
-    // Initiate 
+    // Initiate
     auto startToken = threadPool->Start();
 
     // Transfer all dispatchers from the null pool to the new thread pool:
@@ -535,11 +535,11 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
     }
 
     UnregisterEventReceiversUnsafe();
-    
+
     firstThreadToStop = m_threads.begin();
     if (m_beforeRunning)
       ++firstThreadToStop;
-    
+
     m_stateBlock->m_stateChanged.notify_all();
   }
   onShutdown();
@@ -649,13 +649,13 @@ void CoreContext::AddCoreRunnable(const std::shared_ptr<CoreRunnable>& ptr) {
   bool shouldRun;
   {
     std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
-    
+
     // Insert into the linked list of threads first:
     m_threads.push_front(ptr.get());
-    
+
     // Check if we're already running, this means we're late to the party and need to start _now_.
     shouldRun = IsRunning();
-    
+
     // Signal that we are in the "running"
     m_beforeRunning = true;
   }
@@ -663,17 +663,17 @@ void CoreContext::AddCoreRunnable(const std::shared_ptr<CoreRunnable>& ptr) {
   // Run this thread without the lock
   if(shouldRun)
     ptr->Start(m_stateBlock->IncrementOutstandingThreadCount(shared_from_this()));
-  
+
 
   // Check if the stop signal was sent between the time we started running until now.  If so, then
   // we will stop the thread manually here.
   bool shouldStopHere;
   {
     std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
-    
+
     // Signal that we have stopped "running"
     m_beforeRunning = false;
-    
+
     // If SignalShutdown() was invoked while we were "running", then we will need to stop this thread ourselves
     shouldStopHere = IsShutdown();
   }
@@ -701,12 +701,12 @@ JunctionBoxBase& CoreContext::All(const std::type_info& ti) const {
 void CoreContext::BuildCurrentState(void) {
   auto glbl = GlobalCoreContext::Get();
   glbl->Invoke(&AutowiringEvents::NewContext)(*this);
-    
+
   // Enumerate objects injected into this context
   for(auto& object : m_concreteTypes) {
     GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, object);
   }
-  
+
   // Recurse on all children
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   for(const auto& c : m_children) {
@@ -763,7 +763,7 @@ std::shared_ptr<ThreadPool> CoreContext::GetThreadPool(void) const {
 
 void CoreContext::Dump(std::ostream& os) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-  
+
   for(const auto& entry : m_typeMemos) {
     os << demangle(entry.first);
     const void* pObj = entry.second.m_value.ptr();
@@ -964,7 +964,7 @@ void CoreContext::UnsnoopEvents(const AnySharedPointer& snooper, const JunctionB
 
     m_delayedEventReceivers.erase(receiver);
   }
-  
+
   // Always remove from this junction box manager:
   m_junctionBoxManager->RemoveEventReceiver(receiver);
 
@@ -1060,7 +1060,7 @@ void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
 
 void CoreContext::TryTransitionChildrenState(void) {
   std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
-  
+
   // We have to hold this to prevent dtors from running in a synchronized context
   std::shared_ptr<CoreContext> prior;
   for (auto childWeak : m_children) {
@@ -1069,43 +1069,42 @@ void CoreContext::TryTransitionChildrenState(void) {
     if (!child)
       // Expiration while we were attempting to dereference, circle around
       continue;
-    
+
     // Cannot hold a lock safely if we hand off control to a child context
     lk.unlock();
     {
       // Get lock of child while we're modifying it's state
       std::unique_lock<std::mutex> childLk(child->m_stateBlock->m_lock);
-      
+
       switch (child->m_state) {
         case State::Initiated:
           // Can transition to the running state now
           {
             auto q = child->m_threads.begin();
             child->m_state = State::Running;
-            
+
             // Child had it's state changed
             child->m_stateBlock->m_stateChanged.notify_all();
-            
+
             // Raise the run condition in the child
             childLk.unlock();
-            child->onRunning();
 
             auto outstanding = child->m_stateBlock->IncrementOutstandingThreadCount(child);
-            
             while (q != child->m_threads.end()) {
               (*q)->Start(outstanding);
               q++;
             }
+            child->onRunning();
           }
-          
+
           // Recursivly try to transition children
           child->TryTransitionChildrenState();
-          
+
           break;
         case State::NotStarted:
           // Children can run now that their parent has been initiated
           child->m_state = State::CanRun;
-          
+
           // Child had it's state changed
           child->m_stateBlock->m_stateChanged.notify_all();
           break;
@@ -1117,16 +1116,16 @@ void CoreContext::TryTransitionChildrenState(void) {
           break;
       }
     }
-    
+
     // Permit a prior context to expire if needed
     prior.reset();
-    
+
     // Need to preserve current child context pointer before it goes out of scope in order to
     // preserve our iterator.
     lk.lock();
     prior = child;
   }
-  
+
   // Release our lock before letting `prior` expire, we can't hold a lock through such an event
   lk.unlock();
 }
@@ -1134,13 +1133,13 @@ void CoreContext::TryTransitionChildrenState(void) {
 void CoreContext::UnsnoopAutoPacket(const CoreObjectDescriptor& traits) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-    
+
     // If the passed value is currently a snooper, then the caller has snooped a context and also
     // one of its parents.  End here.
     if (m_snoopers.count(traits.value))
       return;
   }
-  
+
   // Always remove from this context's PacketFactory:
   Inject<AutoPacketFactory>()->RemoveSubscriber(traits.subscriber);
 }
@@ -1161,6 +1160,22 @@ std::shared_ptr<CoreContext> CoreContext::SetCurrent(const std::shared_ptr<CoreC
   auto retVal = currentContext;
   if (ctxt)
     autoCurrentContext.reset(new std::shared_ptr<CoreContext>(ctxt));
+  else
+    autoCurrentContext.reset();
+  return retVal;
+}
+
+std::shared_ptr<CoreContext> CoreContext::SetCurrent(std::shared_ptr<CoreContext>&& ctxt) {
+  const auto& currentContext = CurrentContextOrNull();
+
+  // Short-circuit test, no need to proceed if we aren't changing the context:
+  if (currentContext == ctxt)
+    return currentContext;
+
+  // Value is changing, update:
+  auto retVal = currentContext;
+  if (ctxt)
+    autoCurrentContext.reset(new std::shared_ptr<CoreContext>(std::move(ctxt)));
   else
     autoCurrentContext.reset();
   return retVal;

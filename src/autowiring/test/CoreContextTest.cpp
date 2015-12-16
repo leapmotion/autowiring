@@ -107,7 +107,7 @@ public:
   static void* operator new(size_t) {
     return s_space;
   }
-  
+
   static void operator delete(void*) {
     s_deleterHitCount++;
   }
@@ -215,49 +215,49 @@ TEST_F(CoreContextTest, InitiateOrder) {
     auto outerCtxt = testCtxt->Create<void>();
     auto middleCtxt = outerCtxt->Create<void>();
     auto innerCtxt = middleCtxt->Create<void>();
-    
+
     innerCtxt->Initiate();
     middleCtxt->Initiate();
     outerCtxt->Initiate();
-    
+
     ASSERT_TRUE(outerCtxt->IsRunning()) << "Context not running after begin initiated";
     ASSERT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
     ASSERT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
-    
+
     outerCtxt->SignalShutdown(true);
   }
-  
+
   // Initiate outer to inner
   {
     auto outerCtxt = testCtxt->Create<void>();
     auto middleCtxt = outerCtxt->Create<void>();
     auto innerCtxt = middleCtxt->Create<void>();
-    
+
     outerCtxt->Initiate();
     middleCtxt->Initiate();
     innerCtxt->Initiate();
-    
+
     ASSERT_TRUE(outerCtxt->IsRunning()) << "Context not running after begin initiated";
     ASSERT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
     ASSERT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
-    
+
     outerCtxt->SignalShutdown(true);
   }
-  
+
   // Initiate middle, inner, then outer
   {
     auto outerCtxt = testCtxt->Create<void>();
     auto middleCtxt = outerCtxt->Create<void>();
     auto innerCtxt = middleCtxt->Create<void>();
-    
+
     middleCtxt->Initiate();
     innerCtxt->Initiate();
     outerCtxt->Initiate();
-    
+
     ASSERT_TRUE(outerCtxt->IsRunning()) << "Context not running after begin initiated";
     ASSERT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
     ASSERT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
-    
+
     outerCtxt->SignalShutdown(true);
   }
 }
@@ -481,7 +481,7 @@ TEST_F(CoreContextTest, UnlinkOnTeardown) {
     AutoRequired<ClassThatPoints2> b(ctxt, otherContext);
     weakA = a;
     strongB = b;
-    
+
     ASSERT_TRUE(a->so.IsAutowired()) << "Root object pointer not correctly obtained";
     ASSERT_TRUE(b->so.IsAutowired()) << "Root object pointer not correctly obtained";
 
@@ -588,4 +588,35 @@ TEST_F(CoreContextTest, FindByTypeTest) {
   std::shared_ptr<SimpleObject> so;
   ctxt->FindByType(so);
   ASSERT_FALSE(so) << "Found a type in a context that should not exist";
+}
+
+namespace {
+  class ChildListener:
+    public CoreRunnable
+  {
+  public:
+    bool gotStart = false;
+
+    bool OnStart(void) override {
+      gotStart = true;
+      return false;
+    }
+  };
+}
+
+TEST_F(CoreContextTest, ChildContextSignalOrder) {
+  AutoCurrentContext ctxt;
+
+  AutoCreateContext childCtxt;
+  AutoRequired<ChildListener> cl(childCtxt);
+  childCtxt->Initiate();
+
+  // Now verify correct ordering:
+  bool gotStartObservation = false;
+  childCtxt->onRunning += [&] {
+    gotStartObservation = cl->gotStart;
+  };
+
+  ctxt->Initiate();
+  ASSERT_TRUE(gotStartObservation) << "Start observation obtained";
 }

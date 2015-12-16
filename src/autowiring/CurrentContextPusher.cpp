@@ -37,7 +37,7 @@ std::shared_ptr<CoreContext> CurrentContextPusher::Pop(void) {
     return nullptr;
 
   pop_invoked = true;
-  auto retVal = CoreContext::SetCurrent(m_prior);
+  auto retVal = CoreContext::SetCurrent(std::move(m_prior));
   m_prior.reset();
   return retVal;
 }
