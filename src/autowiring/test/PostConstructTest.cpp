@@ -416,3 +416,14 @@ TEST_F(PostConstructTest, ForwardOnlyBaseType) {
   );
   ASSERT_TRUE(called) << "Failed to find expected base type";
 }
+
+TEST_F(PostConstructTest, CorrectContextAssignment) {
+  AutoCreateContext child;
+  std::shared_ptr<CoreContext> currentCtxt;
+  child->Inject<SimpleObject>();
+  child->NotifyWhenAutowired<SimpleObject>([&] {
+    currentCtxt = AutoCurrentContext();
+  });
+
+  ASSERT_EQ(child, currentCtxt) << "Current context was not correctly assigned in a post-satisfied NotifyWhenAutowired handler";
+}
