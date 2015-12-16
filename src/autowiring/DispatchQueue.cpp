@@ -12,9 +12,9 @@ DispatchQueue::DispatchQueue(size_t dispatchCap):
 
 DispatchQueue::DispatchQueue(DispatchQueue&& q):
   m_dispatchCap(q.m_dispatchCap),
-  m_aborted(q.m_aborted)
+  onAborted(std::move(q.onAborted))
 {
-  if (!m_aborted)
+  if (!onAborted)
     *this += std::move(q);
 }
 
@@ -72,7 +72,7 @@ void DispatchQueue::Abort(void) {
   DispatchThunkBase* pHead;
   {
     std::lock_guard<std::mutex> lk(m_dispatchLock);
-    m_aborted = true;
+    onAborted();
     m_dispatchCap = 0;
     pHead = m_pHead;
     m_pHead = nullptr;
@@ -104,7 +104,7 @@ void DispatchQueue::WakeAllWaitingThreads(void) {
 
 void DispatchQueue::WaitForEvent(void) {
   std::unique_lock<std::mutex> lk(m_dispatchLock);
-  if (m_aborted)
+  if (onAborted)
     throw dispatch_aborted_exception("Dispatch queue was aborted prior to waiting for an event");
 
   // Unconditional delay:
@@ -112,7 +112,7 @@ void DispatchQueue::WaitForEvent(void) {
   m_queueUpdated.wait(
     lk,
     [this, version] {
-      if (m_aborted)
+      if (onAborted)
         throw dispatch_aborted_exception("Dispatch queue was aborted while waiting for an event");
 
       return
@@ -153,7 +153,7 @@ bool DispatchQueue::WaitForEvent(std::chrono::steady_clock::time_point wakeTime)
 }
 
 bool DispatchQueue::WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::chrono::steady_clock::time_point wakeTime) {
-  if (m_aborted)
+  if (onAborted)
     throw dispatch_aborted_exception("Dispatch queue was aborted prior to waiting for an event");
 
   while (!m_pHead) {
@@ -165,7 +165,7 @@ bool DispatchQueue::WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::ch
     std::cv_status status = m_queueUpdated.wait_until(lk, wakeTime);
 
     // Short-circuit if the queue was aborted
-    if (m_aborted)
+    if (onAborted)
       throw dispatch_aborted_exception("Dispatch queue was aborted while waiting for an event");
 
     if (PromoteReadyDispatchersUnsafe())
@@ -223,7 +223,7 @@ bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
   std::unique_lock<std::mutex> lk(m_dispatchLock);
 
   // Short-circuit if dispatching has been aborted
-  if (m_aborted)
+  if (onAborted)
     throw dispatch_aborted_exception("Dispatch queue was aborted before a timed wait was attempted");
 
   // Short-circuit if the queue is already empty
@@ -246,8 +246,8 @@ bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
     lk.lock();
 
   // Wait until our variable is satisfied, which might be right away:
-  bool rv = m_queueUpdated.wait_for(lk, timeout, [&] { return m_aborted || *complete; });
-  if (m_aborted)
+  bool rv = m_queueUpdated.wait_for(lk, timeout, [&] { return onAborted || *complete; });
+  if (onAborted)
     throw dispatch_aborted_exception("Dispatch queue was aborted during a timed wait");
   return rv;
 }
@@ -259,8 +259,8 @@ void DispatchQueue::Barrier(void) {
 
   // Obtain the lock, wait until our variable is satisfied, which might be right away:
   std::unique_lock<std::mutex> lk(m_dispatchLock);
-  m_queueUpdated.wait(lk, [&] { return m_aborted || complete; });
-  if (m_aborted)
+  m_queueUpdated.wait(lk, [&] { return onAborted || complete; });
+  if (onAborted)
     // At this point, the dispatch queue MUST be completely run down.  We have no outstanding references
     // to our stack-allocated "complete" variable.  Furthermore, after m_aborted is true, no further
     // dispatchers are permitted to be run.

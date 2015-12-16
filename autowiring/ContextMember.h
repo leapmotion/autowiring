@@ -70,6 +70,14 @@ public:
   /// Returns a shared pointer that refers to ourselves
   /// </summary>
   template<class T>
+  std::shared_ptr<const T> GetSelf(void) const {
+    return std::static_pointer_cast<const T, const ContextMember>(shared_from_this());
+  }
+
+  /// <summary>
+  /// Returns a shared pointer that refers to ourselves
+  /// </summary>
+  template<class T>
   std::shared_ptr<T> GetSelf(void) {
     return std::static_pointer_cast<T, ContextMember>(shared_from_this());
   }
