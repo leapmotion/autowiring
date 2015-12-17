@@ -59,3 +59,46 @@ TEST_F(AutoConstructTest, CanConstructRvalueCtor) {
 TEST_F(AutoConstructTest, CanCopyAutoConstruct) {
   AutoConstruct<HasDefaultCtorAndOthers> v(100);
 }
+
+namespace {
+  class MyPrivateCtorClass:
+    public CoreObject
+  {
+    MyPrivateCtorClass(void):
+      ival(-10)
+    {}
+    MyPrivateCtorClass(int ival) :
+      ival(ival)
+    {}
+
+  public:
+    const int ival;
+
+    static MyPrivateCtorClass* New(int ival) {
+      return new MyPrivateCtorClass{ ival };
+    }
+  };
+}
+
+static_assert(
+  autowiring::has_static_new<MyPrivateCtorClass, int>::value,
+  "Failed to find factory new on a type that carries it"
+);
+static_assert(
+  autowiring::select_strategy<MyPrivateCtorClass, int>::value == autowiring::construction_strategy::factory_new,
+  "Construction strategy incorrectly inferred"
+);
+static_assert(
+  !std::is_constructible<MyPrivateCtorClass>::value,
+  "Type reported as being constructable when it was not"
+);
+static_assert(
+  !autowiring::has_simple_constructor<MyPrivateCtorClass>::value,
+  "Simple constructor detected when said constructor should have been private"
+);
+
+TEST_F(AutoConstructTest, FactoryNewPrivateCtor) {
+  AutoConstruct<MyPrivateCtorClass> mpcc{ 1002 };
+  ASSERT_NE(nullptr, mpcc.get()) << "Null not expected as a return type from a factory new construction";
+  ASSERT_EQ(1002, mpcc->ival) << "Correct ctor was not invoked on a type with a private ctor";
+}
