@@ -79,7 +79,7 @@ TEST_F(AutowiringTest, PathologicalAutowiringRace) {
   InjectAll();
 
   // Now insert at about the same time as other threads are waking up.  If there are synchronization problems
-  // in spin-up or tear-down, 
+  // in spin-up or tear-down,
   AutoRequired<SimpleObject>();
 }
 
@@ -200,18 +200,6 @@ TEST_F(AutowiringTest, StaticNewWithArgs) {
   }
 }
 
-TEST_F(AutowiringTest, NullDereferenceAttempt) {
-  Autowired<SimpleObject> co;
-  ASSERT_ANY_THROW(*co) << "A dereference attempt on a CoreObject did not throw an exception as expected";
-  ASSERT_ANY_THROW((void)co->one) << "A dereference attempt on a CoreObject did not throw an exception as expected";
-}
-
-TEST_F(AutowiringTest, FastNullDereferenceAttempt) {
-  AutowiredFast<SimpleObject> co;
-  ASSERT_ANY_THROW(*co) << "A dereference attempt on a CoreObject did not throw an exception as expected";
-  ASSERT_ANY_THROW((void)co->one) << "A dereference attempt on a CoreObject did not throw an exception as expected";
-}
-
 namespace {
   class InjectsItself:
     public CoreObject
@@ -227,4 +215,28 @@ namespace {
 TEST_F(AutowiringTest, AutowiresItself) {
   // Try to overtake:
   ASSERT_NO_THROW(AutoConstruct<InjectsItself> bii(true)) << "An overtaken constructor incorrectly caused an exception to be thrown";
+}
+
+TEST_F(AutowiringTest, NullDereferenceTest) {
+  Autowired<SimpleObject> nwa;
+  ASSERT_THROW(*nwa, autowiring::deref_error);
+  try {
+    (void)nwa->one;
+    FAIL() << "Dereference error not thrown for a null Autowired field";
+  }
+  catch (autowiring::deref_error& dre) {
+    ASSERT_STREQ("Attempted to dereference a null Autowired<SimpleObject>", dre.what());
+  }
+}
+
+TEST_F(AutowiringTest, FastNullDereferenceTest) {
+  AutowiredFast<SimpleObject> nwaFast;
+  ASSERT_THROW(*nwaFast, autowiring::deref_error);
+  try {
+    (void)nwaFast->one;
+    FAIL() << "Dereference error not thrown for a null AutowiredFast field";
+  }
+  catch (autowiring::deref_error& dre) {
+    ASSERT_STREQ("Attempted to dereference a null AutowiredFast<SimpleObject>", dre.what());
+  }
 }
