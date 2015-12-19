@@ -221,7 +221,7 @@ TEST_F(AutowiringTest, NullDereferenceTest) {
   Autowired<SimpleObject> nwa;
   ASSERT_THROW(*nwa, autowiring::deref_error);
   try {
-    nwa->one;
+    (void)nwa->one;
     FAIL() << "Dereference error not thrown for a null Autowired field";
   }
   catch (autowiring::deref_error& dre) {
@@ -233,7 +233,7 @@ TEST_F(AutowiringTest, FastNullDereferenceTest) {
   AutowiredFast<SimpleObject> nwaFast;
   ASSERT_THROW(*nwaFast, autowiring::deref_error);
   try {
-    nwaFast->one;
+    (void)nwaFast->one;
     FAIL() << "Dereference error not thrown for a null AutowiredFast field";
   }
   catch (autowiring::deref_error& dre) {
