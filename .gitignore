@@ -42,3 +42,4 @@ Autowiring.nuspec
 .kdev4
 autowiring.kdev4
 
+*.opendb
