@@ -60,7 +60,7 @@ via the [find_package](http://www.cmake.org/cmake/help/v3.0/command/find_package
 
 ### Arm-linux
 
-Building on Android requires the use of a toolchain file.  You will need to use an alternate prefix path if you are trying to cross-compile, the prefix path should contain your version of the Boost libraries built for Android.  To configure, use the following invocation:
+Building on Android requires the use of a toolchain file.  To configure, use the following invocation:
 
     cmake . -DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake -DCMAKE_PREFIX_PATH:PATH=/your/lib/path
 
