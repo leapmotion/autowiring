@@ -5,6 +5,8 @@ project(autowiring VERSION ${autowiring_VERSION})
 include(CTest)
 include(CheckTypeSize)
 
+message(STATUS "sizeof(void*) is ${CMAKE_SIZEOF_VOID_P}")
+
 if(APPLE)
   option(autowiring_BUILD_FAT "Build fat binaries for Autowiring" ON)
   set(CMAKE_OSX_ARCHITECTURES "x86_64;i386" CACHE STRING "Mac OS X build architectures" FORCE)
@@ -162,7 +164,7 @@ install(
   COMPONENT autowiring
   FILES_MATCHING PATTERN "*.h"
 )
- 
+
 # Install autoboost headers on ARM, which still requires them
 if(CMAKE_COMPILER_IS_GNUCC AND ("${CMAKE_CXX_COMPILER}" MATCHES "androideabi"))
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
@@ -173,7 +175,7 @@ if(CMAKE_COMPILER_IS_GNUCC AND ("${CMAKE_CXX_COMPILER}" MATCHES "androideabi"))
     )
   endif()
 endif()
- 
+
 # Targets file is needed in order to describe how to link Autowiring to the rest of the system
 install(EXPORT AutowiringTargets FILE AutowiringTargets.cmake COMPONENT autowiring NAMESPACE Autowiring:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
