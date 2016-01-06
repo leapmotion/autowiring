@@ -12,15 +12,12 @@
 #include FUNCTIONAL_HEADER
 #include STL_UNORDERED_SET
 
-AutoPacketGraph::AutoPacketGraph() {
-}
-
 void AutoPacketGraph::LoadEdges() {
   std::lock_guard<std::mutex> lk(m_lock);
   
   std::list<AutoFilterDescriptor> descriptors;
   m_factory->AppendAutoFiltersTo(descriptors);
-  
+
   for (auto& descriptor : descriptors) {
     for(auto pCur = descriptor.GetAutoFilterArguments(); *pCur; pCur++) {
       auto_id id = pCur->id;
@@ -30,27 +27,27 @@ void AutoPacketGraph::LoadEdges() {
       if (descType == auto_id_t<AutoPacketGraph>{}) {
         continue;
       }
-      
-      if (pCur->is_input) {
-        DeliveryEdge edge { id, descriptor, true };
-        if (m_deliveryGraph.find(edge) == m_deliveryGraph.end()) {
-          m_deliveryGraph[edge] = 0;
-        }
+
+      DeliveryEdge::ArgType arg_type;
+      if (pCur->is_rvalue) {
+        arg_type = DeliveryEdge::ArgType::Rvalue;
+      } else if (pCur->is_input) {
+        arg_type = DeliveryEdge::ArgType::Input;
+      } else {
+        arg_type = DeliveryEdge::ArgType::Output;
       }
-      
-      if (pCur->is_output) {
-        DeliveryEdge edge { id, descriptor, false };
-        if (m_deliveryGraph.find(edge) == m_deliveryGraph.end()) {
-          m_deliveryGraph[edge] = 0;
-        }
+
+      DeliveryEdge edge {id, descriptor, arg_type};
+      if (m_deliveryGraph.find(edge) == m_deliveryGraph.end()) {
+        m_deliveryGraph[edge] = 0;
       }
     }
   }
 }
 
-void AutoPacketGraph::RecordDelivery(auto_id id, const AutoFilterDescriptor& descriptor, bool input) {
-  DeliveryEdge edge { id, descriptor, input };
-  
+void AutoPacketGraph::RecordDelivery(auto_id id, const AutoFilterDescriptor& descriptor, DeliveryEdge::ArgType arg_type) {
+  DeliveryEdge edge { id, descriptor, arg_type };
+
   auto itr = m_deliveryGraph.find(edge);
   assert(itr != m_deliveryGraph.end());
   itr->second++;
@@ -62,7 +59,6 @@ void AutoPacketGraph::NewObject(CoreContext&, const CoreObjectDescriptor&) {
 
 bool AutoPacketGraph::OnStart(void) {
   LoadEdges();
-  
   return true;
 }
 
@@ -72,9 +68,13 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
       auto& decoration = cur.second;
       auto type = cur.first.id;
 
+      for (auto& modifier : decoration.m_modifiers)
+        if (!modifier->remaining)
+          RecordDelivery(type, *modifier, DeliveryEdge::ArgType::Rvalue);
+
       for (auto& publisher : decoration.m_publishers)
         if (!publisher->remaining)
-          RecordDelivery(type, *publisher, false);
+          RecordDelivery(type, *publisher, DeliveryEdge::ArgType::Output);
 
       for (auto& subscriber : decoration.m_subscribers) {
         // Skip the AutoPacketGraph
@@ -82,8 +82,8 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
         if (descType == auto_id_t<AutoPacketGraph>{})
           continue;
         
-        if (subscriber.satCounter->remaining)
-          RecordDelivery(type, *subscriber.satCounter, true);
+        if (!subscriber.satCounter->remaining)
+          RecordDelivery(type, *subscriber.satCounter, DeliveryEdge::ArgType::Input);
       }
     }
   });
@@ -119,23 +119,27 @@ bool AutoPacketGraph::WriteGV(const std::string& filename, bool numPackets) cons
     std::string descriptorName = autowiring::demangle(descType);
     
     // Get a unique set of types/descriptors
-    if (typeNames.find(typeName) == typeNames.end())
-      typeNames.insert(typeName);
-    
-    if (descriptorNames.find(descriptorName) == descriptorNames.end())
-      descriptorNames.insert(descriptorName);
+    typeNames.insert(typeName);
+    descriptorNames.insert(descriptorName);
     
     // string format: "type" -> "AutoFilter" (or vice versa)
     std::stringstream ss;
     ss << "  \"";
-    if (edge.input) {
-      ss << typeName << "\" -> \"" << descriptorName << "\"";
+
+    if (edge.arg_type == DeliveryEdge::ArgType::Rvalue) {
+      ss << typeName << "\" -> \"" << descriptorName << "\" [dir=both";
+      if (numPackets)
+        ss << ", label=\"" << count << "\"";
+      ss << "];";
     } else {
-      ss << descriptorName << "\" -> \"" << typeName << "\"";
+      if (edge.arg_type == DeliveryEdge::ArgType::Input) {
+        ss << typeName << "\" -> \"" << descriptorName << "\"";
+      } else if (edge.arg_type == DeliveryEdge::ArgType::Output) {
+        ss << descriptorName << "\" -> \"" << typeName << "\"";
+      }
+      if (numPackets)
+        ss << " [label=\"" << count << "\"];";
     }
-    
-    if (numPackets)
-      ss << "[label=\"" << count << "\"];";
     
     ss << std::endl;
     

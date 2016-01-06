@@ -14,6 +14,7 @@
 #include "noop.h"
 #include "TeardownNotifier.h"
 #include <typeinfo>
+#include <unordered_set>
 #include CHRONO_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_MAP
@@ -120,6 +121,14 @@ protected:
   /// Adds all AutoFilter argument information for a recipient
   /// </summary>
   void AddSatCounterUnsafe(SatCounter& satCounter);
+
+  /// <summary>
+  /// Remove all AutoFilter argument information for a recipient
+  void RemoveSatCounterUnsafe(const SatCounter& satCounter);
+
+  /// <summary>
+  /// Detect cycle in the auto filter graph using DFS
+  void DetectCycle(SatCounter& satCounter, std::unordered_set<SatCounter*>& tempVisited, std::unordered_set<SatCounter*>& permVisited);
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
@@ -353,6 +362,19 @@ public:
     return retVal;
   }
 
+  /// <returns>
+  /// The Rvalue decoration for the specified type and time shift, or throws an exception if such a type cannot be found
+  /// </returns>
+  template<class T>
+  T&& GetRvalue(int tshift = 0) const {
+    static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
+
+    const T* retVal;
+    if (!Get(retVal, tshift))
+      ThrowNotDecoratedException(DecorationKey(auto_id_t<T>{}, tshift));
+    return std::move(const_cast<T&>(*retVal));
+  }
+
   /// <summary>
   /// Returns a null-terminated buffer containing all decorations
   /// </summary>
@@ -569,13 +591,15 @@ public:
   /// Adds a recipient for data associated only with this issuance of the packet.
   /// </summary>
   /// <remarks>
-  /// This method is not idempotent.  The returned Recipient structure may be used to remove
-  /// the recipient safely at any point.  The caller MUST NOT attempt 
+  /// This method is idempotent. The returned Recipient structure may be used to remove
+  /// the recipient safely at any point.
   /// </remarks>
   const SatCounter* AddRecipient(const AutoFilterDescriptor& descriptor);
 
   /// <summary>
   /// Removes a previously added packet recipient
+  /// The user is responsible to free the memeory for recipient.
+  /// TODO: seems like a bad design, need refactor
   /// </summary>
   void RemoveRecipient(const SatCounter& recipient);
 
@@ -859,6 +883,7 @@ public:
   typedef auto_id_t<AutoPacket> id_type;
   static const bool is_input = false;
   static const bool is_output = false;
+  static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;
@@ -880,6 +905,7 @@ public:
   typedef AutoPacket id_type;
   static const bool is_input = false;
   static const bool is_output = false;
+  static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;

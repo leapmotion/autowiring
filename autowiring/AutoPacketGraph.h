@@ -15,6 +15,12 @@
 /// </summary>
 struct DeliveryEdge
 {
+  enum class ArgType {
+    Input,
+    Output,
+    Rvalue
+  };
+
   // The type info
   auto_id type_info;
   
@@ -22,14 +28,15 @@ struct DeliveryEdge
   AutoFilterDescriptor descriptor;
   
   // Specifies if the argument is an input (type -> descriptor) or output (descriptor -> type)
-  bool input;
+  // or rvalue (type <-> descriptor)
+  ArgType arg_type;
   
   // For the unordered map/hash comparison
   bool operator==(const DeliveryEdge& rhs) const {
     return
       type_info == rhs.type_info &&
       descriptor == rhs.descriptor &&
-      input == rhs.input;
+      arg_type == rhs.arg_type;
   }
 };
 
@@ -54,8 +61,6 @@ class AutoPacketGraph:
   public CoreRunnable
 {
 public:
-  AutoPacketGraph();
-  
   typedef std::unordered_map<DeliveryEdge, size_t, std::hash<DeliveryEdge>> t_deliveryEdges;
   
 protected:
@@ -93,7 +98,7 @@ protected:
   /// <summary>
   /// Record the delivery of a packet and increment the number of times the packet has been delivered
   /// </summary>
-  void RecordDelivery(auto_id id, const AutoFilterDescriptor& descriptor, bool input);
+  void RecordDelivery(auto_id id, const AutoFilterDescriptor& descriptor, DeliveryEdge::ArgType arg_type);
   
   /// AutowiringEvents overrides
   virtual void NewContext(CoreContext&) override {}

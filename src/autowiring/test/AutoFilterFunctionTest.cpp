@@ -16,10 +16,6 @@ void FilterFunction(const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut
   *typeOut = Decoration<1>(1 + 1 + typeIn.i);
 }
 
-// void FilterFunction(const Decoration<0>& typeIn, Decoration<1> &typeOut) {
-//   typeOut = Decoration<1>(1 + 1 + typeIn.i);
-// }
-
 TEST_F(AutoFilterFunctionalTest, FunctionDecorationTest) {
   // AddRecipient that is an instance of std::function f : a -> b
   // This must be satisfied by decoration of type a,
@@ -111,6 +107,7 @@ TEST_F(AutoFilterFunctionalTest, RecipientRemovalTest) {
       }
     );
   packet->RemoveRecipient(*recipient);
+  packet->Decorate(Decoration<0>());
 
   ASSERT_FALSE(*called) << "A recipient that should have been removed was called";
 }

@@ -55,7 +55,6 @@ public:
   }
 };
 
-
 TEST_F(AutoPacketFactoryTest, WaitRunsDownAllPackets) {
   AutoCurrentContext()->Initiate();
 

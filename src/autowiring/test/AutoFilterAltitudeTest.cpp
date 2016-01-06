@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
+#include "TestFixtures/Decoration.hpp"
 #include <autowiring/autowiring.h>
 
 class AutoFilterAltitudeTest:
@@ -77,4 +78,35 @@ TEST_F(AutoFilterAltitudeTest, LambdaAltitudesOnFactory) {
   ASSERT_EQ(3, ctr[6]);
   ASSERT_EQ(2, ctr[7]);
   ASSERT_EQ(1, ctr[8]);
+}
+
+TEST_F(AutoFilterAltitudeTest, AltitudeOnPacket) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  int seq = 0;
+  int ctr[4] = {-1, -1, -1, -1};
+
+  *factory += autowiring::altitude::Standard, [&] (const Decoration<0>& dec) {
+    ctr[0] = ++seq;
+  };
+  *factory += autowiring::altitude::Lowest, [&] (const Decoration<0>& dec) {
+    ctr[1] = ++seq;
+  };
+
+  auto packet = factory->NewPacket();
+
+  packet->AddRecipient(AutoFilterDescriptor([&] (const Decoration<0>& dec) {
+    ctr[2] = ++seq;
+  }, autowiring::altitude::Dispatch));
+  packet->AddRecipient(AutoFilterDescriptor([&] (const Decoration<0>& dec) {
+    ctr[3] = ++seq;
+  }, autowiring::altitude::Passive));
+
+  packet->Decorate(Decoration<0>());
+
+  ASSERT_EQ(2, ctr[0]);
+  ASSERT_EQ(4, ctr[1]);
+  ASSERT_EQ(1, ctr[2]);
+  ASSERT_EQ(3, ctr[3]);
 }

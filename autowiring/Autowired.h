@@ -2,7 +2,6 @@
 #pragma once
 #include "auto_id.h"
 #include "auto_signal.h"
-#include "AutowiringDebug.h"
 #include "AutowirableSlot.h"
 #include "CoreContext.h"
 #include "GlobalCoreContext.h"

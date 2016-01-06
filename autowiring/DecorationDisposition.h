@@ -1,8 +1,10 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AutowiringConfig.h"
+#include "altitude.h"
 #include "AnySharedPointer.h"
 #include <cassert>
+#include <set>
 #include <vector>
 #include TYPE_INDEX_HEADER
 
@@ -10,11 +12,6 @@ struct SatCounter;
 
 struct DecorationKey {
   DecorationKey(void) = default;
-
-  DecorationKey(const DecorationKey& rhs) :
-    id(rhs.id),
-    tshift(rhs.tshift)
-  {}
   
   explicit DecorationKey(auto_id id, int tshift) :
     id(id),
@@ -59,16 +56,6 @@ enum class DispositionState {
 /// </remarks>
 struct DecorationDisposition
 {
-  DecorationDisposition(void) = default;
-
-  DecorationDisposition(const DecorationDisposition& source) :
-    m_decorations(source.m_decorations),
-    m_pImmediate(source.m_pImmediate),
-    m_publishers(source.m_publishers),
-    m_subscribers(source.m_subscribers),
-    m_state(source.m_state)
-  {}
-  
   // The number of producers of this decoration type which have concluded.  This number may be larger
   // than the number of attached decorations if some producers could not run.
   size_t m_nProducersRun = 0;
@@ -82,12 +69,14 @@ struct DecorationDisposition
   // Valid if and only if is_shared is true.
   const void* m_pImmediate = nullptr;
 
+  // Modifiers of this decoration, ordered by altitude.
+  std::vector<SatCounter*> m_modifiers;
+
   // Providers for this decoration, where it can be statically inferred.  Note that a provider for
   // this decoration may exist even if this value is null, in the event that dynamic decoration is
   // taking place.
   std::vector<SatCounter*> m_publishers;
 
-  // Satisfaction counters
   struct Subscriber {
     enum class Type {
       // Ordinary, reference-in, non-optional subscriber
@@ -103,24 +92,37 @@ struct DecorationDisposition
       Multi
     };
 
-    Subscriber(void) {}
-    Subscriber(bool is_shared, Type type, SatCounter* satCounter) :
+    Subscriber(void) = default;
+
+    Subscriber(bool is_shared, Type type, autowiring::altitude altitude, SatCounter* satCounter) :
       is_shared{is_shared},
       type{type},
+      altitude{altitude},
       satCounter{satCounter}
-    {}
+    {
+      if (satCounter == nullptr)
+        throw std::runtime_error("Cannot initialize Subscriber with nullptr to SatCounter.");
+    }
 
     // True if a shared pointer will be taken, false otherwise
-    bool is_shared = false;
+    const bool is_shared;
 
     // The relationship between this subscriber and the provided decoration
-    Type type = Type::Normal;
+    const Type type;
 
-    // The satisfaction counter itself
-    SatCounter* satCounter = nullptr;
+    // The altitude of the satisfaction counter
+    const autowiring::altitude altitude;
+
+    // The pointer to the satisfaction counter, it should never be nullptr
+    SatCounter* const satCounter;
+
+    bool operator<(const Subscriber& rhs) const {
+      return std::tie(altitude, satCounter) > std::tie(rhs.altitude, rhs.satCounter);
+    }
   };
 
-  std::vector<Subscriber> m_subscribers;
+  // Subscribers of this decoration, sorted by altitude.
+  std::set<Subscriber> m_subscribers;
 
   // The current state of this disposition
   DispositionState m_state = DispositionState::Unsatisfied;

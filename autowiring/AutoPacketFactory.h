@@ -9,8 +9,6 @@
 #include TYPE_TRAITS_HEADER
 #include <set>
 
-class AutoPacketFactory;
-class DispatchQueue;
 class AutoPacketInternal;
 
 /// <summary>

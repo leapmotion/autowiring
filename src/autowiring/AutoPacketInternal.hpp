@@ -13,9 +13,6 @@ public:
   AutoPacketInternal(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacketInternal(void);
 
-private:
-
-public:
   /// <summary>
   /// Decrements subscribers requiring AutoPacket argument then calls all initializing subscribers.
   /// </summary>

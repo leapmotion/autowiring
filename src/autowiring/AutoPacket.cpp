@@ -5,7 +5,9 @@
 #include "AutoPacketFactory.h"
 #include "AutoPacketInternal.hpp"
 #include "AutoFilterDescriptor.h"
+#include "autowiring_error.h"
 #include "ContextEnumerator.h"
+#include "demangle.h"
 #include "SatCounter.h"
 #include "thread_specific_ptr.h"
 #include <algorithm>
@@ -74,7 +76,7 @@ DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& 
     std::stringstream ss;
     ss << "Cannot perform immediate decoration with type " << autowiring::demangle(key.id)
        << ", the requested decoration already exists";
-    throw std::runtime_error(ss.str());
+    throw autowiring_error(ss.str());
   }
 
   // Mark the entry as appropriate:
@@ -88,51 +90,146 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
     DecorationKey key(pCur->id, pCur->tshift);
     DecorationDisposition& entry = m_decoration_map[key];
 
+    // Make sure decorations exist for timeshifts less that key's timeshift
+    for (int tshift = 0; tshift < key.tshift; ++tshift)
+      m_decoration_map[DecorationKey(key.id, tshift)];
+
     // Decide what to do with this entry:
     if (pCur->is_input) {
       if (entry.m_publishers.size() > 1 && !pCur->is_multi) {
         std::stringstream ss;
         ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->id);
-        throw std::runtime_error(ss.str());
+        throw autowiring_error(ss.str());
       }
-
-      entry.m_subscribers.push_back({
-        pCur->is_shared,
-        pCur->is_multi ?
-        DecorationDisposition::Subscriber::Type::Multi :
-        pCur->is_shared ?
-        DecorationDisposition::Subscriber::Type::Optional :
-        DecorationDisposition::Subscriber::Type::Normal,
-        &satCounter
-      });
-      switch (entry.m_state) {
-      case DispositionState::Complete:
+      if (entry.m_state == DispositionState::Complete) {
         // Either decorations must be present, or the decoration type must be a shared_ptr.
         if (!entry.m_decorations.empty() || pCur->is_shared) {
           satCounter.Decrement();
         }
-        break;
-      default:
-        break;
       }
     }
-    if (pCur->is_output) {
-      if(!entry.m_publishers.empty())
-        for (const auto& subscriber : entry.m_subscribers)
-          for (auto pOther = subscriber.satCounter->GetAutoFilterArguments(); *pOther; pOther++) {
-            if (pOther->id == pCur->id && !pOther->is_multi) {
-              std::stringstream ss;
-              ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->id) << " with existing subscriber.";
-              throw std::runtime_error(ss.str());
+
+    if (pCur->is_rvalue) {
+      // Throw exception when there is already a modifier with the same altitude,
+      // otherwise insert it to the right position so that the modifiers vector is sorted by altitude
+      auto it = entry.m_modifiers.begin();
+      while (it != entry.m_modifiers.end()) {
+        if (*it == nullptr)
+          continue;
+
+        if ((*it)->GetAltitude() == satCounter.GetAltitude()) {
+          std::stringstream ss;
+          ss << "Added multiple rvalue decorations with same altitudes for type " << autowiring::demangle(pCur->id);
+          throw autowiring_error(ss.str());
+        }
+
+        if ((*it)->GetAltitude() < satCounter.GetAltitude())
+          break;
+        it++;
+      }
+      entry.m_modifiers.insert(it, &satCounter);
+    } else {
+      if (pCur->is_input) {
+          entry.m_subscribers.emplace(
+          pCur->is_shared,
+          pCur->is_multi ?
+          DecorationDisposition::Subscriber::Type::Multi :
+          pCur->is_shared ?
+          DecorationDisposition::Subscriber::Type::Optional :
+          DecorationDisposition::Subscriber::Type::Normal,
+          satCounter.GetAltitude(),
+          &satCounter
+        );
+      }
+
+      if (pCur->is_output) {
+        if (!entry.m_publishers.empty())
+          for (const auto& subscriber : entry.m_subscribers)
+            for (auto pOther = subscriber.satCounter->GetAutoFilterArguments(); *pOther; pOther++) {
+              if (pOther->id == pCur->id && !pOther->is_multi) {
+                std::stringstream ss;
+                ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->id) << " with existing subscriber.";
+                throw autowiring_error(ss.str());
+              }
             }
-          }
-
-      entry.m_publishers.push_back(&satCounter);
+        entry.m_publishers.push_back(&satCounter);
+      }
     }
+  }
 
-    // Make sure decorations exist for timeshifts less that key's timeshift
-    for (int tshift = 0; tshift < key.tshift; ++tshift)
-      m_decoration_map[DecorationKey(key.id, tshift)];
+  auto tempVisited = std::unordered_set<SatCounter*>();
+  auto permVisited = std::unordered_set<SatCounter*>();
+  DetectCycle(satCounter, tempVisited, permVisited);
+}
+
+void AutoPacket::DetectCycle(SatCounter& satCounter, std::unordered_set<SatCounter*>& tempVisited, std::unordered_set<SatCounter*>& permVisited) {
+  if (tempVisited.count(&satCounter)) {
+    std::stringstream ss;
+    ss << "Detected cycle in the auto filter graph involving type " << autowiring::demangle(satCounter.GetType());
+    throw autowiring_error(ss.str());
+  }
+
+  if (permVisited.count(&satCounter))
+    return;
+
+  std::unordered_set<SatCounter*> nextCounters;
+  for(auto pCur = satCounter.GetAutoFilterArguments(); *pCur; pCur++) {
+    if (!pCur->is_output) continue;
+
+    DecorationKey key(pCur->id, pCur->tshift);
+    DecorationDisposition& entry = m_decoration_map[key];
+    for (auto& subscriber : entry.m_subscribers) {
+      auto ptr = subscriber.satCounter;
+      nextCounters.insert(ptr);
+    }
+  }
+  if (nextCounters.empty())
+    return;
+
+  tempVisited.insert(&satCounter);
+  for (auto pCounter : nextCounters) {
+    DetectCycle(*pCounter, tempVisited, permVisited);
+  }
+  permVisited.insert(&satCounter);
+  tempVisited.erase(&satCounter);
+}
+
+void AutoPacket::RemoveSatCounterUnsafe(const SatCounter& satCounter) {
+  for (auto pCur = satCounter.GetAutoFilterArguments(); *pCur; pCur++) {
+    DecorationKey key(pCur->id, pCur->tshift);
+    DecorationDisposition& entry = m_decoration_map[key];
+
+    if (pCur->is_rvalue) {
+      entry.m_modifiers.erase(
+        std::remove_if(
+          entry.m_modifiers.begin(),
+          entry.m_modifiers.end(),
+          [&satCounter](SatCounter* modifier){
+            return modifier && *modifier == satCounter;
+          }),
+        entry.m_modifiers.end()
+      );
+    } else {
+      if (pCur->is_input) {
+        for (auto& sub : entry.m_subscribers) {
+          if (sub.satCounter && *sub.satCounter == satCounter) {
+            entry.m_subscribers.erase(sub);
+            break;
+          }
+        }
+      }
+      if (pCur->is_output) {
+        entry.m_publishers.erase(
+          std::remove_if(
+            entry.m_publishers.begin(),
+            entry.m_publishers.end(),
+            [&satCounter](SatCounter* publisher){
+              return publisher && *publisher == satCounter;
+            }),
+          entry.m_publishers.end()
+        );
+      }
+    }
   }
 }
 
@@ -213,11 +310,18 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
     }
     break;
   case 1:
-    // One unique decoration available.  We should be able to call everyone.
-    for (auto subscriber : disposition.m_subscribers) {
-      auto& satCounter = *subscriber.satCounter;
-      if (satCounter.Decrement())
-        callQueue.push_back(&satCounter);
+    {
+      // One unique decoration available.  We should be able to call everyone.
+      for (auto pMod : disposition.m_modifiers) {
+        if (pMod && pMod->Decrement()) {
+          callQueue.push_back(pMod);
+        }
+      }
+      for (auto subscriber : disposition.m_subscribers) {
+        auto& satCounter = *subscriber.satCounter;
+        if (satCounter.Decrement())
+          callQueue.push_back(&satCounter);
+      }
     }
     break;
   default:
@@ -329,7 +433,7 @@ void AutoPacket::DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key
       else
         ss << "Cannot decorate this packet with type " << autowiring::demangle(ptr)
           << ", the requested decoration is already satisfied";
-      throw std::runtime_error(ss.str());
+      throw autowiring_error(ss.str());
     }
     break;
   default:
@@ -473,6 +577,11 @@ const SatCounter* AutoPacket::AddRecipient(const AutoFilterDescriptor& descripto
   // Linked list insertion:
   {
     std::lock_guard<std::mutex> lk(m_lock);
+    for (auto cur = m_firstCounter; cur; cur=cur->flink) {
+      if (*cur == sat)
+        return cur;
+    }
+
     sat.flink = m_firstCounter;
     if (m_firstCounter)
       m_firstCounter->blink = &sat;
@@ -486,7 +595,6 @@ const SatCounter* AutoPacket::AddRecipient(const AutoFilterDescriptor& descripto
     // Filter is ready to be called, oblige it
     sat.GetCall()(sat.GetAutoFilter().ptr(), *this);
 
-  // Done
   return &sat;
 }
 
@@ -497,6 +605,8 @@ void AutoPacket::RemoveRecipient(const SatCounter& recipient) {
     recipient.blink->flink = recipient.flink;
   if (recipient.flink)
     recipient.flink->blink = recipient.blink;
+
+  RemoveSatCounterUnsafe(recipient);
 }
 
 std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
