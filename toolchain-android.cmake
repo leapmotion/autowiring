@@ -1,20 +1,20 @@
-if(BUILD_64_BIT) # ARMv8 with GCC 4.9
-  set(BUILD_ANDROID64 1)
-  set(ANDROID_NDK_TOOL_PREFIX aarch64-linux-android)
-  set(_ndk_suffix -4.9-aarch64)
-else() # GCC 4.8
-  set(ARM_TARGET "armeabi-v7a")
-  set(ANDROID_NDK_TOOL_PREFIX arm-linux-androideabi)
+if(NOT ANDROID_NDK_TOOL_PREFIX)
+  # Default to the 32-bit toolchain version for legacy compatibility
+  if(0.9.0 VERSION_LESS autowiring_VERSION)
+    message(FATAL_ERROR "Eliminate this compatibility hack")
+  endif()
+
+  if($ENV{ARMv8})
+    include(${CMAKE_CURRENT_LIST_DIR}/toolchain-android64.cmake)
+  else()
+    include(${CMAKE_CURRENT_LIST_DIR}/toolchain-android32.cmake)
+  endif()
+  return()
 endif()
-set(BUILD_ANDROID 1)
+
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 set(CMAKE_SYSTEM_VERSION 1)
-set(BUILD_ARM 1)
-
-if(MSYS)
-  set(_exe_suffix .exe)
-endif()
 
 #For reasons beyond my comprehension, this file is parsed multiple times
 #and in some of them, cache variables are not preserved so we have to store
