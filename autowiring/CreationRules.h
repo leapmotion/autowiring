@@ -10,7 +10,7 @@ class CoreContext;
 template<typename T>
 struct is_injectable
 {
-  static const bool value = has_simple_constructor<T>::value || has_static_new<T>::value;
+  static const bool value = autowiring::has_simple_constructor<T>::value || autowiring::has_static_new<T>::value;
 };
 
 namespace autowiring {

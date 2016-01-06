@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "AutowiringDebug.h"
 #include "Autowired.h"
+#include "AutoPacketFactory.h"
 #include "demangle.h"
 #include <algorithm>
 #include <iomanip>
@@ -66,7 +67,7 @@ std::string autowiring::dbg::ContextName(void) {
 
 void PrintContextTreeRecursive(std::ostream& os, const std::shared_ptr<CoreContext>& root, std::shared_ptr<CoreContext> ctxt) {
   for (; ctxt; ctxt = ctxt->NextSibling()) {
-    
+
     // Create of vector of contexts from child of global to 'ctxt'
     std::deque<std::shared_ptr<CoreContext>> path;
     for (auto c = ctxt; c != root; c = c->GetParentContext()) {

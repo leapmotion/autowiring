@@ -4,6 +4,7 @@
 #include "auto_signal.h"
 #include "autowiring_error.h"
 #include "CoreContext.h"
+#include "deref_error.h"
 #include "fast_pointer_cast.h"
 #include "SlotInformation.h"
 #include MEMORY_HEADER
@@ -73,7 +74,7 @@ public:
   auto_id GetType(void) const {
     return m_ptr.type();
   }
-  
+
   /// <summary>
   /// Performs a full reset of this slot
   /// </summary>
@@ -135,7 +136,7 @@ public:
   }
 };
 
-template<class T>
+template<typename T>
 class AutowirableSlot:
   public DeferrableAutowiring
 {
@@ -200,14 +201,14 @@ public:
 
     auto retVal = get();
     if (!retVal)
-      throw autowiring_error("Attempted to dereference a null autowired field");
+      throw autowiring::deref_error(*this);
     return retVal;
   }
 
   T& operator*(void) const {
     auto retVal = get();
     if (!retVal)
-      throw autowiring_error("Attempted to dereference a null autowired field");
+      throw autowiring::deref_error(*this);
 
     // We have to initialize here, in the operator context, because we don't actually know if the
     // user will be making use of this type.

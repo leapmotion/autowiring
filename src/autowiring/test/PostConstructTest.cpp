@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/SimpleObject.hpp"
+#include "test/HasForwardOnlyType.hpp"
 #include <autowiring/Autowired.h>
 #include <autowiring/ContextMember.h>
 #include THREAD_HEADER
@@ -397,4 +398,32 @@ TEST_F(PostConstructTest, StrictNotificationArrangement) {
 
   for (int i = 0; i < 7; i++)
     ASSERT_EQ(i + 1, call[i]) << "Registered autowired handler was not called in the correct order";
+}
+
+class ForwardedOnlyBaseType;
+
+void InjectForwardOnlyType(CoreContext& ctxt);
+
+TEST_F(PostConstructTest, ForwardOnlyBaseType) {
+  AutoCurrentContext ctxt;
+  InjectForwardOnlyType(*ctxt);
+
+  bool called = false;
+  ctxt->NotifyWhenAutowired<ForwardedOnlyBaseType>(
+    [&called] {
+      called = true;
+    }
+  );
+  ASSERT_TRUE(called) << "Failed to find expected base type";
+}
+
+TEST_F(PostConstructTest, CorrectContextAssignment) {
+  AutoCreateContext child;
+  std::shared_ptr<CoreContext> currentCtxt;
+  child->Inject<SimpleObject>();
+  child->NotifyWhenAutowired<SimpleObject>([&] {
+    currentCtxt = AutoCurrentContext();
+  });
+
+  ASSERT_EQ(child, currentCtxt) << "Current context was not correctly assigned in a post-satisfied NotifyWhenAutowired handler";
 }

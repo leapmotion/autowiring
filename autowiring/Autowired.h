@@ -92,7 +92,7 @@ typedef AutoCreateContextT<void> AutoCreateContext;
 ///
 /// This class may be safely used even when the member in question is an abstract type.
 /// </remarks>
-template<class T>
+template<typename T>
 class Autowired:
   public AutowirableSlot<T>
 {
@@ -109,11 +109,11 @@ public:
   operator const std::shared_ptr<T>&(void) const {
     return static_cast<const AnySharedPointerT<T>&>(this->m_ptr).get();
   }
-  
+
   operator std::weak_ptr<T>(void) const {
     return this->operator const std::shared_ptr<T>&();
   }
-  
+
   operator T*(void) const {
     return this->operator const std::shared_ptr<T>&().get();
   }
@@ -159,7 +159,7 @@ public:
   struct signal_relay {
     signal_relay(Autowired<T>& f, autowiring::signal<void(Args...)> U::*m) :
       field(&f),
-      member(m) 
+      member(m)
     {}
 
     Autowired<T>* field;
@@ -172,7 +172,7 @@ public:
       );
     }
   };
-  
+
   template<typename U, typename... Args>
   signal_relay<U,Args...> operator()(autowiring::signal<void(Args...)> U::*sig) {
     static_assert(std::is_base_of<U, T>::value, "Cannot reference member of unrelated type");
@@ -213,7 +213,7 @@ public:
   AutoRequired(const AutoRequired<T>& rhs) :
     std::shared_ptr<T>(rhs)
   {}
-  
+
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
   // If you are getting an error tracked to this line, ensure that class T is totally
   // defined at the point where the Autowired instance is constructed.  Generally,
@@ -240,7 +240,7 @@ public:
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
     std::shared_ptr<T>(ctxt->template Inject<T>())
   {}
-  
+
   /// <summary>
   /// AutoRequired overload that forwards constructor arguments to the type being wired.
   /// </summary>
@@ -248,15 +248,15 @@ public:
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt, Args&&... args) :
     std::shared_ptr<T>(ctxt->template Inject<T>(std::forward<Args>(args)...))
   {}
-  
+
   operator bool(void) const {
     return IsAutowired();
   }
-  
+
   operator T*(void) const {
     return std::shared_ptr<T>::get();
   }
-  
+
   bool IsAutowired(void) const { return std::shared_ptr<T>::get() != nullptr; }
 };
 
@@ -278,7 +278,7 @@ public:
 /// be completely defined before construction.  By comparison, Autowired fields do not ever
 /// need to be defined.
 /// </remarks>
-template<class T>
+template<typename T>
 class AutowiredFast:
   public std::shared_ptr<T>
 {
@@ -309,14 +309,14 @@ public:
   T* operator->(void) const {
     auto* retVal = std::shared_ptr<T>::operator->();
     if (!retVal)
-      throw autowiring_error("Attempted to dereference a null autowired field");
+      throw autowiring::deref_error(*this);
     return retVal;
   }
 
   T& operator*(void) const {
     T* retVal = std::shared_ptr<T>::get();
     if (!retVal)
-      throw autowiring_error("Attempted to dereference a null autowired field");
+      throw autowiring::deref_error(*this);
     return *retVal;
   }
 
