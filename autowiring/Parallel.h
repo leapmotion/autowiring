@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
-#include "Autowired.h"
+#include "CoreContext.h"
 
 #include <iterator>
 #include <unordered_map>
@@ -107,6 +107,9 @@ public:
 // are run in the thread pool of the current context
 class parallel {
 public:
+  parallel(void);
+  parallel(CoreContext& ctxt);
+
   // Add job to be run in the thread pool
   template<typename _Fx>
   typename std::enable_if<
@@ -224,7 +227,7 @@ protected:
   // Total number of entries currently outstanding:
   size_t m_outstandingCount = 0;
 
-  AutoCurrentContext m_ctxt;
+  std::shared_ptr<CoreContext> m_ctxt;
 };
 
 template<typename T>
