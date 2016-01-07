@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.6</span>
+   &#160;<span id="projectnumber">0.7.7</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -202,20 +202,21 @@ $(document).ready(function(){initNavTree('auto__out_8h_source.html','');});
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  <span class="keyword">typedef</span> auto_id_t&lt;T&gt; id_type;</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_input = <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_output = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_shared = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_multi = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> tshift = 0;</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  <span class="keyword">static</span> <a class="code" href="classauto__out.html">auto_out&lt;T&gt;</a> arg(<a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; packet) {</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classauto__out.html">auto_out&lt;T&gt;</a>(packet);</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  }</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> Commit(<a class="code" href="class_auto_packet.html">AutoPacket</a>&amp;, <span class="keyword">const</span> type&amp;) {</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    <span class="comment">// Do nothing -- auto_out does its own deferred decoration.</span></div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  }</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;};</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_rvalue = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_shared = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_multi = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> tshift = 0;</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  <span class="keyword">static</span> <a class="code" href="classauto__out.html">auto_out&lt;T&gt;</a> arg(<a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; packet) {</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classauto__out.html">auto_out&lt;T&gt;</a>(packet);</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  }</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> Commit(<a class="code" href="class_auto_packet.html">AutoPacket</a>&amp;, <span class="keyword">const</span> type&amp;) {</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="comment">// Do nothing -- auto_out does its own deferred decoration.</span></div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  }</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;};</div>
 <div class="ttc" id="autowiring__error_8h_html"><div class="ttname"><a href="autowiring__error_8h.html">autowiring_error.h</a></div></div>
-<div class="ttc" id="class_auto_packet_html"><div class="ttname"><a href="class_auto_packet.html">AutoPacket</a></div><div class="ttdoc">A decorator-style processing packet </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:76</div></div>
+<div class="ttc" id="class_auto_packet_html"><div class="ttname"><a href="class_auto_packet.html">AutoPacket</a></div><div class="ttdoc">A decorator-style processing packet </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:73</div></div>
 <div class="ttc" id="_auto_packet_8h_html"><div class="ttname"><a href="_auto_packet_8h.html">AutoPacket.h</a></div></div>
 <div class="ttc" id="classauto__out_html_a8f2e723420ba2ca6827bd7e5cedc842d"><div class="ttname"><a href="classauto__out.html#a8f2e723420ba2ca6827bd7e5cedc842d">auto_out::reset</a></div><div class="ttdeci">void reset(void)</div><div class="ttdoc">Releases the internal implementatoin object </div><div class="ttdef"><b>Definition:</b> auto_out.h:108</div></div>
 <div class="ttc" id="classauto__out_html"><div class="ttname"><a href="classauto__out.html">auto_out</a></div><div class="ttdoc">The auto_out<T> class provides a way to implement deferred-output autofilters. </div><div class="ttdef"><b>Definition:</b> auto_out.h:38</div></div>
@@ -226,7 +227,7 @@ $(document).ready(function(){initNavTree('auto__out_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="auto__out_8h.html">auto_out.h</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:27:05 for Autowiring by
+    <li class="footer">Generated on Wed Jan 6 2016 16:25:19 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

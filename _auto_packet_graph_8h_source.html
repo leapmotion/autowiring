@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.6</span>
+   &#160;<span id="projectnumber">0.7.7</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -122,83 +122,88 @@ $(document).ready(function(){initNavTree('_auto_packet_graph_8h_source.html','')
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">struct </span>DeliveryEdge</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;{</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="comment">// The type info</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  auto_id type_info;</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <span class="comment">// The AutoFilterDescriptor</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  AutoFilterDescriptor descriptor;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  </div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <span class="comment">// Specifies if the argument is an input (type -&gt; descriptor) or output (descriptor -&gt; type)</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keywordtype">bool</span> input;</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="keyword">enum class</span> ArgType {</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    Input,</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    Output,</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    Rvalue</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  };</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <span class="comment">// The type info</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  auto_id type_info;</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  </div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="comment">// For the unordered map/hash comparison</span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  <span class="keywordtype">bool</span> operator==(<span class="keyword">const</span> DeliveryEdge&amp; rhs)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keywordflow">return</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;      type_info == rhs.type_info &amp;&amp;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;      descriptor == rhs.descriptor &amp;&amp;</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;      input == rhs.input;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  }</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;};</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacestd.html">std</a> {</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="keyword">template</span>&lt;&gt;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <span class="keyword">struct </span>hash&lt;DeliveryEdge&gt;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  {</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keywordtype">size_t</span> operator()(<span class="keyword">const</span> DeliveryEdge&amp; edge)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;      <span class="keywordflow">return</span> (<span class="keywordtype">size_t</span>) edge.descriptor.GetAutoFilter().ptr();</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    }</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  };</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;}</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;</div>
-<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="class_auto_packet_graph.html">   52</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_auto_packet_graph.html">AutoPacketGraph</a>:</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <span class="keyword">public</span> AutowiringEvents,</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  <span class="keyword">public</span> <a class="code" href="class_core_runnable.html">CoreRunnable</a></div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;{</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  <a class="code" href="class_auto_packet_graph.html">AutoPacketGraph</a>();</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  </div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  <span class="keyword">typedef</span> std::unordered_map&lt;DeliveryEdge, size_t, std::hash&lt;DeliveryEdge&gt;&gt; t_deliveryEdges;</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  </div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  <span class="comment">// A mapping of an edge to the number of times it was delivered</span></div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  t_deliveryEdges m_deliveryGraph;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  </div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <span class="comment">// A lock for this type</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  <span class="keyword">mutable</span> std::mutex m_lock;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  </div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  <span class="comment">// Reference to the AutoPacketFactory</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <a class="code" href="class_auto_required.html">AutoRequired&lt;AutoPacketFactory&gt;</a> m_factory;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  </div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  std::string <a class="code" href="class_auto_packet_graph.html#a04f1aea942c321644bd35f876a28ec65">DemangleTypeName</a>(<span class="keyword">const</span> std::type_info* type_info) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  </div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet_graph.html#a2555985fddf7753797c16fdd640f7293">LoadEdges</a>();</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  </div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet_graph.html#abbf7e7ea12fb7d05a332701bcbf4691e">RecordDelivery</a>(auto_id <span class="keywordtype">id</span>, <span class="keyword">const</span> AutoFilterDescriptor&amp; descriptor, <span class="keywordtype">bool</span> input);</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="comment">// The AutoFilterDescriptor</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  AutoFilterDescriptor descriptor;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  </div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="comment">// Specifies if the argument is an input (type -&gt; descriptor) or output (descriptor -&gt; type)</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="comment">// or rvalue (type &lt;-&gt; descriptor)</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  ArgType arg_type;</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  </div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  <span class="comment">// For the unordered map/hash comparison</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="keywordtype">bool</span> operator==(<span class="keyword">const</span> DeliveryEdge&amp; rhs)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="keywordflow">return</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;      type_info == rhs.type_info &amp;&amp;</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;      descriptor == rhs.descriptor &amp;&amp;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;      arg_type == rhs.arg_type;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  }</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;};</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacestd.html">std</a> {</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="keyword">template</span>&lt;&gt;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="keyword">struct </span>hash&lt;DeliveryEdge&gt;</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  {</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keywordtype">size_t</span> operator()(<span class="keyword">const</span> DeliveryEdge&amp; edge)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;      <span class="keywordflow">return</span> (<span class="keywordtype">size_t</span>) edge.descriptor.GetAutoFilter().ptr();</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    }</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  };</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;}</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
+<div class="line"><a name="l00059"></a><span class="lineno"><a class="line" href="class_auto_packet_graph.html">   59</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_auto_packet_graph.html">AutoPacketGraph</a>:</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  <span class="keyword">public</span> AutowiringEvents,</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  <span class="keyword">public</span> <a class="code" href="class_core_runnable.html">CoreRunnable</a></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;{</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  <span class="keyword">typedef</span> std::unordered_map&lt;DeliveryEdge, size_t, std::hash&lt;DeliveryEdge&gt;&gt; t_deliveryEdges;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  </div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <span class="comment">// A mapping of an edge to the number of times it was delivered</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  t_deliveryEdges m_deliveryGraph;</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  </div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="comment">// A lock for this type</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="keyword">mutable</span> std::mutex m_lock;</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  </div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="comment">// Reference to the AutoPacketFactory</span></div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  <a class="code" href="class_auto_required.html">AutoRequired&lt;AutoPacketFactory&gt;</a> m_factory;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  </div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  std::string <a class="code" href="class_auto_packet_graph.html#a04f1aea942c321644bd35f876a28ec65">DemangleTypeName</a>(<span class="keyword">const</span> std::type_info* type_info) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  </div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet_graph.html#a2555985fddf7753797c16fdd640f7293">LoadEdges</a>();</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  </div>
-<div class="line"><a name="l00099"></a><span class="lineno"><a class="line" href="class_auto_packet_graph.html#a5052cb6b91241eb3fc2029dbe090f464">   99</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_auto_packet_graph.html#a5052cb6b91241eb3fc2029dbe090f464">NewContext</a>(<a class="code" href="class_core_context.html">CoreContext</a>&amp;)<span class="keyword"> override </span>{}</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> ExpiredContext(<a class="code" href="class_core_context.html">CoreContext</a>&amp;)<span class="keyword"> override </span>{}</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> NewObject(<a class="code" href="class_core_context.html">CoreContext</a>&amp;, <span class="keyword">const</span> CoreObjectDescriptor&amp;) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet_graph.html#ad5e6774ac9a5a41e25307193f351e955">RecordDelivery</a>(auto_id <span class="keywordtype">id</span>, <span class="keyword">const</span> AutoFilterDescriptor&amp; descriptor, DeliveryEdge::ArgType arg_type);</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  </div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet_graph.html#a668b16bb510434cad6342e68d470bf7b">OnStart</a>(<span class="keywordtype">void</span>) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  </div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet_graph.html#af7a41e9335db0baf63085b50c889afe9">AutoFilter</a>(<a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; packet);</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  </div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet_graph.html#a2f9fb7e8a3cda106fecc172d5e4649d7">WriteGV</a>(<span class="keyword">const</span> std::string&amp; filename, <span class="keywordtype">bool</span> numPackets = <span class="keyword">false</span>) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;};</div>
+<div class="line"><a name="l00104"></a><span class="lineno"><a class="line" href="class_auto_packet_graph.html#a5052cb6b91241eb3fc2029dbe090f464">  104</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_auto_packet_graph.html#a5052cb6b91241eb3fc2029dbe090f464">NewContext</a>(<a class="code" href="class_core_context.html">CoreContext</a>&amp;)<span class="keyword"> override </span>{}</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> ExpiredContext(<a class="code" href="class_core_context.html">CoreContext</a>&amp;)<span class="keyword"> override </span>{}</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> NewObject(<a class="code" href="class_core_context.html">CoreContext</a>&amp;, <span class="keyword">const</span> CoreObjectDescriptor&amp;) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  </div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet_graph.html#a668b16bb510434cad6342e68d470bf7b">OnStart</a>(<span class="keywordtype">void</span>) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  </div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet_graph.html#af7a41e9335db0baf63085b50c889afe9">AutoFilter</a>(<a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; packet);</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  </div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet_graph.html#a2f9fb7e8a3cda106fecc172d5e4649d7">WriteGV</a>(<span class="keyword">const</span> std::string&amp; filename, <span class="keywordtype">bool</span> numPackets = <span class="keyword">false</span>) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;};</div>
 <div class="ttc" id="class_auto_packet_graph_html_a668b16bb510434cad6342e68d470bf7b"><div class="ttname"><a href="class_auto_packet_graph.html#a668b16bb510434cad6342e68d470bf7b">AutoPacketGraph::OnStart</a></div><div class="ttdeci">virtual bool OnStart(void) override</div><div class="ttdoc">CoreRunnable overrides. </div></div>
-<div class="ttc" id="class_auto_packet_graph_html"><div class="ttname"><a href="class_auto_packet_graph.html">AutoPacketGraph</a></div><div class="ttdoc">Graphical visualization of AutoPackets </div><div class="ttdef"><b>Definition:</b> AutoPacketGraph.h:52</div></div>
-<div class="ttc" id="class_auto_packet_graph_html_abbf7e7ea12fb7d05a332701bcbf4691e"><div class="ttname"><a href="class_auto_packet_graph.html#abbf7e7ea12fb7d05a332701bcbf4691e">AutoPacketGraph::RecordDelivery</a></div><div class="ttdeci">void RecordDelivery(auto_id id, const AutoFilterDescriptor &amp;descriptor, bool input)</div><div class="ttdoc">Record the delivery of a packet and increment the number of times the packet has been delivered ...</div></div>
+<div class="ttc" id="class_auto_packet_graph_html"><div class="ttname"><a href="class_auto_packet_graph.html">AutoPacketGraph</a></div><div class="ttdoc">Graphical visualization of AutoPackets </div><div class="ttdef"><b>Definition:</b> AutoPacketGraph.h:59</div></div>
 <div class="ttc" id="class_auto_packet_graph_html_a04f1aea942c321644bd35f876a28ec65"><div class="ttname"><a href="class_auto_packet_graph.html#a04f1aea942c321644bd35f876a28ec65">AutoPacketGraph::DemangleTypeName</a></div><div class="ttdeci">std::string DemangleTypeName(const std::type_info *type_info) const </div><div class="ttdoc">Demangle a type name as well as stripping "auto_in< >" </div></div>
 <div class="ttc" id="namespacestd_html"><div class="ttname"><a href="namespacestd.html">std</a></div><div class="ttdoc">STL namespace. </div></div>
-<div class="ttc" id="class_auto_packet_html"><div class="ttname"><a href="class_auto_packet.html">AutoPacket</a></div><div class="ttdoc">A decorator-style processing packet </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:76</div></div>
-<div class="ttc" id="class_auto_packet_graph_html_a5052cb6b91241eb3fc2029dbe090f464"><div class="ttname"><a href="class_auto_packet_graph.html#a5052cb6b91241eb3fc2029dbe090f464">AutoPacketGraph::NewContext</a></div><div class="ttdeci">virtual void NewContext(CoreContext &amp;) override</div><div class="ttdoc">AutowiringEvents overrides. </div><div class="ttdef"><b>Definition:</b> AutoPacketGraph.h:99</div></div>
+<div class="ttc" id="class_auto_packet_html"><div class="ttname"><a href="class_auto_packet.html">AutoPacket</a></div><div class="ttdoc">A decorator-style processing packet </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:73</div></div>
+<div class="ttc" id="class_auto_packet_graph_html_a5052cb6b91241eb3fc2029dbe090f464"><div class="ttname"><a href="class_auto_packet_graph.html#a5052cb6b91241eb3fc2029dbe090f464">AutoPacketGraph::NewContext</a></div><div class="ttdeci">virtual void NewContext(CoreContext &amp;) override</div><div class="ttdoc">AutowiringEvents overrides. </div><div class="ttdef"><b>Definition:</b> AutoPacketGraph.h:104</div></div>
 <div class="ttc" id="_autowired_8h_html"><div class="ttname"><a href="_autowired_8h.html">Autowired.h</a></div></div>
 <div class="ttc" id="class_auto_required_html"><div class="ttname"><a href="class_auto_required.html">AutoRequired&lt; AutoPacketFactory &gt;</a></div></div>
 <div class="ttc" id="_auto_packet_factory_8h_html"><div class="ttname"><a href="_auto_packet_factory_8h.html">AutoPacketFactory.h</a></div></div>
 <div class="ttc" id="class_core_runnable_html"><div class="ttname"><a href="class_core_runnable.html">CoreRunnable</a></div><div class="ttdoc">Provides the interface for threads that should receive start and stop notifications in a context ...</div><div class="ttdef"><b>Definition:</b> CoreRunnable.h:16</div></div>
-<div class="ttc" id="class_core_context_html"><div class="ttname"><a href="class_core_context.html">CoreContext</a></div><div class="ttdoc">A top-level container class representing an autowiring domain, a minimum broadcast domain...</div><div class="ttdef"><b>Definition:</b> CoreContext.h:116</div></div>
+<div class="ttc" id="class_core_context_html"><div class="ttname"><a href="class_core_context.html">CoreContext</a></div><div class="ttdoc">A top-level container class representing an autowiring domain, a minimum broadcast domain...</div><div class="ttdef"><b>Definition:</b> CoreContext.h:115</div></div>
 <div class="ttc" id="_auto_packet_8h_html"><div class="ttname"><a href="_auto_packet_8h.html">AutoPacket.h</a></div></div>
+<div class="ttc" id="class_auto_packet_graph_html_ad5e6774ac9a5a41e25307193f351e955"><div class="ttname"><a href="class_auto_packet_graph.html#ad5e6774ac9a5a41e25307193f351e955">AutoPacketGraph::RecordDelivery</a></div><div class="ttdeci">void RecordDelivery(auto_id id, const AutoFilterDescriptor &amp;descriptor, DeliveryEdge::ArgType arg_type)</div><div class="ttdoc">Record the delivery of a packet and increment the number of times the packet has been delivered ...</div></div>
 <div class="ttc" id="_core_runnable_8h_html"><div class="ttname"><a href="_core_runnable_8h.html">CoreRunnable.h</a></div></div>
 <div class="ttc" id="class_auto_packet_graph_html_af7a41e9335db0baf63085b50c889afe9"><div class="ttname"><a href="class_auto_packet_graph.html#af7a41e9335db0baf63085b50c889afe9">AutoPacketGraph::AutoFilter</a></div><div class="ttdeci">void AutoFilter(AutoPacket &amp;packet)</div><div class="ttdoc">Get a copy of the packet via AutoFilter </div></div>
 <div class="ttc" id="class_auto_packet_graph_html_a2f9fb7e8a3cda106fecc172d5e4649d7"><div class="ttname"><a href="class_auto_packet_graph.html#a2f9fb7e8a3cda106fecc172d5e4649d7">AutoPacketGraph::WriteGV</a></div><div class="ttdeci">bool WriteGV(const std::string &amp;filename, bool numPackets=false) const </div><div class="ttdoc">Write the graph to a file in graphviz format </div></div>
@@ -209,7 +214,7 @@ $(document).ready(function(){initNavTree('_auto_packet_graph_8h_source.html','')
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_auto_packet_graph_8h.html">AutoPacketGraph.h</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:27:05 for Autowiring by
+    <li class="footer">Generated on Wed Jan 6 2016 16:25:19 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.6</span>
+   &#160;<span id="projectnumber">0.7.7</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -187,9 +187,9 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_graph.html#a668b16bb510434cad6342e68d470bf7b">OnStart</a> (void) override</td></tr>
 <tr class="memdesc:a668b16bb510434cad6342e68d470bf7b"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="class_core_runnable.html" title="Provides the interface for threads that should receive start and stop notifications in a context ...">CoreRunnable</a> overrides. <br /></td></tr>
 <tr class="separator:a668b16bb510434cad6342e68d470bf7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abbf7e7ea12fb7d05a332701bcbf4691e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_graph.html#abbf7e7ea12fb7d05a332701bcbf4691e">RecordDelivery</a> (auto_id id, const AutoFilterDescriptor &amp;descriptor, bool input)</td></tr>
-<tr class="memdesc:abbf7e7ea12fb7d05a332701bcbf4691e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Record the delivery of a packet and increment the number of times the packet has been delivered  <a href="#abbf7e7ea12fb7d05a332701bcbf4691e">More...</a><br /></td></tr>
-<tr class="separator:abbf7e7ea12fb7d05a332701bcbf4691e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad5e6774ac9a5a41e25307193f351e955"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_graph.html#ad5e6774ac9a5a41e25307193f351e955">RecordDelivery</a> (auto_id id, const AutoFilterDescriptor &amp;descriptor, DeliveryEdge::ArgType arg_type)</td></tr>
+<tr class="memdesc:ad5e6774ac9a5a41e25307193f351e955"><td class="mdescLeft">&#160;</td><td class="mdescRight">Record the delivery of a packet and increment the number of times the packet has been delivered  <a href="#ad5e6774ac9a5a41e25307193f351e955">More...</a><br /></td></tr>
+<tr class="separator:ad5e6774ac9a5a41e25307193f351e955"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_class_core_runnable"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_class_core_runnable')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="class_core_runnable.html">CoreRunnable</a></td></tr>
 <tr class="memitem:acfcf01282cf908f91218bfdd5601678c inherit pro_methods_class_core_runnable"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#acfcf01282cf908f91218bfdd5601678c">DoAdditionalWait</a> (std::chrono::nanoseconds timeout)</td></tr>
 <tr class="memdesc:acfcf01282cf908f91218bfdd5601678c inherit pro_methods_class_core_runnable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked just before control is returned to the user.  <a href="#acfcf01282cf908f91218bfdd5601678c">More...</a><br /></td></tr>
@@ -279,7 +279,7 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 
 </div>
 </div>
-<a class="anchor" id="abbf7e7ea12fb7d05a332701bcbf4691e"></a>
+<a class="anchor" id="ad5e6774ac9a5a41e25307193f351e955"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -301,8 +301,8 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>input</em>&#160;</td>
+          <td class="paramtype">DeliveryEdge::ArgType&#160;</td>
+          <td class="paramname"><em>arg_type</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -365,7 +365,7 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_auto_packet_graph.html">AutoPacketGraph</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:27:05 for Autowiring by
+    <li class="footer">Generated on Wed Jan 6 2016 16:25:20 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

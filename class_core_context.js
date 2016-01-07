@@ -50,6 +50,7 @@ var class_core_context =
     [ "RemoveSnooper", "class_core_context.html#a1a7dd841f71c271a2f61b0a698011f29", null ],
     [ "RemoveSnooper", "class_core_context.html#a9dc0620a27181c14654da12561c1cead", null ],
     [ "SetCurrent", "class_core_context.html#a4b2aca013ec6ca56def339ccc2a950e7", null ],
+    [ "SetCurrent", "class_core_context.html#a40740a5c98a9cf2919b83bde3b9adbfb", null ],
     [ "SetCurrent", "class_core_context.html#ad306c1c3703311ba1fe7fdb4add279f9", null ],
     [ "SetThreadPool", "class_core_context.html#a2eff2c50f12c4de4e9e82a49a4bb2bc7", null ],
     [ "SetUnlinkOnTeardown", "class_core_context.html#a15918e5e6962e2865b6da51e557f35c8", null ],

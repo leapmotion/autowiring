@@ -14,6 +14,7 @@ var dir_2e38afdc5a4015337247db13c49755ec =
       [ "auto_arg< std::shared_ptr< T > & >", "classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_6_01_4.html", null ],
       [ "auto_arg< std::shared_ptr< T > >", "classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_4.html", null ],
       [ "auto_arg< T & >", "classauto__arg_3_01_t_01_6_01_4.html", null ],
+      [ "auto_arg< T && >", "classauto__arg_3_01_t_01_6_6_01_4.html", null ],
       [ "auto_arg< T * >", "classauto__arg_3_01_t_01_5_01_4.html", null ],
       [ "auto_arg< T const ** >", "classauto__arg_3_01_t_01const_01_5_5_01_4.html", null ],
       [ "auto_arg_ctor_helper", "structdetail_1_1auto__arg__ctor__helper.html", null ],

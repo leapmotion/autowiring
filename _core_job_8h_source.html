@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.6</span>
+   &#160;<span id="projectnumber">0.7.7</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -115,54 +115,52 @@ $(document).ready(function(){initNavTree('_core_job_8h_source.html','');});
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="_core_runnable_8h.html">CoreRunnable.h</a>&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="_dispatch_queue_8h.html">DispatchQueue.h</a>&quot;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">class </span>CoreObject;</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">class </span>CoreJob:</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  <span class="keyword">public</span> <a class="code" href="class_context_member.html">ContextMember</a>,</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  <span class="keyword">public</span> <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>,</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  <span class="keyword">public</span> <a class="code" href="class_core_runnable.html">CoreRunnable</a></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;{</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  CoreJob(<span class="keyword">const</span> <span class="keywordtype">char</span>* name = <span class="keyword">nullptr</span>);</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  <span class="keyword">virtual</span> ~CoreJob(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <span class="comment">// Flag, set to true when it&#39;s time to start dispatching</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <span class="keywordtype">bool</span> m_running = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <span class="comment">// The current outstanding async in the thread pool, if one exists:</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="keywordtype">void</span>* m_curEvent = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="comment">// Flag, indicating whether curEvent is in a teardown pathway.  This</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="comment">// flag is highly stateful.</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="keywordtype">bool</span> m_curEventInTeardown = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="keywordtype">void</span> DispatchAllAndClearCurrent(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="comment">// DispatchQueue overrides</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">OnPended</a>(std::unique_lock&lt;std::mutex&gt;&amp;&amp;) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="comment">// Resets the outstanding pointer, calls base abort routine</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016">Abort</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  <span class="comment">// &quot;CoreRunnable&quot; overrides</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_core_runnable.html#aa72398f9348bd2b63fd9e040ee21f7e9">OnStart</a>(<span class="keywordtype">void</span>) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_core_runnable.html#ac2b1fc01ebff2aa052c13abe7be0d647">OnStop</a>(<span class="keywordtype">bool</span> graceful) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_core_runnable.html#af3c2a762acf2fd367f09fff1100231da">DoAdditionalWait</a>(<span class="keywordtype">void</span>) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_core_runnable.html#af3c2a762acf2fd367f09fff1100231da">DoAdditionalWait</a>(std::chrono::nanoseconds timeout) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;};</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">class </span>CoreJob:</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;  <span class="keyword">public</span> <a class="code" href="class_context_member.html">ContextMember</a>,</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  <span class="keyword">public</span> <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>,</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  <span class="keyword">public</span> <a class="code" href="class_core_runnable.html">CoreRunnable</a></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;{</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  CoreJob(<span class="keyword">const</span> <span class="keywordtype">char</span>* name = <span class="keyword">nullptr</span>);</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="keyword">virtual</span> ~CoreJob(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  <span class="comment">// Flag, set to true when it&#39;s time to start dispatching</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="keywordtype">bool</span> m_running = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <span class="comment">// The current outstanding async in the thread pool, if one exists:</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <span class="keywordtype">void</span>* m_curEvent = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="comment">// Flag, indicating whether curEvent is in a teardown pathway.  This</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <span class="comment">// flag is highly stateful.</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keywordtype">bool</span> m_curEventInTeardown = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="keywordtype">void</span> DispatchAllAndClearCurrent(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <span class="comment">// DispatchQueue overrides</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">OnPended</a>(std::unique_lock&lt;std::mutex&gt;&amp;&amp;) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <span class="comment">// Resets the outstanding pointer, calls base abort routine</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016">Abort</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="comment">// &quot;CoreRunnable&quot; overrides</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_core_runnable.html#aa72398f9348bd2b63fd9e040ee21f7e9">OnStart</a>(<span class="keywordtype">void</span>) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_core_runnable.html#ac2b1fc01ebff2aa052c13abe7be0d647">OnStop</a>(<span class="keywordtype">bool</span> graceful) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_core_runnable.html#af3c2a762acf2fd367f09fff1100231da">DoAdditionalWait</a>(<span class="keywordtype">void</span>) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_core_runnable.html#af3c2a762acf2fd367f09fff1100231da">DoAdditionalWait</a>(std::chrono::nanoseconds timeout) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;};</div>
 <div class="ttc" id="class_core_runnable_html_af3c2a762acf2fd367f09fff1100231da"><div class="ttname"><a href="class_core_runnable.html#af3c2a762acf2fd367f09fff1100231da">CoreRunnable::DoAdditionalWait</a></div><div class="ttdeci">virtual void DoAdditionalWait(void)</div><div class="ttdoc">Untimed variant of DoAdditionalWait </div><div class="ttdef"><b>Definition:</b> CoreRunnable.h:80</div></div>
 <div class="ttc" id="_dispatch_queue_8h_html"><div class="ttname"><a href="_dispatch_queue_8h.html">DispatchQueue.h</a></div></div>
 <div class="ttc" id="class_core_runnable_html_ac2b1fc01ebff2aa052c13abe7be0d647"><div class="ttname"><a href="class_core_runnable.html#ac2b1fc01ebff2aa052c13abe7be0d647">CoreRunnable::OnStop</a></div><div class="ttdeci">virtual void OnStop(bool graceful)</div><div class="ttdoc">Invoked by the base class Stop() method. Override this method to perform any needed cleanup...</div><div class="ttdef"><b>Definition:</b> CoreRunnable.h:62</div></div>
-<div class="ttc" id="class_dispatch_queue_html_a6c7d922485f14bdbb72559df2e009b40"><div class="ttname"><a href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">DispatchQueue::OnPended</a></div><div class="ttdeci">virtual void OnPended(std::unique_lock&lt; std::mutex &gt; &amp;&amp;lk)</div><div class="ttdoc">Utility virtual, called whenever a new event is deferred </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:87</div></div>
+<div class="ttc" id="class_dispatch_queue_html_a6c7d922485f14bdbb72559df2e009b40"><div class="ttname"><a href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">DispatchQueue::OnPended</a></div><div class="ttdeci">virtual void OnPended(std::unique_lock&lt; std::mutex &gt; &amp;&amp;lk)</div><div class="ttdoc">Utility virtual, called whenever a new event is deferred </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:88</div></div>
 <div class="ttc" id="class_context_member_html"><div class="ttname"><a href="class_context_member.html">ContextMember</a></div><div class="ttdoc">A class that must be inherited in order to be a member of a context heriarchy </div><div class="ttdef"><b>Definition:</b> ContextMember.h:12</div></div>
 <div class="ttc" id="_context_member_8h_html"><div class="ttname"><a href="_context_member_8h.html">ContextMember.h</a></div></div>
 <div class="ttc" id="class_core_runnable_html"><div class="ttname"><a href="class_core_runnable.html">CoreRunnable</a></div><div class="ttdoc">Provides the interface for threads that should receive start and stop notifications in a context ...</div><div class="ttdef"><b>Definition:</b> CoreRunnable.h:16</div></div>
 <div class="ttc" id="class_dispatch_queue_html_a3193aa5422bf9e1aa80e1c1e9a913016"><div class="ttname"><a href="class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016">DispatchQueue::Abort</a></div><div class="ttdeci">void Abort(void)</div><div class="ttdoc">Causes the current dispatch queue to be dumped if it&#39;s non-empty </div></div>
 <div class="ttc" id="_core_runnable_8h_html"><div class="ttname"><a href="_core_runnable_8h.html">CoreRunnable.h</a></div></div>
-<div class="ttc" id="class_dispatch_queue_html"><div class="ttname"><a href="class_dispatch_queue.html">DispatchQueue</a></div><div class="ttdoc">This is an asynchronous queue of zero-argument functions </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:20</div></div>
+<div class="ttc" id="class_dispatch_queue_html"><div class="ttname"><a href="class_dispatch_queue.html">DispatchQueue</a></div><div class="ttdoc">This is an asynchronous queue of zero-argument functions </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:21</div></div>
 <div class="ttc" id="class_core_runnable_html_aa72398f9348bd2b63fd9e040ee21f7e9"><div class="ttname"><a href="class_core_runnable.html#aa72398f9348bd2b63fd9e040ee21f7e9">CoreRunnable::OnStart</a></div><div class="ttdeci">virtual bool OnStart(void)</div><div class="ttdoc">Invoked by the Start() method. Override this method to perform any needed setup </div><div class="ttdef"><b>Definition:</b> CoreRunnable.h:51</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
@@ -170,7 +168,7 @@ $(document).ready(function(){initNavTree('_core_job_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_core_job_8h.html">CoreJob.h</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:27:05 for Autowiring by
+    <li class="footer">Generated on Wed Jan 6 2016 16:25:19 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

@@ -29,6 +29,7 @@ var searchData=
   ['auto_5farg_3c_20std_3a_3ashared_5fptr_3c_20t_20_3e_20_26_20_3e',['auto_arg&lt; std::shared_ptr&lt; T &gt; &amp; &gt;',['../classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_6_01_4.html',1,'']]],
   ['auto_5farg_3c_20std_3a_3ashared_5fptr_3c_20t_20_3e_20_3e',['auto_arg&lt; std::shared_ptr&lt; T &gt; &gt;',['../classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_4.html',1,'']]],
   ['auto_5farg_3c_20t_20_26_20_3e',['auto_arg&lt; T &amp; &gt;',['../classauto__arg_3_01_t_01_6_01_4.html',1,'']]],
+  ['auto_5farg_3c_20t_20_26_26_20_3e',['auto_arg&lt; T &amp;&amp; &gt;',['../classauto__arg_3_01_t_01_6_6_01_4.html',1,'']]],
   ['auto_5farg_3c_20t_20_2a_20_3e',['auto_arg&lt; T * &gt;',['../classauto__arg_3_01_t_01_5_01_4.html',1,'']]],
   ['auto_5farg_3c_20t_20const_20_2a_2a_20_3e',['auto_arg&lt; T const ** &gt;',['../classauto__arg_3_01_t_01const_01_5_5_01_4.html',1,'']]],
   ['auto_5farg_5fctor_5fhelper',['auto_arg_ctor_helper',['../structdetail_1_1auto__arg__ctor__helper.html',1,'detail']]],

@@ -8,6 +8,7 @@ var searchData=
   ['demangle',['demangle',['../namespaceautowiring.html#aef8c65202e0d57213ea8335013bc634a',1,'autowiring']]],
   ['demangletypename',['DemangleTypeName',['../class_auto_packet_graph.html#a04f1aea942c321644bd35f876a28ec65',1,'AutoPacketGraph']]],
   ['deprecated',['DEPRECATED',['../class_auto_packet.html#aada270350032ac870594ac2fdf6fe372',1,'AutoPacket::DEPRECATED()'],['../class_core_context.html#a1a9cb8e948aee0f4c90e0ec8f89d99cf',1,'CoreContext::DEPRECATED()']]],
+  ['detectcycle',['DetectCycle',['../class_auto_packet.html#a8f801a97c5eb7308c977ef34604608d4',1,'AutoPacket']]],
   ['dispatchallevents',['DispatchAllEvents',['../class_dispatch_queue.html#af94131c04ad4d1513cc411870fc6b002',1,'DispatchQueue']]],
   ['dispatchevent',['DispatchEvent',['../class_dispatch_queue.html#ae4cf0ed4b428ecbee03fb64a0e705ce7',1,'DispatchQueue']]],
   ['dispatcheventunsafe',['DispatchEventUnsafe',['../class_dispatch_queue.html#a7c909a2f706599e2aeaea163afc43d2a',1,'DispatchQueue']]],

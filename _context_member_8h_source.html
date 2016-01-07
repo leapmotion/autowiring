@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.6</span>
+   &#160;<span id="projectnumber">0.7.7</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -145,23 +145,29 @@ $(document).ready(function(){initNavTree('_context_member_8h_source.html','');})
 <div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="class_context_member.html#a256451cd0e6dfb1b9c6312cd2b0a4129">   67</a></span>&#160;  std::shared_ptr&lt;CoreContext&gt; <a class="code" href="class_context_member.html#a256451cd0e6dfb1b9c6312cd2b0a4129">GetContext</a>(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> m_context.lock(); }</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00073"></a><span class="lineno"><a class="line" href="class_context_member.html#ac57af82464416e1763e1d04c50b4c89c">   73</a></span>&#160;  std::shared_ptr&lt;T&gt; <a class="code" href="class_context_member.html#ac57af82464416e1763e1d04c50b4c89c">GetSelf</a>(<span class="keywordtype">void</span>) {</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keywordflow">return</span> std::static_pointer_cast&lt;T, <a class="code" href="class_context_member.html">ContextMember</a>&gt;(shared_from_this());</div>
+<div class="line"><a name="l00073"></a><span class="lineno"><a class="line" href="class_context_member.html#a84efe78dbb81bfa94bb46eaf466a6f77">   73</a></span>&#160;  std::shared_ptr&lt;const T&gt; <a class="code" href="class_context_member.html#a84efe78dbb81bfa94bb46eaf466a6f77">GetSelf</a>(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keywordflow">return</span> std::static_pointer_cast&lt;<span class="keyword">const</span> T, <span class="keyword">const</span> <a class="code" href="class_context_member.html">ContextMember</a>&gt;(shared_from_this());</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  }</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;};</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00081"></a><span class="lineno"><a class="line" href="class_context_member.html#ac57af82464416e1763e1d04c50b4c89c">   81</a></span>&#160;  std::shared_ptr&lt;T&gt; <a class="code" href="class_context_member.html#ac57af82464416e1763e1d04c50b4c89c">GetSelf</a>(<span class="keywordtype">void</span>) {</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordflow">return</span> std::static_pointer_cast&lt;T, <a class="code" href="class_context_member.html">ContextMember</a>&gt;(shared_from_this());</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  }</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;};</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;</div>
 <div class="ttc" id="class_context_member_html_a256451cd0e6dfb1b9c6312cd2b0a4129"><div class="ttname"><a href="class_context_member.html#a256451cd0e6dfb1b9c6312cd2b0a4129">ContextMember::GetContext</a></div><div class="ttdeci">std::shared_ptr&lt; CoreContext &gt; GetContext(void) const </div><div class="ttdoc">Retrieves the context associated with this object. </div><div class="ttdef"><b>Definition:</b> ContextMember.h:67</div></div>
 <div class="ttc" id="class_context_member_html_a34e73ac0659e22117582b903b81d2b18"><div class="ttname"><a href="class_context_member.html#a34e73ac0659e22117582b903b81d2b18">ContextMember::NotifyContextTeardown</a></div><div class="ttdeci">virtual void NotifyContextTeardown(void)</div><div class="ttdoc">Invoked by the parent context when the parent context is about to be destroyed </div><div class="ttdef"><b>Definition:</b> ContextMember.h:55</div></div>
-<div class="ttc" id="class_context_member_html_ac57af82464416e1763e1d04c50b4c89c"><div class="ttname"><a href="class_context_member.html#ac57af82464416e1763e1d04c50b4c89c">ContextMember::GetSelf</a></div><div class="ttdeci">std::shared_ptr&lt; T &gt; GetSelf(void)</div><div class="ttdoc">Returns a shared pointer that refers to ourselves </div><div class="ttdef"><b>Definition:</b> ContextMember.h:73</div></div>
+<div class="ttc" id="class_context_member_html_a84efe78dbb81bfa94bb46eaf466a6f77"><div class="ttname"><a href="class_context_member.html#a84efe78dbb81bfa94bb46eaf466a6f77">ContextMember::GetSelf</a></div><div class="ttdeci">std::shared_ptr&lt; const T &gt; GetSelf(void) const </div><div class="ttdoc">Returns a shared pointer that refers to ourselves </div><div class="ttdef"><b>Definition:</b> ContextMember.h:73</div></div>
+<div class="ttc" id="class_context_member_html_ac57af82464416e1763e1d04c50b4c89c"><div class="ttname"><a href="class_context_member.html#ac57af82464416e1763e1d04c50b4c89c">ContextMember::GetSelf</a></div><div class="ttdeci">std::shared_ptr&lt; T &gt; GetSelf(void)</div><div class="ttdoc">Returns a shared pointer that refers to ourselves </div><div class="ttdef"><b>Definition:</b> ContextMember.h:81</div></div>
 <div class="ttc" id="class_context_member_html"><div class="ttname"><a href="class_context_member.html">ContextMember</a></div><div class="ttdoc">A class that must be inherited in order to be a member of a context heriarchy </div><div class="ttdef"><b>Definition:</b> ContextMember.h:12</div></div>
-<div class="ttc" id="class_core_context_html"><div class="ttname"><a href="class_core_context.html">CoreContext</a></div><div class="ttdoc">A top-level container class representing an autowiring domain, a minimum broadcast domain...</div><div class="ttdef"><b>Definition:</b> CoreContext.h:116</div></div>
+<div class="ttc" id="class_core_context_html"><div class="ttname"><a href="class_core_context.html">CoreContext</a></div><div class="ttdoc">A top-level container class representing an autowiring domain, a minimum broadcast domain...</div><div class="ttdef"><b>Definition:</b> CoreContext.h:115</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_context_member_8h.html">ContextMember.h</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:27:05 for Autowiring by
+    <li class="footer">Generated on Wed Jan 6 2016 16:25:19 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

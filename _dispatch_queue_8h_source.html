@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.6</span>
+   &#160;<span id="projectnumber">0.7.7</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -113,225 +113,226 @@ $(document).ready(function(){initNavTree('_dispatch_queue_8h_source.html','');})
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;dispatch_aborted_exception.h&quot;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;DispatchThunk.h&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;atomic&gt;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;list&gt;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;queue&gt;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include MUTEX_HEADER</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include RVALUE_HEADER</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include MEMORY_HEADER</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">class </span><a class="code" href="class_dispatch_queue.html">DispatchQueue</a>;</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
-<div class="line"><a name="l00020"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html">   20</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_dispatch_queue.html">DispatchQueue</a> {</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>(<span class="keywordtype">size_t</span> dispatchCap);</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>(<a class="code" href="class_dispatch_queue.html">DispatchQueue</a>&amp;&amp;);</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>(<span class="keyword">const</span> <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>&amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  <span class="keyword">virtual</span> <a class="code" href="class_dispatch_queue.html#aa62c1140f05c7513bc80668aa724684c">~DispatchQueue</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="comment">// The maximum allowed number of pended dispatches before pended calls start getting dropped</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="keywordtype">size_t</span> m_dispatchCap = 1024;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="comment">// Current linked list length</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  std::atomic&lt;size_t&gt; m_count{0};</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <span class="comment">// Current version cap:</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  std::atomic&lt;uint64_t&gt; m_version{1};</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  <span class="comment">// The dispatch queue proper.  A vector is used, here, not a queue, because this collection is frequently emptied.</span></div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  DispatchThunkBase* m_pHead = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  DispatchThunkBase* m_pTail = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="comment">// Priority queue of non-ready events:</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  std::priority_queue&lt;DispatchThunkDelayed&gt; m_delayedQueue;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <span class="comment">// A lock held when the dispatch queue must be updated:</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  std::mutex m_dispatchLock;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <span class="comment">// Notice when the dispatch queue has been updated:</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  std::condition_variable m_queueUpdated;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  <span class="comment">// True if DispatchQueue::Abort has been called.  This will cause the dispatch queue&#39;s remaining entries</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  <span class="comment">// to be dumped and prevent the introduction of new entries to the queue.</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  <span class="keywordtype">bool</span> m_aborted = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_dispatch_queue.html#ad392c934d343fb56f8c233d2fbd6243b">PromoteReadyDispatchersUnsafe</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a7c909a2f706599e2aeaea163afc43d2a">DispatchEventUnsafe</a>(std::unique_lock&lt;std::mutex&gt;&amp; lk);</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
-<div class="line"><a name="l00087"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">   87</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">OnPended</a>(std::unique_lock&lt;std::mutex&gt;&amp;&amp; lk) {}</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> _Fx&gt;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="keywordtype">void</span> Pend(_Fx&amp;&amp; fx) {</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <a class="code" href="class_dispatch_queue.html#a6603bb739523587631367935af2aea36">PendExisting</a>(</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;      std::unique_lock&lt;std::mutex&gt;(m_dispatchLock),</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;      <span class="keyword">new</span> DispatchThunk&lt;_Fx&gt;(std::forward&lt;_Fx&amp;&amp;&gt;(fx))</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    );</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  }</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a6603bb739523587631367935af2aea36">PendExisting</a>(std::unique_lock&lt;std::mutex&gt;&amp;&amp; lk, DispatchThunkBase* thunk);</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
-<div class="line"><a name="l00105"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#a6e455ffdaece9c129717211f13752fa3">  105</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a6e455ffdaece9c129717211f13752fa3">SetDispatcherCap</a>(<span class="keywordtype">size_t</span> dispatchCap) { m_dispatchCap = dispatchCap; }</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00111"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#a9ee3c640b1c46dc87157d7e1186db9bc">  111</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_dispatch_queue.html#a9ee3c640b1c46dc87157d7e1186db9bc">AreAnyDispatchersReady</a>(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> !!m_pHead; }</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;</div>
-<div class="line"><a name="l00121"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#aead80f32b70b6c6ee5acffb2b083724a">  121</a></span>&#160;  <span class="keywordtype">size_t</span> <a class="code" href="class_dispatch_queue.html#aead80f32b70b6c6ee5acffb2b083724a">GetDispatchQueueLength</a>(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{<span class="keywordflow">return</span> m_count + m_delayedQueue.size();}</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016">Abort</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#afd3293e212f176ae7a11cbb4690cce71">WakeAllWaitingThreads</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_dispatch_queue.html#ae4cf0ed4b428ecbee03fb64a0e705ce7">DispatchEvent</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="class_dispatch_queue.html#af94131c04ad4d1513cc411870fc6b002">DispatchAllEvents</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a304588a65ecc0712c3aafe0461c73f1b">WaitForEvent</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_dispatch_queue.html#a304588a65ecc0712c3aafe0461c73f1b">WaitForEvent</a>(std::chrono::milliseconds milliseconds);</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_dispatch_queue.html#a304588a65ecc0712c3aafe0461c73f1b">WaitForEvent</a>(std::chrono::steady_clock::time_point wakeTime);</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  <span class="keywordtype">bool</span> WaitForEventUnsafe(std::unique_lock&lt;std::mutex&gt;&amp; lk, std::chrono::steady_clock::time_point wakeTime);</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;</div>
-<div class="line"><a name="l00195"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#a1ecb6036d42a7b56e960713f4f9630a0">  195</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a1ecb6036d42a7b56e960713f4f9630a0">AddExisting</a>(std::unique_ptr&lt;DispatchThunkBase&gt;&amp;&amp; pBase) {</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    std::unique_lock&lt;std::mutex&gt; lk(m_dispatchLock);</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    <span class="keywordflow">if</span> (m_count &lt; m_dispatchCap)</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;      <a class="code" href="class_dispatch_queue.html#a6603bb739523587631367935af2aea36">PendExisting</a>(std::move(lk), pBase.release());</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;  }</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_dispatch_queue.html#a202af0ec4502042b5fb32c0dfc4cdfa8">Barrier</a>(std::chrono::nanoseconds timeout);</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a202af0ec4502042b5fb32c0dfc4cdfa8">Barrier</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;  std::chrono::steady_clock::time_point <a class="code" href="class_dispatch_queue.html#a457e780c30d55fffc706892e1ebb160a">SuggestSoonestWakeupTimeUnsafe</a>(std::chrono::steady_clock::time_point latestTime) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;  <span class="keyword">class </span>DispatchThunkDelayedExpressionRel {</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    DispatchThunkDelayedExpressionRel(<a class="code" href="class_dispatch_queue.html">DispatchQueue</a>* pParent, std::chrono::microseconds delay) :</div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;      m_pParent(pParent),</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;      m_delay(delay)</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;    {}</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;  <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;    <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>* <span class="keyword">const</span> m_pParent;</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    <span class="keyword">const</span> std::chrono::microseconds m_delay;</div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;once.h&quot;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;atomic&gt;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;list&gt;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;queue&gt;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include MUTEX_HEADER</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include RVALUE_HEADER</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include MEMORY_HEADER</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">class </span><a class="code" href="class_dispatch_queue.html">DispatchQueue</a>;</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;</div>
+<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html">   21</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_dispatch_queue.html">DispatchQueue</a> {</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>(<span class="keywordtype">size_t</span> dispatchCap);</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>(<a class="code" href="class_dispatch_queue.html">DispatchQueue</a>&amp;&amp;);</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>(<span class="keyword">const</span> <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>&amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="keyword">virtual</span> <a class="code" href="class_dispatch_queue.html#aa62c1140f05c7513bc80668aa724684c">~DispatchQueue</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="comment">// True if DispatchQueue::Abort has been called.  This will cause the dispatch queue&#39;s remaining entries</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="comment">// to be dumped and prevent the introduction of new entries to the queue.</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  autowiring::once_signal&lt;DispatchQueue&gt; onAborted;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  <span class="comment">// The maximum allowed number of pended dispatches before pended calls start getting dropped</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <span class="keywordtype">size_t</span> m_dispatchCap = 1024;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <span class="comment">// Current linked list length</span></div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  std::atomic&lt;size_t&gt; m_count{0};</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="comment">// Current version cap:</span></div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  std::atomic&lt;uint64_t&gt; m_version{1};</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  <span class="comment">// The dispatch queue proper.  A vector is used, here, not a queue, because this collection is frequently emptied.</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  DispatchThunkBase* m_pHead = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  DispatchThunkBase* m_pTail = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  <span class="comment">// Priority queue of non-ready events:</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  std::priority_queue&lt;DispatchThunkDelayed&gt; m_delayedQueue;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  <span class="comment">// A lock held when the dispatch queue must be updated:</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  std::mutex m_dispatchLock;</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  <span class="comment">// Notice when the dispatch queue has been updated:</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  std::condition_variable m_queueUpdated;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_dispatch_queue.html#ad392c934d343fb56f8c233d2fbd6243b">PromoteReadyDispatchersUnsafe</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a7c909a2f706599e2aeaea163afc43d2a">DispatchEventUnsafe</a>(std::unique_lock&lt;std::mutex&gt;&amp; lk);</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>
+<div class="line"><a name="l00088"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">   88</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">OnPended</a>(std::unique_lock&lt;std::mutex&gt;&amp;&amp; lk) {}</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> _Fx&gt;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="keywordtype">void</span> Pend(_Fx&amp;&amp; fx) {</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <a class="code" href="class_dispatch_queue.html#a6603bb739523587631367935af2aea36">PendExisting</a>(</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;      std::unique_lock&lt;std::mutex&gt;(m_dispatchLock),</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;      <span class="keyword">new</span> DispatchThunk&lt;_Fx&gt;(std::forward&lt;_Fx&amp;&amp;&gt;(fx))</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    );</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  }</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a6603bb739523587631367935af2aea36">PendExisting</a>(std::unique_lock&lt;std::mutex&gt;&amp;&amp; lk, DispatchThunkBase* thunk);</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
+<div class="line"><a name="l00106"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#a6e455ffdaece9c129717211f13752fa3">  106</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a6e455ffdaece9c129717211f13752fa3">SetDispatcherCap</a>(<span class="keywordtype">size_t</span> dispatchCap) { m_dispatchCap = dispatchCap; }</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00112"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#a9ee3c640b1c46dc87157d7e1186db9bc">  112</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_dispatch_queue.html#a9ee3c640b1c46dc87157d7e1186db9bc">AreAnyDispatchersReady</a>(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> !!m_pHead; }</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;</div>
+<div class="line"><a name="l00122"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#aead80f32b70b6c6ee5acffb2b083724a">  122</a></span>&#160;  <span class="keywordtype">size_t</span> <a class="code" href="class_dispatch_queue.html#aead80f32b70b6c6ee5acffb2b083724a">GetDispatchQueueLength</a>(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{<span class="keywordflow">return</span> m_count + m_delayedQueue.size();}</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016">Abort</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#afd3293e212f176ae7a11cbb4690cce71">WakeAllWaitingThreads</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_dispatch_queue.html#ae4cf0ed4b428ecbee03fb64a0e705ce7">DispatchEvent</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="class_dispatch_queue.html#af94131c04ad4d1513cc411870fc6b002">DispatchAllEvents</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a304588a65ecc0712c3aafe0461c73f1b">WaitForEvent</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_dispatch_queue.html#a304588a65ecc0712c3aafe0461c73f1b">WaitForEvent</a>(std::chrono::milliseconds milliseconds);</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_dispatch_queue.html#a304588a65ecc0712c3aafe0461c73f1b">WaitForEvent</a>(std::chrono::steady_clock::time_point wakeTime);</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;  <span class="keywordtype">bool</span> WaitForEventUnsafe(std::unique_lock&lt;std::mutex&gt;&amp; lk, std::chrono::steady_clock::time_point wakeTime);</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;</div>
+<div class="line"><a name="l00199"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#a1ecb6036d42a7b56e960713f4f9630a0">  199</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a1ecb6036d42a7b56e960713f4f9630a0">AddExisting</a>(std::unique_ptr&lt;DispatchThunkBase&gt;&amp;&amp; pBase) {</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    std::unique_lock&lt;std::mutex&gt; lk(m_dispatchLock);</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    <span class="keywordflow">if</span> (m_count &lt; m_dispatchCap)</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;      <a class="code" href="class_dispatch_queue.html#a6603bb739523587631367935af2aea36">PendExisting</a>(std::move(lk), pBase.release());</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;  }</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_dispatch_queue.html#a202af0ec4502042b5fb32c0dfc4cdfa8">Barrier</a>(std::chrono::nanoseconds timeout);</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a202af0ec4502042b5fb32c0dfc4cdfa8">Barrier</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;  std::chrono::steady_clock::time_point <a class="code" href="class_dispatch_queue.html#a457e780c30d55fffc706892e1ebb160a">SuggestSoonestWakeupTimeUnsafe</a>(std::chrono::steady_clock::time_point latestTime) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;</div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;  <span class="keyword">class </span>DispatchThunkDelayedExpressionRel {</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;    DispatchThunkDelayedExpressionRel(<a class="code" href="class_dispatch_queue.html">DispatchQueue</a>* pParent, std::chrono::microseconds delay) :</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;      m_pParent(pParent),</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;      m_delay(delay)</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    {}</div>
 <div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">class</span> _Fx&gt;</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;    <span class="keywordtype">void</span> operator,(_Fx&amp;&amp; fx) {</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;      <span class="comment">// Let the parent handle this one directly after composing a delayed dispatch thunk r-value</span></div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;      <span class="keywordflow">if</span> (m_delay.count())</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;        *m_pParent += DispatchThunkDelayed(</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;          std::chrono::steady_clock::now() + m_delay,</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;          <span class="keyword">new</span> DispatchThunk&lt;_Fx&gt;(std::forward&lt;_Fx&amp;&amp;&gt;(fx))</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;        );</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;      <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;        *m_pParent += std::forward&lt;_Fx&amp;&amp;&gt;(fx);</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    }</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;  };</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;</div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;  <span class="keyword">class </span>DispatchThunkDelayedExpressionAbs {</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    DispatchThunkDelayedExpressionAbs(<a class="code" href="class_dispatch_queue.html">DispatchQueue</a>* pParent, std::chrono::steady_clock::time_point wakeup) :</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;      m_pParent(pParent),</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;      m_wakeup(wakeup)</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;    {}</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;  <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>* <span class="keyword">const</span> m_pParent;</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    <span class="keyword">const</span> std::chrono::steady_clock::time_point m_wakeup;</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;  <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;    <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>* <span class="keyword">const</span> m_pParent;</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;    <span class="keyword">const</span> std::chrono::microseconds m_delay;</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">class</span> _Fx&gt;</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;    <span class="keywordtype">void</span> operator,(_Fx&amp;&amp; fx) {</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;      <span class="comment">// Let the parent handle this one directly after composing a delayed dispatch thunk r-value</span></div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;      <span class="keywordflow">if</span> (m_delay.count())</div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;        *m_pParent += DispatchThunkDelayed(</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;          std::chrono::steady_clock::now() + m_delay,</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;          <span class="keyword">new</span> DispatchThunk&lt;_Fx&gt;(std::forward&lt;_Fx&amp;&amp;&gt;(fx))</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;        );</div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;      <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;        *m_pParent += std::forward&lt;_Fx&amp;&amp;&gt;(fx);</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    }</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;  };</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  <span class="keyword">class </span>DispatchThunkDelayedExpressionAbs {</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;    DispatchThunkDelayedExpressionAbs(<a class="code" href="class_dispatch_queue.html">DispatchQueue</a>* pParent, std::chrono::steady_clock::time_point wakeup) :</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;      m_pParent(pParent),</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;      m_wakeup(wakeup)</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    {}</div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">class</span> _Fx&gt;</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    <span class="keywordtype">void</span> operator,(_Fx&amp;&amp; fx) {</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;      <span class="comment">// Let the parent handle this one directly after composing a delayed dispatch thunk r-value</span></div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;      *m_pParent += DispatchThunkDelayed(</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        m_wakeup,</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;        <span class="keyword">new</span> DispatchThunk&lt;_Fx&gt;(std::forward&lt;_Fx&gt;(fx))</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;      );</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    }</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;  };</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a993c2a6b31496f06d47079a56086a507">operator+=</a>(<a class="code" href="class_dispatch_queue.html">DispatchQueue</a>&amp;&amp; rhs);</div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> Rep, <span class="keyword">class</span> Period&gt;</div>
-<div class="line"><a name="l00299"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#a4ef60c207a481b40c252b120ff366fe5">  299</a></span>&#160;  DispatchThunkDelayedExpressionRel <a class="code" href="class_dispatch_queue.html#a4ef60c207a481b40c252b120ff366fe5">operator+=</a>(std::chrono::duration&lt;Rep, Period&gt; rhs) {</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    <span class="comment">// Verify that the duration is at least microseconds.  If you&#39;re getting an assertion here, try</span></div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;    <span class="comment">// using std::duration_cast&lt;std::chrono::microseconds&gt;(duration)</span></div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;    static_assert(</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;      Period::num / Period::den &lt;= 1000000,</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;      <span class="stringliteral">&quot;Dispatch queues cannot be used to describe intervals less than one microseconds in duration&quot;</span></div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    );</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    <span class="keywordflow">return</span>{<span class="keyword">this</span>, rhs};</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  }</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;  DispatchThunkDelayedExpressionAbs <a class="code" href="class_dispatch_queue.html#a993c2a6b31496f06d47079a56086a507">operator+=</a>(std::chrono::steady_clock::time_point rhs);</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a993c2a6b31496f06d47079a56086a507">operator+=</a>(DispatchThunkDelayed&amp;&amp; rhs);</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> _Fx&gt;</div>
-<div class="line"><a name="l00327"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#a8dfd34970fbfca53f0d3b10cbb9c433c">  327</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a8dfd34970fbfca53f0d3b10cbb9c433c">operator+=</a>(_Fx&amp;&amp; fx) {</div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    static_assert(!std::is_base_of&lt;DispatchThunkBase, _Fx&gt;::value, <span class="stringliteral">&quot;Overload resolution malfunction, must not doubly wrap a dispatch thunk&quot;</span>);</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;    static_assert(!std::is_pointer&lt;_Fx&gt;::value, <span class="stringliteral">&quot;Cannot pend a pointer to a function, we must have direct ownership&quot;</span>);</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;    <span class="comment">// Create the thunk first to reduce the amount of time we spend in lock:</span></div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;    <span class="keyword">auto</span> thunk = <span class="keyword">new</span> DispatchThunk&lt;_Fx&gt;(std::forward&lt;_Fx&gt;(fx));</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;</div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;    std::unique_lock&lt;std::mutex&gt; lk(m_dispatchLock);</div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;    <span class="keywordflow">if</span> (m_count &gt;= m_dispatchCap) {</div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;      lk.unlock();</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;      <span class="keyword">delete</span> thunk;</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;      <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    }</div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    <span class="comment">// Count must be separately maintained:</span></div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;    m_count++;</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;    <span class="comment">// Linked list setup:</span></div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;    <span class="keywordflow">if</span> (m_pHead)</div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;      m_pTail-&gt;m_pFlink = thunk; </div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;    <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;      m_pHead = thunk;</div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;      m_queueUpdated.notify_all();</div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;    }</div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;    m_pTail = thunk;</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;</div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;    <span class="comment">// Notification as needed:</span></div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;    <a class="code" href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">OnPended</a>(std::move(lk));</div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;  }</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;};</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;  <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <a class="code" href="class_dispatch_queue.html">DispatchQueue</a>* <span class="keyword">const</span> m_pParent;</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    <span class="keyword">const</span> std::chrono::steady_clock::time_point m_wakeup;</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">class</span> _Fx&gt;</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    <span class="keywordtype">void</span> operator,(_Fx&amp;&amp; fx) {</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;      <span class="comment">// Let the parent handle this one directly after composing a delayed dispatch thunk r-value</span></div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;      *m_pParent += DispatchThunkDelayed(</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;        m_wakeup,</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;        <span class="keyword">new</span> DispatchThunk&lt;_Fx&gt;(std::forward&lt;_Fx&gt;(fx))</div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;      );</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    }</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;  };</div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a993c2a6b31496f06d47079a56086a507">operator+=</a>(<a class="code" href="class_dispatch_queue.html">DispatchQueue</a>&amp;&amp; rhs);</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> Rep, <span class="keyword">class</span> Period&gt;</div>
+<div class="line"><a name="l00303"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#a4ef60c207a481b40c252b120ff366fe5">  303</a></span>&#160;  DispatchThunkDelayedExpressionRel <a class="code" href="class_dispatch_queue.html#a4ef60c207a481b40c252b120ff366fe5">operator+=</a>(std::chrono::duration&lt;Rep, Period&gt; rhs) {</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;    <span class="comment">// Verify that the duration is at least microseconds.  If you&#39;re getting an assertion here, try</span></div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <span class="comment">// using std::duration_cast&lt;std::chrono::microseconds&gt;(duration)</span></div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    static_assert(</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;      Period::num / Period::den &lt;= 1000000,</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;      <span class="stringliteral">&quot;Dispatch queues cannot be used to describe intervals less than one microseconds in duration&quot;</span></div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    );</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;    <span class="keywordflow">return</span>{<span class="keyword">this</span>, rhs};</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;  }</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;  DispatchThunkDelayedExpressionAbs <a class="code" href="class_dispatch_queue.html#a993c2a6b31496f06d47079a56086a507">operator+=</a>(std::chrono::steady_clock::time_point rhs);</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a993c2a6b31496f06d47079a56086a507">operator+=</a>(DispatchThunkDelayed&amp;&amp; rhs);</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> _Fx&gt;</div>
+<div class="line"><a name="l00331"></a><span class="lineno"><a class="line" href="class_dispatch_queue.html#a8dfd34970fbfca53f0d3b10cbb9c433c">  331</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_dispatch_queue.html#a8dfd34970fbfca53f0d3b10cbb9c433c">operator+=</a>(_Fx&amp;&amp; fx) {</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;    static_assert(!std::is_base_of&lt;DispatchThunkBase, _Fx&gt;::value, <span class="stringliteral">&quot;Overload resolution malfunction, must not doubly wrap a dispatch thunk&quot;</span>);</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;    static_assert(!std::is_pointer&lt;_Fx&gt;::value, <span class="stringliteral">&quot;Cannot pend a pointer to a function, we must have direct ownership&quot;</span>);</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;</div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;    <span class="comment">// Create the thunk first to reduce the amount of time we spend in lock:</span></div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;    <span class="keyword">auto</span> thunk = <span class="keyword">new</span> DispatchThunk&lt;_Fx&gt;(std::forward&lt;_Fx&gt;(fx));</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    std::unique_lock&lt;std::mutex&gt; lk(m_dispatchLock);</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    <span class="keywordflow">if</span> (m_count &gt;= m_dispatchCap) {</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;      lk.unlock();</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;      <span class="keyword">delete</span> thunk;</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;      <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;    }</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;</div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;    <span class="comment">// Count must be separately maintained:</span></div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;    m_count++;</div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;</div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;    <span class="comment">// Linked list setup:</span></div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;    <span class="keywordflow">if</span> (m_pHead)</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;      m_pTail-&gt;m_pFlink = thunk; </div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;    <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;      m_pHead = thunk;</div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;      m_queueUpdated.notify_all();</div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;    }</div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;    m_pTail = thunk;</div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;    <span class="comment">// Notification as needed:</span></div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;    <a class="code" href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">OnPended</a>(std::move(lk));</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;  }</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;};</div>
 <div class="ttc" id="class_dispatch_queue_html_ae4cf0ed4b428ecbee03fb64a0e705ce7"><div class="ttname"><a href="class_dispatch_queue.html#ae4cf0ed4b428ecbee03fb64a0e705ce7">DispatchQueue::DispatchEvent</a></div><div class="ttdeci">bool DispatchEvent(void)</div><div class="ttdoc">Similar to WaitForEvent, but does not block </div></div>
 <div class="ttc" id="class_dispatch_queue_html_a993c2a6b31496f06d47079a56086a507"><div class="ttname"><a href="class_dispatch_queue.html#a993c2a6b31496f06d47079a56086a507">DispatchQueue::operator+=</a></div><div class="ttdeci">void operator+=(DispatchQueue &amp;&amp;rhs)</div><div class="ttdoc">Extracts the contents of the dispatch queue on the right-hand side for handling by this queue ...</div></div>
 <div class="ttc" id="class_dispatch_queue_html_af94131c04ad4d1513cc411870fc6b002"><div class="ttname"><a href="class_dispatch_queue.html#af94131c04ad4d1513cc411870fc6b002">DispatchQueue::DispatchAllEvents</a></div><div class="ttdeci">int DispatchAllEvents(void)</div><div class="ttdoc">Similar to DispatchEvent, but will attempt to dispatch all events currently queued ...</div></div>
 <div class="ttc" id="class_dispatch_queue_html_a457e780c30d55fffc706892e1ebb160a"><div class="ttname"><a href="class_dispatch_queue.html#a457e780c30d55fffc706892e1ebb160a">DispatchQueue::SuggestSoonestWakeupTimeUnsafe</a></div><div class="ttdeci">std::chrono::steady_clock::time_point SuggestSoonestWakeupTimeUnsafe(std::chrono::steady_clock::time_point latestTime) const </div><div class="ttdoc">Recommends a point in time to wake up to check for events </div></div>
 <div class="ttc" id="class_dispatch_queue_html_a6603bb739523587631367935af2aea36"><div class="ttname"><a href="class_dispatch_queue.html#a6603bb739523587631367935af2aea36">DispatchQueue::PendExisting</a></div><div class="ttdeci">void PendExisting(std::unique_lock&lt; std::mutex &gt; &amp;&amp;lk, DispatchThunkBase *thunk)</div><div class="ttdoc">Attaches an element to the end of the dispatch queue without any checks. </div></div>
-<div class="ttc" id="class_dispatch_queue_html_aead80f32b70b6c6ee5acffb2b083724a"><div class="ttname"><a href="class_dispatch_queue.html#aead80f32b70b6c6ee5acffb2b083724a">DispatchQueue::GetDispatchQueueLength</a></div><div class="ttdeci">size_t GetDispatchQueueLength(void) const </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:121</div></div>
+<div class="ttc" id="class_dispatch_queue_html_aead80f32b70b6c6ee5acffb2b083724a"><div class="ttname"><a href="class_dispatch_queue.html#aead80f32b70b6c6ee5acffb2b083724a">DispatchQueue::GetDispatchQueueLength</a></div><div class="ttdeci">size_t GetDispatchQueueLength(void) const </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:122</div></div>
 <div class="ttc" id="class_dispatch_queue_html_a202af0ec4502042b5fb32c0dfc4cdfa8"><div class="ttname"><a href="class_dispatch_queue.html#a202af0ec4502042b5fb32c0dfc4cdfa8">DispatchQueue::Barrier</a></div><div class="ttdeci">void Barrier(void)</div><div class="ttdoc">Identical to the timed version of Barrier, but does not time out </div></div>
-<div class="ttc" id="class_dispatch_queue_html_a8dfd34970fbfca53f0d3b10cbb9c433c"><div class="ttname"><a href="class_dispatch_queue.html#a8dfd34970fbfca53f0d3b10cbb9c433c">DispatchQueue::operator+=</a></div><div class="ttdeci">void operator+=(_Fx &amp;&amp;fx)</div><div class="ttdoc">Generic overload which will pend an arbitrary dispatch type </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:327</div></div>
+<div class="ttc" id="class_dispatch_queue_html_a8dfd34970fbfca53f0d3b10cbb9c433c"><div class="ttname"><a href="class_dispatch_queue.html#a8dfd34970fbfca53f0d3b10cbb9c433c">DispatchQueue::operator+=</a></div><div class="ttdeci">void operator+=(_Fx &amp;&amp;fx)</div><div class="ttdoc">Generic overload which will pend an arbitrary dispatch type </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:331</div></div>
 <div class="ttc" id="class_dispatch_queue_html_afd3293e212f176ae7a11cbb4690cce71"><div class="ttname"><a href="class_dispatch_queue.html#afd3293e212f176ae7a11cbb4690cce71">DispatchQueue::WakeAllWaitingThreads</a></div><div class="ttdeci">void WakeAllWaitingThreads(void)</div><div class="ttdoc">Causes all calls to WaitForEvent to return control to their callers </div></div>
-<div class="ttc" id="class_dispatch_queue_html_a6e455ffdaece9c129717211f13752fa3"><div class="ttname"><a href="class_dispatch_queue.html#a6e455ffdaece9c129717211f13752fa3">DispatchQueue::SetDispatcherCap</a></div><div class="ttdeci">void SetDispatcherCap(size_t dispatchCap)</div><div class="ttdoc">Updates the upper bound on the number of allowed pending dispatchers </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:105</div></div>
-<div class="ttc" id="class_dispatch_queue_html_a6c7d922485f14bdbb72559df2e009b40"><div class="ttname"><a href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">DispatchQueue::OnPended</a></div><div class="ttdeci">virtual void OnPended(std::unique_lock&lt; std::mutex &gt; &amp;&amp;lk)</div><div class="ttdoc">Utility virtual, called whenever a new event is deferred </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:87</div></div>
-<div class="ttc" id="class_dispatch_queue_html_a1ecb6036d42a7b56e960713f4f9630a0"><div class="ttname"><a href="class_dispatch_queue.html#a1ecb6036d42a7b56e960713f4f9630a0">DispatchQueue::AddExisting</a></div><div class="ttdeci">void AddExisting(std::unique_ptr&lt; DispatchThunkBase &gt; &amp;&amp;pBase)</div><div class="ttdoc">Explicit overload for already-constructed dispatch thunk types </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:195</div></div>
-<div class="ttc" id="class_dispatch_queue_html_a9ee3c640b1c46dc87157d7e1186db9bc"><div class="ttname"><a href="class_dispatch_queue.html#a9ee3c640b1c46dc87157d7e1186db9bc">DispatchQueue::AreAnyDispatchersReady</a></div><div class="ttdeci">bool AreAnyDispatchersReady(void) const </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:111</div></div>
+<div class="ttc" id="class_dispatch_queue_html_a6e455ffdaece9c129717211f13752fa3"><div class="ttname"><a href="class_dispatch_queue.html#a6e455ffdaece9c129717211f13752fa3">DispatchQueue::SetDispatcherCap</a></div><div class="ttdeci">void SetDispatcherCap(size_t dispatchCap)</div><div class="ttdoc">Updates the upper bound on the number of allowed pending dispatchers </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:106</div></div>
+<div class="ttc" id="class_dispatch_queue_html_a6c7d922485f14bdbb72559df2e009b40"><div class="ttname"><a href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">DispatchQueue::OnPended</a></div><div class="ttdeci">virtual void OnPended(std::unique_lock&lt; std::mutex &gt; &amp;&amp;lk)</div><div class="ttdoc">Utility virtual, called whenever a new event is deferred </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:88</div></div>
+<div class="ttc" id="class_dispatch_queue_html_a1ecb6036d42a7b56e960713f4f9630a0"><div class="ttname"><a href="class_dispatch_queue.html#a1ecb6036d42a7b56e960713f4f9630a0">DispatchQueue::AddExisting</a></div><div class="ttdeci">void AddExisting(std::unique_ptr&lt; DispatchThunkBase &gt; &amp;&amp;pBase)</div><div class="ttdoc">Explicit overload for already-constructed dispatch thunk types </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:199</div></div>
+<div class="ttc" id="class_dispatch_queue_html_a9ee3c640b1c46dc87157d7e1186db9bc"><div class="ttname"><a href="class_dispatch_queue.html#a9ee3c640b1c46dc87157d7e1186db9bc">DispatchQueue::AreAnyDispatchersReady</a></div><div class="ttdeci">bool AreAnyDispatchersReady(void) const </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:112</div></div>
 <div class="ttc" id="class_dispatch_queue_html_aa62c1140f05c7513bc80668aa724684c"><div class="ttname"><a href="class_dispatch_queue.html#aa62c1140f05c7513bc80668aa724684c">DispatchQueue::~DispatchQueue</a></div><div class="ttdeci">virtual ~DispatchQueue(void)</div><div class="ttdoc">Runs down the dispatch queue without calling anything </div></div>
 <div class="ttc" id="class_dispatch_queue_html_a7c909a2f706599e2aeaea163afc43d2a"><div class="ttname"><a href="class_dispatch_queue.html#a7c909a2f706599e2aeaea163afc43d2a">DispatchQueue::DispatchEventUnsafe</a></div><div class="ttdeci">void DispatchEventUnsafe(std::unique_lock&lt; std::mutex &gt; &amp;lk)</div><div class="ttdoc">Similar to DispatchEvent, except assumes that the dispatch lock is currently held ...</div></div>
 <div class="ttc" id="class_dispatch_queue_html_ad392c934d343fb56f8c233d2fbd6243b"><div class="ttname"><a href="class_dispatch_queue.html#ad392c934d343fb56f8c233d2fbd6243b">DispatchQueue::PromoteReadyDispatchersUnsafe</a></div><div class="ttdeci">bool PromoteReadyDispatchersUnsafe(void)</div><div class="ttdoc">Moves all ready events from the delayed queue into the dispatch queue </div></div>
 <div class="ttc" id="class_dispatch_queue_html_a3193aa5422bf9e1aa80e1c1e9a913016"><div class="ttname"><a href="class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016">DispatchQueue::Abort</a></div><div class="ttdeci">void Abort(void)</div><div class="ttdoc">Causes the current dispatch queue to be dumped if it&#39;s non-empty </div></div>
-<div class="ttc" id="class_dispatch_queue_html"><div class="ttname"><a href="class_dispatch_queue.html">DispatchQueue</a></div><div class="ttdoc">This is an asynchronous queue of zero-argument functions </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:20</div></div>
+<div class="ttc" id="class_dispatch_queue_html"><div class="ttname"><a href="class_dispatch_queue.html">DispatchQueue</a></div><div class="ttdoc">This is an asynchronous queue of zero-argument functions </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:21</div></div>
 <div class="ttc" id="class_dispatch_queue_html_a304588a65ecc0712c3aafe0461c73f1b"><div class="ttname"><a href="class_dispatch_queue.html#a304588a65ecc0712c3aafe0461c73f1b">DispatchQueue::WaitForEvent</a></div><div class="ttdeci">void WaitForEvent(void)</div><div class="ttdoc">Waits until a lambda function is ready to run in this thread&#39;s dispatch queue, dispatches the functio...</div></div>
-<div class="ttc" id="class_dispatch_queue_html_a4ef60c207a481b40c252b120ff366fe5"><div class="ttname"><a href="class_dispatch_queue.html#a4ef60c207a481b40c252b120ff366fe5">DispatchQueue::operator+=</a></div><div class="ttdeci">DispatchThunkDelayedExpressionRel operator+=(std::chrono::duration&lt; Rep, Period &gt; rhs)</div><div class="ttdoc">Overload for the introduction of a delayed dispatch thunk </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:299</div></div>
+<div class="ttc" id="class_dispatch_queue_html_a4ef60c207a481b40c252b120ff366fe5"><div class="ttname"><a href="class_dispatch_queue.html#a4ef60c207a481b40c252b120ff366fe5">DispatchQueue::operator+=</a></div><div class="ttdeci">DispatchThunkDelayedExpressionRel operator+=(std::chrono::duration&lt; Rep, Period &gt; rhs)</div><div class="ttdoc">Overload for the introduction of a delayed dispatch thunk </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:303</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_dispatch_queue_8h.html">DispatchQueue.h</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:27:05 for Autowiring by
+    <li class="footer">Generated on Wed Jan 6 2016 16:25:19 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

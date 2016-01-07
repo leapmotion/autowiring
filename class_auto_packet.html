@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.6</span>
+   &#160;<span id="projectnumber">0.7.7</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -200,6 +200,9 @@ std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a>
 <tr class="separator:aa1235227e171d7229b72d3901e6d1042"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad162cefce3bd9980fa2984c29f2a2517"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#ad162cefce3bd9980fa2984c29f2a2517">GetDecorationTypeCount</a> (void) const </td></tr>
 <tr class="separator:ad162cefce3bd9980fa2984c29f2a2517"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aceabec5a3d6f352bb97f2c8cac72639d"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
+<tr class="memitem:aceabec5a3d6f352bb97f2c8cac72639d"><td class="memTemplItemLeft" align="right" valign="top">T &amp;&amp;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#aceabec5a3d6f352bb97f2c8cac72639d">GetRvalue</a> (int tshift=0) const </td></tr>
+<tr class="separator:aceabec5a3d6f352bb97f2c8cac72639d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e8152052798e49283c8297886c62ffe"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:a1e8152052798e49283c8297886c62ffe"><td class="memTemplItemLeft" align="right" valign="top">const SatCounter &amp;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a1e8152052798e49283c8297886c62ffe">GetSatisfaction</a> (void) const </td></tr>
 <tr class="separator:a1e8152052798e49283c8297886c62ffe"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -236,7 +239,7 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memdesc:a30a84b4131245539806ff5a7738f04f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience overload, provided to allow the attachment of receive-only filters to a const <a class="el" href="class_auto_packet.html" title="A decorator-style processing packet ">AutoPacket</a>  <a href="#a30a84b4131245539806ff5a7738f04f3">More...</a><br /></td></tr>
 <tr class="separator:a30a84b4131245539806ff5a7738f04f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa302c91a39594f5ea0f58094ce4fea3a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#aa302c91a39594f5ea0f58094ce4fea3a">RemoveRecipient</a> (const SatCounter &amp;recipient)</td></tr>
-<tr class="memdesc:aa302c91a39594f5ea0f58094ce4fea3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes a previously added packet recipient  <a href="#aa302c91a39594f5ea0f58094ce4fea3a">More...</a><br /></td></tr>
+<tr class="memdesc:aa302c91a39594f5ea0f58094ce4fea3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes a previously added packet recipient The user is responsible to free the memeory for recipient. TODO: seems like a bad design, need refactor  <a href="#aa302c91a39594f5ea0f58094ce4fea3a">More...</a><br /></td></tr>
 <tr class="separator:aa302c91a39594f5ea0f58094ce4fea3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99e7dd1ee400c313c05d56d7642a0c87"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_auto_packet.html">AutoPacket</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a99e7dd1ee400c313c05d56d7642a0c87">Successor</a> (void)</td></tr>
 <tr class="memdesc:a99e7dd1ee400c313c05d56d7642a0c87"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the next packet that will be issued by the packet factory in this context relative to this context  <a href="#a99e7dd1ee400c313c05d56d7642a0c87">More...</a><br /></td></tr>
@@ -283,6 +286,10 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a721c9e5f19dcc05c8d408901615fcea5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a721c9e5f19dcc05c8d408901615fcea5">DecorateNoPriors</a> (const AnySharedPointer &amp;ptr, DecorationKey key)</td></tr>
 <tr class="memdesc:a721c9e5f19dcc05c8d408901615fcea5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs a decoration operation but does not attach priors to successors.  <a href="#a721c9e5f19dcc05c8d408901615fcea5">More...</a><br /></td></tr>
 <tr class="separator:a721c9e5f19dcc05c8d408901615fcea5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f801a97c5eb7308c977ef34604608d4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8f801a97c5eb7308c977ef34604608d4"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a8f801a97c5eb7308c977ef34604608d4">DetectCycle</a> (SatCounter &amp;satCounter, std::unordered_set&lt; SatCounter * &gt; &amp;tempVisited, std::unordered_set&lt; SatCounter * &gt; &amp;permVisited)</td></tr>
+<tr class="memdesc:a8f801a97c5eb7308c977ef34604608d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect cycle in the auto filter graph using DFS <br /></td></tr>
+<tr class="separator:a8f801a97c5eb7308c977ef34604608d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af40ffd3b386863a7874866aa5a6b0429"><td class="memItemLeft" align="right" valign="top">const DecorationDisposition *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#af40ffd3b386863a7874866aa5a6b0429">GetDisposition</a> (const DecorationKey &amp;ti) const </td></tr>
 <tr class="memdesc:af40ffd3b386863a7874866aa5a6b0429"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the decoration disposition corresponding to some type  <a href="#af40ffd3b386863a7874866aa5a6b0429">More...</a><br /></td></tr>
 <tr class="separator:af40ffd3b386863a7874866aa5a6b0429"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -310,6 +317,10 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:a17e257b9636aff04f23d82d11abfb2a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a17e257b9636aff04f23d82d11abfb2a6">PulseSatisfactionUnsafe</a> (std::unique_lock&lt; std::mutex &gt; lk, DecorationDisposition *pTypeSubs[], size_t nInfos)</td></tr>
 <tr class="memdesc:a17e257b9636aff04f23d82d11abfb2a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs a "satisfaction pulse", which will avoid notifying any deferred filters  <a href="#a17e257b9636aff04f23d82d11abfb2a6">More...</a><br /></td></tr>
 <tr class="separator:a17e257b9636aff04f23d82d11abfb2a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62793bf1d713aab23a5cabebf519a153"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a62793bf1d713aab23a5cabebf519a153"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a62793bf1d713aab23a5cabebf519a153">RemoveSatCounterUnsafe</a> (const SatCounter &amp;satCounter)</td></tr>
+<tr class="memdesc:a62793bf1d713aab23a5cabebf519a153"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove all AutoFilter argument information for a recipient <br /></td></tr>
+<tr class="separator:a62793bf1d713aab23a5cabebf519a153"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7d82f8536c4a1b847a5ba0efb9b99d6"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_auto_packet.html">AutoPacket</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#af7d82f8536c4a1b847a5ba0efb9b99d6">SuccessorUnsafe</a> (void)</td></tr>
 <tr class="memdesc:af7d82f8536c4a1b847a5ba0efb9b99d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">The portion of Successor that must run under a lock  <a href="#af7d82f8536c4a1b847a5ba0efb9b99d6">More...</a><br /></td></tr>
 <tr class="separator:af7d82f8536c4a1b847a5ba0efb9b99d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -345,7 +356,7 @@ Static Protected Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Adds a recipient for data associated only with this issuance of the packet. </p>
-<p>This method is not idempotent. The returned Recipient structure may be used to remove the recipient safely at any point. The caller MUST NOT attempt </p>
+<p>This method is idempotent. The returned Recipient structure may be used to remove the recipient safely at any point. </p>
 
 <p>Referenced by <a class="el" href="class_auto_packet.html#a3fa96738dac77521d123698ad3f80a35">operator+=()</a>.</p>
 
@@ -901,7 +912,7 @@ template&lt;class T &gt; </div>
 
 <p>Detects the desired type, or throws an exception if such a type cannot be found </p>
 
-<p>Referenced by <a class="el" href="class_auto_packet.html#a5467f83887d63a602cb05d88c6893bc0">GetShared()</a>.</p>
+<p>Referenced by <a class="el" href="class_auto_packet.html#aceabec5a3d6f352bb97f2c8cac72639d">GetRvalue()</a>, and <a class="el" href="class_auto_packet.html#a5467f83887d63a602cb05d88c6893bc0">GetShared()</a>.</p>
 
 </div>
 </div>
@@ -1149,6 +1160,33 @@ template&lt;class T &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>The disposition, if the decoration exists and is satisfied, otherwise nullptr</dd></dl>
 
 <p>Referenced by <a class="el" href="class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b">Get()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="aceabec5a3d6f352bb97f2c8cac72639d"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">T&amp;&amp; AutoPacket::GetRvalue </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>tshift</em> = <code>0</code></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>The Rvalue decoration for the specified type and time shift, or throws an exception if such a type cannot be found </dd></dl>
 
 </div>
 </div>
@@ -1506,7 +1544,7 @@ template&lt;class Fx &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Removes a previously added packet recipient </p>
+<p>Removes a previously added packet recipient The user is responsible to free the memeory for recipient. TODO: seems like a bad design, need refactor </p>
 
 </div>
 </div>
@@ -1634,7 +1672,7 @@ template&lt;class Fx &gt; </div>
 
 <p>Throws a formatted runtime error corresponding to the case where an absent decoration was demanded </p>
 
-<p>Referenced by <a class="el" href="class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d">Get()</a>.</p>
+<p>Referenced by <a class="el" href="class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d">Get()</a>, and <a class="el" href="class_auto_packet.html#aceabec5a3d6f352bb97f2c8cac72639d">GetRvalue()</a>.</p>
 
 </div>
 </div>
@@ -1858,7 +1896,7 @@ template&lt;class... Args&gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_auto_packet.html">AutoPacket</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:27:05 for Autowiring by
+    <li class="footer">Generated on Wed Jan 6 2016 16:25:20 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>
