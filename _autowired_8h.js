@@ -6,7 +6,7 @@ var _autowired_8h =
     [ "AutoFired", "class_auto_fired.html", null ],
     [ "AutoGlobalContext", "class_auto_global_context.html", null ],
     [ "AutoRequired", "class_auto_required.html", "class_auto_required" ],
-    [ "Autowired", "class_autowired.html", "class_autowired" ],
+    [ "Autowired", "class_autowired.html", null ],
     [ "AutowiredFast", "class_autowired_fast.html", null ],
     [ "AutoCreateContext", "_autowired_8h.html#aa65e92d94fffb9dcc42b0ff6de09f4cb", null ]
 ];

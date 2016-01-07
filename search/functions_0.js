@@ -12,6 +12,5 @@ var searchData=
   ['appendautofiltersto',['AppendAutoFiltersTo',['../class_auto_packet_factory.html#a5c26425753556533cdec00968acdcffa',1,'AutoPacketFactory']]],
   ['areanydispatchersready',['AreAnyDispatchersReady',['../class_dispatch_queue.html#a9ee3c640b1c46dc87157d7e1186db9bc',1,'DispatchQueue']]],
   ['autofilter',['AutoFilter',['../class_auto_packet_graph.html#af7a41e9335db0baf63085b50c889afe9',1,'AutoPacketGraph::AutoFilter()'],['../class_auto_time_stamp.html#a86afb50fed571942f9160f754035c25b',1,'AutoTimeStamp::AutoFilter()']]],
-  ['autorequired',['AutoRequired',['../class_auto_required.html#a64e2c65e4a28a6a28c0ba96a11d94e33',1,'AutoRequired']]],
-  ['autowire',['Autowire',['../class_core_context.html#ada59ec3baf8cb335d6e0792dd1473705',1,'CoreContext']]]
+  ['autorequired',['AutoRequired',['../class_auto_required.html#a64e2c65e4a28a6a28c0ba96a11d94e33',1,'AutoRequired']]]
 ];

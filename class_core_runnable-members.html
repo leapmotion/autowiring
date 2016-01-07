@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.5</span>
+   &#160;<span id="projectnumber">0.7.6</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -117,23 +117,23 @@ $(document).ready(function(){initNavTree('class_core_runnable.html','');});
   <tr class="even"><td class="entry"><a class="el" href="class_core_runnable.html#acfcf01282cf908f91218bfdd5601678c">DoAdditionalWait</a>(std::chrono::nanoseconds timeout)</td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></td></tr>
   <tr><td class="entry"><a class="el" href="class_core_runnable.html#af3c2a762acf2fd367f09fff1100231da">DoAdditionalWait</a>(void)</td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_core_runnable.html#a7d2c7498d9db4e8f76dc2b6a69d8f1bc">GetOutstanding</a>(void) const </td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"><span class="mlabel">protected</span></td></tr>
-  <tr><td class="entry"><a class="el" href="class_core_runnable.html#ab13799735ef39ebe372f9851395a7f53">IsRunning</a>(void) const </td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr><td class="entry"><a class="el" href="class_core_runnable.html#ab13799735ef39ebe372f9851395a7f53">IsRunning</a>(void) const </td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_core_runnable.html#aa72398f9348bd2b63fd9e040ee21f7e9">OnStart</a>(void)</td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></td></tr>
   <tr><td class="entry"><a class="el" href="class_core_runnable.html#ac2b1fc01ebff2aa052c13abe7be0d647">OnStop</a>(bool graceful)</td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994">ShouldStop</a>(void) const </td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_core_runnable.html#a144421b84f8b8fee45838fbe2be6e5c6">ShouldStop</a>(void) volatile const </td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
   <tr><td class="entry"><a class="el" href="class_core_runnable.html#a4f5e7e482f70200b82d8f0d489eedd12">Start</a>(std::shared_ptr&lt; CoreObject &gt; outstanding)</td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"><span class="mlabel">virtual</span></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_core_runnable.html#a41c3338adf9bf7222b13bbafb564dabb">Stop</a>(bool graceful=true)</td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="class_core_runnable.html#a0aaa1a6490b1b7d16fa63b64a012a9f0">ThreadSleep</a>(std::chrono::nanoseconds timeout)</td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_core_runnable.html#acb3c019cfe57942e293c9cec805828e7">Wait</a>(void)</td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="class_core_runnable.html#a4856481bde70b25d28bac86876cadf88">WaitFor</a>(std::chrono::nanoseconds timeout)</td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_core_runnable.html#aa8b6ac4ade1032ea1411680a04592d87">WaitUntil</a>(TimeType timepoint)</td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="class_core_runnable.html#a1b36f39e87ce13aa8a751922aa61dd03">WasStarted</a>(void) const </td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr><td class="entry"><a class="el" href="class_core_runnable.html#a7811af34bc57739faeefbf64415f819c">WasStarted</a>(void) volatile const </td><td class="entry"><a class="el" href="class_core_runnable.html">CoreRunnable</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
 </table></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Oct 15 2015 13:21:46 for Autowiring by
+    <li class="footer">Generated on Wed Jan 6 2016 16:27:05 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

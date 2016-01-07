@@ -45,9 +45,6 @@ var dir_2e38afdc5a4015337247db13c49755ec =
     [ "AutoPacketGraph.h", "_auto_packet_graph_8h.html", [
       [ "AutoPacketGraph", "class_auto_packet_graph.html", "class_auto_packet_graph" ]
     ] ],
-    [ "AutoParameter.h", "_auto_parameter_8h.html", [
-      [ "AutoParameter", "class_auto_parameter.html", null ]
-    ] ],
     [ "AutoSelfUpdate.h", "_auto_self_update_8h.html", [
       [ "AutoSelfUpdate", "class_auto_self_update.html", null ]
     ] ],

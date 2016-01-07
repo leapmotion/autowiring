@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.5</span>
+   &#160;<span id="projectnumber">0.7.6</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -153,17 +153,10 @@ Additional Inherited Members</h2></td></tr>
 <tr class="memitem:aae5c351a08cc681adb51e7eb21ec6303 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">JunctionBox&lt; T &gt; &amp;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#aae5c351a08cc681adb51e7eb21ec6303">All</a> (void)</td></tr>
 <tr class="memdesc:aae5c351a08cc681adb51e7eb21ec6303 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns all members of and snoopers on this context which implement the specified interface  <a href="#aae5c351a08cc681adb51e7eb21ec6303">More...</a><br /></td></tr>
 <tr class="separator:aae5c351a08cc681adb51e7eb21ec6303 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada59ec3baf8cb335d6e0792dd1473705 inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
-<tr class="memitem:ada59ec3baf8cb335d6e0792dd1473705 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#ada59ec3baf8cb335d6e0792dd1473705">Autowire</a> (AnySharedPointerT&lt; T &gt; &amp;ref, DeferrableAutowiring &amp;defer)</td></tr>
-<tr class="memdesc:ada59ec3baf8cb335d6e0792dd1473705 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Registers a slot to be autowired  <a href="#ada59ec3baf8cb335d6e0792dd1473705">More...</a><br /></td></tr>
-<tr class="separator:ada59ec3baf8cb335d6e0792dd1473705 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a81cde2e3e4031ac1bc1c9e761f8eff11 inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class T , class... Sigils&gt; </td></tr>
 <tr class="memitem:a81cde2e3e4031ac1bc1c9e761f8eff11 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a81cde2e3e4031ac1bc1c9e761f8eff11">BoltTo</a> (void)</td></tr>
 <tr class="memdesc:a81cde2e3e4031ac1bc1c9e761f8eff11 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Injects the specified type T into all subcontexts created with one of the matching sigil types.  <a href="#a81cde2e3e4031ac1bc1c9e761f8eff11">More...</a><br /></td></tr>
 <tr class="separator:a81cde2e3e4031ac1bc1c9e761f8eff11 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae784ab63f9d15a717cdcb3a4a22466c2 inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#ae784ab63f9d15a717cdcb3a4a22466c2">CancelAutowiringNotification</a> (DeferrableAutowiring *pDeferrable)</td></tr>
-<tr class="memdesc:ae784ab63f9d15a717cdcb3a4a22466c2 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unregisters a slot as a recipient of potential autowiring  <a href="#ae784ab63f9d15a717cdcb3a4a22466c2">More...</a><br /></td></tr>
-<tr class="separator:ae784ab63f9d15a717cdcb3a4a22466c2 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a248d2983aeb495dfa013024d10fbfc16 inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::shared_ptr&lt; <a class="el" href="class_basic_thread.html">BasicThread</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a248d2983aeb495dfa013024d10fbfc16">CopyBasicThreadList</a> (void) const </td></tr>
 <tr class="memdesc:a248d2983aeb495dfa013024d10fbfc16 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">A copy of the current list of child CoreRunnables of this context.  <a href="#a248d2983aeb495dfa013024d10fbfc16">More...</a><br /></td></tr>
 <tr class="separator:a248d2983aeb495dfa013024d10fbfc16 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -191,18 +184,6 @@ Additional Inherited Members</h2></td></tr>
 <tr class="memitem:a14de7efacd23075c69ea134a7a45f4a8 inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a14de7efacd23075c69ea134a7a45f4a8">FilterFiringException</a> (const JunctionBoxBase *pProxy, CoreObject *pRecipient)</td></tr>
 <tr class="memdesc:a14de7efacd23075c69ea134a7a45f4a8 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Filters a std::current_exception thrown by an EventSenderBase during a Fire  <a href="#a14de7efacd23075c69ea134a7a45f4a8">More...</a><br /></td></tr>
 <tr class="separator:a14de7efacd23075c69ea134a7a45f4a8 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af83ce7cc526af425b14a87c02070b868 inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
-<tr class="memitem:af83ce7cc526af425b14a87c02070b868 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#af83ce7cc526af425b14a87c02070b868">FindByType</a> (std::shared_ptr&lt; T &gt; &amp;slot, bool localOnly=false) const </td></tr>
-<tr class="memdesc:af83ce7cc526af425b14a87c02070b868 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove EventReceiver from parents unless its a member of the parent  <a href="#af83ce7cc526af425b14a87c02070b868">More...</a><br /></td></tr>
-<tr class="separator:af83ce7cc526af425b14a87c02070b868 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a01014fe31d9a6a10cc7357a5924a6460 inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
-<tr class="memitem:a01014fe31d9a6a10cc7357a5924a6460 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a01014fe31d9a6a10cc7357a5924a6460">FindByTypeRecursive</a> (std::shared_ptr&lt; T &gt; &amp;ptr) const </td></tr>
-<tr class="memdesc:a01014fe31d9a6a10cc7357a5924a6460 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Identical to Autowire, but will not register the passed slot for deferred resolution  <a href="#a01014fe31d9a6a10cc7357a5924a6460">More...</a><br /></td></tr>
-<tr class="separator:a01014fe31d9a6a10cc7357a5924a6460 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6936a4534f8d5b7c959bfed783c0eed5 inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
-<tr class="memitem:a6936a4534f8d5b7c959bfed783c0eed5 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a6936a4534f8d5b7c959bfed783c0eed5">FindByTypeRecursive</a> (AnySharedPointerT&lt; T &gt; &amp;slot) const </td></tr>
-<tr class="memdesc:a6936a4534f8d5b7c959bfed783c0eed5 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Identical to Autowire, but will not register the passed slot for deferred resolution  <a href="#a6936a4534f8d5b7c959bfed783c0eed5">More...</a><br /></td></tr>
-<tr class="separator:a6936a4534f8d5b7c959bfed783c0eed5 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac5cef7deb0bf47f0c6d51ee015f6750 inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#aac5cef7deb0bf47f0c6d51ee015f6750">FirstChild</a> (void) const </td></tr>
 <tr class="memdesc:aac5cef7deb0bf47f0c6d51ee015f6750 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">The first child in the set of this context's children.  <a href="#aac5cef7deb0bf47f0c6d51ee015f6750">More...</a><br /></td></tr>
 <tr class="separator:aac5cef7deb0bf47f0c6d51ee015f6750 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -276,10 +257,10 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:ad571b7a096111d87c37e826546f875ea inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#ad571b7a096111d87c37e826546f875ea">NextSibling</a> (void) const </td></tr>
 <tr class="memdesc:ad571b7a096111d87c37e826546f875ea inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">The next context sharing the same parent, or null if this is the last entry in the list  <a href="#ad571b7a096111d87c37e826546f875ea">More...</a><br /></td></tr>
 <tr class="separator:ad571b7a096111d87c37e826546f875ea inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5920389c012b628511fe22dfb1dadb4 inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class T , class Fn &gt; </td></tr>
-<tr class="memitem:af5920389c012b628511fe22dfb1dadb4 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">const AutowirableSlotFn&lt; T, Fn &gt; *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#af5920389c012b628511fe22dfb1dadb4">NotifyWhenAutowired</a> (Fn &amp;&amp;listener)</td></tr>
-<tr class="memdesc:af5920389c012b628511fe22dfb1dadb4 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a post-attachment listener in this context for a particular autowired member. There is no guarantee for the context in which the listener will be called.  <a href="#af5920389c012b628511fe22dfb1dadb4">More...</a><br /></td></tr>
-<tr class="separator:af5920389c012b628511fe22dfb1dadb4 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2073501aa492a30cb8738a14eee9302e inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class T , class Fn &gt; </td></tr>
+<tr class="memitem:a2073501aa492a30cb8738a14eee9302e inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a2073501aa492a30cb8738a14eee9302e">NotifyWhenAutowired</a> (Fn &amp;&amp;listener)</td></tr>
+<tr class="memdesc:a2073501aa492a30cb8738a14eee9302e inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a post-attachment listener in this context for a particular autowired member. There is no guarantee for the context in which the listener will be called.  <a href="#a2073501aa492a30cb8738a14eee9302e">More...</a><br /></td></tr>
+<tr class="separator:a2073501aa492a30cb8738a14eee9302e inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d4ff8b34b0d1a6159abff8f7b96599e inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class Fx &gt; </td></tr>
 <tr class="memitem:a9d4ff8b34b0d1a6159abff8f7b96599e inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a9d4ff8b34b0d1a6159abff8f7b96599e">operator+=</a> (Fx &amp;&amp;fx)</td></tr>
 <tr class="memdesc:a9d4ff8b34b0d1a6159abff8f7b96599e inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Submits the specified lambda to this context's ThreadPool for processing  <a href="#a9d4ff8b34b0d1a6159abff8f7b96599e">More...</a><br /></td></tr>
@@ -366,7 +347,7 @@ class CoreContextT&lt; T &gt;</h3>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_core_context_t.html">CoreContextT</a></li>
-    <li class="footer">Generated on Thu Oct 15 2015 13:21:46 for Autowiring by
+    <li class="footer">Generated on Wed Jan 6 2016 16:27:05 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

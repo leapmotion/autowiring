@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.5</span>
+   &#160;<span id="projectnumber">0.7.6</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -139,10 +139,10 @@ Public Member Functions</h2></td></tr>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#ab13799735ef39ebe372f9851395a7f53">IsRunning</a> (void) const </td></tr>
 <tr class="memdesc:ab13799735ef39ebe372f9851395a7f53"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether this runnable is currently running. <br /></td></tr>
 <tr class="separator:ab13799735ef39ebe372f9851395a7f53"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a69501f9f79d67d4e53ba38383500f994"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a69501f9f79d67d4e53ba38383500f994"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994">ShouldStop</a> (void) const </td></tr>
-<tr class="memdesc:a69501f9f79d67d4e53ba38383500f994"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether this runnable should stop. <br /></td></tr>
-<tr class="separator:a69501f9f79d67d4e53ba38383500f994"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a144421b84f8b8fee45838fbe2be6e5c6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a144421b84f8b8fee45838fbe2be6e5c6"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#a144421b84f8b8fee45838fbe2be6e5c6">ShouldStop</a> (void) volatile const </td></tr>
+<tr class="memdesc:a144421b84f8b8fee45838fbe2be6e5c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether this runnable should stop. <br /></td></tr>
+<tr class="separator:a144421b84f8b8fee45838fbe2be6e5c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4f5e7e482f70200b82d8f0d489eedd12"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#a4f5e7e482f70200b82d8f0d489eedd12">Start</a> (std::shared_ptr&lt; CoreObject &gt; outstanding)</td></tr>
 <tr class="memdesc:a4f5e7e482f70200b82d8f0d489eedd12"><td class="mdescLeft">&#160;</td><td class="mdescRight">Causes this runnable to begin processing.  <a href="#a4f5e7e482f70200b82d8f0d489eedd12">More...</a><br /></td></tr>
 <tr class="separator:a4f5e7e482f70200b82d8f0d489eedd12"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -162,10 +162,10 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:aa8b6ac4ade1032ea1411680a04592d87"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#aa8b6ac4ade1032ea1411680a04592d87">WaitUntil</a> (TimeType timepoint)</td></tr>
 <tr class="memdesc:aa8b6ac4ade1032ea1411680a04592d87"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits until the specified time.  <a href="#aa8b6ac4ade1032ea1411680a04592d87">More...</a><br /></td></tr>
 <tr class="separator:aa8b6ac4ade1032ea1411680a04592d87"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1b36f39e87ce13aa8a751922aa61dd03"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1b36f39e87ce13aa8a751922aa61dd03"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#a1b36f39e87ce13aa8a751922aa61dd03">WasStarted</a> (void) const </td></tr>
-<tr class="memdesc:a1b36f39e87ce13aa8a751922aa61dd03"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether this runnable was ever started. <br /></td></tr>
-<tr class="separator:a1b36f39e87ce13aa8a751922aa61dd03"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7811af34bc57739faeefbf64415f819c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7811af34bc57739faeefbf64415f819c"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#a7811af34bc57739faeefbf64415f819c">WasStarted</a> (void) volatile const </td></tr>
+<tr class="memdesc:a7811af34bc57739faeefbf64415f819c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether this runnable was ever started. <br /></td></tr>
+<tr class="separator:a7811af34bc57739faeefbf64415f819c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
@@ -482,7 +482,7 @@ template&lt;typename TimeType &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_core_runnable.html">CoreRunnable</a></li>
-    <li class="footer">Generated on Thu Oct 15 2015 13:21:46 for Autowiring by
+    <li class="footer">Generated on Wed Jan 6 2016 16:27:05 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

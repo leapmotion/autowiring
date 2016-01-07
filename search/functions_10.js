@@ -7,7 +7,7 @@ var searchData=
   ['setthreadpool',['SetThreadPool',['../class_core_context.html#a2eff2c50f12c4de4e9e82a49a4bb2bc7',1,'CoreContext']]],
   ['settransporthandler',['SetTransportHandler',['../class_auto_net_transport.html#a98115d15fde7d0e1083b1943afe7b03d',1,'AutoNetTransport']]],
   ['setunlinkonteardown',['SetUnlinkOnTeardown',['../class_core_context.html#a15918e5e6962e2865b6da51e557f35c8',1,'CoreContext']]],
-  ['shouldstop',['ShouldStop',['../class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994',1,'CoreRunnable']]],
+  ['shouldstop',['ShouldStop',['../class_core_runnable.html#a144421b84f8b8fee45838fbe2be6e5c6',1,'CoreRunnable']]],
   ['signalshutdown',['SignalShutdown',['../class_core_context.html#a8e0ff07669244590fcdcec9aeb588aa5',1,'CoreContext']]],
   ['signalterminate',['SignalTerminate',['../class_core_context.html#a107256cd9f29a43301afca98cd7309a5',1,'CoreContext']]],
   ['start',['Start',['../class_auto_net_transport.html#a615cb11de99c2e4286c744e8ba6b2470',1,'AutoNetTransport::Start()'],['../class_core_runnable.html#a4f5e7e482f70200b82d8f0d489eedd12',1,'CoreRunnable::Start()'],['../classautowiring_1_1_thread_pool.html#a1e0dc654fe77523edcc62983603b201b',1,'autowiring::ThreadPool::Start()']]],

@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.5</span>
+   &#160;<span id="projectnumber">0.7.6</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -171,10 +171,10 @@ Public Member Functions</h2></td></tr>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#ab13799735ef39ebe372f9851395a7f53">IsRunning</a> (void) const </td></tr>
 <tr class="memdesc:ab13799735ef39ebe372f9851395a7f53 inherit pub_methods_class_core_runnable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether this runnable is currently running. <br /></td></tr>
 <tr class="separator:ab13799735ef39ebe372f9851395a7f53 inherit pub_methods_class_core_runnable"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a69501f9f79d67d4e53ba38383500f994 inherit pub_methods_class_core_runnable"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a69501f9f79d67d4e53ba38383500f994"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994">ShouldStop</a> (void) const </td></tr>
-<tr class="memdesc:a69501f9f79d67d4e53ba38383500f994 inherit pub_methods_class_core_runnable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether this runnable should stop. <br /></td></tr>
-<tr class="separator:a69501f9f79d67d4e53ba38383500f994 inherit pub_methods_class_core_runnable"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a144421b84f8b8fee45838fbe2be6e5c6 inherit pub_methods_class_core_runnable"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a144421b84f8b8fee45838fbe2be6e5c6"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#a144421b84f8b8fee45838fbe2be6e5c6">ShouldStop</a> (void) volatile const </td></tr>
+<tr class="memdesc:a144421b84f8b8fee45838fbe2be6e5c6 inherit pub_methods_class_core_runnable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether this runnable should stop. <br /></td></tr>
+<tr class="separator:a144421b84f8b8fee45838fbe2be6e5c6 inherit pub_methods_class_core_runnable"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4f5e7e482f70200b82d8f0d489eedd12 inherit pub_methods_class_core_runnable"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#a4f5e7e482f70200b82d8f0d489eedd12">Start</a> (std::shared_ptr&lt; CoreObject &gt; outstanding)</td></tr>
 <tr class="memdesc:a4f5e7e482f70200b82d8f0d489eedd12 inherit pub_methods_class_core_runnable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Causes this runnable to begin processing.  <a href="#a4f5e7e482f70200b82d8f0d489eedd12">More...</a><br /></td></tr>
 <tr class="separator:a4f5e7e482f70200b82d8f0d489eedd12 inherit pub_methods_class_core_runnable"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -194,10 +194,10 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:aa8b6ac4ade1032ea1411680a04592d87 inherit pub_methods_class_core_runnable"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#aa8b6ac4ade1032ea1411680a04592d87">WaitUntil</a> (TimeType timepoint)</td></tr>
 <tr class="memdesc:aa8b6ac4ade1032ea1411680a04592d87 inherit pub_methods_class_core_runnable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits until the specified time.  <a href="#aa8b6ac4ade1032ea1411680a04592d87">More...</a><br /></td></tr>
 <tr class="separator:aa8b6ac4ade1032ea1411680a04592d87 inherit pub_methods_class_core_runnable"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1b36f39e87ce13aa8a751922aa61dd03 inherit pub_methods_class_core_runnable"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1b36f39e87ce13aa8a751922aa61dd03"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#a1b36f39e87ce13aa8a751922aa61dd03">WasStarted</a> (void) const </td></tr>
-<tr class="memdesc:a1b36f39e87ce13aa8a751922aa61dd03 inherit pub_methods_class_core_runnable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether this runnable was ever started. <br /></td></tr>
-<tr class="separator:a1b36f39e87ce13aa8a751922aa61dd03 inherit pub_methods_class_core_runnable"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7811af34bc57739faeefbf64415f819c inherit pub_methods_class_core_runnable"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7811af34bc57739faeefbf64415f819c"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#a7811af34bc57739faeefbf64415f819c">WasStarted</a> (void) volatile const </td></tr>
+<tr class="memdesc:a7811af34bc57739faeefbf64415f819c inherit pub_methods_class_core_runnable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether this runnable was ever started. <br /></td></tr>
+<tr class="separator:a7811af34bc57739faeefbf64415f819c inherit pub_methods_class_core_runnable"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -246,13 +246,13 @@ Protected Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>An abstract class for creating a thread with a single Run method. </p>
 <p>This is an abstract class that has a single <a class="el" href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033" title="Begins thread execution. ">Run()</a> method for implementation by derived classes. A <a class="el" href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. ">BasicThread</a> instance remains in the context as long as the thread is running, even if there are no other references to it.</p>
-<p>To create a thread, extend <a class="el" href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. ">BasicThread</a> and implement the desired <a class="el" href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033" title="Begins thread execution. ">Run()</a> method. To start the thread, wire your thread object to a context and Initiate() the context. When the SignalShutown() or SignalTermination() methods of the owning context are called, or you call the <a class="el" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3" title="Invoked by the base class Stop() method. Implement this method to perform any needed cleanup...">BasicThread::OnStop()</a> function, the <a class="el" href="class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994" title="Reports whether this runnable should stop. ">ShouldStop()</a> function will evaluate to true. It is your <a class="el" href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033" title="Begins thread execution. ">Run()</a> implementation's responsibility to terminate when <a class="el" href="class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994" title="Reports whether this runnable should stop. ">ShouldStop()</a> becomes true.</p>
+<p>To create a thread, extend <a class="el" href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. ">BasicThread</a> and implement the desired <a class="el" href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033" title="Begins thread execution. ">Run()</a> method. To start the thread, wire your thread object to a context and Initiate() the context. When the SignalShutown() or SignalTermination() methods of the owning context are called, or you call the <a class="el" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3" title="Invoked by the base class Stop() method. Implement this method to perform any needed cleanup...">BasicThread::OnStop()</a> function, the <a class="el" href="class_core_runnable.html#a144421b84f8b8fee45838fbe2be6e5c6" title="Reports whether this runnable should stop. ">ShouldStop()</a> function will evaluate to true. It is your <a class="el" href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033" title="Begins thread execution. ">Run()</a> implementation's responsibility to terminate when <a class="el" href="class_core_runnable.html#a144421b84f8b8fee45838fbe2be6e5c6" title="Reports whether this runnable should stop. ">ShouldStop()</a> becomes true.</p>
 <p>The following example prints out the sequence of prime numbers until the context signals that threads should shutdown:</p>
 <div class="fragment"><div class="line"><span class="keyword">class </span>PrimeGenerator : <span class="keyword">public</span> <a class="code" href="class_basic_thread.html">BasicThread</a> {</div>
 <div class="line">    <span class="keyword">public</span>:</div>
 <div class="line">        <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033">Run</a>()<span class="keyword"> override </span>{</div>
 <div class="line">            <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> test = 2;</div>
-<div class="line">            <span class="keywordflow">while</span> (!<a class="code" href="class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994">ShouldStop</a>())</div>
+<div class="line">            <span class="keywordflow">while</span> (!<a class="code" href="class_core_runnable.html#a144421b84f8b8fee45838fbe2be6e5c6">ShouldStop</a>())</div>
 <div class="line">            {</div>
 <div class="line">                <span class="keywordflow">for</span> (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> i = test/2; i &gt; 0 ; --i) {</div>
 <div class="line">                    <span class="keywordflow">if</span> (i == 1) {</div>
@@ -568,7 +568,7 @@ template&lt;class Fx &gt; </div>
 <div class="line">    <span class="keyword">public</span>:</div>
 <div class="line">        <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033">Run</a>()<span class="keyword"> override </span>{</div>
 <div class="line">            <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> test = 2;</div>
-<div class="line">            <span class="keywordflow">while</span> (!<a class="code" href="class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994">ShouldStop</a>())</div>
+<div class="line">            <span class="keywordflow">while</span> (!<a class="code" href="class_core_runnable.html#a144421b84f8b8fee45838fbe2be6e5c6">ShouldStop</a>())</div>
 <div class="line">            {</div>
 <div class="line">                <span class="keywordflow">for</span> (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> i = test/2; i &gt; 0 ; --i) {</div>
 <div class="line">                    <span class="keywordflow">if</span> (i == 1) {</div>
@@ -782,7 +782,7 @@ template&lt;class Fx &gt; </div>
 </div><div class="memdoc">
 
 <p>Begins thread execution. </p>
-<p>Implement this function to perform the work to be done by this thread. Your <a class="el" href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033" title="Begins thread execution. ">Run()</a> function implementation must exit when <a class="el" href="class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994" title="Reports whether this runnable should stop. ">ShouldStop()</a> becomes true.</p>
+<p>Implement this function to perform the work to be done by this thread. Your <a class="el" href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033" title="Begins thread execution. ">Run()</a> function implementation must exit when <a class="el" href="class_core_runnable.html#a144421b84f8b8fee45838fbe2be6e5c6" title="Reports whether this runnable should stop. ">ShouldStop()</a> becomes true.</p>
 <p>BasicThreads can be stopped gracefully or immediately. Override <a class="el" href="class_basic_thread.html#abb056d8402460ea96e350e2b9dcc2f4d" title="Invoked by the base class Stop() method. Override this method to perform any needed cleanup...">OnStop(bool graceful)</a> to implement different behavior for these two shutdown modes. For example, if the shutdown mode is immediate, you might abort any actions in progress, but if the mode is graceful, you might take time to save files, etc. This behavior is application defined. Autowiring does not impose its own requirements. You can also perform custom shutdown cleanup in an <a class="el" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3" title="Invoked by the base class Stop() method. Implement this method to perform any needed cleanup...">OnStop()</a> implementation.</p>
 <p>The default implementation of Run will simply call WaitForEvent in a loop until it's told to quit. </p>
 
@@ -854,7 +854,7 @@ template&lt;class Fx &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_basic_thread.html">BasicThread</a></li>
-    <li class="footer">Generated on Thu Oct 15 2015 13:21:46 for Autowiring by
+    <li class="footer">Generated on Wed Jan 6 2016 16:27:05 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.5</span>
+   &#160;<span id="projectnumber">0.7.6</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -251,7 +251,12 @@ $(document).ready(function(){initNavTree('_auto_packet_factory_8h_source.html','
 <div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;<span class="keyword">extern</span> <span class="keyword">template</span> <span class="keyword">class </span>RegType&lt;AutoPacketFactory&gt;;</div>
 <div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;<span class="keyword">extern</span> <span class="keyword">template</span> <span class="keyword">struct </span>autowiring::fast_pointer_cast_blind&lt;CoreObject, AutoPacketFactory&gt;;</div>
 <div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;<span class="keyword">extern</span> <span class="keyword">template</span> <span class="keyword">struct </span>autowiring::fast_pointer_cast_initializer&lt;CoreObject, AutoPacketFactory&gt;;</div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;<span class="comment">// @endcond</span></div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;<span class="keyword">extern</span> <span class="keyword">template</span> <span class="keyword">struct </span>autowiring::fast_pointer_cast_blind&lt;AutoPacketFactory, CoreObject&gt;;</div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;<span class="keyword">extern</span> <span class="keyword">template</span> <span class="keyword">struct </span>autowiring::fast_pointer_cast_initializer&lt;AutoPacketFactory, CoreObject&gt;;</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;<span class="keyword">extern</span> <span class="keyword">template</span> <span class="keyword">struct </span>auto_id_t&lt;AutoPacketFactory&gt;;</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;<span class="keyword">extern</span> <span class="keyword">template</span> <span class="keyword">class </span>auto_id_t_init&lt;AutoPacketFactory, false&gt;;</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;<span class="keyword">extern</span> <span class="keyword">template</span> <span class="keyword">class </span>auto_id_t_init&lt;AutoPacketFactory, true&gt;;</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;<span class="comment">// @endcond</span></div>
 <div class="ttc" id="class_auto_packet_factory_html_a8743ffc532d0fe739782a2f843a86467"><div class="ttname"><a href="class_auto_packet_factory.html#a8743ffc532d0fe739782a2f843a86467">AutoPacketFactory::GetPacketLifetimeStandardDeviation</a></div><div class="ttdeci">double GetPacketLifetimeStandardDeviation(void)</div><div class="ttdoc">Returns the standard deviation of the lifespans of AutoPackets in nanoseconds since most recent stati...</div></div>
 <div class="ttc" id="class_auto_packet_factory_html_aa60dd197a5520d5b06b1a1c9bfa8dda9"><div class="ttname"><a href="class_auto_packet_factory.html#aa60dd197a5520d5b06b1a1c9bfa8dda9">AutoPacketFactory::OnStart</a></div><div class="ttdeci">bool OnStart(void) override</div><div class="ttdoc">Invoked by the Start() method. Override this method to perform any needed setup </div></div>
 <div class="ttc" id="class_auto_packet_factory_html_a5a898408176ab705b61bcb41025298bf"><div class="ttname"><a href="class_auto_packet_factory.html#a5a898408176ab705b61bcb41025298bf">AutoPacketFactory::operator-=</a></div><div class="ttdeci">void operator-=(const AutoFilterDescriptor &amp;desc)</div><div class="ttdoc">Overloaded counterpart to RemoveSubscriber </div></div>
@@ -284,7 +289,7 @@ $(document).ready(function(){initNavTree('_auto_packet_factory_8h_source.html','
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_auto_packet_factory_8h.html">AutoPacketFactory.h</a></li>
-    <li class="footer">Generated on Thu Oct 15 2015 13:21:46 for Autowiring by
+    <li class="footer">Generated on Wed Jan 6 2016 16:27:05 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

@@ -1,7 +1,6 @@
 var searchData=
 [
   ['call',['Call',['../class_auto_packet.html#a41bb862c699be8294d84d667a717c47f',1,'AutoPacket::Call(void(*pfn)(InArgs...), Outputs &amp;...outputs)'],['../class_auto_packet.html#a3af1a71116512ef135baf225fdd91159',1,'AutoPacket::Call(Fx &amp;&amp;fx, void(Fx::*memfn)(InArgs...) const, Outputs &amp;...outputs)'],['../class_auto_packet.html#abd590b15f2a72b483bf6a64022ff9b6e',1,'AutoPacket::Call(Fx &amp;&amp;fx, Outputs &amp;...outputs)']]],
-  ['cancelautowiringnotification',['CancelAutowiringNotification',['../class_core_context.html#ae784ab63f9d15a717cdcb3a4a22466c2',1,'CoreContext']]],
   ['clear',['Clear',['../class_auto_packet_factory.html#a7f6df86d37b611fd7da03b5d89088d4e',1,'AutoPacketFactory']]],
   ['clearcurrent',['ClearCurrent',['../class_auto_packet.html#a3431dd52847bf0fcc2e2388a80793882',1,'AutoPacket']]],
   ['consume',['Consume',['../classautowiring_1_1_thread_pool.html#ad4e0e0f0ed07a8f7eecb902e477e7400',1,'autowiring::ThreadPool']]],

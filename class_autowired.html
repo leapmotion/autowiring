@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.5</span>
+   &#160;<span id="projectnumber">0.7.6</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -108,7 +108,6 @@ $(document).ready(function(){initNavTree('class_autowired.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="class_autowired-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">Autowired&lt; T &gt; Class Template Reference</div>  </div>
@@ -121,14 +120,6 @@ $(document).ready(function(){initNavTree('class_autowired.html','');});
 <p><code>#include &lt;<a class="el" href="_autowired_8h_source.html">Autowired.h</a>&gt;</code></p>
 
 <p>Inherits AutowirableSlot&lt; T &gt;.</p>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
-Public Member Functions</h2></td></tr>
-<tr class="memitem:a809ba72dfc0e7a010a6a3ae09c186955"><td class="memTemplParams" colspan="2">template&lt;class Fn &gt; </td></tr>
-<tr class="memitem:a809ba72dfc0e7a010a6a3ae09c186955"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_autowired.html#a809ba72dfc0e7a010a6a3ae09c186955">NotifyWhenAutowired</a> (Fn fn)</td></tr>
-<tr class="memdesc:a809ba72dfc0e7a010a6a3ae09c186955"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns a lambda function to be called when the dependency for this slot is autowired.  <a href="#a809ba72dfc0e7a010a6a3ae09c186955">More...</a><br /></td></tr>
-<tr class="separator:a809ba72dfc0e7a010a6a3ae09c186955"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;class T&gt;<br />
 class Autowired&lt; T &gt;</h3>
@@ -145,44 +136,7 @@ class Autowired&lt; T &gt;</h3>
 </div><!-- fragment --><p>If an instance of the type specified in the template parameter already exists in the context, the dependency is satisfied using that instance immediately. Otherwise, the dependency is satisfied when an instance of the correct type is created in the context.</p>
 <p>This class may be safely used even when the member in question is an abstract type. </p>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="_auto_filter_example_8cpp-example.html#_a2">AutoFilterExample.cpp</a>, and <a class="el" href="_context_example_8cpp-example.html#_a0">ContextExample.cpp</a>.</dd>
-</dl></div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a809ba72dfc0e7a010a6a3ae09c186955"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class T&gt; </div>
-<div class="memtemplate">
-template&lt;class Fn &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="class_autowired.html">Autowired</a>&lt; T &gt;::NotifyWhenAutowired </td>
-          <td>(</td>
-          <td class="paramtype">Fn&#160;</td>
-          <td class="paramname"><em>fn</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Assigns a lambda function to be called when the dependency for this slot is autowired. </p>
-<p>In contrast with <a class="el" href="class_core_context.html#af5920389c012b628511fe22dfb1dadb4" title="Adds a post-attachment listener in this context for a particular autowired member. There is no guarantee for the context in which the listener will be called. ">CoreContext::NotifyWhenAutowired</a>, the specified lambda is only called as long as this <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> slot has not been destroyed. If this slot is destroyed before the dependency is satisfied, i.e. because the owning context shuts down, the lambda is cancelled.</p>
-<p>Note that, if T is injected at about the same time as this object is destroyed, then cancellation of the autowired lambda could potentially race with satisfaction of that same lambda. This type of race is called a cancellation race, and can result in the lambda being invoked even though this object has been destroyed.</p>
-<p>Users who use <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> as a member of their class do not need to consider this case. <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> fields declared as class members are always cancelled before the enclosing object is destroyed.</p>
-<div class="fragment"><div class="line"><a class="code" href="class_autowired.html">Autowired&lt;Foo&gt;</a> slotFoo;</div>
-<div class="line">slotFoo.<a class="code" href="class_autowired.html#a809ba72dfc0e7a010a6a3ae09c186955">NotifyWhenAutowired</a>([](){std::cout &lt;&lt; <span class="stringliteral">&quot;slotFoo wired.&quot;</span> &lt;&lt; std::endl;});</div>
-<div class="line"><a class="code" href="class_auto_required.html">AutoRequired&lt;Foo&gt;</a> foo; <span class="comment">// NotifyWhenAutowired on slotFoo invoked.</span></div>
-</div><!-- fragment --> 
-</div>
-</div>
-<hr/>The documentation for this class was generated from the following file:<ul>
+</dl></div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>autowiring/<a class="el" href="_autowired_8h_source.html">Autowired.h</a></li>
 </ul>
 </div><!-- contents -->
@@ -191,7 +145,7 @@ template&lt;class Fn &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_autowired.html">Autowired</a></li>
-    <li class="footer">Generated on Thu Oct 15 2015 13:21:46 for Autowiring by
+    <li class="footer">Generated on Wed Jan 6 2016 16:27:05 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

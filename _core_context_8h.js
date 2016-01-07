@@ -1,6 +1,6 @@
 var _core_context_8h =
 [
-    [ "Autowired", "class_autowired.html", "class_autowired" ],
+    [ "Autowired", "class_autowired.html", null ],
     [ "Boltable", "struct_boltable.html", null ],
     [ "CoreContext", "class_core_context.html", "class_core_context" ],
     [ "CoreContextT", "class_core_context_t.html", null ],

@@ -7,7 +7,7 @@ var searchData=
   ['setthreadpool',['SetThreadPool',['../class_core_context.html#a2eff2c50f12c4de4e9e82a49a4bb2bc7',1,'CoreContext']]],
   ['settransporthandler',['SetTransportHandler',['../class_auto_net_transport.html#a98115d15fde7d0e1083b1943afe7b03d',1,'AutoNetTransport']]],
   ['setunlinkonteardown',['SetUnlinkOnTeardown',['../class_core_context.html#a15918e5e6962e2865b6da51e557f35c8',1,'CoreContext']]],
-  ['shouldstop',['ShouldStop',['../class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994',1,'CoreRunnable']]],
+  ['shouldstop',['ShouldStop',['../class_core_runnable.html#a144421b84f8b8fee45838fbe2be6e5c6',1,'CoreRunnable']]],
   ['shutdownmode',['ShutdownMode',['../_core_context_8h.html#aa042d52710c2112736f295f5adab0de5',1,'CoreContext.h']]],
   ['signalshutdown',['SignalShutdown',['../class_core_context.html#a8e0ff07669244590fcdcec9aeb588aa5',1,'CoreContext']]],
   ['signalterminate',['SignalTerminate',['../class_core_context.html#a107256cd9f29a43301afca98cd7309a5',1,'CoreContext']]],
