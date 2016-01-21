@@ -171,13 +171,13 @@ protected:
 
     // Context is terminated, cleanup operations are underway.
     Shutdown,
-    
+
     // Context was terminated without having been initiated
     Abandoned
   };
 
   State m_state = State::NotStarted;
-  
+
   // Set if a thread is added and needs to be run
   bool m_beforeRunning = false;
 
@@ -221,7 +221,7 @@ protected:
 
   // List of eventReceivers to be added when this context in initiated
   t_rcvrSet m_delayedEventReceivers;
-  
+
   // Context members from other contexts that have snooped this context
   std::set<AnySharedPointer> m_snoopers;
 
@@ -392,7 +392,7 @@ protected:
   /// Removes a snooper to the snoopers set
   /// </summary>
   void RemoveSnooper(const AnySharedPointer& snooper);
-  
+
   /// \internal
   /// <summary>
   /// Recursively removes the specified snooper
@@ -402,7 +402,7 @@ protected:
   /// snooper collection must therefore be updated prior to the call to this method.
   /// </remarks>
   void UnsnoopEvents(const AnySharedPointer& snooper, const JunctionBoxEntry<CoreObject>& traits);
-  
+
   /// \internal
   /// <summary>
   /// Forwarding routine, only removes from this context
@@ -824,7 +824,7 @@ public:
   std::shared_ptr<JunctionBox<T>> GetJunctionBox(void) {
     // Add this type to the event registry. All events call this function
     (void)RegEvent<T>::r;
-    
+
     return std::static_pointer_cast<JunctionBox<T>, JunctionBoxBase>(
       m_junctionBoxManager->Get(typeid(T))
     );
@@ -979,7 +979,7 @@ public:
   static const std::shared_ptr<CoreContext>& CurrentContextOrNull(void);
 
   /// <summary>
-  /// Identical to CurrentContextNoCheck, except returns the global context instead of a null pointer
+  /// Identical to CurrentContextOrNull, except returns the global context instead of a null pointer
   /// </summary>
   static std::shared_ptr<CoreContext> CurrentContext(void);
 
@@ -1052,7 +1052,7 @@ public:
   void RemoveSnooper(const std::shared_ptr<T>& pSnooper) {
     RemoveSnooper(CoreObjectDescriptor(pSnooper, (T*)nullptr));
   }
-  
+
   /// <summary>
   /// Resolution overload of RemoveSnooper
   /// </summary>
@@ -1167,7 +1167,7 @@ namespace autowiring {
 /// A type of CoreContext that has a sigil.
 /// </summary>
 /// <remarks>
-/// 
+///
 /// </remarks>
 template<class T>
 class CoreContextT:
