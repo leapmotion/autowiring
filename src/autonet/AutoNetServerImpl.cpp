@@ -24,15 +24,15 @@ AutoNetServerImpl::AutoNetServerImpl(void):
 
 AutoNetServerImpl::AutoNetServerImpl(std::unique_ptr<AutoNetTransport>&& transport) :
   m_transport(std::move(transport))
-{ 
+{
   // Register internal event handlers
   AddEventHandler("terminateContext", [this] (int contextID) {
     ResolveContextID(contextID)->SignalShutdown();
   });
-  
+
   AddEventHandler("injectContextMember", [this] (int contextID, const std::string& typeName){
     std::shared_ptr<CoreContext> ctxt = ResolveContextID(contextID)->shared_from_this();
-    
+
     if(m_AllTypes.find(typeName) != m_AllTypes.end()) {
       CurrentContextPusher pshr(ctxt);
       m_AllTypes[typeName]();
@@ -42,11 +42,11 @@ AutoNetServerImpl::AutoNetServerImpl(std::unique_ptr<AutoNetTransport>&& transpo
       assert(false);
     }
   });
-  
+
   AddEventHandler("resumeFromBreakpoint", [this] (const std::string& name){
-    std::lock_guard<std::mutex> lk(m_breakpoint_mutex);
-    
+    std::lock_guard<std::mutex>{ m_breakpoint_mutex },
     m_breakpoints.erase(name);
+
     m_breakpoint_cv.notify_all();
   });
 
@@ -73,7 +73,7 @@ AutoNetServer* NewAutoNetServerImpl(void) {
 // CoreThread overrides
 void AutoNetServerImpl::Run(void){
   std::cout << "Starting Autonet server..." << std::endl;
-  
+
   // Register ourselves as a handler
   m_transport->SetTransportHandler(std::static_pointer_cast<AutoNetServerImpl>(shared_from_this()));
 
@@ -110,7 +110,7 @@ void AutoNetServerImpl::OnMessage(AutoNetTransportHandler::connection_hdl hdl, c
 
   std::string msgType = msg["type"].string_value();
   Json::array msgArgs = msg["args"].array_items();
-  
+
   // Handle client specific internal events
   if (msgType == "subscribe") {
     *this += [this, hdl] {
@@ -130,7 +130,7 @@ void AutoNetServerImpl::OnMessage(AutoNetTransportHandler::connection_hdl hdl, c
       for (const auto& a : msgArgs) {
         args.push_back(!a.string_value().empty() ? a.string_value() : a.dump());
       }
-    
+
       // call all the handlers
       for (const auto& handler : this->m_handlers[msgType]) {
         handler(args);
@@ -270,19 +270,19 @@ void AutoNetServerImpl::SendEvent(const std::string& rawEvent, const std::vector
   // Prepend '$' to custum event to avoid namespace collitions with internal events
   std::string event("$");
   event.append(rawEvent);
-  
+
   Json::array jsonArgs;
   for (const auto& a : args) {
     jsonArgs.push_back(a);
   }
-  
+
   *this += [this, event, jsonArgs] {
     for(auto hdl : m_Subscribers) {
       Json msg = Json::object{
         {"type", event},
         {"args", jsonArgs}
       };
-      
+
       m_transport->Send(hdl, msg.dump());
     }
   };

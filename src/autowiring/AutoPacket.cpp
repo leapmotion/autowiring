@@ -35,7 +35,7 @@ AutoPacket::~AutoPacket(void) {
       std::chrono::high_resolution_clock::now() - m_initTime
     )
   );
-  
+
   // Mark decorations of successor packets that use decorations
   // originating from this packet as unsatisfiable
   for (auto& pair : m_decoration_map)
@@ -44,15 +44,15 @@ AutoPacket::~AutoPacket(void) {
 
   // Needed for the AutoPacketGraph
   NotifyTeardownListeners();
-  
+
   // Create vector of all successor packets that will be destroyed
   // This prevents recursive AutoPacket destructor calls
   std::vector<std::shared_ptr<AutoPacket>> packets;
-  
+
   // Recurse through unique successors, storing them in our vector
   for (AutoPacket* current = this; current->m_successor.unique();) {
     packets.push_back(current->m_successor);
-    
+
     // Reset and continue to next successor
     AutoPacket* prev_current = current;
     current = current->m_successor.get();
@@ -249,14 +249,14 @@ void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
 
 void AutoPacket::MarkSuccessorsUnsatisfiable(DecorationKey key) {
   std::lock_guard<std::mutex> lk(m_lock);
-  
+
   // Update key and successor
   key.tshift++;
   auto successor = SuccessorUnsafe();
-  
+
   while (m_decoration_map.count(key)) {
     successor->MarkUnsatisfiable(key);
-    
+
     // Update key and successor
     key.tshift++;
     successor = successor->Successor();
@@ -661,12 +661,16 @@ bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterArgument* inp
           SignalStub* stub = (SignalStub*)pObj;
 
           // Completed, mark the output as satisfied and update the condition variable
-          std::lock_guard<std::mutex>(stub->packet.m_lock);
-          stub->is_satisfied = true;
+          std::condition_variable* pcv;
+          {
+            std::lock_guard<std::mutex>{stub->packet.m_lock};
+            stub->is_satisfied = true;
+            pcv = stub->cv;
+          }
 
           // Only notify while the condition variable is still valid
-          if (stub->cv)
-            stub->cv->notify_all();
+          if (pcv)
+            pcv->notify_all();
         }
       )
     )
@@ -676,12 +680,16 @@ bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterArgument* inp
   // decorations.  In that case, the satisfaction flag is left in its initial state
   AddTeardownListener(
     [stub] {
-      std::lock_guard<std::mutex>(stub->packet.m_lock);
-      stub->is_complete = true;
+      std::condition_variable* pcv;
+      {
+        std::lock_guard<std::mutex> lk(stub->packet.m_lock);
+        stub->is_complete = true;
+        pcv = stub->cv;
+      }
 
       // Only notify the condition variable if it's still present
-      if (stub->cv)
-        stub->cv->notify_all();
+      if (pcv)
+        pcv->notify_all();
     }
   );
 

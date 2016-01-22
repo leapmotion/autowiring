@@ -87,7 +87,7 @@ std::atomic<int> LifeCycle::destructNum{0};
 
 TEST_F(ObjectPoolTest, LifeCycleTestLimitOne) {
   LifeCycle::InitializeNum();
-  
+
   std::shared_ptr<ObjectPool<LifeCycle>> pool(LifeCycle::NewObjectPool(2, 2));
   std::shared_ptr<LifeCycle> objHold, objDrop;
 
@@ -274,17 +274,15 @@ public:
 TEST_F(ObjectPoolTest, RundownWhileWaiting) {
   ObjectPool<int> pool(1);
   auto first = pool.Wait();
-  
+
   std::mutex lock;
   std::condition_variable cv;
   bool proceed = false;
 
   auto future = std::async(std::launch::async, [&] {
-    {
-      std::lock_guard<std::mutex> lk(lock);
-      proceed = true;
-      cv.notify_all();
-    }
+    std::lock_guard<std::mutex>{ lock },
+    proceed = true;
+    cv.notify_all();
 
     // This could throw, but we can't guarantee that it will; in either case,
     // the behavior is tolerated
@@ -292,7 +290,7 @@ TEST_F(ObjectPoolTest, RundownWhileWaiting) {
       pool.Wait();
     } catch(...) {}
   });
-  
+
   // Block until the async call is at least started
   std::unique_lock<std::mutex> lk(lock);
   ASSERT_TRUE(
@@ -301,7 +299,7 @@ TEST_F(ObjectPoolTest, RundownWhileWaiting) {
 
   // Block until the thread is (probably) waiting
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  
+
   // Now, ensure no crashing:
   first.reset();
   pool.Rundown();

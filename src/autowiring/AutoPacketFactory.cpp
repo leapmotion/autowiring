@@ -22,22 +22,22 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
     throw autowiring_error("Attempted to create a packet on an AutoPacketFactory that was already terminated");
   if(!IsRunning())
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
-  
+
   std::shared_ptr<AutoPacketInternal> retVal;
   bool isFirstPacket;
   {
     std::lock_guard<std::mutex> lk(m_lock);
-    
+
     // New packet issued
     isFirstPacket = !m_packetCount;
     ++m_packetCount;
-  
+
     // Create a new next packet
     retVal = m_nextPacket;
     m_nextPacket = retVal->SuccessorInternal();
     m_curPacket = retVal;
   }
-  
+
   retVal->Initialize(isFirstPacket);
   return retVal;
 }
@@ -62,12 +62,12 @@ std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
   retVal = std::shared_ptr<void>(
     (void*)1,
     [this, outstanding] (void*) mutable {
-      std::lock_guard<std::mutex> lk(m_lock);
-      m_stateCondition.notify_all();
-
       // Weak pointer will prevent our lambda from being destroyed, so we manually reset
       // the outstanding counter in order to force it to be reset here
+      std::lock_guard<std::mutex>{m_lock},
       outstanding.reset();
+
+      m_stateCondition.notify_all();
     }
   );
   m_outstandingInternal = retVal;
@@ -105,7 +105,7 @@ SatCounter* AutoPacketFactory::CreateSatCounterList(void) const {
 bool AutoPacketFactory::OnStart(void) {
   // Initialize first packet
   m_nextPacket = ConstructPacket();
-  
+
   // Wake us up. We're starting now
   m_stateCondition.notify_all();
   return true;
@@ -114,12 +114,12 @@ bool AutoPacketFactory::OnStart(void) {
 void AutoPacketFactory::OnStop(bool graceful) {
   // Queue of local variables to be destroyed when leaving scope
   t_autoFilterSet autoFilters;
-  
+
   // Reset next packet, it will never be issued
   m_nextPacket.reset();
 
   // Lock destruction precedes local variables
-  std::lock_guard<std::mutex> lk(m_lock);
+  std::lock_guard<std::mutex>{m_lock},
 
   // Same story with the AutoFilters
   autoFilters.swap(m_autoFilters);

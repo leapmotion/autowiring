@@ -499,7 +499,7 @@ TEST_F(CoreThreadTest, SpuriousWakeupTest) {
   size_t countOnWake = -1;
 
   auto wakeFn = [&] {
-    std::lock_guard<std::mutex> lk(lock);
+    std::lock_guard<std::mutex>{ lock },
     ready = true;
     cv.notify_all();
     countOnWake = extraction->GetDispatchQueueLength();
@@ -542,7 +542,7 @@ public:
   }
 
   void Continue(void) {
-    std::lock_guard<std::mutex> lk(m_lock);
+    std::lock_guard<std::mutex>{ m_lock },
     signal = true;
     m_cv.notify_all();
   }
@@ -594,11 +594,9 @@ TEST_F(CoreThreadTest, SubContextHoldsParentContext) {
     // Terminate the parent, verify that the child has exited:
     parent->SignalShutdown();
     ASSERT_FALSE(parent->Wait(std::chrono::milliseconds(5))) << "Parent context returned before all child threads were done";
-    {
-      std::lock_guard<std::mutex> lk(*lock);
-      *proceed = true;
-      cv->notify_all();
-    }
+    std::lock_guard<std::mutex> { *lock },
+    *proceed = true;
+    cv->notify_all();
     ASSERT_TRUE(parent->Wait(std::chrono::seconds(5))) << "Signalled thread did not terminate in a timely fashion";
   }
   ASSERT_EQ(initUses, parent.use_count()) << "Parent had spurious references after all objects should have been destroyed";

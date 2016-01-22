@@ -60,9 +60,11 @@ void DispatchQueue::DispatchEventUnsafe(std::unique_lock<std::mutex>& lk) {
   lk.unlock();
 
   MakeAtExit([&] {
-    if (!--m_count)
+    if (!--m_count) {
       // Notify that we have hit zero:
+      std::lock_guard<std::mutex>{ *lk.mutex() },
       m_queueUpdated.notify_all();
+    }
   }),
   (*thunk)();
 }
@@ -78,7 +80,7 @@ void DispatchQueue::Abort(void) {
     m_pHead = nullptr;
     m_pTail = nullptr;
   }
-  
+
   // Destroy the whole dispatch queue.  Do so in an unsynchronized context in order to prevent
   // reentrancy.
   size_t nTraversed = 0;
@@ -88,7 +90,7 @@ void DispatchQueue::Abort(void) {
     cur = next;
     nTraversed++;
   }
-  
+
   // Decrement the count by the number of entries we actually traversed.  Abort may potentially
   // be called from a lambda function, so assigning this value directly to zero would be an error.
   m_count -= nTraversed;
@@ -121,7 +123,7 @@ void DispatchQueue::WaitForEvent(void) {
 
         // We also transition out if the dispatch queue has any events:
         this->m_pHead ||
-        
+
         // Or, finally, if the versions don't match
         version != m_version;
     }
@@ -271,10 +273,10 @@ std::chrono::steady_clock::time_point
 DispatchQueue::SuggestSoonestWakeupTimeUnsafe(std::chrono::steady_clock::time_point latestTime) const {
   return
     m_delayedQueue.empty() ?
-  
+
     // Nothing in the queue, no way to suggest a shorter time
     latestTime :
-  
+
     // Return the shorter of the maximum wait time and the time of the queue ready--we don't want to tell the
     // caller to wait longer than the limit of their interest.
     std::min(
@@ -317,10 +319,14 @@ DispatchQueue::DispatchThunkDelayedExpressionAbs DispatchQueue::operator+=(std::
 }
 
 void DispatchQueue::operator+=(DispatchThunkDelayed&& rhs) {
-  std::lock_guard<std::mutex> lk(m_dispatchLock);
-  
-  m_delayedQueue.push(std::forward<DispatchThunkDelayed>(rhs));
-  if(m_delayedQueue.top().GetReadyTime() == rhs.GetReadyTime() && !m_count)
+  bool shouldNotify;
+  {
+    std::lock_guard<std::mutex> lk(m_dispatchLock);
+    m_delayedQueue.push(std::forward<DispatchThunkDelayed>(rhs));
+    shouldNotify = m_delayedQueue.top().GetReadyTime() == rhs.GetReadyTime() && !m_count;
+  }
+
+  if(shouldNotify)
     // We're becoming the new next-to-execute entity, dispatch queue currently empty, trigger wakeup
     // so our newly pended delay thunk is eventually processed.
     m_queueUpdated.notify_all();

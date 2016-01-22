@@ -25,13 +25,15 @@ RunCounter::~RunCounter(void) {
   owner.reset();
 
   std::weak_ptr<CoreObject> outstanding;
-  std::lock_guard<std::mutex> lk(stateBlock->m_lock);
+  {
+    std::lock_guard<std::mutex> lk(stateBlock->m_lock);
 
-  // Unfortunately, this destructor callback is made before weak pointers are
-  // invalidated, which requires that we manually reset the outstanding count
-  // We don't want to free memory while holding the lock, so defer
-  outstanding = std::move(stateBlock->m_outstanding);
-  stateBlock->m_outstanding.reset();
+    // Unfortunately, this destructor callback is made before weak pointers are
+    // invalidated, which requires that we manually reset the outstanding count
+    // We don't want to free memory while holding the lock, so defer
+    outstanding = std::move(stateBlock->m_outstanding);
+    stateBlock->m_outstanding.reset();
+  }
 
   // Wake everyone up
   stateBlock->m_stateChanged.notify_all();

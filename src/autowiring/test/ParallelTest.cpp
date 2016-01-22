@@ -88,7 +88,7 @@ TEST_F(ParallelTest, VoidReturnAll) {
 TEST_F(ParallelTest, Barrier) {
   AutoCurrentContext()->Initiate();
   autowiring::parallel p;
-  
+
   std::atomic<size_t> x{ 0 };
   for (size_t i = 0; i < 1000; i++)
     p += [&x] { x++; };

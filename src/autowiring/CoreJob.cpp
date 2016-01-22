@@ -49,10 +49,10 @@ void CoreJob::OnPended(std::unique_lock<std::mutex>&& lk){
   } else {
     // Need to ask the thread pool to handle our events again:
     m_curEventInTeardown = false;
-    
+
     if (m_curEvent)
       delete static_cast<std::future<void>*>(m_curEvent);
-    
+
     m_curEvent = new std::future<void>(
       std::async(
         std::launch::async,
@@ -81,9 +81,10 @@ void CoreJob::DispatchAllAndClearCurrent(void) {
     // a signal to consumers that a call to m_curEvent.wait() will be nearly
     // non-blocking.
     m_curEventInTeardown = true;
-    m_queueUpdated.notify_all();
     break;
   }
+
+  m_queueUpdated.notify_all();
 }
 
 bool CoreJob::OnStart(void) {
