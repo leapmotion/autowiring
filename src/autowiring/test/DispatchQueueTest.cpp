@@ -249,3 +249,42 @@ TEST_F(DispatchQueueTest, AbortObserver) {
   dq.Abort();
   ASSERT_TRUE(onAbortedCalled) << "Abort signal handler not asserted as expected";
 }
+
+TEST_F(DispatchQueueTest, TryDispatchTest) {
+  DispatchQueue dq;
+  dq += [] {
+    throw std::runtime_error{"Error!"};
+  };
+  ASSERT_THROW(dq.TryDispatchEvent(), std::runtime_error);
+  ASSERT_EQ(1UL, dq.GetDispatchQueueLength());
+}
+
+TEST_F(DispatchQueueTest, VerifyRetry) {
+  DispatchQueue dq;
+  size_t nCalled = 0;
+  dq += [&nCalled] {
+    if(!nCalled++)
+      throw std::runtime_error{ "Error!" };
+  };
+  ASSERT_THROW(dq.TryDispatchEvent(), std::runtime_error);
+  ASSERT_EQ(1U, dq.GetDispatchQueueLength());
+  ASSERT_TRUE(dq.TryDispatchEvent());
+  ASSERT_EQ(2U, nCalled);
+}
+
+TEST_F(DispatchQueueTest, TwoDispatchRetry) {
+  DispatchQueue dq;
+  size_t nCalled = 0;
+  dq += [&nCalled] {
+    if (!nCalled++)
+      throw std::runtime_error{ "Error!" };
+  };
+  dq += [] {};
+  ASSERT_THROW(dq.TryDispatchEvent(), std::runtime_error);
+  ASSERT_EQ(2U, dq.GetDispatchQueueLength());
+  ASSERT_TRUE(dq.TryDispatchEvent());
+  ASSERT_EQ(1U, dq.GetDispatchQueueLength());
+  ASSERT_TRUE(dq.TryDispatchEvent());
+  ASSERT_EQ(2U, nCalled);
+  ASSERT_EQ(0U, dq.GetDispatchQueueLength());
+}
