@@ -62,7 +62,7 @@ void DispatchQueue::DispatchEventUnsafe(std::unique_lock<std::mutex>& lk) {
   MakeAtExit([&] {
     if (!--m_count) {
       // Notify that we have hit zero:
-      std::lock_guard<std::mutex>{ *lk.mutex() },
+      std::lock_guard<std::mutex>{ *lk.mutex() };
       m_queueUpdated.notify_all();
     }
   }),
