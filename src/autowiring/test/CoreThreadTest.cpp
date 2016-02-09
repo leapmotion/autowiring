@@ -505,7 +505,7 @@ TEST_F(CoreThreadTest, SpuriousWakeupTest) {
     countOnWake = extraction->GetDispatchQueueLength();
   };
 
-  // Add a delayed lambda that we know won't launch and another one that should launch right away
+  // Add a lambda that should launch right away and a delayed lambda that we know won't launch
   *extraction += wakeFn;
   *extraction += std::chrono::hours(1), [] {};
 
