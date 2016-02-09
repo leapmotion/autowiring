@@ -499,10 +499,12 @@ TEST_F(CoreThreadTest, SpuriousWakeupTest) {
   size_t countOnWake = -1;
 
   auto wakeFn = [&] {
-    std::lock_guard<std::mutex>{ lock },
-    ready = true;
+    {
+      std::lock_guard<std::mutex> lk{ lock };
+      ready = true;
+      countOnWake = extraction->GetDispatchQueueLength();
+    }
     cv.notify_all();
-    countOnWake = extraction->GetDispatchQueueLength();
   };
 
   // Add a lambda that should launch right away and a delayed lambda that we know won't launch
