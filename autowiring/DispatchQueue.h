@@ -78,6 +78,16 @@ protected:
   void DispatchEventUnsafe(std::unique_lock<std::mutex>& lk);
 
   /// <summary>
+  /// Similar to TryDispatchEvent, except assumes that the dispatch lock is currently held
+  /// </summary>
+  /// <param name="lk">A lock on m_dispatchLock</param>
+  /// <remarks>
+  /// This method assumes that the dispatch lock is held and that m_aborted is false.  It
+  /// is an error to call this method without those preconditions met.
+  /// </remarks>
+  void TryDispatchEventUnsafe(std::unique_lock<std::mutex>& lk);
+
+  /// <summary>
   /// Utility virtual, called whenever a new event is deferred
   /// </summary>
   /// <remarks>
@@ -153,6 +163,24 @@ public:
   /// If the dispatch queue is empty, this method will check the delayed dispatch queue.
   /// </remarks>
   bool DispatchEvent(void);
+
+  /// <summary>
+  /// Similar to WaitForEvent, but does not block
+  /// </summary>
+  /// <returns>True if an event was dispatched, false if the queue was empty when checked</returns>
+  /// <remarks>
+  /// Implements a retry capability for the dispatch queue
+  ///
+  /// If the dispatch queue is empty, this method will check the delayed dispatch queue.  Unlike
+  /// DispatchEvent, if the pended lambda throws an exception, the lambda is put back at the front
+  /// of the queue rather than being deleted.
+  ///
+  /// This method may break the strict sequentiality guarantee of DispatchQueue if it is used in a
+  /// concurrent or reentrant use case.  Consider a queue consisting of two lambdas, [A, B].  If A
+  /// throws an exception the first time it is invoked, and B does not throw, and A calls
+  /// DispatchEvent, then the call order will be [A(throws), B, A].
+  /// </remarks>
+  bool TryDispatchEvent(void);
 
   /// <summary>
   /// Similar to DispatchEvent, but will attempt to dispatch all events currently queued

@@ -67,6 +67,31 @@ void DispatchQueue::DispatchEventUnsafe(std::unique_lock<std::mutex>& lk) {
   (*thunk)();
 }
 
+void DispatchQueue::TryDispatchEventUnsafe(std::unique_lock<std::mutex>& lk) {
+  // Pull the ready thunk off of the front of the queue and pop it while we hold the lock.
+  // Then, we will excecute the call while the lock has been released so we do not create
+  // deadlocks.
+  DispatchThunkBase* pThunk = m_pHead;
+  m_pHead = pThunk->m_pFlink;
+  lk.unlock();
+
+  try { (*pThunk)(); }
+  catch (...) {
+    // Failed to execute thunk, put it back
+    lk.lock();
+    pThunk->m_pFlink = m_pHead;
+    m_pHead = pThunk;
+    throw;
+  }
+
+  if (!--m_count) {
+    // Notify that we have hit zero:
+    std::lock_guard<std::mutex>{ *lk.mutex() };
+    m_queueUpdated.notify_all();
+  }
+  delete pThunk;
+}
+
 void DispatchQueue::Abort(void) {
   // Do not permit any more lambdas to be pended to our queue
   DispatchThunkBase* pHead;
@@ -191,6 +216,15 @@ bool DispatchQueue::DispatchEvent(void) {
     return false;
 
   DispatchEventUnsafe(lk);
+  return true;
+}
+
+bool DispatchQueue::TryDispatchEvent(void) {
+  std::unique_lock<std::mutex> lk(m_dispatchLock);
+  if (!m_pHead && !PromoteReadyDispatchersUnsafe())
+    return false;
+
+  TryDispatchEventUnsafe(lk);
   return true;
 }
 
