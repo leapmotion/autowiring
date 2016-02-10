@@ -11,7 +11,6 @@ class ParallelTest:
 {};
 
 TEST_F(ParallelTest, Basic) {
-  AutoCurrentContext()->Initiate();
   autowiring::parallel p;
 
   std::mt19937_64 mt(time(nullptr));
@@ -42,7 +41,6 @@ TEST_F(ParallelTest, Basic) {
 }
 
 TEST_F(ParallelTest, All) {
-  AutoCurrentContext()->Initiate();
   autowiring::parallel p;
 
   for (size_t i = 0; i < 10; i++)
@@ -57,7 +55,6 @@ TEST_F(ParallelTest, All) {
 }
 
 TEST_F(ParallelTest, VoidReturn) {
-  AutoCurrentContext()->Initiate();
   autowiring::parallel p;
 
   auto val = std::make_shared<std::atomic<size_t>>(0);
@@ -71,7 +68,6 @@ TEST_F(ParallelTest, VoidReturn) {
 }
 
 TEST_F(ParallelTest, VoidReturnAll) {
-  AutoCurrentContext()->Initiate();
   autowiring::parallel p;
 
   auto val = std::make_shared<std::atomic<size_t>>(0);
@@ -86,9 +82,8 @@ TEST_F(ParallelTest, VoidReturnAll) {
 }
 
 TEST_F(ParallelTest, Barrier) {
-  AutoCurrentContext()->Initiate();
   autowiring::parallel p;
-  
+
   std::atomic<size_t> x{ 0 };
   for (size_t i = 0; i < 1000; i++)
     p += [&x] { x++; };
