@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "Parallel.h"
 #include "autowiring.h"
+#include <thread>
 
 using namespace autowiring;
 
