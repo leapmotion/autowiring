@@ -17,15 +17,15 @@ class ThreadPoolTest:
 {
 public:
   ThreadPoolTest(void) {
-    pool->SuggestThreadPoolSize(2);
-    token = pool->Start();
+    m_pool->SuggestThreadPoolSize(2);
+    token = m_pool->Start();
   }
 
   void TearDown(void) {
     token.reset();
   }
 
-  std::shared_ptr<T> pool = std::make_shared<T>();
+  std::shared_ptr<T> m_pool = std::make_shared<T>();
   std::shared_ptr<void> token;
 };
 
@@ -40,7 +40,7 @@ TYPED_TEST_P(ThreadPoolTest, PoolOverload) {
   auto p = std::make_shared<std::promise<void>>();
 
   for (size_t i = cap; i--;)
-    *pool += [=] {
+    *this->m_pool += [=] {
       if (!--*ctr)
         p->set_value();
     };
