@@ -355,7 +355,7 @@ public:
   }
 
   void Proceed(void) {
-    std::lock_guard<std::mutex> lk(lock);
+    std::lock_guard<std::mutex>{ lock },
     outstanding.reset();
     cv.notify_all();
   }

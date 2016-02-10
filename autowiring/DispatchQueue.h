@@ -363,9 +363,9 @@ public:
     // Create the thunk first to reduce the amount of time we spend in lock:
     auto thunk = new DispatchThunk<_Fx>(std::forward<_Fx>(fx));
 
-    std::unique_lock<std::mutex> lk(m_dispatchLock);
+    m_dispatchLock.lock();
     if (m_count >= m_dispatchCap) {
-      lk.unlock();
+      m_dispatchLock.unlock();
       delete thunk;
       return;
     }
@@ -374,15 +374,18 @@ public:
     m_count++;
 
     // Linked list setup:
-    if (m_pHead)
-      m_pTail->m_pFlink = thunk; 
+    if (m_pHead) {
+      m_pTail->m_pFlink = thunk;
+      m_pTail = thunk;
+      m_dispatchLock.unlock();
+    }
     else {
-      m_pHead = thunk;
+      m_pHead = m_pTail = thunk;
+      m_dispatchLock.unlock();
       m_queueUpdated.notify_all();
     }
-    m_pTail = thunk;
 
     // Notification as needed:
-    OnPended(std::move(lk));
+    OnPended(std::unique_lock<std::mutex>{});
   }
 };

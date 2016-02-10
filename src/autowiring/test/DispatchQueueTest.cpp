@@ -30,21 +30,21 @@ class Thread:
 
 TEST_F(DispatchQueueTest, SimpleEvents) {
   int count = 0;
-  
+
   *this += [&count] () {
     ++count;
   };
-  
+
   *this += [&count] () {
     count += 5 ;
   };
-  
+
   int num = DispatchAllEvents();
-  
+
   *this += [&count]() {
     count += 5 ;
   };
-  
+
   ASSERT_EQ(2, num);
   ASSERT_EQ(6, count);
 }
@@ -140,11 +140,9 @@ TEST_F(DispatchQueueTest, BarrierWithAbort) {
   auto f = std::async(
     std::launch::async,
     [=] {
-      {
-        std::unique_lock<std::mutex> lk(b->lock);
-        b->nReady++;
-        b->cv.notify_all();
-      }
+      std::unique_lock<std::mutex> { b->lock },
+      b->nReady++;
+      b->cv.notify_all();
       return ct->Barrier(std::chrono::seconds(5));
     }
   );

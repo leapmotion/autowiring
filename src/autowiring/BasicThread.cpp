@@ -96,7 +96,7 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
 
   // Notify other threads that we are done.  At this point, any held references that might still exist
   // notification must happen from a synchronized level in order to ensure proper ordering.
-  std::lock_guard<std::mutex> lk(state->m_lock);
+  std::lock_guard<std::mutex>{state->m_lock},
   state->m_completed = true;
   state->m_stateCondition.notify_all();
 }
@@ -114,7 +114,7 @@ void BasicThread::WaitForStateUpdate(const std::function<bool()>& fn) const {
 }
 
 void BasicThread::PerformStatusUpdate(const std::function<void()>& fn) const {
-  std::unique_lock<std::mutex> lk(m_state->m_lock);
+  std::unique_lock<std::mutex>{m_state->m_lock},
   fn();
   m_state->m_stateCondition.notify_all();
 }

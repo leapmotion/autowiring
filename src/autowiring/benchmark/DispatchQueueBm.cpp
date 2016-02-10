@@ -44,7 +44,7 @@ Benchmark DispatchQueueBm::Dispatch(void) {
 
         sw.Start();
         for (size_t i = n; i--;) {
-          std::lock_guard<std::mutex> lk(lock);
+          std::lock_guard<std::mutex>{lock},
           fns.push_back(l);
           cv.notify_all();
         }

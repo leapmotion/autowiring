@@ -46,10 +46,9 @@ void CoreRunnable::Stop(bool graceful) {
   }
 
   if (m_outstanding) {
-    std::shared_ptr<CoreObject> outstanding;
-    std::lock_guard<std::mutex> lk(m_lock);
-
     // Ensure we do not invoke the outstanding count dtor while holding a lock
+    std::shared_ptr<CoreObject> outstanding;
+    std::lock_guard<std::mutex>{m_lock},
     outstanding.swap(m_outstanding);
 
     // Everything looks good now

@@ -96,11 +96,9 @@ TEST_F(InterlockedRoutinesTest, VerifyCompareExchangePathological) {
   }
 
   // Now we can wake up the threads:
-  {
-    std::lock_guard<std::mutex> lk(lock);
-    canContinue = true;
-    cv.notify_all();
-  }
+  std::lock_guard<std::mutex> { lock },
+  canContinue = true;
+  cv.notify_all();
 
   // Wait for all threads to complete:
   for(size_t i = 0; i < threadCount; i++)

@@ -426,9 +426,6 @@ void CoreContext::Initiate(void) {
     return;
   }
 
-  // State change has taken place, we can signal
-  m_stateBlock->m_stateChanged.notify_all();
-
   // Now we can add the event receivers we haven't been able to add because the context
   // wasn't yet started:
   AddEventReceiversUnsafe(std::move(m_delayedEventReceivers));
@@ -441,6 +438,7 @@ void CoreContext::Initiate(void) {
   if (!IsRunning()) {
     lk.unlock();
     onInitiated();
+    m_stateBlock->m_stateChanged.notify_all();
 
     // Need to inject a delayed context type so that this context will not be destroyed until
     // it has an opportunity to start.
@@ -471,6 +469,7 @@ void CoreContext::Initiate(void) {
   threadPool = m_threadPool;
   lk.unlock();
   onInitiated();
+  m_stateBlock->m_stateChanged.notify_all();
 
   // Start the thread pool out of the lock, and then update our start token if our thread pool
   // reference has not changed.  The next pool could potentially be nullptr if the parent is going
@@ -539,9 +538,8 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
     firstThreadToStop = m_threads.begin();
     if (m_beforeRunning)
       ++firstThreadToStop;
-
-    m_stateBlock->m_stateChanged.notify_all();
   }
+  m_stateBlock->m_stateChanged.notify_all();
   onShutdown();
 
   // Teardown interleave assurance--all of these contexts will generally be destroyed
@@ -1083,11 +1081,11 @@ void CoreContext::TryTransitionChildrenState(void) {
             auto q = child->m_threads.begin();
             child->m_state = State::Running;
 
-            // Child had it's state changed
-            child->m_stateBlock->m_stateChanged.notify_all();
-
             // Raise the run condition in the child
             childLk.unlock();
+
+            // Child had it's state changed
+            child->m_stateBlock->m_stateChanged.notify_all();
 
             auto outstanding = child->m_stateBlock->IncrementOutstandingThreadCount(child);
             while (q != child->m_threads.end()) {
@@ -1106,6 +1104,7 @@ void CoreContext::TryTransitionChildrenState(void) {
           child->m_state = State::CanRun;
 
           // Child had it's state changed
+          childLk.unlock();
           child->m_stateBlock->m_stateChanged.notify_all();
           break;
         case State::CanRun:
