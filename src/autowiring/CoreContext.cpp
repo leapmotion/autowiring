@@ -12,7 +12,6 @@
 #include "NullPool.h"
 #include "SystemThreadPool.h"
 #include "thread_specific_ptr.h"
-#include "ThreadPool.h"
 #include <sstream>
 #include <stdexcept>
 
@@ -58,8 +57,7 @@ CoreContext::CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childLis
   m_backReference(backReference),
   m_sigilType(sigilType),
   m_stateBlock(std::make_shared<CoreContextStateBlock>(pParent ? pParent->m_stateBlock : nullptr)),
-  m_junctionBoxManager(new JunctionBoxManager),
-  m_threadPool(std::make_shared<NullPool>())
+  m_junctionBoxManager(new JunctionBoxManager)
 {}
 
 CoreContext::~CoreContext(void) {
@@ -448,47 +446,9 @@ void CoreContext::Initiate(void) {
 
   // Now we can recover the first thread that will need to be started
   auto beginning = m_threads.begin();
-
-  // Start our threads before starting any child contexts:
-  std::shared_ptr<ThreadPool> threadPool;
-  auto nullPool = std::dynamic_pointer_cast<NullPool>(m_threadPool);
-  if (nullPool) {
-    // Decide which pool will become our current thread pool.  Global context is the final case,
-    // which defaults to the system thread pool
-    if (!nullPool->GetSuccessor())
-      nullPool->SetSuccessor(m_pParent ? m_pParent->GetThreadPool() : SystemThreadPool::New());
-
-    // Trigger null pool destruction at this point:
-    m_threadPool = nullPool->MoveDispatchersToSuccessor();
-  }
-
-  // The default case should not generally occur, but if it were the case that the null pool were
-  // updated before the context was initiated, then we would have no work to do as no successors
-  // exist to be moved.  In that case, simply take a record of the current thread pool for the
-  // call to Start that follows the unlock.
-  threadPool = m_threadPool;
   lk.unlock();
   onInitiated();
   m_stateBlock->m_stateChanged.notify_all();
-
-  // Start the thread pool out of the lock, and then update our start token if our thread pool
-  // reference has not changed.  The next pool could potentially be nullptr if the parent is going
-  // down while we are going up.
-  if (threadPool) {
-    // Initiate
-    auto startToken = threadPool->Start();
-
-    // Transfer all dispatchers from the null pool to the new thread pool:
-    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-
-    // If the thread pool was updated while we were trying to start the pool we observed earlier,
-    // then allow our token to expire and do not do any other work.  Whomever caused the thread
-    // pool pointer to be updated would also have seen that the context is currently started,
-    // and would have updated both the thread pool pointer and the start token at the same time.
-    if (m_threadPool == threadPool)
-      // Swap, not assign; we don't want teardown to happen while synchronized
-      std::swap(m_startToken, startToken);
-  }
 
   if (beginning != m_threads.end()) {
     auto outstanding = m_stateBlock->IncrementOutstandingThreadCount(shared_from_this());
@@ -552,7 +512,6 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
 
   // Thread pool token and pool pointer
   std::shared_ptr<void> startToken;
-  std::shared_ptr<ThreadPool> threadPool;
 
   // Tear down all the children, evict thread pool:
   {
@@ -560,8 +519,6 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
 
     startToken = std::move(m_startToken);
     m_startToken.reset();
-    threadPool = std::move(m_threadPool);
-    m_threadPool.reset();
 
     // Fill strong lock series in order to ensure proper teardown interleave:
     childrenInterleave.reserve(m_children.size());
@@ -715,48 +672,6 @@ void CoreContext::BuildCurrentState(void) {
     // Recurse into the child instance:
     cur->BuildCurrentState();
   }
-}
-
-void CoreContext::SetThreadPool(const std::shared_ptr<ThreadPool>& threadPool) {
-  if (!threadPool)
-    throw std::invalid_argument("A context cannot be given a null thread pool");
-
-  std::shared_ptr<ThreadPool> priorThreadPool;
-  {
-    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-    if (IsShutdown())
-      // Nothing to do, context already down
-      return;
-
-    if (!IsRunning()) {
-      // Just set up the forwarding thread pool
-      auto nullPool = std::dynamic_pointer_cast<NullPool>(m_threadPool);
-      if (!nullPool)
-        throw autowiring_error("Internal error, null pool was deassigned even though the context has not been started");
-      priorThreadPool = nullPool->GetSuccessor();
-      nullPool->SetSuccessor(threadPool);
-      return;
-    }
-
-    priorThreadPool = m_threadPool;
-    m_threadPool = threadPool;
-  }
-
-  // We are presently running.  We need to start the pool, and then attempt to
-  // update our token
-  auto startToken = threadPool->Start();
-  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-  if (m_threadPool != threadPool)
-    // Thread pool was updated by someone else, let them complete their operation
-    return;
-
-  // Update our start token and return.  Swap, not move; we don't want to risk
-  // calling destructors while synchronized.
-  std::swap(m_startToken, startToken);
-}
-
-std::shared_ptr<ThreadPool> CoreContext::GetThreadPool(void) const {
-  return (std::lock_guard<std::mutex>)m_stateBlock->m_lock, m_threadPool;
 }
 
 void CoreContext::Dump(std::ostream& os) const {
