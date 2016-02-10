@@ -22,7 +22,6 @@
 #include "MemoEntry.h"
 #include "once.h"
 #include "result_or_default.h"
-#include "ThreadPool.h"
 #include "TypeRegistry.h"
 #include "TypeUnifier.h"
 
@@ -48,10 +47,6 @@ class CoreContextT;
 
 template<typename T>
 class JunctionBox;
-
-namespace autowiring {
-  class ThreadPool;
-}
 
 /// \file
 /// CoreContext definitions.
@@ -230,10 +225,6 @@ protected:
 
   // Actual core threads:
   std::list<CoreRunnable*> m_threads;
-
-  // The thread pool used by this context.  By default, a context inherits the thread pool of
-  // its parent, and the global context gets the system thread pool.
-  std::shared_ptr<autowiring::ThreadPool> m_threadPool;
 
   // The start token for the thread pool, if one exists
   std::shared_ptr<void> m_startToken;
@@ -1064,49 +1055,6 @@ public:
         (T*)nullptr
       )
     );
-  }
-
-  /// <summary>
-  /// Assigns the thread pool handler for this context
-  /// </summary>
-  /// <remarks>
-  /// If the context is currently running, the thread pool will automatically be started.  The pool's
-  /// start token and shared pointer is reset automatically when the context is torn down.  If the
-  /// context has already been shut down (IE, IsShutdown returns true), this method has no effect.
-  ///
-  /// Dispatchers that have been attached to the current thread pool will not be transitioned to the
-  /// new pool.  Changing the thread pool may cause the previously assigned thread pool to be stopped.
-  /// This will cause it to complete all work assigned to it and release resources associated with
-  /// processing.  If there are no other handles to the pool, it may potentially destroy itself.
-  ///
-  /// It is an error to pass nullptr to this method.
-  /// </remarks>
-  void SetThreadPool(const std::shared_ptr<autowiring::ThreadPool>& threadPool);
-
-  /// <summary>
-  /// Returns the current thread pool
-  /// </summary>
-  /// <remarks>
-  /// If the context has been shut down, (IE, IsShutdown returns true), this method returns nullptr.  Calling
-  /// ThreadPool::Start on the returned shared pointer will not cause dispatchers pended to this context to
-  /// be executed.  To do this, invoke CoreContext::Initiate
-  /// </remarks>
-  std::shared_ptr<autowiring::ThreadPool> GetThreadPool(void) const;
-
-  /// <summary>
-  /// Submits the specified lambda to this context's ThreadPool for processing
-  /// </summary>
-  /// <returns>True if the job has been submitted for execution</returns>
-  /// <remarks>
-  /// The passed thunk will not be executed if the current context has already stopped.
-  /// </remarks>
-  template<class Fx>
-  bool operator+=(Fx&& fx) {
-    auto pool = GetThreadPool();
-    return
-      pool ?
-      pool->Submit(std::make_unique<DispatchThunk<Fx>>(std::forward<Fx&&>(fx))) :
-      false;
   }
 
   /// <summary>

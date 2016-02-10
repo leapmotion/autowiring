@@ -2,7 +2,7 @@
 #pragma once
 #include "DispatchQueue.h"
 #include "SystemThreadPool.h"
-#include <thread> 
+#include <thread>
 #include <vector>
 
 namespace autowiring {

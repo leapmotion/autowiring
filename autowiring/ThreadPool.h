@@ -89,6 +89,18 @@ public:
   /// be submitted for execution.
   /// </remarks>
   virtual bool Submit(std::unique_ptr<DispatchThunkBase>&& thunk) = 0;
+
+  /// <summary>
+  /// Submits the specified lambda to this context's ThreadPool for processing
+  /// </summary>
+  /// <returns>True if the job has been submitted for execution</returns>
+  /// <remarks>
+  /// The passed thunk will not be executed if the current context has already stopped.
+  /// </remarks>
+  template<class Fx>
+  bool operator+=(Fx&& fx) {
+    return Submit(std::make_unique<DispatchThunk<Fx>>(std::forward<Fx&&>(fx)));
+  }
 };
 
 }
