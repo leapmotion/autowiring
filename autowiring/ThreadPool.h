@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "DispatchThunk.h"
 #include <atomic>
 #include <mutex>
 #include MEMORY_HEADER
