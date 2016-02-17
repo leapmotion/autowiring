@@ -7,6 +7,7 @@
 #include "Bolt.h"
 #include "CallExtractor.h"
 #include "CoreRunnable.h"
+#include "ConfigManager.h"
 #include "ContextMember.h"
 #include "CoreContextStateBlock.h"
 #include "CoreObjectDescriptor.h"
@@ -214,6 +215,9 @@ protected:
   std::vector<ContextMember*> m_contextMembers;
   std::vector<ExceptionFilter*> m_filters;
 
+  // The one and only configuration manager type
+  autowiring::ConfigManager m_cfgManager;
+
   // Context members from other contexts that have snooped this context
   std::set<AnySharedPointer> m_snoopers;
 
@@ -235,7 +239,7 @@ protected:
   typedef std::shared_ptr<CoreContext> (*t_pfnCreate)(
     std::shared_ptr<CoreContext> pParent,
     t_childList::iterator backReference
-    );
+  );
 
   /// \internal
   /// <summary>
@@ -606,13 +610,20 @@ public:
     std::shared_ptr<typename CreationRules::TActual> retVal(
       CreationRules::New(*this, std::forward<Args>(args)...)
     );
+    CoreObjectDescriptor objDesc(retVal, (T*)nullptr);
+
+    // Configure if the object is configurable, use a static check rather than checking the
+    // value of pConfigDesc because it's a little faster and one necessarily follows the other
+    // We also want this to happen before the AutoInit call is made
+    if(autowiring::has_getconfigdescriptor<T>::value)
+      m_cfgManager.Register(static_cast<T*>(retVal.get()), *objDesc.pConfigDesc);
 
     // AutoInit if sensible to do so:
     CallAutoInit(*retVal, has_autoinit<T>());
 
     try {
       // Pass control to the insertion routine, which will handle injection from this point:
-      AddInternal(CoreObjectDescriptor(retVal, (T*)nullptr));
+      AddInternal(objDesc);
     }
     catch(autowiring_error&) {
       // We know why this exception occurred.  It's because, while we were constructing our
@@ -958,6 +969,16 @@ public:
     CurrentContextPusher pshr(*this);
     memo.onSatisfied += std::forward<Fn&&>(listener);
   }
+
+  /// <summary>
+  /// Sets a single configuration value from the context
+  /// </summary>
+  void ConfigSet(std::string name, std::string value);
+
+  /// <summary>
+  /// Gets a configuration value from the context
+  /// </summary>
+  const std::string& ConfigGet(std::string name) const;
 
   /// <summary>
   /// Adds a teardown notifier which receives a pointer to this context on destruction

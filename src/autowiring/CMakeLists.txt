@@ -62,6 +62,12 @@ set(Autowiring_SRCS
   callable.h
   CallExtractor.h
   CallExtractor.cpp
+  config_descriptor.h
+  config_descriptor.cpp
+  ConfigManager.h
+  ConfigManager.cpp
+  ConfigRegistry.h
+  ConfigRegistry.cpp
   ContextEnumerator.cpp
   ContextEnumerator.h
   ContextMap.h
@@ -104,6 +110,7 @@ set(Autowiring_SRCS
   hash_tuple.h
   has_autofilter.h
   has_autoinit.h
+  has_getconfigdescriptor.h
   has_simple_constructor.h
   has_static_new.h
   has_validate.h
@@ -127,8 +134,10 @@ set(Autowiring_SRCS
   ObjectPool.h
   ObjectPoolMonitor.cpp
   ObjectPoolMonitor.h
+  observable.h
   once.h
   once.cpp
+  optional.h
   Parallel.h
   Parallel.cpp
   registration.h

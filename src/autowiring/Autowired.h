@@ -174,7 +174,7 @@ public:
   };
 
   template<typename U, typename... Args>
-  signal_relay<U,Args...> operator()(autowiring::signal<void(Args...)> U::*sig) {
+  signal_relay<U, Args...> operator()(autowiring::signal<void(Args...)> U::*sig) {
     static_assert(std::is_base_of<U, T>::value, "Cannot reference member of unrelated type");
     return signal_relay<U, Args... >(*this, sig);
   }
