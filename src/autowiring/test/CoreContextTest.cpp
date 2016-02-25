@@ -409,37 +409,6 @@ TEST_F(CoreContextTest, AppropriateShutdownInterleave) {
   ASSERT_TRUE(ctxtInner->Wait(std::chrono::seconds(5))) << "Inner context did not tear down in a timely fashion";
 }
 
-class MyClassForAllBase {};
-
-template<int N>
-class MyClassForAll:
-  public MyClassForAllBase
-{
-};
-
-TEST_F(CoreContextTest, All) {
-  AutoCurrentContext ctxt;
-  ctxt->Initiate();
-
-  AutoRequired<MyClassForAll<1>> c1;
-  AutoRequired<MyClassForAll<2>> c2;
-
-  // Sanity check first:
-  auto& allMembers = ctxt->All<MyClassForAllBase>();
-  ASSERT_LE(2UL, allMembers.size()) << "All members not correctly identified by call to all";
-
-  // Check all instances found
-  bool found1 = false;
-  bool found2 = false;
-  for (auto& cur : allMembers) {
-    found1 |= &cur == c1.get();
-    found2 |= &cur == c2.get();
-  }
-
-  ASSERT_TRUE(found1) << "Failed to find MyClassForAll<1> via its ContextMember interface";
-  ASSERT_TRUE(found2) << "Failed to find MyClassForAll<2> via its ContextMember interface";
-}
-
 class ClassThatPoints1;
 class ClassThatPoints2;
 

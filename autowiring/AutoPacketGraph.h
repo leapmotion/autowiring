@@ -4,10 +4,8 @@
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
 #include "Autowired.h"
-#include "AutowiringEvents.h"
 #include "CoreRunnable.h"
 #include STL_UNORDERED_MAP
-
 
 /// \internal
 /// <summary>
@@ -23,14 +21,14 @@ struct DeliveryEdge
 
   // The type info
   auto_id type_info;
-  
+
   // The AutoFilterDescriptor
   AutoFilterDescriptor descriptor;
-  
+
   // Specifies if the argument is an input (type -> descriptor) or output (descriptor -> type)
   // or rvalue (type <-> descriptor)
   ArgType arg_type;
-  
+
   // For the unordered map/hash comparison
   bool operator==(const DeliveryEdge& rhs) const {
     return
@@ -57,36 +55,24 @@ namespace std {
 /// Graphical visualization of AutoPackets
 /// </summary>
 class AutoPacketGraph:
-  public AutowiringEvents,
   public CoreRunnable
 {
 public:
+  AutoPacketGraph(void);
+  ~AutoPacketGraph(void);
+
   typedef std::unordered_map<DeliveryEdge, size_t, std::hash<DeliveryEdge>> t_deliveryEdges;
-  
+
 protected:
   // A mapping of an edge to the number of times it was delivered
   t_deliveryEdges m_deliveryGraph;
-  
+
   // A lock for this type
   mutable std::mutex m_lock;
-  
+
   // Reference to the AutoPacketFactory
   AutoRequired<AutoPacketFactory> m_factory;
-  
-  /// <summary>
-  /// Demangle a type name as well as stripping "auto_in< >"
-  /// </summary>
-  /// <remarks>
-  /// The ">" that encloses the templates will have extra spaces between them, for instance
-  ///
-  ///    auto_in<Class>
-  ///    auto_in<Class<T> >
-  ///    auto_in<Class1<Class2, Class3<Class4> > >
-  ///
-  /// All we care about is matching "^auto_in<(.*)>$"
-  /// </remarks>
-  std::string DemangleTypeName(const std::type_info* type_info) const;
-  
+
   /// <summary>
   /// Scan all of the objects and add any AutoFilter's from all of the objects in a system.
   /// </summary>
@@ -94,26 +80,23 @@ protected:
   /// This function will scan all of the objects (and rescan) and only add new edges to our graph.
   /// </remarks>
   void LoadEdges();
-  
+
   /// <summary>
   /// Record the delivery of a packet and increment the number of times the packet has been delivered
   /// </summary>
   void RecordDelivery(auto_id id, const AutoFilterDescriptor& descriptor, DeliveryEdge::ArgType arg_type);
-  
-  /// AutowiringEvents overrides
-  virtual void NewContext(CoreContext&) override {}
-  virtual void ExpiredContext(CoreContext&) override {}
-  virtual void NewObject(CoreContext&, const CoreObjectDescriptor&) override;
-  
+
+  void NewObject(CoreContext&, const CoreObjectDescriptor&);
+
   /// CoreRunnable overrides
   virtual bool OnStart(void) override;
-  
+
 public:
   /// <summary>
   /// Get a copy of the packet via AutoFilter
   /// </summary>
   void AutoFilter(AutoPacket& packet);
-  
+
   /// <summary>
   /// Write the graph to a file in graphviz format
   /// </summary>

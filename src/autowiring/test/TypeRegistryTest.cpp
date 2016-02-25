@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include <autowiring/Autowired.h>
 #include <autowiring/GlobalCoreContext.h>
-#include <autowiring/JunctionBox.h>
 #include <autowiring/TypeRegistry.h>
 
 class TypeRegistryTest:

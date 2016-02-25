@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AutoNetServer.h"
-#include "AutowiringEvents.h"
 #include <json11/json11.hpp>
 #include <cctype>
 #include <map>
@@ -15,7 +14,6 @@ struct TypeIdentifierBase;
 // Protocol layer for AutoNet
 class AutoNetServerImpl:
   public AutoNetServer,
-  public AutowiringEvents,
   public AutoNetTransportHandler
 {
 public:
@@ -52,20 +50,20 @@ public:
   /// Updates server when a new context is created
   /// </summary>
   /// <param name="ctxt">The new context</param>
-  virtual void NewContext(CoreContext& ctxt) override;
+  void NewContext(CoreContext& ctxt);
 
   /// <summary>
   /// Updates server when a context has expired
   /// </summary>
   /// <param name="ctxt">The expired context</param>
-  virtual void ExpiredContext(CoreContext& ctxt) override;
+  void ExpiredContext(CoreContext& ctxt);
 
   /// <summary>
   /// Updates server when a new object is created
   /// </summary>
   /// <param name="ctxt">Context containing the object</param>
   /// <param name="obj">The object</param>
-  virtual void NewObject(CoreContext& ctxt, const CoreObjectDescriptor& obj) override;
+  void NewObject(CoreContext& ctxt, const CoreObjectDescriptor& obj);
 
 protected:
   /// <summary>
@@ -138,9 +136,6 @@ protected:
   // one-to-one map of contexts to integers
   std::map<CoreContext*, int> m_ContextIDs;
   std::map<int, CoreContext*> m_ContextPtrs;
-
-  // All event types
-  std::set<const TypeIdentifierBase*> m_EventTypes;
 
   // All ContextMembers
   std::map<std::string, std::function<void(void)>> m_AllTypes;

@@ -1,10 +1,25 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "DtorCorrectnessTest.hpp"
 #include <autowiring/CoreThread.h>
 #include ATOMIC_HEADER
 
 using namespace std;
+
+class CtorDtorListener;
+template<int i>
+class MyCtorDtorListenerN;
+
+class DtorCorrectnessTest :
+  public testing::Test
+{
+public:
+  DtorCorrectnessTest(void);
+
+  void SetUp(void) override;
+
+  AutoRequired<MyCtorDtorListenerN<1>> listener1;
+  AutoRequired<MyCtorDtorListenerN<2>> listener2;
+};
 
 class CtorDtorCopyCounter {
 public:
@@ -28,15 +43,8 @@ public:
 std::atomic<int> CtorDtorCopyCounter::s_outstanding;
 std::atomic<size_t> CtorDtorCopyCounter::s_construction;
 
-class CtorDtorListener {
-public:
-  virtual void DoFired(CtorDtorCopyCounter ctr) = 0;
-  virtual void DoDeferred(CtorDtorCopyCounter ctr) = 0;
-};
-
 class MyCtorDtorListener:
-  public CoreThread,
-  public CtorDtorListener
+  public CoreThread
 {
 public:
   MyCtorDtorListener(void):
@@ -45,9 +53,7 @@ public:
 
   bool m_hitDeferred = false;
 
-  virtual void DoFired(CtorDtorCopyCounter ctr) {}
-
-  virtual void DoDeferred(CtorDtorCopyCounter ctr) {
+  void DoDeferred(CtorDtorCopyCounter ctr) {
     *this += [this] {
       m_hitDeferred = true;
     };
@@ -72,17 +78,6 @@ void DtorCorrectnessTest::SetUp(void) {
   CtorDtorCopyCounter::s_construction = 0;
 }
 
-void convert(int x);
-
-TEST_F(DtorCorrectnessTest, VerifyFiringDtors) {
-  AutoCurrentContext()->Initiate();
-
-  // Try firing some events and validate the invariant:
-  cdl(&CtorDtorListener::DoFired)(CtorDtorCopyCounter());
-  ASSERT_LE(2UL, CtorDtorCopyCounter::s_construction) << "Counter constructors were not invoked the expected number of times when fired";
-  ASSERT_EQ(0, CtorDtorCopyCounter::s_outstanding) << "Counter mismatch under event firing";
-}
-
 TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
   AutoCurrentContext()->Initiate();
   {
@@ -102,7 +97,8 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
   ASSERT_FALSE(listener1->ShouldStop()) << "Thread was signalled to stop even though it should have been deferring";
 
   // Now try deferring:
-  cdl(&CtorDtorListener::DoDeferred)(CtorDtorCopyCounter());
+  listener1->DoDeferred({});
+  listener2->DoDeferred({});
 
   // Process all deferred elements and then check to see what we got:
   AutoCurrentContext ctxt;

@@ -36,11 +36,8 @@ set(AutowiringTest_SRCS
   DecoratorTest.cpp
   DemangleTest.cpp
   DispatchQueueTest.cpp
-  DtorCorrectnessTest.hpp
   DtorCorrectnessTest.cpp
   ExceptionFilterTest.cpp
-  EventReceiverTest.cpp
-  EventRegistryTest.cpp
   FactoryTest.cpp
   GlobalInitTest.hpp
   GlobalInitTest.cpp

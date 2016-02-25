@@ -5,6 +5,7 @@
 #include "AutoPacketFactory.h"
 #include "demangle.h"
 #include <algorithm>
+#include <deque>
 #include <iomanip>
 #include <iostream>
 #include <unordered_set>

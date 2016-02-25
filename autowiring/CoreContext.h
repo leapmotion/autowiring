@@ -3,7 +3,6 @@
 #include "AnySharedPointer.h"
 #include "auto_signal.h"
 #include "AutoFilterDescriptor.h"
-#include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
 #include "CallExtractor.h"
@@ -16,8 +15,6 @@
 #include "ExceptionFilter.h"
 #include "fast_pointer_cast.h"
 #include "has_autoinit.h"
-#include "InvokeRelay.h"
-#include "JunctionBoxManager.h"
 #include "member_new_type.h"
 #include "MemoEntry.h"
 #include "once.h"
@@ -34,7 +31,6 @@ struct CoreContextStateBlock;
 class BasicThread;
 class BoltBase;
 class GlobalCoreContext;
-class JunctionBoxBase;
 
 template<typename T>
 class Autowired;
@@ -44,9 +40,6 @@ struct Boltable;
 
 template<class T>
 class CoreContextT;
-
-template<typename T>
-class JunctionBox;
 
 /// \file
 /// CoreContext definitions.
@@ -116,6 +109,10 @@ protected:
   CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference, const std::type_info& sigilType);
 
 public:
+  // Asserted whenever a child of this context is created.  This signal is asserted before
+  // any bolts are notified of the context's existence.
+  autowiring::signal<void(CoreContext* pNewChild)> newContext;
+
   // Asserted when the context is initiated
   autowiring::once_signal<CoreContext> onInitiated;
 
@@ -125,9 +122,16 @@ public:
   // Asserted when the context is being shut down
   autowiring::once_signal<CoreContext> onShutdown;
 
+  // Signalled when a context is just starting to be destroyed.  The global context does not
+  // assert this signal
+  autowiring::signal<void()> expiredContext;
+
   // Asserted when the context is tearing down but before members objects are destroyed or
   // any contained Autowired fields are unlinked
   autowiring::signal<void(const CoreContext&)> onTeardown;
+
+  // Asserted any time a new object is added to the context
+  autowiring::signal<void(const CoreObjectDescriptor&)> newObject;
 
   virtual ~CoreContext(void);
 
@@ -210,18 +214,8 @@ protected:
   std::vector<ContextMember*> m_contextMembers;
   std::vector<ExceptionFilter*> m_filters;
 
-  // All known event receivers and receiver proxies originating from this context:
-  typedef std::set<JunctionBoxEntry<CoreObject>> t_rcvrSet;
-  t_rcvrSet m_eventReceivers;
-
-  // List of eventReceivers to be added when this context in initiated
-  t_rcvrSet m_delayedEventReceivers;
-
   // Context members from other contexts that have snooped this context
   std::set<AnySharedPointer> m_snoopers;
-
-  // Manages events for this context
-  const std::unique_ptr<JunctionBoxManager> m_junctionBoxManager;
 
   // Actual core threads:
   std::list<CoreRunnable*> m_threads;
@@ -268,12 +262,6 @@ protected:
 
   /// \internal
   /// <summary>
-  /// Unregisters all event receivers in this context
-  /// </summary>
-  void UnregisterEventReceiversUnsafe(void);
-
-  /// \internal
-  /// <summary>
   /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
   /// </summary>
   /// <remarks>
@@ -281,15 +269,6 @@ protected:
   /// one about which they are being informed.
   /// </remarks>
   void BroadcastContextCreationNotice(const std::type_info& sigil) const;
-
-  /// \internal
-  /// <summary>
-  /// Satisfies all slots associated with the passed memo entry and causes finalizers to be invoked
-  /// </summary>
-  /// <remarks>
-  /// The passed lock will be unlocked when this function returns
-  /// </remarks>
-  void SatisfyAutowiring(std::unique_lock<std::mutex>& lk, MemoEntry& entry);
 
   /// \internal
   /// <summary>
@@ -302,25 +281,6 @@ protected:
   /// Updates all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
   void UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry, bool local);
-
-  /// \internal
-  /// <summary>
-  /// Adds the named event receiver to the collection of known receivers
-  /// </summary>
-  /// <param name="pRecvr">The junction box entry corresponding to the receiver type</param>
-  void AddEventReceiver(const JunctionBoxEntry<CoreObject>& pRecvr);
-
-  /// \internal
-  /// <summary>
-  /// Add delayed event receivers
-  /// </summary>
-  void AddEventReceiversUnsafe(t_rcvrSet&& receivers);
-
-  /// \internal
-  /// <summary>
-  /// Removes all recognized event receivers in the indicated range
-  /// </summary>
-  void RemoveEventReceivers(const t_rcvrSet& receivers);
 
   /// \internal
   /// <summary>
@@ -383,16 +343,6 @@ protected:
   /// Removes a snooper to the snoopers set
   /// </summary>
   void RemoveSnooper(const AnySharedPointer& snooper);
-
-  /// \internal
-  /// <summary>
-  /// Recursively removes the specified snooper
-  /// </summary>
-  /// <remarks>
-  /// This method has no effect if the passed value is presently a snooper in this context; the
-  /// snooper collection must therefore be updated prior to the call to this method.
-  /// </remarks>
-  void UnsnoopEvents(const AnySharedPointer& snooper, const JunctionBoxEntry<CoreObject>& traits);
 
   /// \internal
   /// <summary>
@@ -698,39 +648,6 @@ public:
     return reg.m_value != nullptr;
   }
 
-  /// <summary>
-  /// Runtime variant of All
-  /// </summary>
-  /// <remarks>
-  /// This instance does not cause a correct instantiation of the underlying junction box.  Users are cautioned against
-  /// using this method directly unless they are able to ensure a proper entry is made into the type registry.
-  ///
-  /// It is an error to call this method on an unregistered type.
-  /// </remarks>
-  JunctionBoxBase& All(const std::type_info& ti) const;
-
-  /// <summary>
-  /// Returns all members of and snoopers on this context which implement the specified interface
-  /// </summary>
-  /// <remarks>
-  /// This method makes use of the JunctionBox subsystem, and thus is extremely efficient.  The underlying system is
-  /// memoized, and new entries automatically update any existing memos, which gives this routine O(n) efficiency, where
-  /// n is the number of types in this context that implement the specified interface.
-  ///
-  /// Note that the junction box will also contain members of child contexts that implement the specified interface, and
-  /// instances that are snooping this context.
-  ///
-  /// This method's result will be an empty iterable if the context is not currently initiated.
-  /// </remarks>
-  template<class T>
-  JunctionBox<T>& All(void) {
-    // Type registration, needed to ensure our junction box actually exists
-    (void) RegEvent<T>::r;
-
-    // Simple coercive transfer:
-    return static_cast<JunctionBox<T>&>(All(typeid(T)));
-  }
-
   /// \internal
   /// <summary>
   /// Sends AutowiringEvents to build current state.
@@ -805,47 +722,6 @@ public:
       if(cur == this)
         return true;
     return false;
-  }
-
-  /// \internal
-  /// <summary>
-  /// Provides a shared pointer to the event sender in this context that matches the specified type.
-  /// </summary>
-  template<class T>
-  std::shared_ptr<JunctionBox<T>> GetJunctionBox(void) {
-    // Add this type to the event registry. All events call this function
-    (void)RegEvent<T>::r;
-
-    return std::static_pointer_cast<JunctionBox<T>, JunctionBoxBase>(
-      m_junctionBoxManager->Get(typeid(T))
-    );
-  }
-
-  /// <summary>
-  /// Fires an event in another context.
-  /// </summary>
-  /// <remarks>
-  /// Invoke allows you to fire an event in another context without first making that
-  /// context current.
-  ///
-  /// The following statment:
-  ///
-  ///    \code
-  ///    ctxt->Invoke(&MyEventType::MyEvent)();
-  ///    \endcode
-  ///
-  /// is equivalent to:
-  ///
-  ///    \code
-  ///    CurrentContextPusher(ctxt);
-  ///    (AutoFired<MyEventType>())(&MyEventType::MyEvent)();
-  ///    ctxt->Pop();
-  ///    \endcode
-  /// </remarks>
-  template<typename MemFn>
-  InvokeRelay<MemFn> Invoke(MemFn memFn){
-    typedef typename Decompose<MemFn>::type EventType;
-    return MakeInvokeRelay(GetJunctionBox<EventType>(), memFn);
   }
 
   /// <summary>

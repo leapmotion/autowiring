@@ -115,19 +115,15 @@ TEST_F(CoreThreadTest, VerifyNestedTermination) {
   ASSERT_FALSE(st->IsRunning()) << "Child thread was running even though the enclosing context was terminated";
 }
 
-class SleepEvent {
-public:
-  virtual void SleepFor(int seconds) = 0;
-};
-
 class ListenThread :
-  public CoreThread,
-  public SleepEvent
+  public CoreThread
 {
 public:
-  ListenThread() : CoreThread("ListenThread") {}
+  ListenThread() :
+    CoreThread("ListenThread")
+  {}
 
-  void SleepFor(int seconds) override {
+  void SleepFor(void) {
     *this += [this] {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
       if(ShouldStop())
@@ -145,11 +141,8 @@ TEST_F(CoreThreadTest, AUTOTHROW_VerifyDispatchQueueShutdown) {
   {
     ctxt->Initiate();
 
-    AutoFired<SleepEvent> evt;
-
     // Spam in a bunch of events:
-    for(size_t i = 100; i--;)
-      evt(&SleepEvent::SleepFor)(0);
+    listener->SleepFor();
 
     // Graceful termination then enclosing context shutdown:
     listener->Stop(true);

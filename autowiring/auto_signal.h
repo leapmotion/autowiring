@@ -420,7 +420,7 @@ namespace autowiring {
           } catch(...) {}
           break;
         }
-        
+
         switch (state) {
         case SignalState::Free:
         case SignalState::Updating:

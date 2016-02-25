@@ -151,7 +151,6 @@ TEST_F(ObjectPoolTest, DISABLED_VerifyAsynchronousUsage) {
   CurrentContextPusher pshr(ctxt);
 
   AutoRequired<SimpleThreadedT<PooledObject>> obj;
-  AutoFired<SharedPtrReceiver<PooledObject>> spr;
   ObjectPool<PooledObject> pool(3);
 
   {
@@ -173,10 +172,10 @@ TEST_F(ObjectPoolTest, DISABLED_VerifyAsynchronousUsage) {
     // Now we kick off threads:
     AutoCurrentContext()->Initiate();
 
-    // Fire off a few events:
-    spr(&SharedPtrReceiver<PooledObject>::OnEvent)(obj1);
-    spr(&SharedPtrReceiver<PooledObject>::OnEvent)(obj2);
-    spr(&SharedPtrReceiver<PooledObject>::OnEvent)(obj3);
+    // Pass a few copies
+    obj->OnEvent(obj1);
+    obj->OnEvent(obj2);
+    obj->OnEvent(obj3);
   }
 
   // This should return more or less right away as objects become available:

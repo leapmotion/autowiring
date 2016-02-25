@@ -12,16 +12,23 @@
 #include FUNCTIONAL_HEADER
 #include STL_UNORDERED_SET
 
+AutoPacketGraph::AutoPacketGraph(void)
+{
+  AutoCurrentContext()->newObject += [this] (const CoreObjectDescriptor&) { LoadEdges(); };
+}
+
+AutoPacketGraph::~AutoPacketGraph(void) {}
+
 void AutoPacketGraph::LoadEdges() {
   std::lock_guard<std::mutex> lk(m_lock);
-  
+
   std::list<AutoFilterDescriptor> descriptors;
   m_factory->AppendAutoFiltersTo(descriptors);
 
   for (auto& descriptor : descriptors) {
     for(auto pCur = descriptor.GetAutoFilterArguments(); *pCur; pCur++) {
       auto_id id = pCur->id;
-      
+
       // Skip the AutoPacketGraph
       const auto_id descType = m_factory->GetContext()->GetAutoTypeId(descriptor.GetAutoFilter());
       if (descType == auto_id_t<AutoPacketGraph>{}) {
@@ -53,10 +60,6 @@ void AutoPacketGraph::RecordDelivery(auto_id id, const AutoFilterDescriptor& des
   itr->second++;
 }
 
-void AutoPacketGraph::NewObject(CoreContext&, const CoreObjectDescriptor&) {
-  LoadEdges();
-}
-
 bool AutoPacketGraph::OnStart(void) {
   LoadEdges();
   return true;
@@ -81,7 +84,7 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
         auto_id descType = m_factory->GetContext()->GetAutoTypeId(subscriber.satCounter->GetAutoFilter());
         if (descType == auto_id_t<AutoPacketGraph>{})
           continue;
-        
+
         if (!subscriber.satCounter->remaining)
           RecordDelivery(type, *subscriber.satCounter, DeliveryEdge::ArgType::Input);
       }
@@ -94,34 +97,34 @@ bool AutoPacketGraph::WriteGV(const std::string& filename, bool numPackets) cons
   if (!file && !file.good()) {
     return false;
   }
-  
+
   file << "digraph \"" << autowiring::demangle(CoreContext::CurrentContext()->GetSigilType()) << " context\" {" << std::endl;
-  
+
   std::lock_guard<std::mutex> lk(m_lock);
-  
+
   // Containers for the unique types and descriptors
   std::unordered_set<std::string> typeNames;
   std::unordered_set<std::string> descriptorNames;
-  
+
   for (auto& itr : m_deliveryGraph) {
     auto& edge = itr.first;
     auto type = edge.type_info;
     auto& descriptor = edge.descriptor;
     auto count = itr.second;
-    
+
     // Skip the AutoPacketGraph
     auto_id descType = m_factory->GetContext()->GetAutoTypeId(descriptor.GetAutoFilter());
     if (descType == auto_id_t<AutoPacketGraph>{}) {
       continue;
     }
-    
+
     std::string typeName = autowiring::demangle(type);
     std::string descriptorName = autowiring::demangle(descType);
-    
+
     // Get a unique set of types/descriptors
     typeNames.insert(typeName);
     descriptorNames.insert(descriptorName);
-    
+
     // string format: "type" -> "AutoFilter" (or vice versa)
     std::stringstream ss;
     ss << "  \"";
@@ -140,21 +143,21 @@ bool AutoPacketGraph::WriteGV(const std::string& filename, bool numPackets) cons
       if (numPackets)
         ss << " [label=\"" << count << "\"];";
     }
-    
+
     ss << std::endl;
-    
+
     file << ss.str();
   }
   file << std::endl;
-  
+
   // Setup the shapes for the types and descriptors
   for (auto& typeName : typeNames)
     file << "  \"" << typeName << "\" [shape=box];" << std::endl;
-  
+
   for (auto& descriptorName : descriptorNames)
     file << "  \"" << descriptorName << "\" [shape=ellipse];" << std::endl;
-  
+
   file << "}\n";
-  
+
   return true;
 }
