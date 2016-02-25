@@ -31,9 +31,6 @@ target_link_libraries(ContextExample Autowiring::Autowiring)
 add_executable(ThreadExample ThreadExample.cpp)
 target_link_libraries(ThreadExample Autowiring::Autowiring)
 
-add_executable(EventExample EventExample.cpp)
-target_link_libraries(EventExample Autowiring::Autowiring)
-
 add_executable(AutoFilterExample AutoFilterExample.cpp)
 target_link_libraries(AutoFilterExample Autowiring::Autowiring)
 
