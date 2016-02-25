@@ -52,8 +52,6 @@ set(Autowiring_SRCS
   AutowiringConfig.h
   AutowiringDebug.h
   AutowiringDebug.cpp
-  AutowiringEvents.cpp
-  AutowiringEvents.h
   autowiring_error.cpp
   autowiring_error.h
   BasicThread.cpp
@@ -100,8 +98,6 @@ set(Autowiring_SRCS
   DispatchQueue.cpp
   DispatchQueue.h
   DispatchThunk.h
-  EventRegistry.cpp
-  EventRegistry.h
   ExceptionFilter.cpp
   ExceptionFilter.h
   fast_pointer_cast.h
@@ -118,15 +114,8 @@ set(Autowiring_SRCS
   HeteroBlock.cpp
   index_tuple.h
   InterlockedExchange.h
-  InvokeRelay.h
   is_any.h
   is_shared_ptr.h
-  JunctionBox.h
-  JunctionBoxBase.cpp
-  JunctionBoxBase.h
-  JunctionBoxEntry.h
-  JunctionBoxManager.cpp
-  JunctionBoxManager.h
   ManualThreadPool.h
   ManualThreadPool.cpp
   member_new_type.h

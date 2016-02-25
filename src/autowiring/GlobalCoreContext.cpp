@@ -5,7 +5,7 @@
 #include <cassert>
 
 GlobalCoreContext::GlobalCoreContext(void):
-  CoreContextT<GlobalCoreContext>(std::shared_ptr<CoreContext>(), t_childList::iterator())
+  CoreContextT<GlobalCoreContext>(nullptr, t_childList::iterator())
 {
   // Guard against multi-initialization:
   assert(!getGlobalContextSharedPtr());

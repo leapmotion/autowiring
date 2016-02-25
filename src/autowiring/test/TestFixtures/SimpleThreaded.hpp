@@ -3,24 +3,17 @@
 
 #include <autowiring/CoreThread.h>
 
-template<class T>
-class SharedPtrReceiver {
-public:
-  virtual void OnEvent(std::shared_ptr<T> obj) = 0;
-};
-
 /// <summary>
 /// A simple class which will delay block until it is signalled to stop.
 /// </summary>
 template<class T>
 class SimpleThreadedT:
-  public CoreThread,
-  public SharedPtrReceiver<T>
+  public CoreThread
 {
 public:
   SimpleThreadedT(void) {}
 
-  void OnEvent(std::shared_ptr<T> obj) override {
+  void OnEvent(std::shared_ptr<T> obj) {
     *this += [obj]{};
   }
 };

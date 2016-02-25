@@ -87,28 +87,6 @@ TEST_F(CoreJobTest, VerifyTeardown) {
   ASSERT_TRUE(check3) << "Lambda 3 didn't finish";
 }
 
-struct SimpleListen{
-  void SetFlag(){ m_flag = true; }
-  bool m_flag = false;
-};
-
-TEST_F(CoreJobTest, VerifyNoEventReceivers){
-  AutoCreateContext ctxt1;
-  CurrentContextPusher pshr1(ctxt1);
-
-  AutoFired<SimpleListen> fire;
-  ctxt1->Initiate();
-
-  AutoCreateContext ctxt2;
-  CurrentContextPusher pshr2(ctxt2);
-
-  AutoRequired<SimpleListen> listener;
-  ASSERT_FALSE(listener->m_flag) << "Flag was initialized improperly";
-
-  fire(&SimpleListen::SetFlag)();
-  ASSERT_FALSE(listener->m_flag) << "Lister recived event event though it wasn't initiated";
-}
-
 TEST_F(CoreJobTest, AbandonedDispatchers) {
   auto v = std::make_shared<bool>(false);
 
@@ -126,11 +104,11 @@ TEST_F(CoreJobTest, RecursiveAdd) {
   bool first = false;
   bool second = false;
   bool third = false;
-  
+
   AutoRequired<CoreJob> cj;
-  
+
   AutoCurrentContext()->Initiate();
-  
+
   *cj += [&first,&second,&third, &cj] {
     first = true;
     *cj += [&first,&second,&third,&cj] {
@@ -141,9 +119,9 @@ TEST_F(CoreJobTest, RecursiveAdd) {
       cj->Stop(true);
     };
   };
-  
+
   cj->Wait();
-  
+
   // Verify that all lambdas on the CoreThread got called as expected:
   ASSERT_TRUE(first) << "Appended lambda didn't set value";
   ASSERT_TRUE(second) << "Appended lambda didn't set value";
@@ -158,22 +136,22 @@ TEST_F(CoreJobTest, RaceCondition) {
     CurrentContextPusher pshr(ctxt);
     AutoRequired<CoreJob> cj;
     ctxt->Initiate();
-    
+
     bool first = false;
     bool second = false;
-    
+
     *cj += [&first] {
       first = true;
     };
-    
+
     std::this_thread::sleep_for(std::chrono::milliseconds(i));
-    
+
     *cj += [&second, &cj] {
       second = true;
     };
-    
+
     ctxt->SignalShutdown(true);
-    
+
     ASSERT_TRUE(first) << "Failed after set value in lambda";
     ASSERT_TRUE(second) << "Failed to set value when delayed " << i << " milliseconds";
   }

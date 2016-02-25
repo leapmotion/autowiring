@@ -6,7 +6,6 @@
 #include "CoreThread.h"
 #include "demangle.h"
 #include "GlobalCoreContext.h"
-#include "JunctionBox.h"
 #include "ManualThreadPool.h"
 #include "MicroBolt.h"
 #include "NullPool.h"
@@ -56,16 +55,14 @@ CoreContext::CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childLis
   m_pParent(pParent),
   m_backReference(backReference),
   m_sigilType(sigilType),
-  m_stateBlock(std::make_shared<CoreContextStateBlock>(pParent ? pParent->m_stateBlock : nullptr)),
-  m_junctionBoxManager(new JunctionBoxManager)
+  m_stateBlock(std::make_shared<CoreContextStateBlock>(pParent ? pParent->m_stateBlock : nullptr))
 {}
 
 CoreContext::~CoreContext(void) {
   // Evict from the parent's child list first, if we have a parent:
   if(m_pParent)
   {
-    // Notify AutowiringEvents listeners
-    GetGlobal()->Invoke(&AutowiringEvents::ExpiredContext)(*this);
+    expiredContext();
 
     // Also clear out any parent pointers:
     std::lock_guard<std::mutex> lk(m_pParent->m_stateBlock->m_lock);
@@ -82,9 +79,6 @@ CoreContext::~CoreContext(void) {
 
   // Notify all ContextMember instances that their parent is going away
   onTeardown(*this);
-
-  // Make sure events aren't happening anymore:
-  UnregisterEventReceiversUnsafe();
 
   // Tell all context members that we're tearing down:
   for(ContextMember* q : m_contextMembers)
@@ -146,7 +140,7 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate)
   std::shared_ptr<CoreContext> retVal = pfnCreate(shared_from_this(), childIterator);
 
   // Notify AutowiringEvents listeners
-  GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*retVal);
+  newContext(retVal.get());
 
   // Remainder of operations need to happen with the created context made current
   CurrentContextPusher pshr(retVal);
@@ -274,24 +268,12 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
   if(traits.pCoreRunnable)
     AddCoreRunnable(traits.pCoreRunnable);
 
-  // Event receivers:
-  if(traits.receivesEvents) {
-    JunctionBoxEntry<CoreObject> entry(this, traits.pCoreObject);
-
-    // Add to our vector of local receivers first:
-    (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
-    m_eventReceivers.insert(entry);
-
-    // Recursively add to all junction box managers up the stack:
-    AddEventReceiver(entry);
-  }
-
   // Subscribers, if applicable:
   if(!traits.subscriber.empty())
     AddPacketSubscriber(traits.subscriber);
 
   // Signal listeners that a new object has been created
-  GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, traits);
+  newObject(traits);
 }
 
 void CoreContext::AddInternal(const AnySharedPointer& ptr) {
@@ -424,14 +406,6 @@ void CoreContext::Initiate(void) {
     return;
   }
 
-  // Now we can add the event receivers we haven't been able to add because the context
-  // wasn't yet started:
-  AddEventReceiversUnsafe(std::move(m_delayedEventReceivers));
-  m_delayedEventReceivers.clear();
-
-  // Spin up the junction box before starting threads
-  m_junctionBoxManager->Initiate();
-
   // Notify all child contexts that they can start if they want
   if (!IsRunning()) {
     lk.unlock();
@@ -492,8 +466,6 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
       // Already shut down, no further work need be done
       return;
     }
-
-    UnregisterEventReceiversUnsafe();
 
     firstThreadToStop = m_threads.begin();
     if (m_beforeRunning)
@@ -646,21 +618,14 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
     m_nameListeners[typeid(void)].push_back(pBase.get());
 }
 
-JunctionBoxBase& CoreContext::All(const std::type_info& ti) const {
-  auto jb = m_junctionBoxManager->Get(ti);
-  if (!jb)
-    throw autowiring_error("Attempted to obtain a junction box which has not been declared");
-  return *jb;
-}
-
 void CoreContext::BuildCurrentState(void) {
   auto glbl = GlobalCoreContext::Get();
-  glbl->Invoke(&AutowiringEvents::NewContext)(*this);
+  if(m_pParent)
+    m_pParent->newContext(this);
 
   // Enumerate objects injected into this context
-  for(auto& object : m_concreteTypes) {
-    GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, object);
-  }
+  for(auto& object : m_concreteTypes)
+    newObject(object);
 
   // Recurse on all children
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
@@ -696,19 +661,6 @@ void CoreContext::Dump(std::ostream& os) const {
 
 void ShutdownCurrentContext(void) {
   CoreContext::CurrentContext()->SignalShutdown();
-}
-
-void CoreContext::UnregisterEventReceiversUnsafe(void) {
-  // Release all event receivers originating from this context:
-  for(const auto& entry : m_eventReceivers)
-    m_junctionBoxManager->RemoveEventReceiver(entry);
-
-  // Notify our parent (if we have one) that our event receivers are going away:
-  if(m_pParent)
-    m_pParent->RemoveEventReceivers(m_eventReceivers);
-
-  // Wipe out all collections so we don't try to free these multiple times:
-  m_eventReceivers.clear();
 }
 
 void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) const {
@@ -809,83 +761,6 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
   }
 }
 
-void CoreContext::AddEventReceiver(const JunctionBoxEntry<CoreObject>& entry) {
-  {
-    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-
-    if (!IsInitiated()) {
-      // Delay adding receiver until context is initialized
-      m_delayedEventReceivers.insert(entry);
-      return;
-    }
-  }
-
-  m_junctionBoxManager->AddEventReceiver(entry);
-
-  // Delegate ascending resolution, where possible.  This ensures that the parent context links
-  // this event receiver to compatible senders in the parent context itself.
-  if(m_pParent)
-    m_pParent->AddEventReceiver(entry);
-}
-
-
-void CoreContext::AddEventReceiversUnsafe(t_rcvrSet&& receivers) {
-  if (IsInitiated()) {
-    // Context is initiated, we can safely attach these receivers to our own junction box
-    for (const auto& q : receivers)
-      m_junctionBoxManager->AddEventReceiver(q);
-
-    // Delegate ascending resolution, where possible.  This ensures that the parent context links
-    // this event receiver to compatible senders in the parent context itself.
-    if (m_pParent) {
-      std::lock_guard<std::mutex> lk(m_pParent->m_stateBlock->m_lock);
-      m_pParent->AddEventReceiversUnsafe(std::forward<t_rcvrSet&&>(receivers));
-    }
-  }
-  else {
-    // Context not initiated, we need to add the receivers to our own deferred collection
-    if (m_delayedEventReceivers.empty())
-      m_delayedEventReceivers = std::move(receivers);
-    else
-      m_delayedEventReceivers.insert(receivers.begin(), receivers.end());
-  }
-}
-
-void CoreContext::RemoveEventReceivers(const t_rcvrSet& receivers) {
-  for(const auto& q : receivers)
-    m_junctionBoxManager->RemoveEventReceiver(q);
-
-  // Detour to the parent collection (if necessary)
-  if(m_pParent)
-    m_pParent->RemoveEventReceivers(receivers);
-}
-
-void CoreContext::UnsnoopEvents(const AnySharedPointer& snooper, const JunctionBoxEntry<CoreObject>& receiver) {
-  {
-    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-    if(
-      // If the passed value is currently a snooper, then the caller has snooped a context and also
-      // one of its parents.  End here.
-      m_snoopers.count(snooper) ||
-
-      // If we are an event receiver in this context, then the caller has snooped a context and
-      // is also a proper EventReceiver in one of that context's ancestors--this is a fairly
-      // common case.  We return here, rather than incorrectly unregistering the caller.
-      m_eventReceivers.count(receiver)
-    )
-      return;
-
-    m_delayedEventReceivers.erase(receiver);
-  }
-
-  // Always remove from this junction box manager:
-  m_junctionBoxManager->RemoveEventReceiver(receiver);
-
-  // Handoff to parent type:
-  if(m_pParent)
-    m_pParent->UnsnoopEvents(snooper, receiver);
-}
-
 void CoreContext::FilterException(void) {
   bool handled = false;
   for(ExceptionFilter* filter : m_filters) {
@@ -931,10 +806,6 @@ void CoreContext::AddSnooper(const CoreObjectDescriptor& traits) {
   // Add to collections of snoopers
   InsertSnooper(traits.value);
 
-  // Add EventReceiver
-  if (traits.receivesEvents)
-    AddEventReceiver(JunctionBoxEntry<CoreObject>(this, traits.pCoreObject));
-
   // Add PacketSubscriber;
   if (!traits.subscriber.empty())
     AddPacketSubscriber(traits.subscriber);
@@ -942,10 +813,6 @@ void CoreContext::AddSnooper(const CoreObjectDescriptor& traits) {
 
 void CoreContext::RemoveSnooper(const CoreObjectDescriptor& traits) {
   RemoveSnooper(traits.value);
-
-  // Cleanup if its an EventReceiver
-  if (traits.receivesEvents)
-    UnsnoopEvents(traits.value, JunctionBoxEntry<CoreObject>(this, traits.pCoreObject));
 
   // Cleanup if its a packet listener
   if (!traits.subscriber.empty())

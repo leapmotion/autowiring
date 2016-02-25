@@ -119,47 +119,6 @@ TEST_F(ExceptionFilterTest, AUTOTHROW_ThreadThrowsCheck) {
   ASSERT_FALSE(filter->m_generic) << "Filter did not correctly filter out a specific exception";
 }
 
-TEST_F(ExceptionFilterTest, SimpleFilterCheck) {
-  AutoCurrentContext()->Initiate();
-
-  // Firing will occur at the parent context scope:
-  AutoFired<ThrowingListener> broadcaster;
-
-  // Add the generic filter:
-  AutoRequired<GenericFilter> filter;
-
-  // Add a context member which will throw when its event is fired, and a firing class:
-  AutoRequired<ThrowsWhenFired<>> fireThrower;
-
-  // Add something to fire the exception:
-  ASSERT_NO_THROW(broadcaster(&ThrowingListener::DoThrow)());
-
-  // Verify that the exception was filtered properly by the generic filter:
-  ASSERT_TRUE(filter->m_fireSpecific) << "Filter was not invoked on a Fired exception";
-}
-
-TEST_F(ExceptionFilterTest, FireContainmentCheck) {
-  // Initiate parent context first
-  AutoCurrentContext()->Initiate();
-
-  // Firing will occur at the parent context scope:
-  AutoFired<ThrowingListener> broadcaster;
-
-  // Create a subcontext and add the fire thrower to it:
-  AutoCreateContext ctxt;
-  ctxt->Initiate();
-  ctxt->Inject<ThrowsWhenFired<>>();
-
-  // Now cause the exception to occur:
-  ASSERT_NO_THROW(broadcaster(&ThrowingListener::DoThrow)());
-
-  // Verify that the context containing the fire thrower was torn down:
-  ASSERT_TRUE(ctxt->IsShutdown()) << "An unhandled exception from a fire call in a context should have signalled it to stop";
-
-  // Verify that the parent context was protected:
-  ASSERT_FALSE(AutoCurrentContext()->IsShutdown()) << "An unhandled exception incorrectly terminated a parent context";
-}
-
 TEST_F(ExceptionFilterTest, AUTOTHROW_EnclosedThrowCheck) {
   AutoCurrentContext()->Initiate();
 
@@ -179,53 +138,4 @@ TEST_F(ExceptionFilterTest, AUTOTHROW_EnclosedThrowCheck) {
 
   // Verify that the filter caught the exception:
   ASSERT_TRUE(filter->m_hit) << "Filter operating in a superior context did not catch an exception thrown from a child context";
-}
-
-TEST_F(ExceptionFilterTest, VerifyThrowingRecipients) {
-  AutoCurrentContext()->Initiate();
-
-  // Create a pair of classes which throw exceptions:
-  AutoRequired<ThrowsWhenFired<custom_exception, 200>> v200;
-  AutoRequired<ThrowsWhenFired<custom_exception, 201>> v201;
-
-  // Now try to throw:
-  AutoFired<ThrowingListener> tl;
-  tl(&ThrowingListener::DoThrow)();
-
-  // Verify that BOTH are hit:
-  ASSERT_TRUE(v200->hit && v201->hit) << "Expected all receivers of a fired event will be processed, even if some throw exceptions";
-}
-
-TEST_F(ExceptionFilterTest, ExceptionFirewall) {
-  AutoCurrentContext()->Initiate();
-
-  AutoRequired<ThrowsWhenFired<custom_exception,200>> v200;
-
-  // Try to throw, verify the return value.  The value should be false, because this particular type always
-  // throws an exception in response to the receipt of an event.
-  AutoFired<ThrowingListener> tl;
-  ASSERT_FALSE(tl(&ThrowingListener::DoThrow)()) << "An exception event was not properly indicated to an event firer";
-}
-
-TEST_F(ExceptionFilterTest, VerifySimpleConfinement) {
-  AutoCurrentContext ctxt;
-  ctxt->Initiate();
-
-  // Create a subcontext where the errant recipients will live:
-  AutoCreateContext child;
-  child->Initiate();
-  child->Inject<ThrowsWhenFired<custom_exception, 200>>();
-
-  Autowired<ThrowsWhenFired<custom_exception, 200>> twf;
-  ASSERT_FALSE(twf) << "A member injected into a child context was incorrectly scoped at the parent context";
-
-  // Cause the child context to throw an exception:
-  AutoFired<ThrowingListener> tl;
-  tl(&ThrowingListener::DoThrow)();
-
-  // Verify that the parent scope wasn't incorrectly terminated:
-  ASSERT_FALSE(ctxt->IsShutdown()) << "Parent scope was terminated incorrectly due to an exception sourced by a child context";
-
-  // Verify that the child scope was terminated as expected:
-  ASSERT_TRUE(child->IsShutdown()) << "An event recipient in a child scope threw an exception and the child context was not correctly terminated";
 }

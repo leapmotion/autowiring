@@ -6,7 +6,6 @@
 #include "AutoNetTransportHttp.hpp"
 #include "demangle.h"
 #include "CoreObjectDescriptor.h"
-#include "EventRegistry.h"
 #include "TypeRegistry.h"
 #include <iostream>
 #include FUTURE_HEADER
@@ -20,7 +19,12 @@ using json11::Json;
 
 AutoNetServerImpl::AutoNetServerImpl(void):
   AutoNetServerImpl(std::unique_ptr<AutoNetTransportHttp>(new AutoNetTransportHttp))
-{}
+{
+  auto* pCtxt = AutoCurrentContext().get();
+  pCtxt->newContext += [this] (CoreContext* pChild) { NewContext(*pChild); };
+  pCtxt->expiredContext += [this, pCtxt] { ExpiredContext(*pCtxt); };
+  pCtxt->newObject += [this, pCtxt] (const CoreObjectDescriptor& desc) { NewObject(*pCtxt, desc); };
+}
 
 AutoNetServerImpl::AutoNetServerImpl(std::unique_ptr<AutoNetTransport>&& transport) :
   m_transport(std::move(transport))
@@ -54,10 +58,6 @@ AutoNetServerImpl::AutoNetServerImpl(std::unique_ptr<AutoNetTransport>&& transpo
   for(auto type = g_pFirstTypeEntry; type; type = type->pFlink)
     if(type->CanInject())
       m_AllTypes[autowiring::demangle(type->ti)] = [type]{ type->Inject(); };
-
-  // Generate list of all events from event registry
-  for(auto event = g_pFirstEventEntry; event; event = event->pFlink)
-    m_EventTypes.insert(event);
 }
 
 AutoNetServerImpl::~AutoNetServerImpl(){}
@@ -234,18 +234,6 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const CoreObjectDescriptor&
         };
       }
       types["autoFilter"] = args;
-    }
-
-    // Check if type receives any events
-    {
-      Json::array listenerTypes;
-      for(const auto& event : m_EventTypes) {
-        if (object.receivesEvents)
-          listenerTypes.push_back(autowiring::demangle(event->GetTypeInfo()));
-      }
-
-      if(!listenerTypes.empty())
-        types["eventReceiver"] = listenerTypes;
     }
 
     auto filter = object.pFilter;
