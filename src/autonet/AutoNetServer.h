@@ -1,8 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "CoreThread.h"
-#include "index_tuple.h"
+#include <autowiring/CoreThread.h>
 #include <autowiring/Decompose.h>
+#include <autowiring/index_tuple.h>
 #include <sstream>
 #include STL_UNORDERED_MAP
 #include FUNCTIONAL_HEADER
@@ -37,7 +37,7 @@ public:
   /// Transmits the specified string message to the remote host
   /// </summary>
   virtual void Send(AutoNetTransportHandler::connection_hdl hdl, const std::string& msg) = 0;
-  
+
   /// <summary>
   /// Assigns the handler for operations occuring on this transport
   /// </summary>
@@ -63,7 +63,7 @@ public:
   static AutoNetServer* New(std::unique_ptr<AutoNetTransport> transport) {
     return NewAutoNetServerImpl(std::move(transport));
   }
-  
+
   static AutoNetServer* New(void) {
     return NewAutoNetServerImpl();
   }
@@ -73,7 +73,7 @@ public:
   /// </summary>
   /// <param name="name">The identifier for this breakpoint</param>
   virtual void Breakpoint(std::string name) = 0;
-  
+
   /// Add a custom event handler. Arguments must be primative types are strings
   template<typename Fx>
   void AddEventHandler(const std::string& event, Fx&& handler) {
@@ -84,24 +84,24 @@ public:
       typename make_index_tuple<Decompose<decltype(&Fx::operator())>::N>::type()
     );
   }
-  
+
   /// Send a custom event to all clients.
   template<typename... Args>
   void SendEvent(const std::string& event, Args... args) {
     SendEvent(event, std::vector<std::string>{parseToString(args)...});
   }
-  
+
 protected:
   // Send event with arguments parsed as vector of string
   virtual void SendEvent(const std::string& event, const std::vector<std::string>& args) = 0;
-  
+
   // Map of callbacks keyed by event type
   std::unordered_map<std::string, std::vector<std::function<void(std::vector<std::string>)>>> m_handlers;
-  
+
 private:
   // Add a handler that will be called when an event is received from the client
   void AddEventHandlerInternal(const std::string& event, std::function<void(const std::vector<std::string>&)> handler);
-  
+
   // Extract arguments from list of strings, parse and pass to handler
   template<typename Fx, typename... Args, int... N>
   void AddEventHandler(const std::string& event, Fx&& handler, void (Fx::*pfn)(Args...) const, index_tuple<N...>) {
@@ -115,7 +115,7 @@ private:
       }
     );
   }
-  
+
   // parse type to string
   template<class T>
   std::string parseToString(const T& t){
@@ -123,18 +123,18 @@ private:
     ss << t;
     return ss.str();
   }
-  
+
   // parse string to primative type
   template<class T>
   inline T parseFromString(const std::string& str){
     std::istringstream ss(str);
     typename std::decay<T>::type val;
     ss >> std::boolalpha >> val;
-    
+
     if (ss.fail()) {
       autowiring::ThrowFailedTypeParseException(str, typeid(T));
     }
-    
+
     return val;
   }
 };

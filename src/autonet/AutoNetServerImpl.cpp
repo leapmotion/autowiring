@@ -1,12 +1,10 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoNetServerImpl.hpp"
-#include "at_exit.h"
-#include "autowiring.h"
+#include <autowiring/autowiring.h>
+#include <autowiring/at_exit.h>
+#include <autowiring/demangle.h>
 #include "AutoNetTransportHttp.hpp"
-#include "demangle.h"
-#include "CoreObjectDescriptor.h"
-#include "TypeRegistry.h"
 #include <iostream>
 #include FUTURE_HEADER
 

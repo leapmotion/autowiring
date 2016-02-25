@@ -224,7 +224,6 @@ add_conditional_sources(Autowiring_SRCS "NOT WIN32 AND NOT APPLE"
   FILES CoreThreadLinux.cpp
 )
 
-rewrite_header_paths(Autowiring_SRCS)
 add_pch(Autowiring_SRCS "stdafx.h" "stdafx.cpp")
 
 #
@@ -233,11 +232,11 @@ add_pch(Autowiring_SRCS "stdafx.h" "stdafx.cpp")
 
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 
-target_include_directories(Autowiring
+target_include_directories(
+  Autowiring
   PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/contrib/autoboost>"
   INTERFACE
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
   "$<INSTALL_INTERFACE:include>"
 )
 

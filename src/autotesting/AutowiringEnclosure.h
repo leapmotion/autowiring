@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <autowiring/autowiring.h>
-#include "demangle.h"
+#include <autowiring/demangle.h>
 #include <autowiring/at_exit.h>
 #include MEMORY_HEADER
 

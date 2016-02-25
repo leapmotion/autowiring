@@ -4,7 +4,7 @@
 // Internal build flag for namespace discrimination
 #define AUTOWIRING_IS_BEING_BUILT
 
-#include <C++11/cpp11.h>
+#include <autowiring/C++11/cpp11.h>
 #include <gtest/gtest.h>
 #include <autowiring/autowiring.h>
 

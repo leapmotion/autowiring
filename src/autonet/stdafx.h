@@ -7,7 +7,7 @@
   #define NOMINMAX
 #endif
 
-#include "AutowiringConfig.h"
+#include <autowiring/AutowiringConfig.h>
 
 // Defined when Autowiring is being built, as opposed to when it is being linked
 #define AUTOWIRING_IS_BEING_BUILT
@@ -21,6 +21,6 @@
 #endif
 
 // C++11 glue logic, for platforms that have incomplete C++11 support
-#include "C++11/cpp11.h"
+#include <autowiring/C++11/cpp11.h>
 
 #define ARRAYCOUNT(x) sizeof(ArraySize(x))
