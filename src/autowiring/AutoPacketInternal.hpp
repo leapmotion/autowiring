@@ -21,7 +21,7 @@ public:
   /// It is not called when the Packet is created since that could result in
   /// spurious calls when no packet is issued.
   /// </remarks>
-  void Initialize(bool isFirstPacket);
+  void Initialize(bool isFirstPacket, long long uniqueId);
 
   /// <summary>
   /// 

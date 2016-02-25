@@ -12,7 +12,9 @@ AutoPacketInternal::AutoPacketInternal(AutoPacketFactory& factory, std::shared_p
 
 AutoPacketInternal::~AutoPacketInternal(void) {}
 
-void AutoPacketInternal::Initialize(bool isFirstPacket) {
+void AutoPacketInternal::Initialize(bool isFirstPacket, long long uniqueId) {
+  m_uniqueId = uniqueId;
+
   // Mark init time of packet
   this->m_initTime = std::chrono::high_resolution_clock::now();
 

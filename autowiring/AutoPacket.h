@@ -94,8 +94,14 @@ protected:
   // The successor to this packet
   std::shared_ptr<AutoPacketInternal> m_successor;
 
-  // Hold the time point at which this packet was last initalized.
+  // Hold the time point at which this packet was last initialized.
   std::chrono::high_resolution_clock::time_point m_initTime;
+
+  // User specified identifier for packet tracking.  
+  int64_t m_userId;
+
+  // Unique identifier provided for packet tracking.  
+  long long m_uniqueId;
 
   // Outstanding count local and remote holds:
   const std::shared_ptr<void> m_outstanding;
@@ -231,7 +237,7 @@ public:
   }
 
   /// <returns>
-  /// True if this packet posesses one or more instances of a decoration of the specified type
+  /// True if this packet possesses one or more instances of a decoration of the specified type
   /// </returns>
   /// <remarks>
   /// Although "AutoPacket &" and "const AutoPacket&" argument types will be
@@ -598,7 +604,7 @@ public:
 
   /// <summary>
   /// Removes a previously added packet recipient
-  /// The user is responsible to free the memeory for recipient.
+  /// The user is responsible to free the memory for recipient.
   /// TODO: seems like a bad design, need refactor
   /// </summary>
   void RemoveRecipient(const SatCounter& recipient);
@@ -820,6 +826,22 @@ public:
 
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;
+
+  /// <summary>
+  /// Sets the current AutoPacket User ID.  This value is for external use, and defaults to -1.
+  /// </summary>
+  void SetUserId(int64_t id) { m_userId = id; }
+
+  /// <summary>
+  /// Gets the current AutoPacket User ID.
+  /// </summary>
+  int64_t GetUserId() { return m_userId; }
+
+  /// <summary>
+  /// Gets the current packet unique ID.  Values are unique to the AutoPacketFactory when
+  /// using NewPacket(), -1 otherwise.
+  /// </summary>
+  long long GetUniqueId() { return m_uniqueId; }
 };
 
 namespace autowiring {

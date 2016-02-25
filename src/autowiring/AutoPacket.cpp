@@ -23,6 +23,8 @@ static thread_specific_ptr<AutoPacket> autoCurrentPacket{ nullptr };
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
+  m_userId(-1),
+  m_uniqueId(-1),
   m_outstanding(std::move(outstanding))
 {
   // Need to ensure our identity type is instantiated

@@ -25,12 +25,13 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
 
   std::shared_ptr<AutoPacketInternal> retVal;
   bool isFirstPacket;
+  long long uniquePacketId;
   {
     std::lock_guard<std::mutex> lk(m_lock);
 
     // New packet issued
     isFirstPacket = !m_packetCount;
-    ++m_packetCount;
+    uniquePacketId = ++m_packetCount;
 
     // Create a new next packet
     retVal = m_nextPacket;
@@ -38,7 +39,7 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
     m_curPacket = retVal;
   }
 
-  retVal->Initialize(isFirstPacket);
+  retVal->Initialize(isFirstPacket, uniquePacketId);
   return retVal;
 }
 
