@@ -4,10 +4,14 @@ set(AutoTesting_SOURCES
   gtest-all-guard.cpp
 )
 
-rewrite_header_paths(AutoTesting_SOURCES)
 add_library(AutoTesting ${AutoTesting_SOURCES})
 target_link_libraries(AutoTesting Autowiring)
-target_include_directories(AutoTesting PRIVATE "${CMAKE_SOURCE_DIR}/contrib/autoboost")
+target_include_directories(
+  AutoTesting
+  PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/contrib/autoboost
+)
+install_headers(TARGET AutoTesting DESTINATION include/autotesting COMPONENT autowiring)
 
 if(NOT AUTOWIRING_IS_EMBEDDED)
   install(TARGETS AutoTesting EXPORT AutowiringTargets

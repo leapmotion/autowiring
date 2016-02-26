@@ -1,11 +1,11 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "gtest-all-guard.hpp"
 #include "TestFixtures/SimpleObject.hpp"
 #include "TestFixtures/SimpleReceiver.hpp"
+#include <autotesting/gtest-all-guard.hpp>
 #include <autowiring/Autowired.h>
+#include <autowiring/AutowiringDebug.h>
 #include <autowiring/CoreThread.h>
-#include "AutowiringDebug.h"
 
 int main(int argc, const char* argv []) {
   autowiring::dbg::DebugInit();

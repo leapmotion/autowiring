@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "DispatchQueueBm.h"
 #include "Benchmark.h"
+#include <autowiring/CoreThread.h>
 #include FUTURE_HEADER
 #include <thread>
 

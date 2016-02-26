@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "at_exit.h"
-#include "atomic_list.h"
+#include <autowiring/at_exit.h>
+#include <autowiring/atomic_list.h>
 #include <thread>
 
 using autowiring::atomic_list;

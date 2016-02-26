@@ -7,8 +7,8 @@
 #include FUTURE_HEADER
 
 #ifdef _MSC_VER
-#include "SystemThreadPoolWinXP.hpp"
-#include "SystemThreadPoolWinLH.hpp"
+#include <autowiring/SystemThreadPoolWinXP.hpp>
+#include <autowiring/SystemThreadPoolWinLH.hpp>
 #endif
 
 template<typename T>
