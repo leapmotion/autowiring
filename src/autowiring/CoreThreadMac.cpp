@@ -68,6 +68,7 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
     percent = 20;
     break;
   case ThreadPriority::Normal:
+  case ThreadPriority::Default:
     percent = 50;
     break;
   case ThreadPriority::AboveNormal:
@@ -77,6 +78,7 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
     percent = 83;
     break;
   case ThreadPriority::TimeCritical:
+  case ThreadPriority::Multimedia:
     percent = 100;
     break;
   default:
