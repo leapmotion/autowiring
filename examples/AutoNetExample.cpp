@@ -1,21 +1,21 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include <autowiring/Autowired.h>
-#include <autowiring/AutoNetServer.h>
+#include <autonet/AutoNetServer.h>
 #include <iostream>
 #include THREAD_HEADER
 
-// 
+//
 // AutoNetServer
-// 
+//
 // This example creates a sample context structure to view with the
 // AutoNetVisualizer. It creates contexts and adds dummy context members
 // at timed intervals to show off the dynamic nature of the visualizer.
 // You can view the visualizer at leapmotion.github.io/autonet
-// 
+//
 
-// 
+//
 // Declaration of dummy classes to view in the visualizer
-// 
+//
 
 class TestThread1:
   public CoreThread
@@ -65,30 +65,30 @@ int main() {
 
   // Initiate context to start threads
   ctxt->Initiate();
-  
+
   // Create a bunch of example Contexts and Context Members
   auto ctxt2 = ctxt->Create<ContextB>();
   auto ctxt3 = ctxt->Create<ContextC>();
-  
+
   ctxt2->Initiate();
-  
+
   {
     CurrentContextPusher pshr(ctxt3);
     AutoRequired<TestThread2> bar;
   }
-  
+
   std::shared_ptr<CoreContext> newContext;
-  
+
   {
     CurrentContextPusher pshr(ctxt2);
     AutoRequired<TestThread1> foo;
 
     AutoRequired<TestAutoFilter<const TestData<0>&, TestData<1>&>> filter01;
     AutoRequired<TestAutoFilter<const TestData<1>&, TestData<2>&>> filter12;
-    
+
     // Give time to open AutoNet Visualizer
     std::this_thread::sleep_for(std::chrono::seconds(10));
-    
+
     *foo += std::chrono::seconds(1),[&ctxt]{
       ctxt->Inject<ThisClassGetsAddedLater<4>>();
     };
