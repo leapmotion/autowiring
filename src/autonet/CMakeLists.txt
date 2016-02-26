@@ -26,6 +26,9 @@ add_subdirectory(test)
 # Install library
 #
 
+# Install public header files
+install_headers(TARGET AutoNet DESTINATION include/autonet COMPONENT autowiring)
+
 if(NOT NO_INSTALL_AUTONET AND NOT AUTOWIRING_IS_EMBEDDED)
   install(TARGETS AutoNet EXPORT AutowiringTargets
     DESTINATION lib

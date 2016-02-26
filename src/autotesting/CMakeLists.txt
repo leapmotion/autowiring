@@ -11,6 +11,7 @@ target_include_directories(
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/contrib/autoboost
 )
+install_headers(TARGET AutoTesting DESTINATION include/autotesting COMPONENT autowiring)
 
 if(NOT AUTOWIRING_IS_EMBEDDED)
   install(TARGETS AutoTesting EXPORT AutowiringTargets
