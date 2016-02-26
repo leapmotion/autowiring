@@ -97,7 +97,6 @@ protected:
   /// </remarks>
   void SetCurrentThreadName(void) const;
 
-private:
   /// Only implemented on Windows (as of version 0.4.1).
   /// <summary>
   /// Sets the thread priority of this thread
@@ -108,7 +107,6 @@ private:
   /// </remarks>
   void SetThreadPriority(ThreadPriority threadPriority);
 
-protected:
   /// <summary>
   /// Recovers a general lock used to synchronize entities in this thread internally.
   /// </summary>
