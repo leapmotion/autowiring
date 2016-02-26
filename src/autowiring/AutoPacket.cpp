@@ -10,6 +10,7 @@
 #include "demangle.h"
 #include "SatCounter.h"
 #include "thread_specific_ptr.h"
+#include "AutoPacketProfiler.h"
 #include <algorithm>
 #include <sstream>
 #include RVALUE_HEADER
@@ -341,7 +342,18 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   }
   lk.unlock();
 
+
+  // std::string typeName = autowiring::demangle(type);
+
   // Generate all calls
+  if (m_parentFactory->GetAutoPacketProfiler()) {
+    AutoCurrentPacketPusher apkt(*this);
+    for (SatCounter* call : callQueue) {
+      AutoPacketProfiler::Block profileBlock(m_parentFactory->GetAutoPacketProfiler(), this, call->GetType());
+      call->GetCall()(call->GetAutoFilter().ptr(), *this);
+    }
+  }
+  else
   {
     AutoCurrentPacketPusher apkt(*this);
     for (SatCounter* call : callQueue)
@@ -404,10 +416,21 @@ void AutoPacket::PulseSatisfactionUnsafe(std::unique_lock<std::mutex> lk, Decora
 
     // Run through calls while unsynchronized:
     lk.unlock();
-    for (SatCounter* call : callQueue) {
-      call->GetCall()(call->GetAutoFilter().ptr(), *this);
-      call->remaining = 0;
+
+    if (m_parentFactory->GetAutoPacketProfiler()) {
+      for (SatCounter* call : callQueue) {
+        AutoPacketProfiler::Block profileBlock(m_parentFactory->GetAutoPacketProfiler(), this, call->GetType());
+        call->GetCall()(call->GetAutoFilter().ptr(), *this);
+        call->remaining = 0;
+      }
     }
+    else {
+      for (SatCounter* call : callQueue) {
+        call->GetCall()(call->GetAutoFilter().ptr(), *this);
+        call->remaining = 0;
+      }
+    }
+
     lk.lock();
   } while (!callQueue.empty());
 }
@@ -593,9 +616,13 @@ const SatCounter* AutoPacket::AddRecipient(const AutoFilterDescriptor& descripto
     AddSatCounterUnsafe(sat);
   }
 
-  if (!sat.remaining)
-    // Filter is ready to be called, oblige it
-    sat.GetCall()(sat.GetAutoFilter().ptr(), *this);
+  if (!sat.remaining) {
+    if (m_parentFactory->GetAutoPacketProfiler()) {
+      AutoPacketProfiler::Block profileBlock(m_parentFactory->GetAutoPacketProfiler(), this, sat.GetType());
+      sat.GetCall()(sat.GetAutoFilter().ptr(), *this);
+    } else
+      sat.GetCall()(sat.GetAutoFilter().ptr(), *this);
+  }
 
   return &sat;
 }

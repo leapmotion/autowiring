@@ -10,6 +10,7 @@
 #include <set>
 
 class AutoPacketInternal;
+class AutoPacketProfiler;
 
 /// <summary>
 /// A configurable factory class for pipeline packets with a built-in object pool
@@ -50,6 +51,8 @@ private:
   long long m_packetCount = 0;
   double m_packetDurationSum = 0.0;
   double m_packetDurationSqSum = 0.0;
+
+  AutoPacketProfiler* m_autoPacketProfiler;
 
   // Returns the internal outstanding count, for use with AutoPacket
   std::shared_ptr<void> GetInternalOutstanding(void);
@@ -199,6 +202,17 @@ public:
   void RecordPacketDuration(std::chrono::nanoseconds duration);
 
   /// <summary>
+  /// Returns the AutoPacketProfiler if one was enabled for this factory.  This is unsynchronized
+  /// as it is expected to be called from within outstanding packets.
+  /// </summary>
+  AutoPacketProfiler* GetAutoPacketProfiler();
+
+  /// <summary>
+  /// Assigns an AutoPacketProfiler to this factory.  Can only be called when there is no packet outstanding.
+  /// </summary>
+  void EnableAutoPacketProfiler(bool enable);
+  
+  /// <summary>
   /// Returns the number of packets which have recorded duration statistics
   /// since the most recent statistics reset.
   /// </summary>
@@ -219,7 +233,7 @@ public:
   /// </summary>
   /// <remarks>
   /// If the factory is left to run for an extended period of time without a reset
-  /// the standard deviation will behave erraticly due to saturation of the accumulators.
+  /// the standard deviation will behave erratically due to saturation of the accumulators.
   /// </remarks>
   double GetPacketLifetimeStandardDeviation(void);
 
@@ -231,7 +245,7 @@ public:
 
 // @cond
 // Extern explicit template instantiation declarations added to prevent
-// exterior instantation of internally used template instances
+// exterior instantiation of internally used template instances
 extern template struct SlotInformationStump<AutoPacketFactory, false>;
 extern template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPacketFactory, CoreObject>(const std::shared_ptr<CoreObject>& Other);
 extern template class RegType<AutoPacketFactory>;

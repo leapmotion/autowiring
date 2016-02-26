@@ -101,7 +101,7 @@ protected:
   int64_t m_userId;
 
   // Unique identifier provided for packet tracking.  
-  long long m_uniqueId;
+  int64_t m_uniqueId;
 
   // Outstanding count local and remote holds:
   const std::shared_ptr<void> m_outstanding;
@@ -841,7 +841,7 @@ public:
   /// Gets the current packet unique ID.  Values are unique to the AutoPacketFactory when
   /// using NewPacket(), -1 otherwise.
   /// </summary>
-  long long GetUniqueId() { return m_uniqueId; }
+  int64_t GetUniqueId() { return m_uniqueId; }
 };
 
 namespace autowiring {

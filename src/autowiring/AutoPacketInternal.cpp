@@ -4,6 +4,8 @@
 #include "AutoPacketInternal.hpp"
 #include "AutoPacketFactory.h"
 #include "SatCounter.h"
+#include "AutoPacketProfiler.h"
+
 #include <algorithm>
 
 AutoPacketInternal::AutoPacketInternal(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding) :
@@ -12,7 +14,7 @@ AutoPacketInternal::AutoPacketInternal(AutoPacketFactory& factory, std::shared_p
 
 AutoPacketInternal::~AutoPacketInternal(void) {}
 
-void AutoPacketInternal::Initialize(bool isFirstPacket, long long uniqueId) {
+void AutoPacketInternal::Initialize(bool isFirstPacket, uint64_t uniqueId) {
   m_uniqueId = uniqueId;
 
   // Mark init time of packet
@@ -48,8 +50,17 @@ void AutoPacketInternal::Initialize(bool isFirstPacket, long long uniqueId) {
   // NOTE: This may result in decorations that cause other subscribers to be called.
   {
     autowiring::AutoCurrentPacketPusher pkt(*this);
-    for (SatCounter* call : callCounters)
-      call->GetCall()(call->GetAutoFilter().ptr(), *this);
+
+    if (m_parentFactory->GetAutoPacketProfiler()) {
+      for (SatCounter* call : callCounters) {
+        AutoPacketProfiler::Block profileBlock(m_parentFactory->GetAutoPacketProfiler(), this, call->GetType());
+        call->GetCall()(call->GetAutoFilter().ptr(), *this);
+      }
+    }
+    else {
+      for (SatCounter* call : callCounters)
+        call->GetCall()(call->GetAutoFilter().ptr(), *this);
+    }
   }
 }
 

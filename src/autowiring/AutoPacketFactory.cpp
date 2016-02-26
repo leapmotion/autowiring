@@ -2,12 +2,14 @@
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketInternal.hpp"
+#include "AutoPacketProfiler.h"
 #include "CoreContext.h"
 #include "SatCounter.h"
 #include <cmath>
 
 AutoPacketFactory::AutoPacketFactory(void):
-  ContextMember("AutoPacketFactory")
+  ContextMember("AutoPacketFactory"),
+  m_autoPacketProfiler(nullptr)
 {}
 
 AutoPacketFactory::~AutoPacketFactory() {}
@@ -189,6 +191,22 @@ void AutoPacketFactory::RecordPacketDuration(std::chrono::nanoseconds duration) 
   std::unique_lock<std::mutex> lk(m_lock);
   m_packetDurationSum += duration.count();
   m_packetDurationSqSum += duration.count() * duration.count();
+}
+
+AutoPacketProfiler* AutoPacketFactory::GetAutoPacketProfiler() {
+  return m_autoPacketProfiler;
+}
+
+void AutoPacketFactory::EnableAutoPacketProfiler(bool enable)
+{
+  std::unique_lock<std::mutex> lk(m_lock);
+
+  // This allows an executing AutoPacket to hold a raw pointer without the
+  // overhead of locking a weak pointer.
+  if (!m_outstandingInternal.expired())
+    throw autowiring_error("Cannot set the profiler while a packet is outstanding.");
+
+//  m_autoPacketProfiler.reset(enable ? new AutoPacketProfiler : nullptr);
 }
 
 double AutoPacketFactory::GetMeanPacketLifetime(void) {
