@@ -3,7 +3,6 @@
 #
 
 add_subdirectory(test)
-add_subdirectory(benchmark)
 
 #
 # Configure source files

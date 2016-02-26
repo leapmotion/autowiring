@@ -9,3 +9,4 @@ include_directories(
 add_subdirectory(autonet)
 add_subdirectory(autowiring)
 add_subdirectory(autotesting)
+add_subdirectory(benchmark)
