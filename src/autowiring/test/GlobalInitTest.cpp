@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "GlobalInitTest.hpp"
 #include "TestFixtures/SimpleObject.hpp"
-#include <autowiring/Autowired.h>
+#include <autowiring/autowiring.h>
 #include <autowiring/GlobalCoreContext.h>
 
 void GlobalInitTest::SetUp(void) {

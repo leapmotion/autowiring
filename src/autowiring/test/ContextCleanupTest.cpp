@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "TestFixtures/SimpleObject.hpp"
 #include "TestFixtures/SimpleThreaded.hpp"
-#include <autowiring/Autowired.h>
+#include <autowiring/autowiring.h>
 #include <autowiring/CoreContext.h>
 #include THREAD_HEADER
 

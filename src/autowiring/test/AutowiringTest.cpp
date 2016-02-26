@@ -3,7 +3,7 @@
 #include "TestFixtures/SimpleObject.hpp"
 #include "TestFixtures/SimpleReceiver.hpp"
 #include <autotesting/gtest-all-guard.hpp>
-#include <autowiring/Autowired.h>
+#include <autowiring/autowiring.h>
 #include <autowiring/AutowiringDebug.h>
 #include <autowiring/CoreThread.h>
 

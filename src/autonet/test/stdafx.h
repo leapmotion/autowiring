@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 #ifdef _MSC_VER
-  #include <autowiring/Autowired.h>
+  #include <autowiring/autowiring.h>
   #include <thread>
   #include <mutex>
 #endif

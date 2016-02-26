@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "TestFixtures/SimpleObject.hpp"
 #include "HasForwardOnlyType.hpp"
-#include <autowiring/Autowired.h>
+#include <autowiring/autowiring.h>
 #include <autowiring/ContextMember.h>
 #include THREAD_HEADER
 

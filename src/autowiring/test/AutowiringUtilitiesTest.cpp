@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include <autowiring/Autowired.h>
+#include <autowiring/autowiring.h>
 #include <autowiring/BasicThread.h>
 #include <autowiring/CoreThread.h>
 #include <autowiring/thread_specific_ptr.h>

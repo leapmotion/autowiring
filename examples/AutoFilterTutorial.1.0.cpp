@@ -16,7 +16,7 @@
 /// - `const std::shared_ptr<const T>`
 /// - `const std::shared_ptr<const T> &`
 ///
-#include <autowiring/Autowired.h> // Needed for Autowiring classes.
+#include <autowiring/autowiring.h> // Needed for Autowiring classes.
 #include <iostream>               // Needed for std::cout.
 #include <string>                 // Needed for std::string.
 #include <unordered_set>          // Needed for std::unordered_set.
