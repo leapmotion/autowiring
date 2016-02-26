@@ -356,7 +356,7 @@ public:
   /// Generic overload which will pend an arbitrary dispatch type
   /// </summary>
   template<class _Fx>
-  void operator+=(_Fx&& fx) {
+  bool operator+=(_Fx&& fx) {
     static_assert(!std::is_base_of<DispatchThunkBase, _Fx>::value, "Overload resolution malfunction, must not doubly wrap a dispatch thunk");
     static_assert(!std::is_pointer<_Fx>::value, "Cannot pend a pointer to a function, we must have direct ownership");
 
@@ -367,7 +367,7 @@ public:
     if (m_count >= m_dispatchCap) {
       m_dispatchLock.unlock();
       delete thunk;
-      return;
+      return false;
     }
 
     // Count must be separately maintained:
@@ -387,5 +387,6 @@ public:
 
     // Notification as needed:
     OnPended(std::unique_lock<std::mutex>{});
+    return true;
   }
 };
