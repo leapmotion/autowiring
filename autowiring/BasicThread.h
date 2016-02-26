@@ -97,7 +97,6 @@ protected:
   /// </remarks>
   void SetCurrentThreadName(void) const;
 
-  /// Only implemented on Windows (as of version 0.4.1).
   /// <summary>
   /// Sets the thread priority of this thread
   /// </summary>
