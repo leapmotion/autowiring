@@ -639,6 +639,8 @@ TEST_F(CoreThreadTest, LambdaHoldAfterTermination) {
 TEST_F(CoreThreadTest, CanElevateAnyPriority) {
   AutoRequired<CoreThread> ct;
 
-  for (int i = (int)ThreadPriority::Default; i < (int)ThreadPriority::Multimedia; i++)
-    ASSERT_NO_THROW((BasicThread::ElevatePriority{ *ct, (ThreadPriority)i }));
+  for (int i = (int)ThreadPriority::Default; i < (int)ThreadPriority::Multimedia; i++) {
+    BasicThread::ElevatePriority ep{ *ct, (ThreadPriority)i };
+    ASSERT_EQ((ThreadPriority)i, ct->GetThreadPriority());
+  }
 }

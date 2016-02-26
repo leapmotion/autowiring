@@ -94,13 +94,14 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
     nPriority = THREAD_PRIORITY_TIME_CRITICAL;
     break;
   default:
-    throw std::runtime_error("Attempted to assign an unrecognized thread priority");
+    throw std::invalid_argument("Attempted to assign an unrecognized thread priority");
   }
 
   ::SetThreadPriority(
     m_state->m_thisThread.native_handle(),
     nPriority
   );
+  m_priority = threadPriority;
 }
 
 std::chrono::steady_clock::time_point BasicThread::GetCreationTime(void) {

@@ -206,6 +206,11 @@ protected:
 
 public:
   /// <returns>
+  /// The current thread priority
+  /// </returns>
+  ThreadPriority GetThreadPriority(void) const { return m_priority; }
+
+  /// <returns>
   /// True if this thread has transitioned to a completed state
   /// </returns>
   bool IsCompleted(void) const;

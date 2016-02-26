@@ -82,9 +82,10 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
     percent = 100;
     break;
   default:
-    throw std::runtime_error("Attempted to assign an unrecognized thread priority");
+    throw std::invalid_argument("Attempted to assign an unrecognized thread priority");
   }
-  param.sched_priority = PTHREAD_MIN_PRIORITY + (percent*(PTHREAD_MAX_PRIORITY - PTHREAD_MIN_PRIORITY) + 50) / 100;
 
+  param.sched_priority = PTHREAD_MIN_PRIORITY + (percent*(PTHREAD_MAX_PRIORITY - PTHREAD_MIN_PRIORITY) + 50) / 100;
   pthread_setschedparam(m_state->m_thisThread.native_handle(), policy, &param);
+  m_priority = threadPriority;
 }
