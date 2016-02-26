@@ -73,6 +73,7 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
     nPriority = THREAD_PRIORITY_BELOW_NORMAL;
     break;
   case ThreadPriority::Normal:
+  case ThreadPriority::Default:
     nPriority = THREAD_PRIORITY_NORMAL;
     break;
   case ThreadPriority::AboveNormal:
