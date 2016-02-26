@@ -4,12 +4,12 @@
 # Enforce spaces instead of tabs
 #
 
-ENFORCED_FILES="autowiring examples src CMakeLists.txt"
+ENFORCED_FILES="examples src CMakeLists.txt"
 
 # Go to root directory
 
 if grep -qr $'\t' $ENFORCED_FILES
-then 
+then
   echo
   echo "The Autowiring project prohibits tabs for spacing."
   echo
