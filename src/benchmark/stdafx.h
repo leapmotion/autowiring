@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include <C++11/cpp11.h>
+#include <autowiring/C++11/cpp11.h>
 #include <autowiring/autowiring.h>
 #include "Foo.h"
 

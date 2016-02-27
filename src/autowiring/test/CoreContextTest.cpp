@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "TestFixtures/SimpleObject.hpp"
 #include <autowiring/ContextEnumerator.h>
+#include <autowiring/CoreThread.h>
 #include <algorithm>
 #include <set>
 #include THREAD_HEADER

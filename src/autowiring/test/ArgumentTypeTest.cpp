@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "var_logic.h"
+#include <autowiring/var_logic.h>
 #include <autowiring/auto_arg.h>
 #include <autowiring/has_autofilter.h>
 

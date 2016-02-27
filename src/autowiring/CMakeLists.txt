@@ -3,7 +3,6 @@
 #
 
 add_subdirectory(test)
-add_subdirectory(benchmark)
 
 #
 # Configure source files
@@ -134,6 +133,7 @@ set(Autowiring_SRCS
   Parallel.h
   Parallel.cpp
   registration.h
+  result_or_default.h
   SatCounter.h
   signal_base.h
   SlotInformation.cpp
@@ -177,6 +177,38 @@ add_conditional_sources(
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/once_atomic.cpp
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/thread.cpp
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/future.cpp
+)
+
+add_conditional_sources(
+  Autowiring_SRCS
+  "TRUE"
+  GROUP_NAME "C++11"
+  FILES
+  C++11/boost_array.h
+  C++11/boost_atomic.h
+  C++11/boost_chrono.h
+  C++11/boost_exception_ptr.h
+  C++11/boost_functional.h
+  C++11/boost_future.h
+  C++11/boost_mutex.h
+  C++11/boost_rvalue.h
+  C++11/boost_shared_ptr.h
+  C++11/boost_system_error.h
+  C++11/boost_thread.h
+  C++11/boost_tuple.h
+  C++11/boost_type_traits.h
+  C++11/boost_utility.h
+  C++11/chrono_with_profiling_clock.h
+  C++11/cpp11.h
+  C++11/empty_file.h
+  C++11/make_unique.h
+  C++11/memory.h
+  C++11/memory_nostl11.h
+  C++11/mutex.h
+  C++11/tr1_unordered_map.h
+  C++11/tr1_unordered_set.h
+  C++11/type_index.h
+  C++11/unique_ptr.h
 )
 
 add_windows_sources(Autowiring_SRCS
@@ -224,7 +256,6 @@ add_conditional_sources(Autowiring_SRCS "NOT WIN32 AND NOT APPLE"
   FILES CoreThreadLinux.cpp
 )
 
-rewrite_header_paths(Autowiring_SRCS)
 add_pch(Autowiring_SRCS "stdafx.h" "stdafx.cpp")
 
 #
@@ -233,13 +264,16 @@ add_pch(Autowiring_SRCS "stdafx.h" "stdafx.cpp")
 
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 
-target_include_directories(Autowiring
+target_include_directories(
+  Autowiring
   PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/contrib/autoboost>"
   INTERFACE
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
   "$<INSTALL_INTERFACE:include>"
 )
+
+# Install public header files
+install_headers(TARGET Autowiring DESTINATION include/autowiring COMPONENT autowiring)
 
 # Need multithreading services if available
 find_package(Threads)

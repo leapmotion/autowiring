@@ -14,7 +14,6 @@ set(AutoNet_SRCS
 )
 
 # All include files are located in /autowiring from here, so prepend that to all sources
-rewrite_header_paths(AutoNet_SRCS)
 add_pch(AutoNet_SRCS "stdafx.h" "stdafx.cpp")
 
 add_library(AutoNet STATIC ${AutoNet_SRCS})
@@ -26,6 +25,9 @@ add_subdirectory(test)
 #
 # Install library
 #
+
+# Install public header files
+install_headers(TARGET AutoNet DESTINATION include/autonet COMPONENT autowiring)
 
 if(NOT NO_INSTALL_AUTONET AND NOT AUTOWIRING_IS_EMBEDDED)
   install(TARGETS AutoNet EXPORT AutowiringTargets

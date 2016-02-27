@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/SimpleObject.hpp"
-#include "test/HasForwardOnlyType.hpp"
+#include "HasForwardOnlyType.hpp"
 #include <autowiring/Autowired.h>
 #include <autowiring/ContextMember.h>
 #include THREAD_HEADER
@@ -230,7 +230,7 @@ TEST_F(PostConstructTest, VerifyAllInstancesSatisfied) {
 TEST_F(PostConstructTest, ContextNotifyWhenAutowired) {
   auto called = std::make_shared<bool>(false);
   AutoCurrentContext ctxt;
-  
+
   // Now we'd like to be notified when SimpleObject gets added:
   ctxt->NotifyWhenAutowired<SimpleObject>(
     [called] {

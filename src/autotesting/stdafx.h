@@ -18,7 +18,7 @@
 #endif
 
 // C++11 glue logic, for platforms that have incomplete C++11 support
-#include "C++11/cpp11.h"
+#include <autowiring/C++11/cpp11.h>
 
 
 template<class T, int n>

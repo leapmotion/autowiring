@@ -71,6 +71,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules")
 include(AddPCH)
 include(ConditionalSources)
+include(InstallHeaders)
 
 get_filename_component(AUTOWIRING_ROOT_DIR . ABSOLUTE)
 
@@ -155,14 +156,6 @@ install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/autowiring-configVersion.cmake"
   DESTINATION "."
   COMPONENT autowiring
-)
-
-# Install public header files
-install(
-  DIRECTORY ${PROJECT_SOURCE_DIR}/autowiring
-  DESTINATION include
-  COMPONENT autowiring
-  FILES_MATCHING PATTERN "*.h"
 )
 
 # Install autoboost headers on ARM, which still requires them
