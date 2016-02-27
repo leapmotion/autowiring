@@ -69,6 +69,48 @@ public:
   BasicThread(const char* pName = nullptr);
   virtual ~BasicThread(void);
 
+  /// \internal Only implemented on Windows (as of 0.4.1).
+  /// <summary>
+  /// Boosts thread priority while an instance of this type exists.
+  /// </summary>
+  /// <remarks>
+  /// The thread priority is changed when the requested priority is higher than the
+  /// current priority.  The destructor automatically restores the previous priority.
+  /// This class cannot be moved or copied, in order to guarantee proper RAII.
+  /// </remarks>
+  class ElevatePriority {
+  public:
+    /// Creating an ElevatePriority object as a member of a BasicThread instance
+    /// elevates the priority of the thread if the specified priority is higher
+    /// then the current thread priority. Destroy this ElevatePriority instance
+    /// to restore the normal thread priority.
+    ElevatePriority(ElevatePriority&) = delete;
+
+    /// Elevates the priority of a BasicThread instance if the specified priority is higher
+    /// then the current thread priority. Destroy this ElevatePriority instance
+    /// to restore the normal thread priority.
+    ElevatePriority(BasicThread& thread, ThreadPriority priority) :
+      m_oldPriority(thread.m_priority),
+      m_thread(thread)
+    {
+      // Elevate if the new level is higher than the old level:
+      if (priority > m_oldPriority)
+        m_thread.SetThreadPriority(priority);
+    }
+
+    /// Destroying this object returns the thread to its previous priority
+    /// level.
+    ~ElevatePriority(void) {
+      // Delevate if the old level is lower than the current level:
+      if (m_thread.m_priority > m_oldPriority)
+        m_thread.SetThreadPriority(m_oldPriority);
+    }
+
+  private:
+    ThreadPriority m_oldPriority;
+    BasicThread& m_thread;
+  };
+
 protected:
   // Internally held thread status block.  This has to be a shared pointer because we need to signal
   // the held state condition after releasing all shared pointers to ourselves, and this could mean
@@ -97,8 +139,6 @@ protected:
   /// </remarks>
   void SetCurrentThreadName(void) const;
 
-private:
-  /// Only implemented on Windows (as of version 0.4.1).
   /// <summary>
   /// Sets the thread priority of this thread
   /// </summary>
@@ -108,7 +148,6 @@ private:
   /// </remarks>
   void SetThreadPriority(ThreadPriority threadPriority);
 
-protected:
   /// <summary>
   /// Recovers a general lock used to synchronize entities in this thread internally.
   /// </summary>
@@ -134,48 +173,6 @@ protected:
   /// <param name="ctxt">The last reference to the enclosing context held by this thread</param>
   /// <param name="refTracker">A reference tracker held for as long as the cleanup operation is incomplete</param>
   virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<CoreObject>&& refTracker);
-
-  /// \internal Only implemented on Windows (as of 0.4.1).
-  /// <summary>
-  /// Boosts thread priority while an instance of this type exists.
-  /// </summary>
-  /// <remarks>
-  /// The thread priority is changed when the requested priority is higher than the
-  /// current priority.  The destructor automatically restores the previous priority.
-  /// This class cannot be moved or copied, in order to guarantee proper RAII.
-  /// </remarks>
-  class ElevatePriority {
-  public:
-    /// Creating an ElevatePriority object as a member of a BasicThread instance
-    /// elevates the priority of the thread if the specified priority is higher
-    /// then the current thread priority. Destroy this ElevatePriority instance
-    /// to restore the normal thread priority.
-    ElevatePriority(ElevatePriority&) = delete;
-
-    /// Elevates the priority of a BasicThread instance if the specified priority is higher
-    /// then the current thread priority. Destroy this ElevatePriority instance
-    /// to restore the normal thread priority.
-    ElevatePriority(BasicThread& thread, ThreadPriority priority) :
-      m_oldPriority(thread.m_priority),
-      m_thread(thread)
-    {
-      // Elevate if the new level is higher than the old level:
-      if(priority > m_oldPriority)
-        m_thread.SetThreadPriority(priority);
-    }
-
-    /// Destroying this object returns the thread to its previous priority
-    /// level.
-    ~ElevatePriority(void) {
-      // Delevate if the old level is lower than the current level:
-      if(m_thread.m_priority > m_oldPriority)
-        m_thread.SetThreadPriority(m_oldPriority);
-    }
-
-  private:
-    ThreadPriority m_oldPriority;
-    BasicThread& m_thread;
-  };
 
   /// <summary>
   /// Waits until the specified lambda function returns true or the thread shuts down.
@@ -208,6 +205,11 @@ protected:
   bool DoAdditionalWait(std::chrono::nanoseconds timeout) override;
 
 public:
+  /// <returns>
+  /// The current thread priority
+  /// </returns>
+  ThreadPriority GetThreadPriority(void) const { return m_priority; }
+
   /// <returns>
   /// True if this thread has transitioned to a completed state
   /// </returns>

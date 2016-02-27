@@ -635,3 +635,12 @@ TEST_F(CoreThreadTest, LambdaHoldAfterTermination) {
   }
   ASSERT_TRUE(childWeak.expired()) << "Child context leaked due to lambda pending in teardown";
 }
+
+TEST_F(CoreThreadTest, CanElevateAnyPriority) {
+  AutoRequired<CoreThread> ct;
+
+  for (int i = (int)ThreadPriority::Default; i < (int)ThreadPriority::Multimedia; i++) {
+    BasicThread::ElevatePriority ep{ *ct, (ThreadPriority)i };
+    ASSERT_EQ((ThreadPriority)i, ct->GetThreadPriority());
+  }
+}
