@@ -194,7 +194,7 @@ void AutoPacketFactory::RecordPacketDuration(std::chrono::nanoseconds duration) 
 }
 
 AutoPacketProfiler* AutoPacketFactory::GetAutoPacketProfiler() {
-  return m_autoPacketProfiler;
+  return m_autoPacketProfiler.get();
 }
 
 void AutoPacketFactory::EnableAutoPacketProfiler(bool enable)
@@ -202,11 +202,11 @@ void AutoPacketFactory::EnableAutoPacketProfiler(bool enable)
   std::unique_lock<std::mutex> lk(m_lock);
 
   // This allows an executing AutoPacket to hold a raw pointer without the
-  // overhead of locking a weak pointer.
-  if (!m_outstandingInternal.expired())
+  // overhead of copying a shared pointer or locking a weak pointer.
+  if (GetOutstandingPacketCount())
     throw autowiring_error("Cannot set the profiler while a packet is outstanding.");
 
-//  m_autoPacketProfiler.reset(enable ? new AutoPacketProfiler : nullptr);
+  m_autoPacketProfiler.reset(enable ? new AutoPacketProfiler : nullptr);
 }
 
 double AutoPacketFactory::GetMeanPacketLifetime(void) {

@@ -30,7 +30,9 @@ public:
 
     // sort key.
     bool operator<(const Event& rhs) const {
-      return m_time != rhs.m_time ? (m_time < rhs.m_time) : (m_flag < rhs.m_flag);
+      if (m_time != rhs.m_time) return m_time < rhs.m_time;
+      if (m_type != rhs.m_type) return m_type < rhs.m_type;
+      return m_flag < rhs.m_flag;
     }
   };
 

@@ -5,12 +5,12 @@
 #include "ContextMember.h"
 #include "CoreRunnable.h"
 #include "TypeRegistry.h"
+#include "AutoPacketProfiler.h"
 #include CHRONO_HEADER
 #include TYPE_TRAITS_HEADER
 #include <set>
 
 class AutoPacketInternal;
-class AutoPacketProfiler;
 
 /// <summary>
 /// A configurable factory class for pipeline packets with a built-in object pool
@@ -52,7 +52,7 @@ private:
   double m_packetDurationSum = 0.0;
   double m_packetDurationSqSum = 0.0;
 
-  AutoPacketProfiler* m_autoPacketProfiler;
+  std::unique_ptr<AutoPacketProfiler> m_autoPacketProfiler;
 
   // Returns the internal outstanding count, for use with AutoPacket
   std::shared_ptr<void> GetInternalOutstanding(void);

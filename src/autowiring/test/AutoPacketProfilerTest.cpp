@@ -36,10 +36,13 @@ template<int N>
 class SimpleAutoFilter {
 public:
   int m_value = 0;
-  void AutoFilter(int value) { m_value = value; }
+  void AutoFilter(int value) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    m_value = value;
+  }
 };
 
-TEST_F(AutoPacketProfilerTest, AutoPacketFactoryCycle) {
+TEST_F(AutoPacketProfilerTest, CheckForEventRecordings) {
   AutoCurrentContext ctxt;
 
   AutoRequired<SimpleAutoFilter<0>> simpleFilter0(ctxt);
@@ -49,7 +52,7 @@ TEST_F(AutoPacketProfilerTest, AutoPacketFactoryCycle) {
   for (int count = 0; count < 7; ++count) {
     auto trivial = factory->NewPacket();
     trivial->SetUserId(345 + count);
-    trivial->Decorate((int)100);
+    trivial->Decorate((int)(100 + count));
     ASSERT_EQ(100 + count, simpleFilter0->m_value) << "A simple packet was not received as expected by an AutoFilter";
     ASSERT_EQ(100 + count, simpleFilter1->m_value) << "A simple packet was not received as expected by an AutoFilter";
     ASSERT_EQ(100 + count, simpleFilter2->m_value) << "A simple packet was not received as expected by an AutoFilter";
@@ -60,15 +63,19 @@ TEST_F(AutoPacketProfilerTest, AutoPacketFactoryCycle) {
   for (int count = 0; count < 7; ++count) {
     const std::vector<AutoPacketProfiler::Event>* events = profiler->UnsafeCheckForEvents(345 + count);
     ASSERT_TRUE(events != nullptr) << "Events were not recorded";
-    ASSERT_TRUE(events->size() == 6) << "6 Events were not recorded";
 
-    bool expectBegin = true;
+    // There will be begin and end events for the 3 above and the overhead sample for the profiler itself.
+    ASSERT_TRUE(events->size() == 8) << "8 Events were not recorded";
+
+    int countBegin = 0;
+    int countEnd = 0;
     for (const auto& evt : *events) {
-      ASSERT_TRUE((evt.m_flag == AutoPacketProfiler::FlagBegin) == expectBegin);
-      expectBegin = !expectBegin;
+      if (evt.m_flag == AutoPacketProfiler::FlagBegin) ++countBegin;
+      if (evt.m_flag == AutoPacketProfiler::FlagEnd) ++countEnd;
     }
-  }
 
-  ASSERT_TRUE(true) << "X";
+    ASSERT_TRUE(countBegin == 4);
+    ASSERT_TRUE(countEnd == 4);
+  }
 }
 
