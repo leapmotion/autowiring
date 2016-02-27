@@ -5,6 +5,7 @@
 #include "auto_tuple.h"
 #include "AutoPacket.h"
 #include "CurrentContextPusher.h"
+#include "AutoPacketProfiler.h"
 #include "Decompose.h"
 #include "index_tuple.h"
 #include "noop.h"
@@ -155,9 +156,18 @@ struct CE<Deferred(T::*)(Args...), index_tuple<N...>> :
 
       // Extract, call, commit
       t_ceSetup extractor(*pAutoPacket);
-      (((T*) pObj)->*memFn)(
-        static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
-      );
+
+      if (pAutoPacket->GetProfiler()) {
+        AutoPacketProfiler::Block profileBlock(&*pAutoPacket, auto_id_t<T>());
+        (((T*)pObj)->*memFn)(
+          static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
+        );
+      }
+      else
+        (((T*)pObj)->*memFn)(
+          static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
+        );
+
       autowiring::noop(extractor.template Commit<N>(false)...);
     };
   }

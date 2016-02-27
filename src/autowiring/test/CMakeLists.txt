@@ -16,6 +16,7 @@ set(AutowiringTest_SRCS
   AutoIDTest.cpp
   AutoPacketTest.cpp
   AutoPacketFactoryTest.cpp
+  AutoPacketProfilerTest.cpp
   AutoSignalTest.cpp
   AutowiringDebugTest.cpp
   AutowiringTest.cpp

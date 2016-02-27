@@ -349,7 +349,7 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   if (m_parentFactory->GetAutoPacketProfiler()) {
     AutoCurrentPacketPusher apkt(*this);
     for (SatCounter* call : callQueue) {
-      AutoPacketProfiler::Block profileBlock(m_parentFactory->GetAutoPacketProfiler(), this, call->GetType());
+      AutoPacketProfiler::Block profileBlock(this, call->GetType());
       call->GetCall()(call->GetAutoFilter().ptr(), *this);
     }
   }
@@ -419,7 +419,7 @@ void AutoPacket::PulseSatisfactionUnsafe(std::unique_lock<std::mutex> lk, Decora
 
     if (m_parentFactory->GetAutoPacketProfiler()) {
       for (SatCounter* call : callQueue) {
-        AutoPacketProfiler::Block profileBlock(m_parentFactory->GetAutoPacketProfiler(), this, call->GetType());
+        AutoPacketProfiler::Block profileBlock(this, call->GetType());
         call->GetCall()(call->GetAutoFilter().ptr(), *this);
         call->remaining = 0;
       }
@@ -618,7 +618,7 @@ const SatCounter* AutoPacket::AddRecipient(const AutoFilterDescriptor& descripto
 
   if (!sat.remaining) {
     if (m_parentFactory->GetAutoPacketProfiler()) {
-      AutoPacketProfiler::Block profileBlock(m_parentFactory->GetAutoPacketProfiler(), this, sat.GetType());
+      AutoPacketProfiler::Block profileBlock(this, sat.GetType());
       sat.GetCall()(sat.GetAutoFilter().ptr(), *this);
     } else
       sat.GetCall()(sat.GetAutoFilter().ptr(), *this);
@@ -671,6 +671,10 @@ AutoPacket& AutoPacket::CurrentPacket(void) {
 
 std::shared_ptr<CoreContext> AutoPacket::GetContext(void) const {
   return m_parentFactory->GetContext();
+}
+
+AutoPacketProfiler* AutoPacket::GetProfiler(void) const {
+  return m_parentFactory->GetAutoPacketProfiler();
 }
 
 bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterArgument* inputs, std::chrono::nanoseconds duration) {

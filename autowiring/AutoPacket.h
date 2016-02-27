@@ -24,6 +24,7 @@ class AutoPacketInternal;
 class AutoPacketFactory;
 class CoreContext;
 struct AutoFilterDescriptor;
+class AutoPacketProfiler;
 
 template<class T>
 class auto_arg;
@@ -826,6 +827,11 @@ public:
 
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;
+
+  /// <summary>
+  /// Returns a pointer to the AutoPacketProfiler that was enabled on this factories profiler if any.
+  /// </summary>
+  AutoPacketProfiler* GetProfiler(void) const;
 
   /// <summary>
   /// Sets the current AutoPacket User ID.  This value is for external use, and defaults to -1.

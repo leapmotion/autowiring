@@ -36,8 +36,8 @@ inline void AutoPacketProfiler::Submit(AutoPacket* packet, EventType type, Event
 // ----------------------------------------------------------------------------
 // AutoPacketProfiler::Block
 
-AutoPacketProfiler::Block::Block(AutoPacketProfiler* profiler, AutoPacket* packet, EventType type) :
-  m_profiler(profiler),
+AutoPacketProfiler::Block::Block(AutoPacket* packet, EventType type) :
+  m_profiler(packet->GetProfiler()),
   m_packet(packet),
   m_type(type)
 {
@@ -64,6 +64,16 @@ void AutoPacketProfiler::Begin(AutoPacket* packet, EventType type, int64_t time)
 
 void AutoPacketProfiler::End(AutoPacket* packet, EventType type, int64_t time) {
   Submit(packet, type, AutoPacketProfiler::FlagEnd, time);
+}
+
+const std::vector<AutoPacketProfiler::Event>* AutoPacketProfiler::UnsafeCheckForEvents(int64_t packet_id) {
+  std::lock_guard<std::mutex> lock(m_mutex);
+  auto it = m_EventListTable.find(packet_id);
+  if (it != m_EventListTable.end()) {
+    std::sort(it->second.begin(), it->second.end());
+    return &it->second;
+  }
+  return nullptr;
 }
 
 AutoPacketProfiler::AutoPacketProfiler() :

@@ -15,25 +15,6 @@ public:
   // This is an ID for the class on which AutoFilter was called.
   typedef auto_id EventType;
 
-  class Block {
-  public:
-    Block(AutoPacketProfiler* profiler, AutoPacket* packet, EventType type);
-    ~Block();
-
-  private:
-    AutoPacketProfiler* m_profiler;
-    AutoPacket*  m_packet;
-    EventType    m_type;
-  };
-
-  static int64_t GetNow();
-
-  void Begin(AutoPacket* packet, EventType type, int64_t time = GetNow());
-  void End(AutoPacket* packet, EventType type, int64_t time = GetNow());
-
-  //  void SendAutoNetServerEvent();
-
-private:
   enum EventFlag {
     FlagError = 0x00,
     FlagBegin = 0x01, // Begin < End in sort for matching time stamps
@@ -62,6 +43,30 @@ private:
 
     int64_t m_packet_id;
   };
+
+  class Block {
+  public:
+    Block(AutoPacket* packet, EventType type);
+    ~Block();
+
+  private:
+    AutoPacketProfiler* m_profiler;
+    AutoPacket*  m_packet;
+    EventType    m_type;
+  };
+
+  static int64_t GetNow();
+
+  void Begin(AutoPacket* packet, EventType type, int64_t time = GetNow());
+  void End(AutoPacket* packet, EventType type, int64_t time = GetNow());
+
+  // Result may be modified or even deleted if the profiler is accessed by other threads.
+  const std::vector<Event>* UnsafeCheckForEvents(int64_t packet_id);
+
+  //  void SendAutoNetServerEvent();
+
+private:
+
 
   // Access must be wrapped in m_Mutex to avoid a race condition on the first call.
   std::vector<Event>& GetEventList(int64_t packet_id);

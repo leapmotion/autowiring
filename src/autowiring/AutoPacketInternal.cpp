@@ -53,7 +53,7 @@ void AutoPacketInternal::Initialize(bool isFirstPacket, uint64_t uniqueId) {
 
     if (m_parentFactory->GetAutoPacketProfiler()) {
       for (SatCounter* call : callCounters) {
-        AutoPacketProfiler::Block profileBlock(m_parentFactory->GetAutoPacketProfiler(), this, call->GetType());
+        AutoPacketProfiler::Block profileBlock(this, call->GetType());
         call->GetCall()(call->GetAutoFilter().ptr(), *this);
       }
     }

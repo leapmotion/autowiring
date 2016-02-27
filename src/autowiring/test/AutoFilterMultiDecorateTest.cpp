@@ -241,5 +241,5 @@ TEST_F(AutoFilterMultiDecorateTest, AddRecipientIdempotentTest) {
 
   packet->Decorate(Decoration<0>());
 
-  ASSERT_EQ(1, called) << "Add receipient should be idempotent";
+  ASSERT_EQ(1, called) << "Add recipient should be idempotent";
 }
