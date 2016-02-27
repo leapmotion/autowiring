@@ -141,7 +141,6 @@ include_directories(
 # CMake configurations
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
-configure_file(AutowiringConfig.h.in ${PROJECT_SOURCE_DIR}/autowiring/AutowiringConfig.h @ONLY)
 configure_file(Autowiring.nuspec.in ${PROJECT_BINARY_DIR}/Autowiring.nuspec @ONLY)
 
 # Recurse through source directories
