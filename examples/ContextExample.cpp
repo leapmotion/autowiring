@@ -1,5 +1,5 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
-#include <autowiring/Autowired.h>
+#include <autowiring/autowiring.h>
 #include <iostream>
 #include <memory>
 

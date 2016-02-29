@@ -18,7 +18,7 @@
 /// deal only with ordinary input and output.
 ///
 /// This tutorial will define and instantiate a simple filter network.
-#include <autowiring/Autowired.h> // Needed for Autowiring classes.
+#include <autowiring/autowiring.h> // Needed for Autowiring classes.
 #include <cmath>                  // Needed for std::round.
 #include <cstdlib>                // Needed for std::atof.
 #include <iostream>               // Needed for std::cout.
