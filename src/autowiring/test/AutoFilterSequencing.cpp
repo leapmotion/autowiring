@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "TestFixtures/Decoration.hpp"
 #include <autowiring/autowiring.h>
-#include <autowiring/AutoSelfUpdate.h>
 #include <autowiring/auto_prev.h>
 
 class AutoFilterSequencing:

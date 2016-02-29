@@ -13,7 +13,6 @@ set(Autowiring_SRCS
   AnySharedPointer.h
   atomic_list.h
   atomic_list.cpp
-  atomic_object.h
   at_exit.h
   altitude.h
   auto_arg.h
@@ -40,7 +39,6 @@ set(Autowiring_SRCS
   AutoPacketFactory.h
   AutoPacketGraph.cpp
   AutoPacketGraph.h
-  AutoSelfUpdate.h
   AutoTimeStamp.h
   AutowirableSlot.cpp
   AutowirableSlot.h
@@ -154,7 +152,6 @@ set(Autowiring_SRCS
   TypeRegistry.cpp
   TypeRegistry.h
   TypeUnifier.h
-  unlock_object.h
   uuid.h
   var_logic.h
 )
