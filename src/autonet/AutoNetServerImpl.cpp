@@ -6,6 +6,7 @@
 #include "AutoNetTransportHttp.hpp"
 #include "demangle.h"
 #include "CoreObjectDescriptor.h"
+#include "AutoPacketProfiler.h"
 #include "EventRegistry.h"
 #include "TypeRegistry.h"
 #include <iostream>
@@ -267,7 +268,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const CoreObjectDescriptor&
 }
 
 void AutoNetServerImpl::SendEvent(const std::string& rawEvent, const std::vector<std::string>& args) {
-  // Prepend '$' to custum event to avoid namespace collitions with internal events
+  // Prepend '$' to custom event to avoid namespace collisions with internal events
   std::string event("$");
   event.append(rawEvent);
 
@@ -326,6 +327,105 @@ int AutoNetServerImpl::ResolveContextID(CoreContext* ctxt) {
 
 CoreContext* AutoNetServerImpl::ResolveContextID(int id) {
   return m_ContextPtrs.at(id);
+}
+
+void AutoNetServerImpl::HandlePacketProfilerUpdate(AutoPacketProfiler& profiler) {
+  // previous AutoPacketProfiler::sc_FrameTimelineMinTableSize frames.
+  AutoPacketProfiler::Access profilerAccess(profiler);
+
+  Json::array frameTable(profilerAccess.eventListTable.size());
+  int frameTableIndex = 0;
+  int packetsLackingUserIDs = 0;
+  int errors = 0;
+
+  std::vector<std::vector<const AutoPacketProfiler::Event*>> perFrameRows;
+
+  // Format events into rows to that they form non-overlapping ranges
+  for (auto& it : profilerAccess.eventListTable) {
+    const std::vector<AutoPacketProfiler::Event>& eventList = it.second.events;
+
+    if (it.second.userId == -1) {
+      ++packetsLackingUserIDs;
+      continue;
+    }
+
+    // Go easy on reallocation
+    for (auto& row : perFrameRows)
+      row.clear();
+
+    // Format events into rows to that they form non-overlapping ranges
+    for (auto& event : eventList) {
+      if (event.m_flag == AutoPacketProfiler::FlagBegin) {
+        // Find first row that does not have an open range.
+        bool found = false;
+        for (auto& row : perFrameRows) {
+          if (row.empty() || row.back()->m_flag == AutoPacketProfiler::FlagEnd) {
+            row.push_back(&event);
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          perFrameRows.emplace_back();
+          perFrameRows.back().push_back(&event);
+        }
+      }
+      else if (event.m_flag == AutoPacketProfiler::FlagEnd) {
+        // Find row that has this range, assuming that there is only one event
+        // of the same type executing per-frame id.
+        bool found = false;
+        for (auto& row : perFrameRows) {
+          if (!row.empty() && (row.back()->m_type == event.m_type) && row.back()->m_flag == AutoPacketProfiler::FlagBegin) {
+            row.push_back(&event);
+            found = true;
+          }
+        }
+        if (!found) {
+          ++errors;
+        }
+      }
+    }
+
+    // Each frame has a number of rows of events.  This allows events to be rendered without overlapping.
+    Json::array perFrameRowsJson(perFrameRows.size());
+    int rowIndex = 0;
+    for (auto& row : perFrameRows) {
+      if (row.empty()) {
+        perFrameRowsJson.resize(rowIndex);
+        break;
+      }
+
+      Json::array rowJson(row.size());
+      int eventIndex = 0;
+      for (auto evt : row) {
+        // time modulo non-negative int representation space
+        rowJson[eventIndex++] = std::move(Json::object{
+          { "flag", (int)evt->m_flag },
+          { "time", (int)(evt->m_time & 0x7fffffff) },
+          { "type", autowiring::demangle(evt->m_type) },
+        });
+      }
+
+      perFrameRowsJson[rowIndex++] = std::move(rowJson);
+    }
+
+    Json::object frameJson{
+      { "id", (int)(it.second.userId & 0x7fffffff) },
+      { "rows", std::move(perFrameRowsJson) }
+    };
+    frameTable[frameTableIndex++] = std::move(frameJson);
+  }
+
+  // Fit array to frames actually used.  Packets lacking UserIds were recorded seperately.
+  frameTable.resize(frameTableIndex);
+
+  Json::object result {
+    { "frameTable", frameTable },
+    { "packetsLackingUserIDs", packetsLackingUserIDs },
+    { "errors", errors }
+  };
+
+  BroadcastMessage("autoPacketProfiler", result);
 }
 
 void AutoNetServerImpl::PollThreadUtilization(std::chrono::milliseconds period){

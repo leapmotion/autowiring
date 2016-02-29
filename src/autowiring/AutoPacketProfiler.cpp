@@ -19,18 +19,17 @@ namespace {
 inline void AutoPacketProfiler::Submit(AutoPacket* packet, EventType type, EventFlag flag, int64_t time) {
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  int64_t id = packet->GetUserId();
-
-  // TODO: The packet's unique ID would be usable here, however a mapping would need to be kept to the User ID.
-//  if(id == -1)
-//    throw autowiring_error("The AutoPacketProfiler requires a User ID to be set for the packet.");
-
-  if (id == -1)
-    return; // TODO: AutoPacketInternal::Initialize might call filters before client code can set a user ID.
+  int64_t id = packet->GetUniqueId();
 
   // GetEventList can trigger a lot of memory allocation traffic.
-  std::vector<Event>& events = (m_LastFrameId == id) ? *m_LastEventList : GetEventList(id);
-  events.emplace_back(type, flag, time);
+  Record& record = (m_LastFrameId == id) ? *m_LastRecord : GetRecord(id);
+  record.events.emplace_back(type, flag, time);
+
+  // Allow user IDs to be associated with a packet at any time.
+  if(record.userId != packet->GetUniqueId()) {
+    record.userId = packet->GetUniqueId();
+    m_UserIdToUniqueId[id] = record.userId;
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -52,7 +51,7 @@ AutoPacketProfiler::Block::~Block()
 // ----------------------------------------------------------------------------
 // AutoPacketProfiler
 
-auto_id_t<AutoPacketProfiler> AutoPacketProfiler::m_overheadId;
+auto_id_t<AutoPacketProfiler> AutoPacketProfiler::s_overheadId;
 
 int64_t AutoPacketProfiler::GetNow() {
   return duration_cast<microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
@@ -66,150 +65,62 @@ void AutoPacketProfiler::End(AutoPacket* packet, EventType type, int64_t time) {
   Submit(packet, type, AutoPacketProfiler::FlagEnd, time);
 }
 
-const std::vector<AutoPacketProfiler::Event>* AutoPacketProfiler::UnsafeCheckForEvents(int64_t packet_id) {
-  std::lock_guard<std::mutex> lock(m_mutex);
-  auto it = m_EventListTable.find(packet_id);
-  if (it != m_EventListTable.end()) {
-    std::sort(it->second.begin(), it->second.end());
-    return &it->second;
-  }
-  return nullptr;
-}
-
 AutoPacketProfiler::AutoPacketProfiler() :
-  m_LastEventList(nullptr),
+  m_LastRecord(nullptr),
   m_LastFrameId(-1),
   m_AgeCounterStartFrameId(-1),
   m_AgeCounter(0)
 {
 }
 
-std::vector<AutoPacketProfiler::Event>& AutoPacketProfiler::GetEventList(int64_t packet_id) {
+AutoPacketProfiler::Record& AutoPacketProfiler::GetRecord(int64_t packet_id) {
 
-  m_LastEventList = &m_EventListTable[packet_id];
+  m_LastRecord = &m_EventListTable[packet_id];
   m_LastFrameId = packet_id;
 
   // This can get really slow due to deallocations.  The idea is to only do this very rarely.
-  if (m_LastEventList->empty()) {
+  if (m_LastRecord->events.empty()) {
     int64_t time = GetNow();
 
-    m_LastEventList->reserve(sc_FrameTimelineEventListCapacity);
+    m_LastRecord->events.reserve(sc_FrameTimelineEventListCapacity);
     AgeTable(packet_id);
 
     // AgeTable could be bad enough that this will avoid confusion.  Might as well declare the array allocation
     // to provide a baseline measurement as well.  
 
-    m_LastEventList->emplace_back(m_overheadId, AutoPacketProfiler::FlagBegin, time);
-    m_LastEventList->emplace_back(m_overheadId, AutoPacketProfiler::FlagEnd, GetNow());
+    m_LastRecord->events.emplace_back(s_overheadId, AutoPacketProfiler::FlagBegin, time);
+    m_LastRecord->events.emplace_back(s_overheadId, AutoPacketProfiler::FlagEnd, GetNow());
   }
 
-  return *m_LastEventList;
+  return *m_LastRecord;
 }
 
 void AutoPacketProfiler::AgeTable(int64_t current_packet_id) {
   ++m_AgeCounter;
   if (m_AgeCounter > sc_FrameTimelineMinTableSize) {
-
     for (auto it = m_EventListTable.begin(); it != m_EventListTable.end();) {
       if (it->first <= m_AgeCounterStartFrameId) {
         it = m_EventListTable.erase(it);
       }
-      else {
+      else
         ++it;
-      }
     }
 
     m_AgeCounter = 0;
     m_AgeCounterStartFrameId = current_packet_id;
   }
+
+  // Just rebuild m_UserIdToUniqueId.
+  m_UserIdToUniqueId.clear();
+
+  for (auto& i : m_EventListTable)
+    if (i.second.userId != -1)
+      m_UserIdToUniqueId[i.second.userId] = i.first;
 }
 
-/*
-void AutoPacketProfiler::SendAutoNetServerEvent() {
-  if (m_autoNetServer) {
-
-    // Dump previous sc_FrameTimelineMinTableSize frames.
-    m_results = Value::Hash();
-
-    Value::Array frameTable;
-    m_results.HashSet("frameTable", frameTable);
-
-    std::vector<std::vector<Event*>> perFrameRows;
-
-    for (auto& it : m_EventListTable) {
-      std::vector<Event>& eventList = it.second;
-      std::sort(eventList.begin(), eventList.end());
-
-      // Be reasonable wrt. to reallocation
-      for (auto& row : perFrameRows) {
-        row.clear();
-      }
-
-      for (auto& event : eventList) {
-        if (event.m_flag == FlagBegin) {
-          // Find first row that does not have an open range.
-          bool found = false;
-          for (auto& row : perFrameRows) {
-            if (row.empty() || row.back()->m_flag == FlagEnd) {
-              row.push_back(&event);
-              found = true;
-            }
-          }
-          if (!found) {
-            perFrameRows.emplace_back();
-            perFrameRows.back().push_back(&event);
-          }
-        }
-        else if (event.m_flag == FlagEnd) {
-          // Find row that has this range.
-          bool found = false;
-          for (auto& row : perFrameRows) {
-
-            // Assuming that there is only one event of the same type executing per-frame id.
-
-            if (!row.empty() && (strcmp(row.back()->m_type, event.m_type) == 0) && ) {
-              row.push_back(&event);
-              found = true;
-            }
-          }
-          if (!found) {
-            perFrameRows.emplace_back();
-            perFrameRows.back().push_back(&event);
-          }
-        }
-      }
-
-
-      /*
-
-      Value::Array frameEventRows;
-
-      free_rows.clear();
-
-      for (auto& event : li.second) {
-
-      Value v;
-      v.HashSet("flag", event.m_flag);
-      v.HashSet("time", event.m_time);
-      v.HashSet("type", event.m_type);
-
-      if (event.m_flag == FlagBegin) {
-      if (free_rows.empty()) {
-
-      frameEventRows.emplace_back();
-      frameEventRows.back().emplace_back()
-
-      }
-
-
-      }
-
-      // Push "begin" events on a stack.  Each element of the stack is a row that
-      // is being colored in horizontally.  
-
-    }
-
-    m_autoNetServer->SendEvent("sequence", m_results.ToJSON());
+void AutoPacketProfiler::SortUnsafe() {
+  for (auto& it : m_EventListTable) {
+    std::vector<Event>& eventList = it.second.events;
+    std::sort(eventList.begin(), eventList.end());
   }
 }
-*/

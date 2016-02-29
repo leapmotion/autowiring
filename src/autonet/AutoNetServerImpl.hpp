@@ -11,6 +11,7 @@
 
 struct CoreObjectDescriptor;
 struct TypeIdentifierBase;
+class AutoPacketProfiler;
 
 // Protocol layer for AutoNet
 class AutoNetServerImpl:
@@ -121,6 +122,11 @@ protected:
   /// <param name="ctxt">Client that sent event</param>
   int ResolveContextID(CoreContext* ctxt);
   CoreContext* ResolveContextID(int id);
+
+  /// <summary>
+  /// Transmit a new batch of profiler data
+  /// </summary>
+  void HandlePacketProfilerUpdate(AutoPacketProfiler& profiler);
 
   /// <summary>
   /// Append a lambda to this queue that will poll CoreThreads for their utilization

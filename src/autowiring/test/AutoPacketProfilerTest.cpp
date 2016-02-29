@@ -58,18 +58,22 @@ TEST_F(AutoPacketProfilerTest, CheckForEventRecordings) {
     ASSERT_EQ(100 + count, simpleFilter2->m_value) << "A simple packet was not received as expected by an AutoFilter";
   }
 
-  AutoPacketProfiler* profiler = factory->GetAutoPacketProfiler();
+  AutoPacketProfiler& profiler = *factory->GetAutoPacketProfiler();
 
   for (int count = 0; count < 7; ++count) {
-    const std::vector<AutoPacketProfiler::Event>* events = profiler->UnsafeCheckForEvents(345 + count);
-    ASSERT_TRUE(events != nullptr) << "Events were not recorded";
+    AutoPacketProfiler::Access profilerAccess(profiler);
+
+    // These will throw if missing
+    int64_t uniqueId = profilerAccess.userIdToUniqueId.at(345 + count);
+    const AutoPacketProfiler::Record& record = profilerAccess.eventListTable.at(uniqueId);
+    ASSERT_TRUE(record.userId == 345 + count);
 
     // There will be begin and end events for the 3 above and the overhead sample for the profiler itself.
-    ASSERT_TRUE(events->size() == 8) << "8 Events were not recorded";
+    ASSERT_TRUE(record.events.size() == 8) << "8 Events were not recorded";
 
     int countBegin = 0;
     int countEnd = 0;
-    for (const auto& evt : *events) {
+    for (const auto& evt : record.events) {
       if (evt.m_flag == AutoPacketProfiler::FlagBegin) ++countBegin;
       if (evt.m_flag == AutoPacketProfiler::FlagEnd) ++countEnd;
     }

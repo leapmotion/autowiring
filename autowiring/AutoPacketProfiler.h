@@ -18,7 +18,7 @@ public:
   enum EventFlag {
     FlagError = 0x00,
     FlagBegin = 0x01, // Begin < End in sort for matching time stamps
-    FlagEnd = 0x02,
+    FlagEnd = 0x02
   };
 
   struct Event {
@@ -38,11 +38,10 @@ public:
 
   struct FrameEvent : public Event {
     FrameEvent() = delete;
-
     FrameEvent(int64_t packet_id, EventType type, EventFlag flag, int64_t time) :
       Event(type, flag, time),
-      m_packet_id(packet_id) {}
-
+      m_packet_id(packet_id) {
+    }
     int64_t m_packet_id;
   };
 
@@ -57,22 +56,38 @@ public:
     EventType    m_type;
   };
 
+  struct Record {
+    std::vector<Event> events;
+    int64_t userId = -1;
+  };
+
+  // Provide thread safe access to the profiler data.
+  class Access : private std::lock_guard<std::mutex> {
+  public:
+    Access(AutoPacketProfiler& profiler) :
+      std::lock_guard<std::mutex>(profiler.m_mutex),
+      eventListTable(profiler.m_EventListTable),
+      userIdToUniqueId(profiler.m_UserIdToUniqueId)
+    {
+      profiler.SortUnsafe();
+    }
+
+    const std::unordered_map<int64_t, int64_t>& userIdToUniqueId; // Only if userId set.
+    const std::unordered_map<int64_t, Record>&  eventListTable;   // Unique packet id as key.
+  };
+
   static int64_t GetNow();
-
   void Begin(AutoPacket* packet, EventType type, int64_t time = GetNow());
-  void End(AutoPacket* packet, EventType type, int64_t time = GetNow());
-
-  // Result may be modified or even deleted if the profiler is accessed by other threads.
-  const std::vector<Event>* UnsafeCheckForEvents(int64_t packet_id);
-
-  //  void SendAutoNetServerEvent();
+  void End(  AutoPacket* packet, EventType type, int64_t time = GetNow());
 
 private:
-
+  static auto_id_t<AutoPacketProfiler> s_overheadId;
 
   // Access must be wrapped in m_Mutex to avoid a race condition on the first call.
-  std::vector<Event>& GetEventList(int64_t packet_id);
+  Record& GetRecord(int64_t packet_id);
   void AgeTable(int64_t current_packet_id);
+
+  void SortUnsafe();
 
   // Will not hold packet references
   inline void Submit(AutoPacket* packet, EventType type, EventFlag flag, int64_t time);
@@ -80,17 +95,13 @@ private:
   std::mutex m_mutex;
 
   // m_packet_id -> Event
-  std::vector<Event>* m_LastEventList;
+  Record* m_LastRecord;
   int64_t m_LastFrameId;
 
   int64_t m_AgeCounterStartFrameId;
   int m_AgeCounter;
 
-  std::unordered_map<int64_t, std::vector<Event>> m_EventListTable;
-
-  static auto_id_t<AutoPacketProfiler> m_overheadId;
-
-  // output
-  //  Value m_results;
+  std::unordered_map<int64_t, Record>  m_EventListTable;
+  std::unordered_map<int64_t, int64_t> m_UserIdToUniqueId;
 };
 
