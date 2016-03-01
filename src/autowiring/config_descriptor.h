@@ -25,7 +25,7 @@ namespace autowiring {
       "Marshaller for type T does not implement the marshal_base interface"
     );
 
-    static const marshaller<T> sc_marshaller;
+    static const marshaller<T> sc_marshaller{};
     return sc_marshaller;
   }
 
