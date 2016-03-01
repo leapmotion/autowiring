@@ -62,6 +62,7 @@ set(Autowiring_SRCS
   callable.h
   CallExtractor.h
   CallExtractor.cpp
+  config.h
   config_descriptor.h
   config_descriptor.cpp
   ConfigManager.h
@@ -123,6 +124,7 @@ set(Autowiring_SRCS
   is_shared_ptr.h
   ManualThreadPool.h
   ManualThreadPool.cpp
+  marshaller.h
   member_new_type.h
   MemoEntry.h
   MemoEntry.cpp

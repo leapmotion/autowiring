@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include <autowiring/spin_lock.h>
+#include "marshaller.h"
+#include "spin_lock.h"
 #include <array>
 
 namespace autowiring {
@@ -90,4 +91,24 @@ namespace autowiring {
 
   template<typename T>
   bool operator==(const T& lhs, const config<T>& rhs) { return rhs == lhs; }
+
+  template<typename T>
+  struct marshaller<config<T>> :
+    marshaller_base
+  {
+    typedef autowiring::config<T> type;
+
+    // Marshaller for the interior type
+    marshaller<T> interior;
+
+    std::string marshal(const void* ptr) const override {
+      return interior.marshal(&static_cast<const type*>(ptr)->get());
+    }
+
+    void unmarshal(void* ptr, const char* szValue) const override {
+      T value;
+      interior.unmarshal(&value, szValue);
+      *static_cast<type*>(ptr) = std::move(value);
+    }
+  };
 }

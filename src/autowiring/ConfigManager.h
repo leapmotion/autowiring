@@ -2,6 +2,7 @@
 #pragma once
 #include "config_descriptor.h"
 #include "optional.h"
+#include "spin_lock.h"
 #include <string>
 #include <unordered_map>
 

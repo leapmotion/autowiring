@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "auto_signal.h"
+#include "marshaller.h"
+#include "signal.h"
 
 namespace autowiring {
 
@@ -62,6 +63,27 @@ public:
     val = std::move(rhs);
     onChanged();
     return *this;
+  }
+};
+
+
+template<typename T>
+struct marshaller<autowiring::observable<T>> :
+  marshaller_base
+{
+  typedef autowiring::observable<T> type;
+
+  // Marshaller for the interior type
+  marshaller<T> interior;
+
+  std::string marshal(const void* ptr) const override {
+    return interior.marshal(&static_cast<const type*>(ptr)->get());
+  }
+
+  void unmarshal(void* ptr, const char* szValue) const override {
+    T value;
+    interior.unmarshal(&value, szValue);
+    *static_cast<type*>(ptr) = std::move(value);
   }
 };
 
