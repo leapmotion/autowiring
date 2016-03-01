@@ -1,8 +1,10 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <initializer_list>
+#include <cmath>
 #include <stdexcept>
 #include <string>
+#include <string.h>
 #include TYPE_TRAITS_HEADER
 
 namespace autowiring {

@@ -4,7 +4,6 @@
 #include "DispatchThunk.h"
 #include "once.h"
 #include <atomic>
-#include <list>
 #include <queue>
 #include MUTEX_HEADER
 #include RVALUE_HEADER
