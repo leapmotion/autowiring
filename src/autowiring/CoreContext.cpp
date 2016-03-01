@@ -969,11 +969,3 @@ std::shared_ptr<CoreContext> CoreContext::SetCurrent(void) {
 void CoreContext::EvictCurrent(void) {
   autoCurrentContext.reset();
 }
-
-void CoreContext::ConfigSet(std::string name, std::string value) {
-  m_cfgManager.Set(std::move(name), std::move(value));
-}
-
-const std::string& CoreContext::ConfigGet(std::string name) const {
-  return m_cfgManager.Get(std::move(name));
-}

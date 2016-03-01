@@ -134,6 +134,9 @@ public:
   // Asserted any time a new object is added to the context
   autowiring::signal<void(const CoreObjectDescriptor&)> newObject;
 
+  // The one and only configuration manager type
+  autowiring::ConfigManager Config;
+
   virtual ~CoreContext(void);
 
   /// <summary>
@@ -214,9 +217,6 @@ protected:
   // All known context members, exception filters:
   std::vector<ContextMember*> m_contextMembers;
   std::vector<ExceptionFilter*> m_filters;
-
-  // The one and only configuration manager type
-  autowiring::ConfigManager m_cfgManager;
 
   // Context members from other contexts that have snooped this context
   std::set<AnySharedPointer> m_snoopers;
@@ -616,7 +616,7 @@ public:
     // value of pConfigDesc because it's a little faster and one necessarily follows the other
     // We also want this to happen before the AutoInit call is made
     if(autowiring::has_getconfigdescriptor<T>::value)
-      m_cfgManager.Register(static_cast<T*>(retVal.get()), *objDesc.pConfigDesc);
+      Config.Register(static_cast<T*>(retVal.get()), *objDesc.pConfigDesc);
 
     // AutoInit if sensible to do so:
     CallAutoInit(*retVal, has_autoinit<T>());
@@ -969,16 +969,6 @@ public:
     CurrentContextPusher pshr(*this);
     memo.onSatisfied += std::forward<Fn&&>(listener);
   }
-
-  /// <summary>
-  /// Sets a single configuration value from the context
-  /// </summary>
-  void ConfigSet(std::string name, std::string value);
-
-  /// <summary>
-  /// Gets a configuration value from the context
-  /// </summary>
-  const std::string& ConfigGet(std::string name) const;
 
   /// <summary>
   /// Adds a teardown notifier which receives a pointer to this context on destruction

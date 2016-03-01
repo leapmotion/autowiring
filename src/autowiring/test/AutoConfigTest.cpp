@@ -136,7 +136,7 @@ TEST_F(AutoConfigTest, Configurable) {
 
   ASSERT_TRUE(c->cfg.clear_dirty()) << "Dirty flag was not set on a value that should have been dirty";
   ASSERT_FALSE(c->cfg.is_dirty());
-  ctxt->ConfigSet("cfg", "888");
+  ctxt->Config.Set("cfg", "888");
   ASSERT_TRUE(c->cfg.is_dirty()) << "Dirty flag not set correctly after being updated in configuration";
   ASSERT_TRUE(c->cfg.clear_dirty());
   ASSERT_EQ(888, c->cfg);
@@ -146,13 +146,13 @@ TEST_F(AutoConfigTest, ContextSetSimple) {
   AutoCurrentContext ctxt;
   AutoRequired<MyConfigurableClass> mcc;
 
-  ctxt->ConfigSet("b", "1029");
+  ctxt->Config.Set("b", "1029");
   ASSERT_EQ(mcc->b, 1029);
 }
 
 TEST_F(AutoConfigTest, ContextSetAfter) {
   AutoCurrentContext ctxt;
-  ctxt->ConfigSet("b", "10442");
+  ctxt->Config.Set("b", "10442");
 
   AutoRequired<MyConfigurableClass> mcc;
   ASSERT_EQ(mcc->b, 10442);
