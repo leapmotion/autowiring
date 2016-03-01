@@ -1,10 +1,11 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "config_descriptor.h"
 #include TYPE_TRAITS_HEADER
 #include RVALUE_HEADER
 
 namespace autowiring {
+  struct config_descriptor;
+
   /// <summary>
   /// Utility helper structure for types which have a factory New routine
   /// </summary>
