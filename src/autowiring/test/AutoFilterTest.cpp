@@ -6,7 +6,6 @@
 #include <autowiring/Deferred.h>
 #include <autowiring/demangle.h>
 #include <autowiring/ObjectPool.h>
-#include <autowiring/AutoSelfUpdate.h>
 #include <autowiring/AutoTimeStamp.h>
 #include <autowiring/SatCounter.h>
 #include THREAD_HEADER
@@ -577,41 +576,6 @@ TEST_F(AutoFilterTest, NoDeferredImmediateSatisfaction) {
 
   // Verify that the thread did not receive anything:
   ASSERT_EQ(0UL, wfil->GetDispatchQueueLength()) << "Deferred AutoFilter incorrectly received an immediate-mode decoration";
-}
-
-TEST_F(AutoFilterTest, AutoSelfUpdateTest) {
-  AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<AutoSelfUpdate<Decoration<0>>> filter;
-
-  {
-    auto packet = factory->NewPacket();
-    ASSERT_TRUE(packet->Has<AutoSelfUpdate<Decoration<0>>::prior_object>()) << "Missing status update from AutoSelfUpdate";
-    Decoration<0> mod_deco;
-    mod_deco.i = 1;
-    packet->Decorate(mod_deco);
-    Decoration<0> get_deco = *filter; //Implicit cast from AutoSelfUpdate
-    ASSERT_EQ(1, get_deco.i) << "AutoSelfUpdate did not update";
-  }
-
-  {
-    auto packet = factory->NewPacket();
-    Decoration<0> get_deco = packet->Get<AutoSelfUpdate<Decoration<0>>::prior_object>(); //Implicit cast from prior_object
-    ASSERT_EQ(1, get_deco.i) << "Status updated yielded incorrect prior";
-  }
-}
-
-TEST_F(AutoFilterTest, AutoSelfUpdateTwoContexts) {
-  AutoCreateContext contextA;
-  {
-    CurrentContextPusher pusher(contextA);
-    ASSERT_NO_THROW(AutoRequired<AutoSelfUpdate<Decoration<0>>>()) << "Failed to create AutoSelfUpdate in contextA";
-  }
-
-  AutoCreateContext contextB;
-  {
-    CurrentContextPusher pusher(contextB);
-    ASSERT_NO_THROW(AutoRequired<AutoSelfUpdate<Decoration<0>>>()) << "Failed to create AutoSelfUpdate in contextB";
-  }
 }
 
 TEST_F(AutoFilterTest, AutoTimeStampTest) {
