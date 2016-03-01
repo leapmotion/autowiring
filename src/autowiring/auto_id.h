@@ -1,8 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "fast_pointer_cast.h"
-#include <functional>
-#include TYPE_INDEX_HEADER
 
 class CoreObject;
 

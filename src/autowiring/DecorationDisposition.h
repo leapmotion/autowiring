@@ -6,25 +6,24 @@
 #include <cassert>
 #include <set>
 #include <vector>
-#include TYPE_INDEX_HEADER
 
 struct SatCounter;
 
 struct DecorationKey {
   DecorationKey(void) = default;
-  
+
   explicit DecorationKey(auto_id id, int tshift) :
     id(id),
     tshift(tshift)
   {}
-  
+
   // The type index
   auto_id id;
 
   // Zero refers to a decoration created on this packet, a positive number [tshift] indicates
   // a decoration attached [tshift] packets ago.
   int tshift = -1;
-  
+
   bool operator==(const DecorationKey& rhs) const {
     return id == rhs.id && tshift == rhs.tshift;
   }
@@ -126,7 +125,7 @@ struct DecorationDisposition
 
   // The current state of this disposition
   DispositionState m_state = DispositionState::Unsatisfied;
-  
+
   /// <returns>
   /// True if all publishers have run on this disposition
   /// </summary>

@@ -1,10 +1,13 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <string>
-#include <typeindex>
 
 struct AnySharedPointer;
 struct auto_id;
+
+namespace std {
+  class type_index;
+}
 
 //
 // Demangle type names on mac and linux.
