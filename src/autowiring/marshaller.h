@@ -2,6 +2,7 @@
 #pragma once
 #include <initializer_list>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <string.h>
