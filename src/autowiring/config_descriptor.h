@@ -5,6 +5,7 @@
 #include "marshaller.h"
 #include <initializer_list>
 #include <stdexcept>
+#include <unordered_map>
 
 namespace autowiring {
   template<typename T>

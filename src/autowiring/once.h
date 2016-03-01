@@ -4,6 +4,7 @@
 #include "callable.h"
 #include "signal_base.h"
 #include "spin_lock.h"
+#include <mutex>
 #include <vector>
 
 namespace autowiring {

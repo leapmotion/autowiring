@@ -5,6 +5,7 @@
 #include "spin_lock.h"
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace autowiring {
   class ConfigManager {
