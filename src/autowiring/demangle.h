@@ -2,13 +2,10 @@
 #pragma once
 #include <string>
 #include <typeinfo>
+#include <typeindex>
 
 struct AnySharedPointer;
 struct auto_id;
-
-namespace std {
-  class type_index;
-}
 
 //
 // Demangle type names on mac and linux.
