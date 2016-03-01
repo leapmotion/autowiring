@@ -78,7 +78,13 @@ namespace autowiring {
       }
       if (!pos)
         retVal.push_back('-');
-      std::reverse(retVal.begin(), retVal.end());
+
+      for (
+        auto first = retVal.begin(), last = retVal.end();
+        (first != last) && (first != --last);
+        ++first
+      )
+        std::swap(*first, *last);
       return retVal;
     }
 
@@ -161,7 +167,12 @@ namespace autowiring {
 
       if (neg)
         retVal.push_back('-');
-      std::reverse(retVal.begin(), retVal.end());
+      for (
+        auto first = retVal.begin(), last = retVal.end();
+        (first != last) && (first != --last);
+        ++first
+      )
+        std::swap(*first, *last);
       return retVal;
     }
 
