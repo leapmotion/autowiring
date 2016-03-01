@@ -12,14 +12,14 @@ class AutoConfigTest:
 namespace {
   class MyConfigurableClass {
   public:
-    autowiring::config<std::string> a = "Hello world!";
-    std::atomic<int> b = 929;
-    std::atomic<unsigned int> bUnsigned = 92999;
+    autowiring::config<std::string> a{ "Hello world!" };
+    std::atomic<int> b{ 929 };
+    std::atomic<unsigned int> bUnsigned{ 92999 };
     volatile bool c = false;
     volatile float d = 1.0f;
     volatile double e = 99.2;
-    autowiring::observable<int> obs = 44;
-    autowiring::config<int> cfg = 929999;
+    autowiring::observable<int> obs{ 44 };
+    autowiring::config<int> cfg{ 929999 };
 
     static autowiring::config_descriptor GetConfigDescriptor(void) {
       return {
@@ -43,6 +43,11 @@ namespace {
 
 static_assert(autowiring::has_getconfigdescriptor<MyConfigurableClass>::value, "Static new not correctly detected");
 static_assert(!autowiring::has_getconfigdescriptor<BadClass>::value, "Bad class cannot have a configuration descriptor");
+
+TEST_F(AutoConfigTest, ConfigFieldAssign) {
+  autowiring::config<std::string> x{ "Hello world!" };
+  ASSERT_TRUE(x.is_dirty()) << "Config values are assumed to be initially dirty";
+}
 
 TEST_F(AutoConfigTest, String) {
   MyConfigurableClass c;
@@ -129,7 +134,8 @@ TEST_F(AutoConfigTest, Configurable) {
   AutoCurrentContext ctxt;
   AutoRequired<MyConfigurableClass> c;
 
-  ASSERT_FALSE(c->cfg.is_dirty()) << "Dirty flag set on a value that should not have been marked dirty";
+  ASSERT_TRUE(c->cfg.clear_dirty()) << "Dirty flag was not set on a value that should have been dirty";
+  ASSERT_FALSE(c->cfg.is_dirty());
   ctxt->ConfigSet("cfg", "888");
   ASSERT_TRUE(c->cfg.is_dirty()) << "Dirty flag not set correctly after being updated in configuration";
   ASSERT_TRUE(c->cfg.clear_dirty());

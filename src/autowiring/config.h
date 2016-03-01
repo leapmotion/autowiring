@@ -29,12 +29,17 @@ namespace autowiring {
     explicit config(const T& value) { values[0] = value; }
     explicit config(T&& value) { values[0] = std::move(value); }
 
+    template<typename U>
+    explicit config(U&& value) {
+      values[0] = std::forward<U&&>(value);
+    }
+
   private:
     // Lock, used to move the asyncrhonous value to the value field
     autowiring::spin_lock lock;
 
     // Tracks whether the backing value has been updated
-    bool dirty = false;
+    bool dirty = true;
 
     // The index of the currently active value
     size_t valueIndex = 0;
