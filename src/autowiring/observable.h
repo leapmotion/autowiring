@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "auto_signal.h"
+#include "marshaller.h"
+#include "signal.h"
 
 namespace autowiring {
 
@@ -8,7 +9,7 @@ namespace autowiring {
 /// An unsynchronzied wrapper type that implements the observable pattern
 /// </summary>
 /// <remarks>
-/// 
+///
 /// </remarks>
 template<typename T>
 class observable {
@@ -38,12 +39,51 @@ private:
 public:
   operator const T&(void) const { return val; }
   const T& operator*(void) const { return val; }
+  const T& get(void) const { return val; }
+
+  /// <summary>
+  /// Retrieves the underlying value, without any protection
+  /// </summary>
+  /// <remarks>
+  /// Users should make use of this with caution.  Changes to the returned value will not cause
+  /// signals to be asserted at the correct time by this type; users are responsible for doing
+  /// this on their own.
+  /// </remarks>
+  T& get(void) { return val; }
 
   observable& operator=(const T& rhs) {
     onBeforeChanged(val, rhs);
     val = rhs;
     onChanged();
     return *this;
+  }
+
+  observable& operator=(T&& rhs) {
+    onBeforeChanged(val, rhs);
+    val = std::move(rhs);
+    onChanged();
+    return *this;
+  }
+};
+
+
+template<typename T>
+struct marshaller<autowiring::observable<T>> :
+  marshaller_base
+{
+  typedef autowiring::observable<T> type;
+
+  // Marshaller for the interior type
+  marshaller<T> interior;
+
+  std::string marshal(const void* ptr) const override {
+    return interior.marshal(&static_cast<const type*>(ptr)->get());
+  }
+
+  void unmarshal(void* ptr, const char* szValue) const override {
+    T value;
+    interior.unmarshal(&value, szValue);
+    *static_cast<type*>(ptr) = std::move(value);
   }
 };
 

@@ -4,6 +4,7 @@
 #include "auto_id.h"
 #include "AutoFilterDescriptor.h"
 #include "BoltBase.h"
+#include "ConfigRegistry.h"
 #include "ContextMember.h"
 #include "CoreObject.h"
 #include "CoreRunnable.h"
@@ -49,6 +50,7 @@ struct CoreObjectDescriptor {
     pBasicThread(autowiring::fast_pointer_cast<BasicThread>(value)),
     pFilter(autowiring::fast_pointer_cast<ExceptionFilter>(value)),
     pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
+    pConfigDesc(autowiring::config_registry_entry<T>::desc()),
     primitiveOffset(
       reinterpret_cast<size_t>(
         static_cast<T*>(
@@ -122,6 +124,9 @@ struct CoreObjectDescriptor {
   std::shared_ptr<BasicThread> pBasicThread;
   std::shared_ptr<ExceptionFilter> pFilter;
   std::shared_ptr<BoltBase> pBoltBase;
+
+  // Configuration descriptor, if the object provides one
+  const autowiring::config_descriptor* pConfigDesc;
 
   // Distance from TActual to T
   size_t primitiveOffset;

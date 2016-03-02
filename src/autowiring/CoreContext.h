@@ -7,6 +7,7 @@
 #include "Bolt.h"
 #include "CallExtractor.h"
 #include "CoreRunnable.h"
+#include "ConfigManager.h"
 #include "ContextMember.h"
 #include "CoreContextStateBlock.h"
 #include "CoreObjectDescriptor.h"
@@ -133,6 +134,9 @@ public:
   // Asserted any time a new object is added to the context
   autowiring::signal<void(const CoreObjectDescriptor&)> newObject;
 
+  // The one and only configuration manager type
+  autowiring::ConfigManager Config;
+
   virtual ~CoreContext(void);
 
   /// <summary>
@@ -235,7 +239,7 @@ protected:
   typedef std::shared_ptr<CoreContext> (*t_pfnCreate)(
     std::shared_ptr<CoreContext> pParent,
     t_childList::iterator backReference
-    );
+  );
 
   /// \internal
   /// <summary>
@@ -606,13 +610,20 @@ public:
     std::shared_ptr<typename CreationRules::TActual> retVal(
       CreationRules::New(*this, std::forward<Args>(args)...)
     );
+    CoreObjectDescriptor objDesc(retVal, (T*)nullptr);
+
+    // Configure if the object is configurable, use a static check rather than checking the
+    // value of pConfigDesc because it's a little faster and one necessarily follows the other
+    // We also want this to happen before the AutoInit call is made
+    if(autowiring::has_getconfigdescriptor<T>::value)
+      Config.Register(static_cast<T*>(retVal.get()), *objDesc.pConfigDesc);
 
     // AutoInit if sensible to do so:
     CallAutoInit(*retVal, has_autoinit<T>());
 
     try {
       // Pass control to the insertion routine, which will handle injection from this point:
-      AddInternal(CoreObjectDescriptor(retVal, (T*)nullptr));
+      AddInternal(objDesc);
     }
     catch(autowiring_error&) {
       // We know why this exception occurred.  It's because, while we were constructing our

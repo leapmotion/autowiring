@@ -139,6 +139,15 @@ public:
     AnySharedPointer(std::shared_ptr<T>{})
   {}
 
+  AnySharedPointerT(T&& value) :
+    AnySharedPointer(std::make_shared<T>(std::forward<T&&>(value)))
+  {}
+
+  template<typename U>
+  AnySharedPointerT(U&& value) :
+    AnySharedPointer(std::make_shared<T>(std::forward<U&&>(value)))
+  {}
+
   T& operator*(void) { return *as<T>(); }
   const T& operator*(void) const { return *as<T>(); }
 

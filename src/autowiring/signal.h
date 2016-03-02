@@ -12,10 +12,7 @@
 #include "spin_lock.h"
 #include <atomic>
 #include <functional>
-#include <list>
 #include <memory>
-#include <mutex>
-#include <unordered_map>
 #include TYPE_TRAITS_HEADER
 
 /// <summary>

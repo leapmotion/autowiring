@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include "demangle.h"
 #include "AnySharedPointer.h"
+#include <sstream>
+#include <typeindex>
 
 #if __GNUG__ // Mac and linux
 #include <cxxabi.h>
@@ -16,7 +18,7 @@ static std::string demangle_name(const char* name) {
 
   if(status != 0)
     return std::string();
-  
+
   return std::string(res.get());
 }
 
@@ -36,7 +38,7 @@ static std::string demangle_name(const char* name) {
       name += 6;
       continue;
     }
-    
+
     if (strncmp(name, "struct ", 7) == 0) {
       name += 7;
       continue;

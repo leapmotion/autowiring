@@ -5,7 +5,6 @@
 #include "DispatchQueue.h"
 #include <iterator>
 #include <unordered_map>
-#include <typeindex>
 #include <deque>
 
 class CoreContext;

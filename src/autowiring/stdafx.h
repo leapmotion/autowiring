@@ -11,27 +11,18 @@
     #define NOMINMAX
   #endif
 
-  #include <algorithm>
   #include <atomic>
   #include <chrono>
   #include <exception>
-  #include <functional>
-  #include <future>
   #include <iosfwd>
-  #include <list>
-  #include <map>
   #include <memory>
   #include <mutex>
   #include <queue>
   #include <set>
-  #include <sstream>
   #include <string>
   #include <thread>
-  #include <tuple>
   #include <type_traits>
-  #include <typeindex>
   #include <unordered_map>
-  #include <unordered_set>
   #include <vector>
 #endif
 

@@ -1,14 +1,11 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "is_any.h"
-#include <tuple>
 #include <typeinfo>
 
 template<class... Ts>
 struct TemplatePack {
   static const int N = sizeof...(Ts);
-
-  typedef std::tuple<Ts...> t_args;
 
   /// <returns>
   /// An array of type T, parameterized by the bound function's arguments

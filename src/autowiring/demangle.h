@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <string>
+#include <typeinfo>
 #include <typeindex>
 
 struct AnySharedPointer;
