@@ -228,7 +228,7 @@ protected:
   std::shared_ptr<void> m_startToken;
 
   // Unlink flag
-  bool m_unlinkOnTeardown = false;
+  bool m_unlinkOnTeardown = true;
 
   // Creation rules are allowed to refer to private methods in this type
   template<autowiring::construction_strategy, class T, class... Args>
@@ -557,6 +557,8 @@ public:
   ///
   /// This method may be called at any time where a valid CoreContext reference exists.  CoreContext
   /// does not track additional state if this flag is set.
+  ///
+  /// Teardown unlinking is the default behavior.
   /// </reamrks>
   void SetUnlinkOnTeardown(bool unlinkOnTeardown) {
     m_unlinkOnTeardown = unlinkOnTeardown;
