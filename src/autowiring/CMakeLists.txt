@@ -165,6 +165,7 @@ set(Autowiring_SRCS
   TypeUnifier.h
   uuid.h
   var_logic.h
+  vector_from_tuple.h
 )
 
 add_conditional_sources(
