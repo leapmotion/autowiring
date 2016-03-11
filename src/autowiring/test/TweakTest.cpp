@@ -34,6 +34,6 @@ namespace {
 TEST(TweakTest, Value) {
   aw::marshaller<aw::tweak<int>> marshaller;
   aw::tweak<int> value = 787;
-  std::string v = marshaller.marshal(&value);
+  std::string v = marshaller.marshal(std::addressof(value));
   ASSERT_STREQ("787", v.c_str());
 }

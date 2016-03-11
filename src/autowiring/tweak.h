@@ -59,6 +59,9 @@ namespace autowiring {
     operator T(void) volatile const {
       return value;
     }
+    volatile T* operator&(void) volatile {
+      return &value;
+    }
   };
 
   template<typename T>
