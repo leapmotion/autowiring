@@ -173,10 +173,10 @@ namespace autowiring {
     }
 
   private:
-    template<typename T, int... Ns>
-    void bind(const config_field& configField, T& field, index_tuple<Ns...>) {
+    template<typename U, int... Ns>
+    void bind(const config_field& configField, U& field, index_tuple<Ns...>) {
       noop(
-        (std::get<Ns>(pack).bind<T>(configField, field), false)...
+        (std::get<Ns>(pack).bind<U>(configField, field), false)...
       );
     }
 
