@@ -101,7 +101,7 @@ namespace autowiring {
   struct marshaller<config<T>> :
     marshaller_base
   {
-    typedef autowiring::config<T> type;
+    typedef config<T> type;
 
     // Marshaller for the interior type
     marshaller<T> interior;

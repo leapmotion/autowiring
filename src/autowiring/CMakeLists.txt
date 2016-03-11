@@ -160,6 +160,7 @@ set(Autowiring_SRCS
   ThreadPool.h
   ThreadPool.cpp
   TypeIdentifier.h
+  tweak.h
   TypeRegistry.cpp
   TypeRegistry.h
   TypeUnifier.h
