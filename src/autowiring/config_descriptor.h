@@ -323,7 +323,7 @@ namespace autowiring {
     /// </summary>
     template<typename T, typename U>
     const config_field& get(U T::*pMember) const {
-      return get(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*memptr)));
+      return get(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*pMember)));
     }
   };
 }
