@@ -108,6 +108,7 @@ namespace autowiring {
           configField = rhs.configField;
           bound_metadata = std::move(rhs.bound_metadata);
           pField = rhs.pField;
+          return *this;
         }
       };
 

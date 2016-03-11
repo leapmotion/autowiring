@@ -57,6 +57,7 @@ set(Autowiring_SRCS
   Bolt.h
   BoltBase.cpp
   BoltBase.h
+  bounds.h
   callable.h
   CallExtractor.h
   CallExtractor.cpp

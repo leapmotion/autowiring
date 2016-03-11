@@ -190,6 +190,7 @@ TEST_F(AutoConfigTest, ContextSetAfter) {
 namespace {
   class slider
   {
+  public:
     template<typename U>
     struct valid {
       static const bool value = std::is_arithmetic<U>::value;
@@ -197,6 +198,8 @@ namespace {
   };
 
   static_assert(aw::valid<float, slider>::value, "Float metadata field not detected as being valid");
+  static_assert(!std::is_arithmetic<std::string>::value, "Strings are not arithmetic");
+  static_assert(!slider::valid<std::string>::value, "Slider should not believe strings are valid");
   static_assert(!aw::valid<std::string, slider>::value, "String metadata field incorrectly detected as being valid");
 
   class SliderManager {

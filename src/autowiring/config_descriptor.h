@@ -62,7 +62,7 @@ namespace autowiring {
     static std::true_type select(
       decltype(
         static_cast<U*>(nullptr)->bind(
-          config_field{},
+          std::declval<config_field>(),
           *static_cast<Args*>(nullptr)...
         )
       )*
@@ -176,7 +176,7 @@ namespace autowiring {
     template<typename U, int... Ns>
     void bind(const config_field& configField, U& field, index_tuple<Ns...>) {
       noop(
-        (std::get<Ns>(pack).bind<U>(configField, field), false)...
+        (std::get<Ns>(pack).template bind<U>(configField, field), false)...
       );
     }
 
