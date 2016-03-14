@@ -232,5 +232,5 @@ TEST_F(AutoConfigTest, OpenRegistry) {
   AutoRequired<SliderManager> mgr;
   AutoRequired<ClassWithBoundsField> cwbf;
 
-  ASSERT_EQ(1UL, mgr->sliderReg.size()) << "Slider registration count did not match expectatiosn";
+  ASSERT_EQ(1UL, mgr->sliderReg.size()) << "Slider registration count did not match expectations";
 }
