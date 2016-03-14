@@ -16,7 +16,7 @@ namespace autowiring {
 
     // Holds true if we allow this instantiation _for a particular member variable_
     template<typename U>
-    struct legal {
+    struct valid {
       static const bool value = std::is_arithmetic<T>::value;
     };
 
