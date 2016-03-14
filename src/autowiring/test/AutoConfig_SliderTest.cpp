@@ -26,9 +26,22 @@ namespace {
 
     static aw::config_descriptor GetConfigDescriptor(void) {
       return{
-        { "api_path", &ClassWithASlider::api_path },
+        { "api_path", &ClassWithASlider::api_path, slider{} },
         { "timeout", &ClassWithASlider::timeout, slider{} }
       };
     }
   };
+
+  class SliderManager {
+    SliderManager(void) {
+      AutoCurrentContext ctxt;
+      ctxt->Config.When([](const aw::config_field& field, const slider&) {
+      });
+    }
+  };
+}
+
+TEST_F(AutoConfig_SliderTest, CanFindAllSliders) {
+
+  // Get a full list of all sliders:
 }
