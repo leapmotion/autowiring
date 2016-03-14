@@ -208,32 +208,43 @@ namespace autowiring {
     );
   };
 
+  template<typename T>
+  struct default_value_t {
+    default_value_t(T&& value) :
+      value(std::move(value))
+    {}
+
+    T value;
+  };
+
+  template<typename T>
+  default_value_t<typename std::remove_cv<T>::type> default_value(T&& t) {
+    return { std::forward<T>(t) };
+  }
+
   struct config_field {
     config_field(void) = default;
     config_field(const config_field& rhs) { *this = rhs; }
 
-    template<typename T, typename U, typename V, typename... Ms>
-    config_field(const char* name, const char* desc, U T::* memptr, V&& default_value, Ms&&... ms) :
+    template<typename T, typename U, typename... Ms>
+    config_field(const char* name, const char* desc, U T::* memptr, Ms&&... ms) :
       name(name),
       description(desc),
       type(auto_id_t<U>()),
       offset(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*memptr))),
-      default_value(std::make_shared<typename std::remove_cv<U>::type>()),
       marshaller{ &get_marshaller<U>() },
       metadata(new metadata_pack<T, Ms...>{ std::forward<Ms>(ms)... })
     {
+      noop(
+        (HandleMetadata(memptr, ms), false)...
+      );
       for (const metadata_base* entry : metadata->get_list())
         m_mdMap[entry->id()].push_back(entry);
     }
 
-    template<typename T, typename U>
-    config_field(const char* name, U T::* memptr) :
-      name(name),
-      type(auto_id_t<U>()),
-      offset(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*memptr))),
-      default_value(std::make_shared<typename std::remove_cv<U>::type>()),
-      marshaller{ &get_marshaller<U>() },
-      metadata(new metadata_pack<T>{})
+    template<typename T, typename U, typename... Ms>
+    config_field(const char* name, U T::* memptr, Ms&&... ms) :
+      config_field(name, "", memptr, std::forward<Ms>(ms)...)
     {}
 
     // Name and optional description
@@ -287,6 +298,15 @@ namespace autowiring {
   private:
     std::vector<const metadata_base*> empty{};
     std::unordered_map<auto_id, std::vector<const metadata_base*>> m_mdMap;
+
+    // Initializes our default value
+    template<typename T, typename U, typename V>
+    void HandleMetadata(T U::*, const default_value_t<V>& value) {
+      default_value = AnySharedPointerT<T>{ std::make_shared<T>(value.value) };
+    }
+
+    // Final case does nothing with the metadata
+    void HandleMetadata(...) {}
   };
 
   struct string_hash {

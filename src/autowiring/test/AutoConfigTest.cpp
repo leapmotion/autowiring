@@ -50,8 +50,8 @@ namespace {
     static autowiring::config_descriptor GetConfigDescriptor(void) {
       return {
         { "a", "Field A description", &MyConfigurableClass::a, "Hello world!" },
-        { "b", "Field B description", &MyConfigurableClass::b, 929, aw::bounds<int>{ 0, 1000 }, multi_meta{}, multi_meta{} },
-        { "bUnsigned", "Description", &MyConfigurableClass::bUnsigned, 4444, single_meta{"Hello world!"} },
+        { "b", "Field B description", &MyConfigurableClass::b, aw::default_value(929), aw::bounds<int>{ 0, 1000 }, multi_meta{}, multi_meta{} },
+        { "bUnsigned", "Description", &MyConfigurableClass::bUnsigned, aw::default_value(4444), single_meta{"Hello world!"} },
         { "c", &MyConfigurableClass::c },
         { "d", &MyConfigurableClass::d },
         { "e", &MyConfigurableClass::e },
