@@ -3,6 +3,8 @@ set(AutowiringTest_SRCS
   ArgumentTypeTest.cpp
   AtomicListTest.cpp
   AutoConfigTest.cpp
+  AutoConfig_FromTableTest.cpp
+  AutoConfig_SliderTest.cpp
   AutoConstructTest.cpp
   AutoFilterAltitudeTest.cpp
   AutoFilterCollapseRulesTest.cpp
