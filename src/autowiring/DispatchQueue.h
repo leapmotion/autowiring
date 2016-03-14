@@ -145,6 +145,21 @@ public:
   void Abort(void);
 
   /// <summary>
+  /// Causes the very first lambda on the dispatch queue to be deleted without running it
+  /// </summary>
+  /// <returns>
+  /// True if a lambda was cancelled, false if the queue was empty when the cancellation attempt was made
+  /// </returns>
+  /// <remarks>
+  /// This method cannot cancel lambdas that are already being dispatched.  As a result, it's possible for
+  /// this function to return zero even if the dispatch queue length is nonzero before and after the call.
+  ///
+  /// Lambdas are cancelled in the order they are pended.  If there are no lambdas ready to execute, then
+  /// deferred lambdas will be cancelled in the order they are scheduled to run.
+  /// </remarks>
+  bool Cancel(void);
+
+  /// <summary>
   /// Causes all calls to WaitForEvent to return control to their callers
   /// </summary>
   /// <remarks>

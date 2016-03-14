@@ -286,3 +286,52 @@ TEST_F(DispatchQueueTest, TwoDispatchRetry) {
   ASSERT_EQ(2U, nCalled);
   ASSERT_EQ(0U, dq.GetDispatchQueueLength());
 }
+
+TEST_F(DispatchQueueTest, SimpleCancel) {
+  DispatchQueue dq;
+  auto called = std::make_shared<bool>(false);
+  dq += [called] { *called = true; };
+  ASSERT_TRUE(dq.Cancel()) << "Dispatch queue failed to cancel a lambda as expected";
+  ASSERT_FALSE(dq.DispatchEvent()) << "Succeeded in dispatching an event that should not have been dispatched";
+  ASSERT_FALSE(*called) << "Dispatch queue executed a lambda that should have been destroyed";
+  ASSERT_TRUE(called.unique()) << "Dispatch queue leaked a lambda function";
+}
+
+TEST_F(DispatchQueueTest, TimedCancel) {
+  DispatchQueue dq;
+
+  auto called1 = std::make_shared<bool>(false);
+  dq += std::chrono::hours(20), [called1] { *called1 = true; };
+
+  auto called2 = std::make_shared<bool>(false);
+  dq += std::chrono::hours(12), [called2] { *called2 = true; };
+
+  auto called3 = std::make_shared<bool>(false);
+  dq += std::chrono::microseconds(1), [called3] { *called3 = true; };
+
+  auto called4 = std::make_shared<bool>(false);
+  dq += std::chrono::microseconds(1), [called4] { *called4 = true; };
+
+  ASSERT_TRUE(dq.Cancel());
+  ASSERT_TRUE(dq.WaitForEvent(std::chrono::seconds(30))) << "Cancel removed the wrong event from the queue";
+  ASSERT_TRUE(*called4) << "Cancel did not drop the most immanent dispatcher";
+  ASSERT_FALSE(*called3) << "Cancel did not drop the most immanent dispatcher";
+  ASSERT_TRUE(dq.Cancel());
+  ASSERT_TRUE(dq.Cancel());
+  ASSERT_EQ(0U, dq.GetDispatchQueueLength()) << "Dispatch queue was not empty even though it should have been";
+  ASSERT_TRUE(called1.unique() && called2.unique() && called3.unique() && called4.unique()) << "Cancellation leaked some lambdas";
+}
+
+TEST_F(DispatchQueueTest, MixedCancel) {
+  DispatchQueue dq;
+
+  auto called1 = std::make_shared<bool>(false);
+  dq += std::chrono::minutes(30), [called1] { *called1 = true; };
+
+  auto called2 = std::make_shared<bool>(false);
+  dq += [called2] { *called2 = true; };
+
+  ASSERT_TRUE(dq.Cancel());
+  ASSERT_FALSE(called1.unique()) << "Cancellation cancelled the wrong lambda";
+  ASSERT_TRUE(called2.unique()) << "Cancellation cancelled the wrong lambda";
+}
