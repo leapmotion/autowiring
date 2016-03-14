@@ -302,11 +302,12 @@ namespace autowiring {
     // Initializes our default value
     template<typename T, typename U, typename V>
     void HandleMetadata(T U::*, const default_value_t<V>& value) {
-      default_value = AnySharedPointerT<T>{ std::make_shared<T>(value.value) };
+      default_value = AnySharedPointerT<T>{ value.value };
     }
 
     // Final case does nothing with the metadata
-    void HandleMetadata(...) {}
+    template<typename T, typename U, typename V>
+    void HandleMetadata(T U::*, const V&) {}
   };
 
   struct string_hash {
