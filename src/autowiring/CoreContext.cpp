@@ -51,7 +51,7 @@ public:
 static thread_specific_ptr<std::shared_ptr<CoreContext>> autoCurrentContext;
 
 // Peer Context Constructor. Called interally by CreatePeer
-CoreContext::CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference, const std::type_info& sigilType) :
+CoreContext::CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference, auto_id sigilType) :
   m_pParent(pParent),
   m_backReference(backReference),
   m_sigilType(sigilType),
@@ -256,13 +256,12 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
     if(traits.pFilter)
       m_filters.push_back(traits.pFilter.get());
 
-    if(traits.pBoltBase)
-      AddBolt(traits.pBoltBase);
-
-    // Notify any autowiring field that is currently waiting that we have a new member
-    // to be considered.
+    // Notify any autowiring field that is currently waiting that we have a new member to be considered.
     UpdateDeferredElements(std::move(lk), m_concreteTypes.back(), true);
   }
+
+  if (traits.pBoltBase)
+    AddBolt(traits.pBoltBase);
 
   // Moving this outside the lock because AddCoreRunnable will perform the checks inside its function
   if(traits.pCoreRunnable)
@@ -610,12 +609,27 @@ void CoreContext::AddCoreRunnable(const std::shared_ptr<CoreRunnable>& ptr) {
 }
 
 void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
-  for(auto cur = pBase->GetContextSigils(); *cur; cur++){
-    m_nameListeners[**cur].push_back(pBase.get());
+  // Register all listeners as needed under lock
+  {
+    std::lock_guard<std::mutex> lk{ m_stateBlock->m_lock };
+    for (auto cur = pBase->GetContextSigils(); *cur; cur++)
+      m_nameListeners[*cur].push_back(pBase.get());
+    if(!*pBase->GetContextSigils())
+      m_nameListeners[{}].push_back(pBase.get());
   }
 
-  if(!*pBase->GetContextSigils())
-    m_nameListeners[typeid(void)].push_back(pBase.get());
+  // We intend to reset the context just once, when the function is done
+  CurrentContextPusher pshr;
+
+  // Post-hoc invocation of all already-created contexts:
+  ContextEnumerator e{ shared_from_this() };
+  for (auto q = e.begin(); ++q != e.end(); ) {
+    if (!pBase->Matches(q->GetSigilType()))
+      break;
+
+    q->SetCurrent();
+    pBase->ContextCreated();
+  }
 }
 
 void CoreContext::BuildCurrentState(void) {
@@ -663,7 +677,7 @@ void ShutdownCurrentContext(void) {
   CoreContext::CurrentContext()->SignalShutdown();
 }
 
-void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) const {
+void CoreContext::BroadcastContextCreationNotice(auto_id sigil) const {
   auto listeners = m_nameListeners.find(sigil);
   if(listeners != m_nameListeners.end()) {
     // Iterate through all listeners:
@@ -673,8 +687,8 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
 
   // In the case of an anonymous sigil type, we do not notify the all-types
   // listeners a second time.
-  if(sigil != typeid(void)) {
-    listeners = m_nameListeners.find(typeid(void));
+  if (sigil != auto_id{}) {
+    listeners = m_nameListeners.find({});
     if(listeners != m_nameListeners.end())
       for(BoltBase* bolt : listeners->second)
         bolt->ContextCreated();

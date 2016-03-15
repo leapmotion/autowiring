@@ -35,8 +35,10 @@ public:
   /// <summary>
   /// Constructs an enumerator which may enumerate all of the contexts rooted at the specified root
   /// </summary>
-  /// <param name="root">The root context, optionally null</param>
+  /// <param name="root">The root context, optionally null, in which case this type is instantiated as an end-iterator</param>
   ContextEnumerator(const std::shared_ptr<CoreContext>& root);
+
+  ContextEnumerator(std::shared_ptr<CoreContext>&& root);
   ~ContextEnumerator(void);
 
 protected:
@@ -70,7 +72,7 @@ public:
 
   public:
     const iterator& NextSibling(void);
-    
+
     // Operator overloads:
     const iterator& operator++(void);
     iterator operator++(int);

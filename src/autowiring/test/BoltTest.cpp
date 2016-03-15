@@ -13,60 +13,71 @@ class BoltTest:
 struct Pipeline {};
 struct OtherContext {};
 
-class Listener:
-  public Bolt<Pipeline>
-{
-public:
-  bool hit = false;
+namespace {
+  class Listener :
+    public Bolt<Pipeline>
+  {
+  public:
+    Listener(void) {
+      // Cycle prevention
+      AutoCurrentContext()->onShutdown += [this] {
+        createdContext.reset();
+      };
+    }
 
-  std::shared_ptr<CoreContext> createdContext;
+    bool hit = false;
+    size_t hitCount = 0;
 
-  void ContextCreated(void) override {
-    hit = true;
+    std::shared_ptr<CoreContext> createdContext;
 
-    createdContext = CoreContext::CurrentContext();
-  }
-};
+    void ContextCreated(void) override {
+      hit = true;
+      hitCount++;
 
-class InjectsIntoPipeline:
-  public Bolt<Pipeline>
-{
-public:
-  void ContextCreated(void) override {
-    AutoRequired<SimpleObject>();
-  }
-};
+      createdContext = CoreContext::CurrentContext();
+    }
+  };
 
-class InjectsIntoBoth:
-  public Bolt<Pipeline,OtherContext>
-{
-public:
-  void ContextCreated(void) override {
-    AutoRequired<SimpleObject>();
-  }
-};
+  class InjectsIntoPipeline :
+    public Bolt<Pipeline>
+  {
+  public:
+    void ContextCreated(void) override {
+      AutoRequired<SimpleObject>();
+    }
+  };
 
-struct CountObject:
-  ContextMember
-{
-  int count = 0;
-};
+  class InjectsIntoBoth :
+    public Bolt<Pipeline, OtherContext>
+  {
+  public:
+    void ContextCreated(void) override {
+      AutoRequired<SimpleObject>();
+    }
+  };
 
-class InjectsIntoEverything:
-  public Bolt<>
-{
-public:
-  void ContextCreated(void) override {
-    AutoRequired<CountObject> derp;
-    (derp->count)++;
-  }
+  struct CountObject :
+    ContextMember
+  {
+    int count = 0;
+  };
 
-  int count = 0;
-};
+  class InjectsIntoEverything :
+    public Bolt<>
+  {
+  public:
+    void ContextCreated(void) override {
+      AutoRequired<CountObject> derp;
+      (derp->count)++;
+    }
+
+    int count = 0;
+  };
+}
 
 TEST_F(BoltTest, VerifySimpleInjection) {
   AutoCurrentContext ctxt;
-  AutoEnable<InjectsIntoPipeline>();
+  AutoRequired<InjectsIntoPipeline>();
 
   auto created = ctxt->Create<Pipeline>();
 
@@ -88,9 +99,6 @@ TEST_F(BoltTest, VerifyMapping) {
 
   // Now try to autowire a listener:
   AutoRequired<Listener> myListener;
-  auto cleanup = MakeAtExit([myListener] {
-    myListener->createdContext.reset();
-  });
 
   // Create a second context, verify that the listener got the message:
   AutoCreateContextT<Pipeline> createdContext;
@@ -226,4 +234,20 @@ TEST_F(BoltTest, BoltAfterContext) {
     ASSERT_EQ(1, TargetBoltable<Pipeline>::ConstructedNum()) << "Failed to instantiate on creation of matching context";
   }
   ASSERT_EQ(1, TargetBoltable<Pipeline>::DestructedNum()) << "Failed to be destroyed with matching context";
+}
+
+TEST_F(BoltTest, PrePopulateBolt) {
+  AutoCurrentContext ctxt;
+
+  // Create two contexts in advance, we want to ensure these are seen by our bolt
+  AutoCreateContextT<Pipeline> p1;
+  AutoCreateContextT<Pipeline> p2;
+
+  // Also create a child context, we want to make sure a full traversal is taking place
+  auto p11 = p1->Create<Pipeline>();
+
+  // Now create the listener in the outer scope
+  AutoRequired<Listener> l;
+  ASSERT_TRUE(l->hit) << "Bolt was not hit after contexts were created, even though those contexts still exist";
+  ASSERT_EQ(3U, l->hitCount) << "Bolt did not traverse the expected number of child contexts";
 }

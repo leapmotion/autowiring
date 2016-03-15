@@ -107,7 +107,7 @@ class CoreContext:
 protected:
   typedef std::list<std::weak_ptr<CoreContext>> t_childList;
   CoreContext(const CoreContext&) = delete;
-  CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference, const std::type_info& sigilType);
+  CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference, auto_id sigilType);
 
 public:
   // Asserted whenever a child of this context is created.  This signal is asserted before
@@ -153,7 +153,7 @@ protected:
   const t_childList::iterator m_backReference;
 
   // Sigil type, used during bolting
-  const std::type_info& m_sigilType;
+  const auto_id m_sigilType;
 
   // State block for this context:
   std::shared_ptr<CoreContextStateBlock> m_stateBlock;
@@ -189,7 +189,7 @@ protected:
 
   // Lists of event receivers, by name.  The type index of "void" is reserved for
   // bolts for all context types.
-  typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
+  typedef std::unordered_map<auto_id, std::vector<BoltBase*>> t_contextNameListeners;
   t_contextNameListeners m_nameListeners;
 
   /// \internal
@@ -272,7 +272,7 @@ protected:
   /// The broadcast is made without altering the current context.  Recipients expect that the current context will be the
   /// one about which they are being informed.
   /// </remarks>
-  void BroadcastContextCreationNotice(const std::type_info& sigil) const;
+  void BroadcastContextCreationNotice(auto_id sigil) const;
 
   /// \internal
   /// <summary>
@@ -417,7 +417,7 @@ public:
   /// The number of child contexts of this context.
   size_t GetChildCount(void) const;
   /// The type used as a sigil when creating this class, if any.
-  const std::type_info& GetSigilType(void) const { return m_sigilType; }
+  auto_id GetSigilType(void) const { return m_sigilType; }
   /// The Context iterator for the parent context's children, pointing to this context.
   t_childList::iterator GetBackReference(void) const { return m_backReference; }
   /// A shared reference to the parent context of this context.
@@ -434,7 +434,7 @@ public:
 
   /// True if the sigil type of this CoreContext matches the specified sigil type.
   template<class Sigil>
-  bool Is(void) const { return m_sigilType == typeid(Sigil); }
+  bool Is(void) const { return m_sigilType == auto_id_t<Sigil>{}; }
 
   /// <summary>
   /// The first child in the set of this context's children.
@@ -1012,8 +1012,10 @@ class CoreContextT:
 {
 public:
   CoreContextT(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference) :
-    CoreContext(pParent, backReference, typeid(T))
-  {}
+    CoreContext(pParent, backReference, auto_id_t<T>{})
+  {
+    (void)auto_id_t_init<T>::init;
+  }
 };
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& context);

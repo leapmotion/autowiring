@@ -243,7 +243,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const CoreObjectDescriptor&
     if(bolt) {
       Json::array sigils;
       for(auto cur = bolt->GetContextSigils(); *cur; cur++){
-        sigils.push_back(autowiring::demangle(**cur));
+        sigils.push_back(autowiring::demangle(*cur));
       }
       types["bolt"] = sigils;
     }
