@@ -11,23 +11,45 @@
 #include <vector>
 
 namespace autowiring {
+  struct config_event {
+    config_event(void) = default;
+    config_event(void* pObj, const config_descriptor* desc, const config_field* field_desc, const metadata_base* metadata) :
+      pObj(pObj),
+      desc(desc),
+      field_desc(field_desc),
+      metadata(metadata)
+    {}
+
+    // A pointer to the enclosing object on which the event is being asserted
+    void* pObj;
+
+    // A pointer to the field itself
+    void* field(void) const {
+      return static_cast<char*>(pObj) + field_desc->offset;
+    }
+
+    // Metadata and descriptor pointers
+    const config_descriptor* desc;
+    const config_field* field_desc;
+    const metadata_base* metadata;
+  };
+
+  struct WhenWatcher {
+    WhenWatcher(auto_id id) :
+      id(id)
+    {}
+
+    auto_id id;
+
+    virtual void OnMetadata(const config_event& evt) = 0;
+  };
+
   namespace internal {
-
-    struct WhenWatcher {
-      WhenWatcher(auto_id id) :
-        id(id)
-      {}
-
-      auto_id id;
-
-      virtual void operator()(const config_field& field, const void* pObj) const = 0;
-    };
-
     template<typename Fn, typename = void>
     struct WhenWatcherT;
 
     template<typename Fn, typename M>
-    struct WhenWatcherT<Fn, void (Fn::*)(const config_field&, const M&) const> :
+    struct WhenWatcherT<Fn, void (Fn::*)(const config_event&, const M&) const> :
       WhenWatcher
     {
       WhenWatcherT(Fn&& fn) :
@@ -37,21 +59,9 @@ namespace autowiring {
 
       Fn fn;
 
-      void operator()(const config_field& field, const void* pMetadata) const override { fn(field, *static_cast<const M*>(pMetadata)); }
-    };
-
-    template<typename Fn, typename M>
-    struct WhenWatcherT<Fn, void (Fn::*)(const M&) const> :
-      WhenWatcher
-    {
-      WhenWatcherT(Fn&& fn) :
-        WhenWatcher(auto_id_t<M>{}),
-        fn(std::move(fn))
-      {}
-
-      Fn fn;
-
-      void operator()(const config_field&, const void* pMetadata) const override { fn(*static_cast<const M*>(pMetadata)); }
+      void OnMetadata(const config_event& evt) override {
+        fn(evt, *static_cast<const M*>(evt.metadata->value()));
+      }
     };
   }
 
@@ -119,23 +129,14 @@ namespace autowiring {
     // All configuration values
     std::unordered_map<std::string, Entry> m_config;
 
-    // Cache of metadata values to their fields:
-    struct metadata_value {
-      metadata_value(const config_field* field, const void* metadata) :
-        field(field),
-        metadata(metadata)
-      {}
-
-      const config_field* field;
-      const void* metadata;
-    };
-    std::unordered_multimap<auto_id, metadata_value> metadata_collection;
+    // Cache of metadata values to event types that would be asserted for those values:
+    std::unordered_multimap<auto_id, config_event> metadata_collection;
 
     // All watchers for each individual metadata field:
-    std::unordered_multimap<auto_id, std::unique_ptr<internal::WhenWatcher>> watchers;
+    std::unordered_multimap<auto_id, std::shared_ptr<WhenWatcher>> watchers;
 
     // Adds a watcher on a specified type
-    void WhenInternal(std::unique_ptr<internal::WhenWatcher>&& watcher);
+    void WhenInternal(const std::shared_ptr<WhenWatcher>& watcher);
 
   public:
     /// <summary>
@@ -148,6 +149,7 @@ namespace autowiring {
     /// <summary>
     /// Invokes the specified callback when a piece of metadata is attached to any object
     /// </summary>
+    /// <returns>A shared pointer containing the added watcher</returns>
     /// <remarks>
     /// Two callable signatures are allowed.  The first is the full context variant, which
     /// provides the configuration filed.  Here, M is the metadata type:
@@ -159,15 +161,17 @@ namespace autowiring {
     /// [] (const M& slider)
     /// </remarks>
     template<typename Fn>
-    void When(Fn&& fn) {
-      WhenInternal(
-        std::unique_ptr<internal::WhenWatcher> {
-          new internal::WhenWatcherT<
-            Fn,
-            decltype(&Fn::operator())
-          >{ std::forward<Fn>(fn) }
-        }
-      );
+    std::shared_ptr<WhenWatcher> WhenFn(Fn&& fn) {
+      auto retVal = std::make_shared<internal::WhenWatcherT<Fn, decltype(&Fn::operator())>>(std::forward<Fn>(fn));
+      WhenInternal(retVal);
+      return retVal;
+    }
+
+    /// <summary>
+    /// Identical to WhenFn, except uses a preconstructed WhenWatcher
+    /// </summary>
+    void When(const std::shared_ptr<WhenWatcher>& watcher) {
+      WhenInternal(watcher);
     }
 
     /// <summary>

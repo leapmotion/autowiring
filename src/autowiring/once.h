@@ -107,6 +107,7 @@ namespace autowiring {
     /// </returns>
     operator bool(void) const { return get(); }
 
+  protected:
     /// <summary>
     /// Sets the control flag
     /// </summary>
@@ -138,7 +139,7 @@ namespace autowiring {
   /// </summary>
   template<typename T>
   struct once_signal:
-    private once
+    once
   {
   public:
     once_signal(void) = default;
@@ -147,20 +148,28 @@ namespace autowiring {
       once(std::move(rhs))
     {}
 
-    template<typename Fn>
-    registration_t operator+=(Fn&& fn) {
-      return once::operator+=<Fn>(std::forward<Fn&&>(fn));
-    }
+    // Type T should be able to access base class methods:
+    friend T;
 
-    using once::get;
-    using once::is_executing;
-    using once::operator bool;
-    using once::operator-=;
+  protected:
+    using once::operator=;
+  };
 
-  private:
-    // We don't allow these to be called by just anyone, only by T
+  /// <summary>
+  /// Fully open version of once_signal
+  /// </summary>
+  template<>
+  struct once_signal<void>:
+    once
+  {
+  public:
+    once_signal(void) = default;
+    once_signal(once_signal&& rhs) :
+      once(std::move(rhs))
+    {}
+
     using once::operator=;
     using once::operator();
-    friend T;
+    using once::signal;
   };
 }

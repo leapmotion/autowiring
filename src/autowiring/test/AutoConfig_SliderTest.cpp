@@ -26,22 +26,31 @@ namespace {
 
     static aw::config_descriptor GetConfigDescriptor(void) {
       return{
-        { "api_path", &ClassWithASlider::api_path, slider{} },
+        { "api_path", &ClassWithASlider::api_path },
         { "timeout", &ClassWithASlider::timeout, slider{} }
       };
     }
   };
 
-  class SliderManager {
-    SliderManager(void) {
-      AutoCurrentContext ctxt;
-      ctxt->Config.When([](const aw::config_field& field, const slider&) {
-      });
+  class SliderManager :
+    public autowiring::ConfigWatcher<slider>
+  {
+  public:
+    std::vector<autowiring::config_event> all_configs;
+
+    void OnMetadata(const aw::config_event& evt, const slider& metadata, aw::once& shutdown) override {
+      all_configs.push_back(evt);
     }
   };
 }
 
 TEST_F(AutoConfig_SliderTest, CanFindAllSliders) {
+  AutoRequired<SliderManager> mgr;
 
-  // Get a full list of all sliders:
+  for (size_t i = 0; i < 2; i++) {
+    AutoCreateContext ctxt;
+    ctxt->Inject<ClassWithASlider>();
+  }
+
+  ASSERT_EQ(2U, mgr->all_configs.size()) << "Slider manager failed to detect all added slider instances";
 }

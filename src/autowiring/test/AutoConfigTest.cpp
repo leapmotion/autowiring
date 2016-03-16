@@ -206,8 +206,8 @@ namespace {
   public:
     SliderManager(void) {
       AutoCurrentContext ctxt;
-      ctxt->Config.When(
-        [this] (const aw::config_field& field, const slider& slider) {
+      ctxt->Config.WhenFn(
+        [this] (const aw::config_event&, const slider& slider) {
           sliderReg.push_back(slider);
         }
       );

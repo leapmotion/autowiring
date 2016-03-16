@@ -15,17 +15,19 @@ ConfigManager::ConfigManager(void) :
 
 void ConfigManager::Register(void* pObj, const config_descriptor& desc) {
   // Deferred call registrations:
-  std::vector<std::pair<internal::WhenWatcher*, const ConfigManager::metadata_value*>> deferred;
+  std::vector<std::pair<WhenWatcher*, const config_event*>> deferred;
 
   {
     std::lock_guard<autowiring::spin_lock> lk(m_lock);
     for (const auto& field : desc.fields) {
+      const config_field& field_desc = field.second;
+
       // We need to attach this field to the corresponding configuration entry,
       // we perform the attachment by name
-      Entry& entry = m_config[field.second.name];
+      Entry& entry = m_config[field_desc.name];
       entry.attached.emplace_back(
-        field.second,
-        static_cast<uint8_t*>(pObj) + field.second.offset
+        field_desc,
+        static_cast<uint8_t*>(pObj) + field_desc.offset
       );
 
       // Default value generation:
@@ -36,13 +38,15 @@ void ConfigManager::Register(void* pObj, const config_descriptor& desc) {
         );
 
       // Deferred signalling on all watcher collections.  This part causes When handlers to be invoked.
-      for (const auto& m : field.second.metadata->get_list()) {
+      const std::vector<const metadata_base*>& all_metadata = field_desc.metadata->get_list();
+      for (const auto& m : all_metadata) {
         auto q = metadata_collection.emplace(
           std::piecewise_construct,
           std::forward_as_tuple(m->id()),
-          std::forward_as_tuple(&field.second, m->value())
+          std::forward_as_tuple(pObj, &desc, &field_desc, m)
         );
 
+        // Here's where we actually figure out what watchers need invocation:
         auto er = watchers.equal_range(m->id());
         for (auto r = er.first; r != er.second; r++)
           deferred.emplace_back(r->second.get(), &q->second);
@@ -51,28 +55,27 @@ void ConfigManager::Register(void* pObj, const config_descriptor& desc) {
   }
 
   for (auto& e : deferred)
-    (*e.first)(*e.second->field, e.second->metadata);
+    e.first->OnMetadata(*e.second);
 }
 
-void ConfigManager::WhenInternal(std::unique_ptr<internal::WhenWatcher>&& watcher) {
-  std::vector<metadata_value> matched;
+void ConfigManager::WhenInternal(const std::shared_ptr<WhenWatcher>& watcher) {
+  std::vector<config_event*> matched;
 
-  const internal::WhenWatcher& w = *watcher.get();
+  WhenWatcher& w = *watcher;
+
   {
     // Add the watcher to the colleciton, and also make a list of all existing metadata
     // that will need to be passed to the watcher:
     std::lock_guard<autowiring::spin_lock> lk(m_lock);
-    watchers.emplace(
-      watcher->id,
-      std::move(watcher)
-    );
+    watchers.emplace(watcher->id, watcher);
     auto r = metadata_collection.equal_range(w.id);
-    for (auto q = r.first; q != r.second; q++)
-      matched.emplace_back(q->second.field, q->second.metadata);
+    for (auto q = r.first; q != r.second; q++) {
+      matched.emplace_back(&q->second);
+    }
   }
 
-  for (metadata_value& match : matched)
-    w(*match.field, match.metadata);
+  for (const config_event* match : matched)
+    w.OnMetadata(*match);
 }
 
 const std::string& ConfigManager::Get(std::string name) const {

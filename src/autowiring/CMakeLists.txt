@@ -68,6 +68,8 @@ set(Autowiring_SRCS
   ConfigManager.cpp
   ConfigRegistry.h
   ConfigRegistry.cpp
+  ConfigWatcher.h
+  ConfigWatcher.cpp
   ContextEnumerator.cpp
   ContextEnumerator.h
   ContextMap.h
