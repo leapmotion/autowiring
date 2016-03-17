@@ -104,6 +104,8 @@ set(Autowiring_SRCS
   ExceptionFilter.cpp
   ExceptionFilter.h
   fast_pointer_cast.h
+  FastParallel.cpp
+  FastParallel.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   hash_tuple.h
