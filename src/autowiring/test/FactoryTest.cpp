@@ -157,7 +157,7 @@ TEST_F(FactoryTest, VerifyCanAutowireActualType) {
 }
 
 class AcceptsString:
-  public Object
+  public CoreObject
 {
 public:
   AcceptsString(const char* str) :
