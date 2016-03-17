@@ -6,7 +6,6 @@ class CoreContext;
 
 /// <summary>
 /// </summary>
-/// <param name="contextName">The name of the context whose creation we want to listen for</param>
 /// <remarks>
 /// </remarks>
 class BoltBase
