@@ -9,14 +9,13 @@ class FastParallelTest:
 TEST_F(FastParallelTest, VoidReturn) {
   autowiring::FastParallel p(5);
 
-  std::vector<int> entries;
-  int begin = 4, end = 10;
+  std::vector<int> entries(6);
   p.Parallelize([&entries](int i) {
-    entries.push_back(i);
-  }, begin, end);
+    entries[i] = i;
+  }, 0, 6);
 
-  for (int i = 0; i < end - begin; i++)
-    ASSERT_EQ(begin+i, entries[i]);
+  for (int i = 0; i < 6; i++)
+    ASSERT_EQ(i, entries[i]);
 }
 
 TEST_F(FastParallelTest, ReturnAll) {
@@ -34,15 +33,18 @@ TEST_F(FastParallelTest, ReturnAll) {
 TEST_F(FastParallelTest, IteratorVersion) {
   autowiring::FastParallel p(5);
 
-  std::vector<float> seq = {0.5, 1.5, 2.5, 3.5, 4,5, 5.5};
-  std::vector<float> entries;
-  p.Parallelize([&entries](float f) {
-    entries.push_back(f);
+  auto val = std::make_shared<std::atomic<size_t>>(0);
+  std::vector<float> seq = {0.5, 1.5, 2.5, 3.5, 4,5, 5.5};;
+  p.Parallelize([val](float f) {
+    (*val) = (*val) + f;
   }, seq.begin(), seq.end());
 
-  for (int i = 0; i < seq.size(); i++) {
-    ASSERT_EQ(seq[i], entries[i]);
-  }
+  float sum;
+  std::for_each(seq.begin(), seq.end(), [&sum] (float f) {
+    sum += f;
+  });
+
+  ASSERT_FLOAT_EQ(sum, *val);
 }
 
 TEST_F(FastParallelTest, IteratorVersionWithReturn) {
