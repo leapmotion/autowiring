@@ -40,6 +40,7 @@ set(AutowiringTest_SRCS
   DtorCorrectnessTest.cpp
   ExceptionFilterTest.cpp
   FactoryTest.cpp
+  FastParallelTest.cpp
   GlobalInitTest.hpp
   GlobalInitTest.cpp
   HeteroBlockTest.cpp
