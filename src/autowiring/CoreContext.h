@@ -61,7 +61,6 @@ enum class ShutdownMode {
 /// A context is the basic unit of organization within an autowired application. The scope of a context
 /// determines:
 /// * How Autowired dependencies are resolved
-/// * Who receives AutoFired events
 /// * Thread ownership (BasicThread, CoreThread)
 /// * AutoPacket filter graph scope
 ///
@@ -69,12 +68,12 @@ enum class ShutdownMode {
 /// The system looks in the current context for an existing object of the required
 /// type to satisfy the dependency. If one does not exist, it looks in parent contexts.
 /// When using AutoRequired, a new instance of the required type is created if no
-/// existing object is found. Otherwise, the dependoncy is satisfied when another
+/// existing object is found. Otherwise, the dependency is satisfied when another
 /// object of the same type (or subtype) is added to the context (or one of its
 /// parents). This resolution system carries the restriction that only one instance
 /// of an Autowired type can exist in the same branch of the context tree.
 ///
-/// In addition, an Autowired member of a context exists for as long as that context.
+/// In addition, an Autowired member of a context exists for as long as that context
 /// exists.
 ///
 /// Autowired dependencies do not need to meet any special requirements such as
@@ -93,13 +92,13 @@ enum class ShutdownMode {
 ///
 /// \include snippets/Context_Class_Enumerate.txt
 ///
-/// Autowired members of a context can pass information using AutoFired events, as well as with a filter graph.
+/// Autowired members of a context can pass information with a filter graph.
 /// You can also pass data from one context to another in the same way. A context can also snoop on another context's
-/// events and filter graph packets to receive data it wouldn't otherwise have access to. Use Bolt objects to receive
+/// filter graph packets to receive data it wouldn't otherwise have access to. Use Bolt objects to receive
 /// notification when a context of a particular sigil type is created. This allows you to set up snooping
 /// whenever a particular type of context is created.
 ///
-/// Events, threads, and filter graphs require that the context's Initiate() function is called.
+/// Threads and filter graphs require that the context's Initiate() function is called.
 /// </remarks>
 class CoreContext:
   public std::enable_shared_from_this<CoreContext>
