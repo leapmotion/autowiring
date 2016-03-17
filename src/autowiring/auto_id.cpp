@@ -2,9 +2,18 @@
 #include "stdafx.h"
 #include "auto_id.h"
 
+// Index that will be given to the next auto_id instance.  Zero is reserved.
 static int s_index = 1;
 
-const autowiring::auto_id_block auto_id_t<void>::s_block{};
+const autowiring::auto_id_block auto_id_t<void>::s_block{
+  0,
+  &typeid(void),
+  &typeid(autowiring::s<void>),
+  0,
+  0,
+  nullptr,
+  nullptr
+};
 
 int autowiring::CreateIndex(void) {
   return s_index++;

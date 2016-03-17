@@ -17,12 +17,19 @@ class Bolt:
   public BoltBase
 {
 public:
-  const t_TypeInfoVector GetContextSigils(void) const override {
-    static const std::type_info* s_types[] = {
-      &typeid(Sigil)...,
-      nullptr
+  const auto_id* GetContextSigils(void) const override {
+    static const auto_id s_types[] = {
+      auto_id_t<Sigil>{}...,
+      auto_id_t<void>{}
     };
     return s_types;
+  }
+
+  bool Matches(auto_id id) const override {
+    for (auto cur : { auto_id{auto_id_t<Sigil>{}}... })
+      if(cur == id)
+        return true;
+    return false;
   }
 
   static_assert(!is_any_same<void, Sigil...>::value, "Can't use 'void' as a sigil type");
@@ -33,8 +40,10 @@ class Bolt<>:
   public BoltBase
 {
 public:
-  const t_TypeInfoVector GetContextSigils(void) const override {
-    static const std::type_info* s_types[] = {nullptr};
+  const auto_id* GetContextSigils(void) const override {
+    static const auto_id s_types[] = { {} };
     return s_types;
   }
+
+  virtual bool Matches(auto_id id) const override { return true; }
 };
