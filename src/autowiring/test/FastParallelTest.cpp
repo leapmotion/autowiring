@@ -9,7 +9,7 @@ class FastParallelTest:
 TEST_F(FastParallelTest, VoidReturn) {
   autowiring::FastParallel p(5);
 
-  std::vector<int> entries(6);
+  std::vector<int64_t> entries(6);
   p.Parallelize([&entries](int i) {
     entries[i] = i;
   }, 0, 6);
@@ -56,6 +56,28 @@ TEST_F(FastParallelTest, IteratorVersionWithReturn) {
   }, seq.begin(), seq.end());
 
   for (int i = 0; i < seq.size(); i++) {
-    ASSERT_EQ(seq[i], entries[i]);
+    ASSERT_FLOAT_EQ(seq[i], entries[i]);
+  }
+}
+
+TEST_F(FastParallelTest, MultipleSequences) {
+  autowiring::FastParallel p(5);
+
+  std::vector<float> seq1 = {0.5, 1.5, 2.5, 3.5, 4,5, 5.5};
+  std::vector<float> entries(6);
+  p.Parallelize([&entries](int i, float f) {
+    entries[i] = f;
+  }, 0, 6, seq1.begin(), seq1.end());
+  for (int i = 0; i < 6; i++)
+    ASSERT_FLOAT_EQ(seq1[i], entries[i]);
+
+  p.Resize(6);
+  std::vector<float> seq2 = {0, 1, 2, 3, 4, 5};
+  auto entries = p.Parallelize([](float f1, float f2) {
+    return f1 + f2;
+  }, seq1.begin(), seq1.end(), seq2.begin(), seq2.end());
+
+  for (int i = 0; i < seq1.size(); i++) {
+    ASSERT_FLOAT_EQ(seq1[i] + seq2[i], entries[i]);
   }
 }
