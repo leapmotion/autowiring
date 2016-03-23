@@ -134,7 +134,7 @@ protected:
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
   void MarkUnsatisfiable(const DecorationKey& key);
-  
+
   /// <summary>
   /// Marks timeshifted decorations on successor packets as unsatisfiable
   /// </summary>
@@ -471,18 +471,15 @@ public:
   template<class T>
   void Decorate(const std::shared_ptr<T>& ptr) {
     DecorationKey key(auto_id_t<T>{}, 0);
-    
+
     // We don't want to see this overload used on a const T
     static_assert(!std::is_const<T>::value, "Cannot decorate a shared pointer to const T with this overload");
 
     // Injunction to prevent existential loops:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
 
-    // Either decorate, or prevent anyone from decorating
-    if (ptr)
-      Decorate(AnySharedPointer(ptr), key);
-    else
-      MarkUnsatisfiable(key);
+    // Either decorate or abdicate
+    Decorate(AnySharedPointer(ptr), key);
   }
 
   /// <summary>
@@ -777,7 +774,7 @@ public:
   template<typename Fx, typename... InArgs, typename... Outputs>
   void Call(Fx&& fx, void (Fx::*memfn)(InArgs...) const, Outputs&... outputs) {
     typedef typename make_index_tuple<Decompose<decltype(&Fx::operator())>::N>::type t_index;
-    
+
     // Completely unnecessary.  Call will avoid making unneeded copies, and this is guaranteed
     // by a unit test.  Dereference your shared pointers before passing them in.
     static_assert(

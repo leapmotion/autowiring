@@ -3,7 +3,7 @@
 #include "AutowiringConfig.h"
 #include "altitude.h"
 #include "AnySharedPointer.h"
-#include <cassert>
+#include <atomic>
 #include <set>
 #include <vector>
 
@@ -126,15 +126,40 @@ struct DecorationDisposition
   // The current state of this disposition
   DispositionState m_state = DispositionState::Unsatisfied;
 
+  /// <summary>
+  /// Increments the number of producers run by one
+  /// </summary>
+  /// <returns>True if the decoration has become satisfied as a result of this call</returns>
+  bool IncProducerCount(void) {
+    auto producersRun = ++m_nProducersRun;
+
+    // Uniformly advance state:
+    switch (m_state) {
+    case DispositionState::Unsatisfied:
+    case DispositionState::PartlySatisfied:
+      // Permit a transition to another state
+      if (producersRun >= m_publishers.size()) {
+        m_state = DispositionState::Complete;
+        return true;
+      }
+
+      m_state = DispositionState::PartlySatisfied;
+      break;
+    default:
+      // Do nothing, no advancing to any states from here
+      break;
+    }
+    return false;
+  }
+
   /// <returns>
   /// True if all publishers have run on this disposition
   /// </summary>
   /// <remarks>
-  /// Publication is complete automatically on this type if there are no statically known publishers,
-  /// and at least one decoration has been attached to this disposition.
+  /// Publication is complete whenever all producers have run on the decoration.
   /// </remarks>
   bool IsPublicationComplete(void) const {
-    return !m_decorations.empty() && m_nProducersRun >= m_publishers.size();
+    return m_nProducersRun >= m_publishers.size();
   }
 
   void Reset(void) {

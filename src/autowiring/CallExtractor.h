@@ -121,7 +121,7 @@ struct CE<void (T::*)(Args...) const, index_tuple<N...>> :
 {
   typedef CESetup<Args...> t_ceSetup;
   static const bool deferred = false;
-  
+
   template<void(T::*memFn)(Args...) const>
   static void Call(const void* pObj, AutoPacket& packet) {
     // Extract, call, commit

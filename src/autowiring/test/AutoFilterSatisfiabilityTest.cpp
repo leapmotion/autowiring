@@ -33,7 +33,10 @@ TEST_F(SatisfiabilityTest, MarkUnsatisfiableCalls) {
 
 TEST_F(SatisfiabilityTest, TransitiveUnsatisfiability) {
   // Set up the filter configuration that will create the transitive condition
-  *factory += [](Decoration<0> in, std::shared_ptr<Decoration<1>>& out) { };
+  auto called0 = std::make_shared<bool>(false);
+  *factory += [called0](Decoration<0> in, std::shared_ptr<Decoration<1>>& out) {
+    *called0 = true;
+  };
 
   // This filter accepts Decoration<1> as an optional input argument.  It should be called
   // with this value set to nullptr.
@@ -43,7 +46,7 @@ TEST_F(SatisfiabilityTest, TransitiveUnsatisfiability) {
   };
 
   // This filter won't be called at all
-  *factory += [](Decoration<1>, Decoration<2>&) {};
+  *factory += [] (Decoration<1>, Decoration<2>&) {};
 
   // This verifies that we do have correct transitive unsatisfiability behavior
   auto called2 = std::make_shared<bool>(false);
