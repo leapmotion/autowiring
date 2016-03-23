@@ -547,7 +547,7 @@ bool AutoPacket::IsUnsatisfiable(const auto_id& id) const
     return false;
   if (!pDisposition->m_decorations.empty())
     return false;
-  if (pDisposition->m_nProducersRun == pDisposition->m_publishers.size())
+  if (pDisposition->m_nProducersRun != pDisposition->m_publishers.size())
     return false;
   return true;
 }
