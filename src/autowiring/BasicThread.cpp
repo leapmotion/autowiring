@@ -9,6 +9,7 @@
 #include "dispatch_aborted_exception.h"
 #include "GlobalCoreContext.h"
 #include "fast_pointer_cast.h"
+#include <cassert>
 #include ATOMIC_HEADER
 
 static auto mainTID = std::this_thread::get_id();

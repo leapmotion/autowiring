@@ -11,6 +11,7 @@
 #include "NullPool.h"
 #include "SystemThreadPool.h"
 #include "thread_specific_ptr.h"
+#include <cassert>
 #include <sstream>
 #include <stdexcept>
 
