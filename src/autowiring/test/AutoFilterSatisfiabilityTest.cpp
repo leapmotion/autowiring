@@ -3,18 +3,18 @@
 #include <autowiring/autowiring.h>
 #include "TestFixtures/Decoration.hpp"
 
-class SatisfiabilityTest:
+class AutoFilterSatisfiabilityTest :
   public testing::Test
 {
 public:
-  SatisfiabilityTest(void) {
+  AutoFilterSatisfiabilityTest(void) {
     AutoCurrentContext()->Initiate();
   }
 
   AutoRequired<AutoPacketFactory> factory;
 };
 
-TEST_F(SatisfiabilityTest, MarkUnsatisfiableCalls) {
+TEST_F(AutoFilterSatisfiabilityTest, MarkUnsatisfiableCalls) {
   auto packet = factory->NewPacket();
 
   // This filter shouldn't be called, because it expects a reference as an input
@@ -31,7 +31,7 @@ TEST_F(SatisfiabilityTest, MarkUnsatisfiableCalls) {
   ASSERT_TRUE(bSharedPtrCalled) << "Shared pointer version should have been called as a result of Unsatisfiable";
 }
 
-TEST_F(SatisfiabilityTest, TransitiveUnsatisfiability) {
+TEST_F(AutoFilterSatisfiabilityTest, TransitiveUnsatisfiability) {
   // Set up the filter configuration that will create the transitive condition
   auto called0 = std::make_shared<bool>(false);
   *factory += [called0](Decoration<0> in, std::shared_ptr<Decoration<1>>& out) {
