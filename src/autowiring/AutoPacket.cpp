@@ -349,11 +349,10 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   // Mark all unsatisfiable output types
   for (auto unsatOutputArg : unsatOutputArgs) {
     // One more producer run, even though we couldn't attach any new decorations
-    auto& entry = m_decoration_map[DecorationKey{unsatOutputArg->id, 0}];
-    entry.m_nProducersRun++;
-
-    // Now recurse on this entry
-    UpdateSatisfactionUnsafe(std::unique_lock<std::mutex>{m_lock}, entry);
+    auto& disposition = m_decoration_map[DecorationKey{unsatOutputArg->id, 0}];
+    if(disposition.IncProducerCount())
+      // Recurse on this entry
+      UpdateSatisfactionUnsafe(std::unique_lock<std::mutex>{m_lock}, disposition);
   }
 }
 
@@ -440,26 +439,11 @@ void AutoPacket::DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key
     break;
   }
 
-  // Decoration attaches here
-  disposition->m_decorations.push_back(ptr);
-  disposition->m_nProducersRun++;
-
-  // Uniformly advance state:
-  switch (disposition->m_state) {
-  case DispositionState::Unsatisfied:
-  case DispositionState::PartlySatisfied:
-    // Permit a transition to another state
-    if (disposition->IsPublicationComplete()) {
-      disposition->m_state = DispositionState::Complete;
-      UpdateSatisfactionUnsafe(std::move(lk), *disposition);
-    }
-    else
-      disposition->m_state = DispositionState::PartlySatisfied;
-    break;
-  default:
-    // Do nothing, no advancing to any states from here
-    break;
-  }
+  // Decoration attaches here, if it is non-null
+  if(ptr)
+    disposition->m_decorations.push_back(ptr);
+  if(disposition->IncProducerCount())
+    UpdateSatisfactionUnsafe(std::move(lk), *disposition);
 }
 
 void AutoPacket::Decorate(const AnySharedPointer& ptr, DecorationKey key) {
@@ -544,10 +528,13 @@ bool AutoPacket::IsUnsatisfiable(const auto_id& id) const
 {
   const DecorationDisposition* pDisposition = GetDisposition(DecorationKey{ id, 0 });
   if (!pDisposition)
+    // We have never heard of this type
     return false;
   if (!pDisposition->m_decorations.empty())
+    // We have some actual decorations, we know this is not satisfiable
     return false;
-  if (pDisposition->m_nProducersRun == pDisposition->m_publishers.size())
+  if (pDisposition->m_nProducersRun != pDisposition->m_publishers.size())
+    // Some producers have not yet run, we could still feasibly get a decoration back
     return false;
   return true;
 }

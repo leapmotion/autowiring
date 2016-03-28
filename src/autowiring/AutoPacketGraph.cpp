@@ -6,6 +6,7 @@
 #include "demangle.h"
 #include "SatCounter.h"
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <string>
 #include <sstream>
