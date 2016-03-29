@@ -56,7 +56,7 @@ public:
     m_readyAt(rhs.m_readyAt),
     m_thunk(std::move(rhs.m_thunk))
   {}
-  
+
 private:
   // The time when the thunk becomes ready-to-execute
   std::chrono::steady_clock::time_point m_readyAt;
@@ -65,11 +65,7 @@ private:
 public:
   // Accessor methods:
   std::chrono::steady_clock::time_point GetReadyTime(void) const { return m_readyAt; }
-
-  /// <summary>
-  /// Extracts the underlying thunk
-  /// </summary>
-  DispatchThunkBase* Release(void) const { return m_thunk.release(); }
+  std::unique_ptr<DispatchThunkBase>& GetThunk(void) const { return m_thunk; }
 
   /// <summary>
   /// Operator overload, used to sequence delayed dispatch thunks

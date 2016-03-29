@@ -11,8 +11,8 @@ DispatchQueue::DispatchQueue(size_t dispatchCap):
 {}
 
 DispatchQueue::DispatchQueue(DispatchQueue&& q):
-  m_dispatchCap(q.m_dispatchCap),
-  onAborted(std::move(q.onAborted))
+  onAborted(std::move(q.onAborted)),
+  m_dispatchCap(q.m_dispatchCap)
 {
   if (!onAborted)
     *this += std::move(q);
@@ -38,7 +38,7 @@ bool DispatchQueue::PromoteReadyDispatchersUnsafe(void) {
     m_delayedQueue.pop()
   ) {
     // Update tail if head is already set, otherwise update head:
-    auto thunk = m_delayedQueue.top().Release();
+    auto thunk = m_delayedQueue.top().GetThunk().release();
     if (m_pHead)
       m_pTail->m_pFlink = thunk;
     else
@@ -122,6 +122,28 @@ void DispatchQueue::Abort(void) {
 
   // Wake up anyone who is still waiting:
   m_queueUpdated.notify_all();
+}
+
+bool DispatchQueue::Cancel(void) {
+  // Holds the cancelled thunk, declared here so that we delete it out of the lock
+  std::unique_ptr<DispatchThunkBase> thunk;
+
+  std::lock_guard<std::mutex> lk(m_dispatchLock);
+  if(m_pHead) {
+    // Found a ready thunk, run from here:
+    thunk.reset(m_pHead);
+    m_pHead = thunk->m_pFlink;
+  }
+  else if (!m_delayedQueue.empty()) {
+    auto& f = m_delayedQueue.top();
+    thunk = std::move(f.GetThunk());
+    m_delayedQueue.pop();
+  }
+  else
+    // Nothing to cancel!
+    return false;
+
+  return true;
 }
 
 void DispatchQueue::WakeAllWaitingThreads(void) {
@@ -339,7 +361,7 @@ void DispatchQueue::operator+=(DispatchQueue&& rhs) {
   // Append delayed thunks
   while (!rhs.m_delayedQueue.empty()) {
     const auto& top = rhs.m_delayedQueue.top();
-    m_delayedQueue.emplace(top.GetReadyTime(), top.Release());
+    m_delayedQueue.emplace(top.GetReadyTime(), top.GetThunk().release());
     rhs.m_delayedQueue.pop();
   }
 

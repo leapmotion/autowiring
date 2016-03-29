@@ -53,7 +53,7 @@ TEST_F(SelfSelectingFixtureTest, ExteriorFixtureTest) {
   ASSERT_TRUE(created != nullptr) << "Created context was unexpectedly null";
 
   // Verify that the context has the name we gave to it:
-  ASSERT_EQ(typeid(SelfSelect), created->GetSigilType()) << "Context was incorrectly named";
+  ASSERT_EQ(auto_id_t<SelfSelect>{}, created->GetSigilType()) << "Context was incorrectly named";
 
   // Set the current context and detect the SelfSelectingFixture's presence
   CurrentContextPusher pshr(created);

@@ -14,6 +14,7 @@ set(AutowiringTest_SRCS
   AutoFilterFunctionTest.cpp
   AutoFilterMultiDecorateTest.cpp
   AutoFilterRvalueTest.cpp
+  AutoFilterSatisfiabilityTest.cpp
   AutoFilterSequencing.cpp
   AutoFilterTest.cpp
   AutoIDTest.cpp
@@ -56,7 +57,6 @@ set(AutowiringTest_SRCS
   SpinLockTest.cpp
   TeardownNotifierTest.cpp
   TypeRegistryTest.cpp
-  SatisfiabilityTest.cpp
   ScopeTest.cpp
   SnoopTest.cpp
   ThreadPoolTest.cpp

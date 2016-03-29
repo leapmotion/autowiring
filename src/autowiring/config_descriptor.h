@@ -232,6 +232,7 @@ namespace autowiring {
       description(desc),
       type(auto_id_t<U>()),
       offset(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*memptr))),
+      default_value(std::make_shared<typename std::remove_cv<U>::type>()),
       marshaller{ &get_marshaller<U>() },
       metadata(new metadata_pack<T, Ms...>{ std::forward<Ms>(ms)... })
     {

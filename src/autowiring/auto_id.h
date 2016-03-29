@@ -58,7 +58,26 @@ namespace autowiring {
       )
     {}
 
-    // Index and underlying type
+    auto_id_block(
+      int index,
+      const std::type_info* ti,
+      const std::type_info* ti_synth,
+      size_t ncb,
+      size_t align,
+      std::shared_ptr<CoreObject>(*pToObj)(const std::shared_ptr<void>&),
+      std::shared_ptr<void>(*pFromObj)(const std::shared_ptr<CoreObject>&)
+    ):
+      index(index),
+      ti(ti),
+      ti_synth(ti_synth),
+      ncb(ncb),
+      align(align),
+      pToObj(pToObj),
+      pFromObj(pFromObj)
+    {}
+
+    // Index and underlying type.  Indexes are guaranteed to start at 1.  The index value of 0
+    // is reserved as the invalid index.
     int index;
     const std::type_info* ti;
 
@@ -109,7 +128,7 @@ namespace std {
   template<>
   struct hash<auto_id> {
     size_t operator()(const auto_id& id) const {
-      return id.block->index;
+      return id.block ? id.block->index : 0;
     }
   };
 }
@@ -198,6 +217,20 @@ class auto_id_t_init<T, false>
     new (ptr) autowiring::auto_id_block(ptr->index ? ptr->index : autowiring::CreateIndex(), typeid(autowiring::s<T>));
   }
 
+public:
+  static const auto_id_t_init init;
+};
+
+// Don't need to initialize void
+template<>
+class auto_id_t_init<void, true> {
+public:
+  static const auto_id_t_init init;
+};
+
+template<>
+class auto_id_t_init<void, false>
+{
 public:
   static const auto_id_t_init init;
 };
