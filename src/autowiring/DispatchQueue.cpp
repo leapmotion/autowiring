@@ -11,8 +11,8 @@ DispatchQueue::DispatchQueue(size_t dispatchCap):
 {}
 
 DispatchQueue::DispatchQueue(DispatchQueue&& q):
-  m_dispatchCap(q.m_dispatchCap),
-  onAborted(std::move(q.onAborted))
+  onAborted(std::move(q.onAborted)),
+  m_dispatchCap(q.m_dispatchCap)
 {
   if (!onAborted)
     *this += std::move(q);
