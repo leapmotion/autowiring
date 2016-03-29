@@ -107,7 +107,6 @@ TEST_F(AutowiringDebugTest, FilterInfoTest) {
   AutoRequired<IntModifier> filter4;
 
   auto text = autowiring::dbg::AutoFilterInfo("IntInFloatIn");
-  std::cout << text << std::endl;
   ASSERT_NE(std::string{"Filter not found"}, text) << "Debug helper routine did not find a named filter in the current context as expected";
 }
 

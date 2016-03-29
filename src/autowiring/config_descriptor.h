@@ -45,8 +45,8 @@ namespace autowiring {
     config_field(const char* name, U T::* memptr) :
       name(name),
       offset(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*memptr))),
-      marshaller{ &get_marshaller<U>() },
-      default_value(std::make_shared<typename std::remove_cv<U>::type>())
+      default_value(std::make_shared<typename std::remove_cv<U>::type>()),
+      marshaller{ &get_marshaller<U>() }
     {}
 
     // Name and optional description
