@@ -275,6 +275,16 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   switch (disposition.m_decorations.size()) {
   case 0:
     // No decorations here whatsoever.
+    for (auto modifier : disposition.m_modifiers) {
+      auto& satCounter = *modifier.satCounter;
+      if (modifier.is_shared) {
+          if (satCounter.Decrement())
+            callQueue.push_back(&satCounter);
+      } else {
+        // Mark unsatisfiable
+      }
+    }
+
     // Subscribers that cannot be invoked should have their outputs recursively marked unsatisfiable.
     // Subscribers that can be invoked should be.
     for (auto subscriber : disposition.m_subscribers) {

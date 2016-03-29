@@ -152,29 +152,13 @@ TEST_F(AutoFilterRvalueTest, RecipientRemovalTest) {
 }
 
 TEST_F(AutoFilterRvalueTest, SharedPtrTest) {
-//  auto called0 = std::make_shared<bool>(false);
-//  *factory += [called0](Decoration<0> in, std::shared_ptr<Decoration<1>>& out) {
-//    out.reset(new Decoration<1>);
-//    *called0 = true;
-//  };
-//
-  auto called1 = std::make_shared<bool>(false);
-  *factory += [called1](std::shared_ptr<Decoration<1>>&& r) {
-    r.reset();
-    *called1 = true;
+  auto called = std::make_shared<bool>(false);
+  *factory += [called](std::shared_ptr<Decoration<1>>&& sp) {
+    sp.reset(new Decoration<1>);
+    *called = true;
   };
-//
-//  auto called2 = std::make_shared<bool>(false);
-//  *factory += [called2] (std::shared_ptr<const Decoration<1>> in, std::shared_ptr<Decoration<2>>& out) {
-//    out = in;
-//    *called2 = true;
-//  };
-//
+
   auto packet = factory->NewPacket();
-//  packet->Decorate(Decoration<1>{});
-//  ASSERT_TRUE(*called0);
-  ASSERT_TRUE(*called1);
-//  ASSERT_TRUE(*called2);
-//  const Decoration<2>& dec2 = packet->Get<Decoration<2>>();
-//  ASSERT_EQ(999, dec2.i) << "AutoFilters was not called in the correct order when there are multiple R-value AutoFilter with different altitude";
+  packet->MarkUnsatisfiable<Decoration<1>>();
+  ASSERT_TRUE(*called);
 }
