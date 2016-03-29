@@ -154,7 +154,7 @@ TEST_F(AutoFilterRvalueTest, RecipientRemovalTest) {
 TEST_F(AutoFilterRvalueTest, SharedPtrTest) {
   auto called = std::make_shared<bool>(false);
   *factory += [called](std::shared_ptr<Decoration<1>>&& sp) {
-    sp.reset(new Decoration<1>);
+    //sp.reset(new Decoration<1>);
     *called = true;
   };
 

@@ -384,7 +384,7 @@ public:
 
     const std::shared_ptr<const T>* retVal;
     Get(retVal, tshift);
-    return std::move(std::const_pointer_cast<T>(*retVal));
+    return retVal ? std::move(std::const_pointer_cast<T>(*retVal)) : std::move(nullptr);
   }
 
   /// <summary>
