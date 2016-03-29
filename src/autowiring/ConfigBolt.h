@@ -1,12 +1,14 @@
 #pragma once
 #include "auto_id.h"
+#include "Bolt.h"
 #include "once.h"
 #include "config_descriptor.h"
 #include "ConfigManager.h"
 
 namespace autowiring {
   class ConfigWatcherBase :
-    public WhenWatcher
+    public WhenWatcher,
+    public Bolt<>
   {
   public:
     ConfigWatcherBase(auto_id id) :
@@ -16,9 +18,19 @@ namespace autowiring {
   protected:
     virtual void OnMetadata(const config_event& evt, autowiring::once& shutdown) = 0;
 
+    // Weak pointer self-reference, we use this instead of enable_shared_from_this because this type
+    // may be multiply inherited with ContextMember
+    std::weak_ptr<ConfigWatcherBase> m_self;
+
   public:
-    // Base class overrides:
+    // Invoked by CoreContext during the registration step
+    void SetSelf(const std::shared_ptr<ConfigWatcherBase>& self);
+
+    // WhenWatcher overrides:
     void OnMetadata(const config_event& evt) override;
+
+    // Bolt overrides:
+    void ContextCreated(void) override;
   };
 
   /// <summary>

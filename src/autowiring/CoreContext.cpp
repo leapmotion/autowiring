@@ -858,6 +858,7 @@ void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
 }
 
 void CoreContext::AddConfigWatcher(const std::shared_ptr<autowiring::ConfigWatcherBase>& rhs) {
+  rhs->SetSelf(rhs);
   Config.When(rhs);
 }
 
