@@ -376,7 +376,7 @@ public:
   }
 
   /// <returns>
-  /// The Rvalue decoration for the specified type and time shift, or throws an exception if such a type cannot be found
+  /// The Rvalue shared pointer decoration for the specified type and time shift, or nullptr if such a type cannot be found
   /// </returns>
   template<class T>
   std::shared_ptr<T>&& GetRvalueShared(int tshift = 0) const {

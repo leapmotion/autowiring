@@ -114,20 +114,17 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
       // otherwise insert it to the right position so that the modifiers vector is sorted by altitude
       auto it = entry.m_modifiers.begin();
       while (it != entry.m_modifiers.end()) {
-        if (*it == nullptr)
-          continue;
-
-        if ((*it)->GetAltitude() == satCounter.GetAltitude()) {
+        if (it->altitude == satCounter.GetAltitude()) {
           std::stringstream ss;
           ss << "Added multiple rvalue decorations with same altitudes for type " << autowiring::demangle(pCur->id);
           throw autowiring_error(ss.str());
         }
 
-        if ((*it)->GetAltitude() < satCounter.GetAltitude())
+        if (it->altitude < satCounter.GetAltitude())
           break;
         it++;
       }
-      entry.m_modifiers.insert(it, &satCounter);
+      entry.m_modifiers.emplace(it, pCur->is_shared, satCounter.GetAltitude(), &satCounter);
     } else {
       if (pCur->is_input) {
           entry.m_subscribers.emplace(
@@ -204,8 +201,8 @@ void AutoPacket::RemoveSatCounterUnsafe(const SatCounter& satCounter) {
         std::remove_if(
           entry.m_modifiers.begin(),
           entry.m_modifiers.end(),
-          [&satCounter](SatCounter* modifier){
-            return modifier && *modifier == satCounter;
+          [&satCounter](const DecorationDisposition::Modifier& modifier){
+            return modifier.satCounter && *modifier.satCounter == satCounter;
           }),
         entry.m_modifiers.end()
       );
@@ -312,9 +309,10 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   case 1:
     {
       // One unique decoration available.  We should be able to call everyone.
-      for (auto pMod : disposition.m_modifiers) {
-        if (pMod && pMod->Decrement()) {
-          callQueue.push_back(pMod);
+      for (auto modifier: disposition.m_modifiers) {
+        auto& satCounter = *modifier.satCounter;
+        if (satCounter.Decrement()) {
+          callQueue.push_back(&satCounter);
         }
       }
       for (auto subscriber : disposition.m_subscribers) {

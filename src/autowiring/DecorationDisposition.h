@@ -68,13 +68,42 @@ struct DecorationDisposition
   // Valid if and only if is_shared is true.
   const void* m_pImmediate = nullptr;
 
-  // Modifiers of this decoration, ordered by altitude.
-  std::vector<SatCounter*> m_modifiers;
-
   // Providers for this decoration, where it can be statically inferred.  Note that a provider for
   // this decoration may exist even if this value is null, in the event that dynamic decoration is
   // taking place.
   std::vector<SatCounter*> m_publishers;
+
+  struct Modifier {
+    Modifier(void) = default;
+
+    Modifier(bool is_shared, autowiring::altitude altitude, SatCounter* satCounter) :
+      is_shared{is_shared},
+      altitude{altitude},
+      satCounter{satCounter}
+    {
+      if (satCounter == nullptr)
+        throw std::runtime_error("Cannot initialize Modifier with nullptr to SatCounter.");
+    }
+
+    Modifier(const Modifier& rhs) = default;
+
+    Modifier& operator=(Modifier rhs) {
+      std::swap(*this, rhs);
+      return *this;
+    }
+
+    // True if a shared pointer will be taken, false otherwise
+    const bool is_shared;
+
+    // The altitude of the satisfaction counter
+    const autowiring::altitude altitude;
+
+    // The pointer to the satisfaction counter, it should never be nullptr
+    SatCounter* const satCounter;
+  };
+
+  // Modifiers of this decoration, ordered by altitude.
+  std::vector<Modifier> m_modifiers;
 
   struct Subscriber {
     enum class Type {
