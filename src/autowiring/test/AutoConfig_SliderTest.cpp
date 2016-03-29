@@ -33,7 +33,7 @@ namespace {
   };
 
   class SliderManager :
-    public autowiring::ConfigWatcher<slider>
+    public autowiring::ConfigBolt<slider>
   {
   public:
     std::vector<autowiring::config_event> all_configs;

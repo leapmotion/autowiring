@@ -8,7 +8,7 @@
 #include "CallExtractor.h"
 #include "CoreRunnable.h"
 #include "ConfigManager.h"
-#include "ConfigWatcher.h"
+#include "ConfigBolt.h"
 #include "ContextMember.h"
 #include "CoreContextStateBlock.h"
 #include "CoreObjectDescriptor.h"

@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "ConfigWatcher.h"
+#include "ConfigBolt.h"
 #include "Autowiring.h"
 
 using namespace autowiring;

@@ -28,11 +28,11 @@ namespace autowiring {
   /// Metadata comes in from various
   /// </remarks>
   template<typename T>
-  class ConfigWatcher:
+  class ConfigBolt:
     public ConfigWatcherBase
   {
   public:
-    ConfigWatcher(void) :
+    ConfigBolt(void) :
       ConfigWatcherBase{ auto_id_t<T>{} }
     {}
 

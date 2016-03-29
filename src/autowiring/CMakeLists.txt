@@ -64,12 +64,12 @@ set(Autowiring_SRCS
   config.h
   config_descriptor.h
   config_descriptor.cpp
+  ConfigBolt.h
+  ConfigBolt.cpp
   ConfigManager.h
   ConfigManager.cpp
   ConfigRegistry.h
   ConfigRegistry.cpp
-  ConfigWatcher.h
-  ConfigWatcher.cpp
   ContextEnumerator.cpp
   ContextEnumerator.h
   ContextMap.h

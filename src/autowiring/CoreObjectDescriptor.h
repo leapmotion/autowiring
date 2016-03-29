@@ -5,7 +5,7 @@
 #include "AutoFilterDescriptor.h"
 #include "BoltBase.h"
 #include "ConfigRegistry.h"
-#include "ConfigWatcher.h"
+#include "ConfigBolt.h"
 #include "ContextMember.h"
 #include "CoreObject.h"
 #include "CoreRunnable.h"
