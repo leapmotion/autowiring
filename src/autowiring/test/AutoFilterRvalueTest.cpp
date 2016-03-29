@@ -11,11 +11,11 @@ public:
   AutoFilterRvalueTest(void) {
     AutoCurrentContext()->Initiate();
   }
+
+  AutoRequired<AutoPacketFactory> factory;
 };
 
 TEST_F(AutoFilterRvalueTest, SimpleCallCheck) {
-  AutoRequired<AutoPacketFactory> factory;
-
   // Register an r-value filter that will receive our decoration
   bool called = false;
   *factory += [&] (Decoration<0>&& dec) { called = true; };
@@ -26,8 +26,6 @@ TEST_F(AutoFilterRvalueTest, SimpleCallCheck) {
 }
 
 TEST_F(AutoFilterRvalueTest, CanModifyInPlace) {
-  AutoRequired<AutoPacketFactory> factory;
-
   // Register an r-value filter that will receive our decoration
   *factory += [&](Decoration<0>&& dec) { dec.i = 129; };
 
@@ -39,7 +37,6 @@ TEST_F(AutoFilterRvalueTest, CanModifyInPlace) {
 
 TEST_F(AutoFilterRvalueTest, CallOrderCorrect) {
   std::vector<std::pair<size_t, Decoration<0>>> observations;
-  AutoRequired<AutoPacketFactory> factory;
 
   // Register a bunch of lambdas that will take observations of the decoration
   for (size_t i = 0; i < 10; i++)
@@ -57,8 +54,6 @@ TEST_F(AutoFilterRvalueTest, CallOrderCorrect) {
 }
 
 TEST_F(AutoFilterRvalueTest, CanUseInTheChain) {
-  AutoRequired<AutoPacketFactory> factory;
-
   *factory += [](Decoration<0> dec0, Decoration<1>& dec1) {
     dec1.i = dec0.i;
   };
@@ -79,8 +74,6 @@ TEST_F(AutoFilterRvalueTest, CanUseInTheChain) {
 }
 
 TEST_F(AutoFilterRvalueTest, MultipleModifiersWithSameAltitude) {
-  AutoRequired<AutoPacketFactory> factory;
-
   *factory += [](Decoration<0>&& dec0) {
     dec0.i = 999;
   };
@@ -95,7 +88,6 @@ TEST_F(AutoFilterRvalueTest, MultipleModifiersWithSameAltitude) {
 }
 
 TEST_F(AutoFilterRvalueTest, MultipleModifiersWithDifferentAltitude) {
-  AutoRequired<AutoPacketFactory> factory;
   int called = 0;
 
   *factory += [&](Decoration<1> dec1, Decoration<0>& dec0) {
@@ -131,8 +123,6 @@ TEST_F(AutoFilterRvalueTest, MultipleModifiersWithDifferentAltitude) {
 }
 
 TEST_F(AutoFilterRvalueTest, DetectCycle) {
-  AutoRequired<AutoPacketFactory> factory;
-
   *factory += [](Decoration<0> dec0, Decoration<1>&& dec1) {
     dec1.i = dec0.i;
   };
@@ -145,7 +135,6 @@ TEST_F(AutoFilterRvalueTest, DetectCycle) {
 }
 
 TEST_F(AutoFilterRvalueTest, RecipientRemovalTest) {
-  AutoRequired<AutoPacketFactory> factory;
   auto called = std::make_shared<bool>(false);
 
   // Add a recipient and then remove it, verify it doesn't get called
@@ -160,4 +149,32 @@ TEST_F(AutoFilterRvalueTest, RecipientRemovalTest) {
   packet->Decorate(Decoration<0>());
 
   ASSERT_FALSE(*called) << "A recipient that should have been removed was called";
+}
+
+TEST_F(AutoFilterRvalueTest, SharedPtrTest) {
+//  auto called0 = std::make_shared<bool>(false);
+//  *factory += [called0](Decoration<0> in, std::shared_ptr<Decoration<1>>& out) {
+//    out.reset(new Decoration<1>);
+//    *called0 = true;
+//  };
+//
+  auto called1 = std::make_shared<bool>(false);
+  *factory += [called1](std::shared_ptr<Decoration<1>>&& r) {
+    r.reset();
+    *called1 = true;
+  };
+//
+//  auto called2 = std::make_shared<bool>(false);
+//  *factory += [called2] (std::shared_ptr<const Decoration<1>> in, std::shared_ptr<Decoration<2>>& out) {
+//    out = in;
+//    *called2 = true;
+//  };
+//
+  auto packet = factory->NewPacket();
+//  packet->Decorate(Decoration<1>{});
+//  ASSERT_TRUE(*called0);
+  ASSERT_TRUE(*called1);
+//  ASSERT_TRUE(*called2);
+//  const Decoration<2>& dec2 = packet->Get<Decoration<2>>();
+//  ASSERT_EQ(999, dec2.i) << "AutoFilters was not called in the correct order when there are multiple R-value AutoFilter with different altitude";
 }

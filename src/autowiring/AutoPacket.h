@@ -375,6 +375,18 @@ public:
     return std::move(const_cast<T&>(*retVal));
   }
 
+  /// <returns>
+  /// The Rvalue decoration for the specified type and time shift, or throws an exception if such a type cannot be found
+  /// </returns>
+  template<class T>
+  std::shared_ptr<T>&& GetRvalueShared(int tshift = 0) const {
+    static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
+
+    const std::shared_ptr<const T>* retVal;
+    Get(retVal, tshift);
+    return std::move(std::const_pointer_cast<T>(*retVal));
+  }
+
   /// <summary>
   /// Returns a null-terminated buffer containing all decorations
   /// </summary>
