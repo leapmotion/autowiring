@@ -161,18 +161,20 @@ TEST_F(AutoFilterRvalueTest, SharedPtrTest) {
 
   auto called1 = std::make_shared<bool>(false);
   *factory += [called1] (std::shared_ptr<Decoration<1>>&& sp) {
-    sp.reset();
+    sp.reset(new Decoration<1>);
     *called1 = true;
   };
 
-//  auto called2 = std::make_shared<bool>(false);
-//  *factory += [called2] (Decoration<1> in) {
-//    *called2 = true;
-//  };
+  auto called2 = std::make_shared<bool>(false);
+  *factory += [called2] (Decoration<1> in) {
+    *called2 = true;
+  };
 
   auto packet = factory->NewPacket();
   packet->Decorate(Decoration<0>());
   ASSERT_TRUE(*called0);
   ASSERT_TRUE(*called1);
-//  ASSERT_FALSE(*called2);
+  ASSERT_TRUE(*called2);
+  const Decoration<1>& dec1 = packet->Get<Decoration<1>>();
+  ASSERT_EQ(1, dec1.i) << "R-value shared pointer AutoFilter was not able to modify a decoration value before passing on to the next Autofilter";
 }

@@ -80,33 +80,38 @@ TEST_F(AutoFilterSatisfiabilityTest, RvalueMarkUnsatisfiableTest) {
   ASSERT_TRUE(*sharedCalled);
 }
 
-//TEST_F(AutoFilterSatisfiabilityTest, RvalueTransitiveUnsatisfiability) {
-//  // Set up the filter configuration that will create the transitive condition
-//  auto called0 = std::make_shared<bool>(false);
-//  *factory += [called0](Decoration<0> in, std::shared_ptr<Decoration<1>>& out) {
-//    *called0 = true;
-//  };
-//
-//  // This filter accepts Decoration<1> as an optional input argument.  It should be called
-//  // with this value set to nullptr.
-//  auto called1 = std::make_shared<bool>(false);
-//  *factory += [called1](std::shared_ptr<Decoration<1>&&> r) {
-//    *called1 = true;
-//  };
-//
-//  // This filter won't be called at all
-//  *factory += [] (Decoration<1>&&, Decoration<2>&) {};
-//
-//  // This verifies that we do have correct transitive unsatisfiability behavior
-//  auto called2 = std::make_shared<bool>(false);
-//  *factory += [called2] (std::shared_ptr<Decoration<2>&&> r) {
-//    *called2 = true;
-//  };
-//
-//  auto packet = factory->NewPacket();
-//  packet->Decorate(Decoration<0>{});
-//  ASSERT_TRUE(packet->IsUnsatisfiable<Decoration<1>>());
-//  ASSERT_TRUE(*called1);
-//  ASSERT_TRUE(packet->IsUnsatisfiable<Decoration<2>>());
-//  ASSERT_TRUE(*called2);
-//}
+TEST_F(AutoFilterSatisfiabilityTest, RvalueTransitiveUnsatisfiability) {
+  auto called0 = std::make_shared<bool>(false);
+  *factory += [called0] (Decoration<0> in, std::shared_ptr<Decoration<1>>& out) {
+    out.reset(new Decoration<1>);
+    out->i = in.i;
+    *called0 = true;
+  };
+
+  auto called1 = std::make_shared<bool>(false);
+  *factory += [called1] (std::shared_ptr<Decoration<1>>&& sp) {
+    sp.reset();
+    *called1 = true;
+  };
+
+  // This filter won't be called at all
+  auto called2 = std::make_shared<bool>(false);
+  *factory += [called2] (Decoration<1>, Decoration<2>&) {
+    *called2 = true;
+  };
+
+  // This verifies that we do have correct transitive unsatisfiability behavior
+  auto called3 = std::make_shared<bool>(false);
+  *factory += [called3] (std::shared_ptr<Decoration<2>>&&) {
+    *called3 = true;
+  };
+
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>{});
+  ASSERT_TRUE(*called0);
+  ASSERT_TRUE(*called1);
+  ASSERT_FALSE(*called2) << "Reference version should not be called after Decoration<1> becomes unsatisfiable";
+  ASSERT_TRUE(*called3);
+  ASSERT_TRUE(packet->IsUnsatisfiable<Decoration<1>>()) << "Decoration<1> is not successfully marked as unsatisfiable";
+  ASSERT_TRUE(packet->IsUnsatisfiable<Decoration<2>>()) << "Decoration<2> is not successfully marked as unsatisfiable";
+}
