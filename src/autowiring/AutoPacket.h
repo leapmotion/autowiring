@@ -379,12 +379,29 @@ public:
   /// The Rvalue shared pointer decoration for the specified type and time shift, or nullptr if such a type cannot be found
   /// </returns>
   template<class T>
-  std::shared_ptr<T>&& GetRvalueShared(int tshift = 0) const {
+  std::shared_ptr<T>&& GetRvalueShared(int tshift = 0) {
     static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
 
-    const std::shared_ptr<const T>* retVal;
-    Get(retVal, tshift);
-    return retVal ? std::move(std::const_pointer_cast<T>(*retVal)) : std::move(nullptr);
+    typedef typename std::remove_const<T>::type TActual;
+    const DecorationKey key(auto_id_t<TActual>{}, tshift);
+
+    std::lock_guard<std::mutex> lk(m_lock);
+    auto q = m_decoration_map.find(key);
+    if (q == m_decoration_map.end() || q->second.m_state != DispositionState::Complete)
+      return std::move(std::shared_ptr<T>());
+
+    DecorationDisposition* pDisposition =  &q->second;
+    switch (pDisposition->m_decorations.size()) {
+      case 0:
+        // Simple non-availability, trivial return
+        return std::move(std::shared_ptr<T>());
+      case 1:
+        // Single decoration available, we can return here
+        return std::move(pDisposition->m_decorations[0].as<T>());
+      default:
+        ThrowMultiplyDecoratedException(key);
+    }
+    return std::move(std::shared_ptr<T>());
   }
 
   /// <summary>

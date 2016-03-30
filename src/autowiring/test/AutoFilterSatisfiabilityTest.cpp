@@ -62,6 +62,24 @@ TEST_F(AutoFilterSatisfiabilityTest, TransitiveUnsatisfiability) {
   ASSERT_TRUE(*called2);
 }
 
+TEST_F(AutoFilterSatisfiabilityTest, RvalueMarkUnsatisfiableTest) {
+  auto refCalled = std::make_shared<bool>(false);
+  *factory += [refCalled] (Decoration<1>&& ref) {
+    *refCalled = true;
+  };
+
+  auto sharedCalled = std::make_shared<bool>(false);
+  *factory += [sharedCalled] (std::shared_ptr<Decoration<1>>&& sp) {
+    sp.reset(new Decoration<1>);
+    *sharedCalled = true;
+  };
+
+  auto packet = factory->NewPacket();
+  packet->MarkUnsatisfiable<Decoration<1>>();
+  ASSERT_FALSE(*refCalled);
+  ASSERT_TRUE(*sharedCalled);
+}
+
 //TEST_F(AutoFilterSatisfiabilityTest, RvalueTransitiveUnsatisfiability) {
 //  // Set up the filter configuration that will create the transitive condition
 //  auto called0 = std::make_shared<bool>(false);

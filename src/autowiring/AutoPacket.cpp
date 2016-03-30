@@ -114,7 +114,7 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
       // otherwise insert it to the right position so that the modifiers vector is sorted by altitude
       auto it = entry.m_modifiers.begin();
       while (it != entry.m_modifiers.end()) {
-        if (it->altitude == satCounter.GetAltitude()) {
+        if (it->altitude == satCounter.GetAltitude() && it->is_shared == pCur->is_shared) {
           std::stringstream ss;
           ss << "Added multiple rvalue decorations with same altitudes for type " << autowiring::demangle(pCur->id);
           throw autowiring_error(ss.str());
@@ -539,7 +539,7 @@ bool AutoPacket::IsUnsatisfiable(const auto_id& id) const
     // We have never heard of this type
     return false;
   if (!pDisposition->m_decorations.empty())
-    // We have some actual decorations, we know this is not satisfiable
+    // We have some actual decorations, we know this is not unsatisfiable
     return false;
   if (pDisposition->m_nProducersRun != pDisposition->m_publishers.size())
     // Some producers have not yet run, we could still feasibly get a decoration back

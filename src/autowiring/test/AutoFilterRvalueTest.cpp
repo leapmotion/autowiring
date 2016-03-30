@@ -152,13 +152,27 @@ TEST_F(AutoFilterRvalueTest, RecipientRemovalTest) {
 }
 
 TEST_F(AutoFilterRvalueTest, SharedPtrTest) {
-  auto called = std::make_shared<bool>(false);
-  *factory += [called](std::shared_ptr<Decoration<1>>&& sp) {
-    //sp.reset(new Decoration<1>);
-    *called = true;
+  auto called0 = std::make_shared<bool>(false);
+  *factory += [called0] (Decoration<0> in, std::shared_ptr<Decoration<1>>& out) {
+    out.reset(new Decoration<1>);
+    out->i = in.i;
+    *called0 = true;
   };
 
+  auto called1 = std::make_shared<bool>(false);
+  *factory += [called1] (std::shared_ptr<Decoration<1>>&& sp) {
+    sp.reset();
+    *called1 = true;
+  };
+
+//  auto called2 = std::make_shared<bool>(false);
+//  *factory += [called2] (Decoration<1> in) {
+//    *called2 = true;
+//  };
+
   auto packet = factory->NewPacket();
-  packet->MarkUnsatisfiable<Decoration<1>>();
-  ASSERT_TRUE(*called);
+  packet->Decorate(Decoration<0>());
+  ASSERT_TRUE(*called0);
+  ASSERT_TRUE(*called1);
+//  ASSERT_FALSE(*called2);
 }
