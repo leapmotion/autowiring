@@ -271,6 +271,15 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
 
   // Recursively mark unsatisfiable any single-output arguments on these subscribers:
   std::vector<const AutoFilterArgument*> unsatOutputArgs;
+  auto MarkOutputsUnsat = [&unsatOutputArgs] (const SatCounter& satCounter) {
+    const auto* args = satCounter.GetAutoFilterArguments();
+    for (size_t i = satCounter.GetArity(); i--;) {
+      // Only consider output arguments:
+      if (args[i].is_output)
+        // This output is transitively unsatisfiable, include it for later removal
+        unsatOutputArgs.push_back(&args[i]);
+    }
+  };
 
   switch (disposition.m_decorations.size()) {
   case 0:
@@ -278,10 +287,12 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
     for (auto modifier : disposition.m_modifiers) {
       auto& satCounter = *modifier.satCounter;
       if (modifier.is_shared) {
-          if (satCounter.Decrement())
-            callQueue.push_back(&satCounter);
+        // Optional
+        if (satCounter.Decrement())
+          callQueue.push_back(&satCounter);
       } else {
-        // Mark unsatisfiable
+        // Non-optional
+        MarkOutputsUnsat(satCounter);
       }
     }
 
@@ -302,16 +313,8 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
           callQueue.push_back(&satCounter);
         break;
       case DecorationDisposition::Subscriber::Type::Normal:
-        {
-          // Non-optional, consider outputs and recursively invalidate
-          const auto* args = satCounter.GetAutoFilterArguments();
-          for (size_t i = satCounter.GetArity(); i--;) {
-            // Only consider output arguments:
-            if (args[i].is_output)
-              // This output is transitively unsatisfiable, include it for later removal
-              unsatOutputArgs.push_back(&args[i]);
-          }
-        }
+        // Non-optional, consider outputs and recursively invalidate
+        MarkOutputsUnsat(satCounter);
         break;
       }
     }
