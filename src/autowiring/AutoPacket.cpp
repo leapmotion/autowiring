@@ -281,10 +281,12 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
     }
   };
 
+  // The shared pointer modifiers need to be called first in case they reset the shared pointer
+  // and remove the decoration as a result
   for (auto modifier : disposition.m_modifiers) {
     auto& satCounter = *modifier.satCounter;
-    if ((modifier.is_shared && disposition.m_decorations.size() == 0)
-      || disposition.m_decorations.size() == 1) {
+    if (modifier.is_shared &&
+      (disposition.m_decorations.size() == 0 || disposition.m_decorations.size() == 1)) {
       if (satCounter.Decrement())
         callQueue.push_back(&satCounter);
     }
@@ -292,7 +294,6 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
 
   if (!callQueue.empty()) {
     lk.unlock();
-    // Generate all calls
     {
       AutoCurrentPacketPusher apkt(*this);
       for (SatCounter* call : callQueue)
@@ -338,6 +339,13 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
     break;
   case 1:
     {
+      for (auto modifier : disposition.m_modifiers) {
+        auto& satCounter = *modifier.satCounter;
+        if (!modifier.is_shared) {
+          if (satCounter.Decrement())
+            callQueue.push_back(&satCounter);
+        }
+      }
       // One unique decoration available.  We should be able to call everyone.
       for (auto subscriber : disposition.m_subscribers) {
         auto& satCounter = *subscriber.satCounter;
