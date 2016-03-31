@@ -30,8 +30,9 @@ void ConfigManager::Register(void* pObj, const config_descriptor& desc) {
         static_cast<uint8_t*>(pObj) + field_desc.offset
       );
 
-      // Default value generation:
       if (entry.value)
+        // This configuration entry specifies a default value, we will take that value and store
+        // it in the manager to be advertised during query
         entry.attached.back().configField->marshaller->unmarshal(
           entry.attached.back().pField,
           entry.value->c_str()
