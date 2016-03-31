@@ -41,5 +41,5 @@ win64/Autowiring.nuspec
 Autowiring.nuspec
 .kdev4
 autowiring.kdev4
-
 *.opendb
+*.orig
