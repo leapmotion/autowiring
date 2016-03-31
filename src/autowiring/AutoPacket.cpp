@@ -339,6 +339,7 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
     break;
   case 1:
     {
+      // One unique decoration available.  We should be able to call everyone.
       for (auto modifier : disposition.m_modifiers) {
         auto& satCounter = *modifier.satCounter;
         if (!modifier.is_shared) {
@@ -346,7 +347,6 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
             callQueue.push_back(&satCounter);
         }
       }
-      // One unique decoration available.  We should be able to call everyone.
       for (auto subscriber : disposition.m_subscribers) {
         auto& satCounter = *subscriber.satCounter;
         if (satCounter.Decrement())
