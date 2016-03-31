@@ -281,16 +281,33 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
     }
   };
 
+  for (auto modifier : disposition.m_modifiers) {
+    auto& satCounter = *modifier.satCounter;
+    if ((modifier.is_shared && disposition.m_decorations.size() == 0)
+      || disposition.m_decorations.size() == 1) {
+      if (satCounter.Decrement())
+        callQueue.push_back(&satCounter);
+    }
+  }
+
+  if (!callQueue.empty()) {
+    lk.unlock();
+    // Generate all calls
+    {
+      AutoCurrentPacketPusher apkt(*this);
+      for (SatCounter* call : callQueue)
+        call->GetCall()(call->GetAutoFilter().ptr(), *this);
+    }
+    callQueue.clear();
+    lk.lock();
+  }
+
   switch (disposition.m_decorations.size()) {
   case 0:
     // No decorations here whatsoever.
     for (auto modifier : disposition.m_modifiers) {
       auto& satCounter = *modifier.satCounter;
-      if (modifier.is_shared) {
-        // Optional
-        if (satCounter.Decrement())
-          callQueue.push_back(&satCounter);
-      } else {
+      if (!modifier.is_shared) {
         // Non-optional
         MarkOutputsUnsat(satCounter);
       }
@@ -322,12 +339,6 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   case 1:
     {
       // One unique decoration available.  We should be able to call everyone.
-      for (auto modifier: disposition.m_modifiers) {
-        auto& satCounter = *modifier.satCounter;
-        if (satCounter.Decrement()) {
-          callQueue.push_back(&satCounter);
-        }
-      }
       for (auto subscriber : disposition.m_subscribers) {
         auto& satCounter = *subscriber.satCounter;
         if (satCounter.Decrement())
@@ -473,6 +484,15 @@ void AutoPacket::Decorate(const AnySharedPointer& ptr, DecorationKey key) {
     (std::lock_guard<std::mutex>)m_lock,
     m_decoration_map.count(key)
   );
+}
+
+void AutoPacket::RemoveDecoration(DecorationKey key) {
+  std::lock_guard<std::mutex> lk(m_lock);
+
+  auto q = m_decoration_map.find(key);
+  if (q == m_decoration_map.end())
+    return;
+  q->second.m_decorations.clear();
 }
 
 const DecorationDisposition* AutoPacket::GetDisposition(const DecorationKey& key) const {

@@ -167,7 +167,8 @@ public:
 
   template<class C>
   static void Commit(C& packet, std::shared_ptr<T> val) {
-    // Do nothing. Modify val in place, no need to commit
+    if (!val)
+      packet.template RemoveDecoration<T>();
   }
 };
 

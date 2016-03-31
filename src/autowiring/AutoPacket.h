@@ -171,6 +171,9 @@ protected:
   /// <summary>Runtime counterpart to Decorate</summary>
   void Decorate(const AnySharedPointer& ptr, DecorationKey key);
 
+  /// <summary>Runtime counterpart to RemoveDecoration</summary>
+  void RemoveDecoration(DecorationKey key);
+
   /// <summary>
   /// The portion of Successor that must run under a lock
   /// </summary>
@@ -611,6 +614,15 @@ public:
       );
     }),
     PulseSatisfactionUnsafe(std::move(lk), pTypeSubs, 1 + sizeof...(Ts));
+  }
+
+  /// <summary>
+  /// Remove decorations on this packet with a particular type
+  /// </summary>
+  template<class T>
+  void RemoveDecoration(void) {
+    DecorationKey key(auto_id_t<T>{}, 0);
+    RemoveDecoration(key);
   }
 
   /// <summary>
