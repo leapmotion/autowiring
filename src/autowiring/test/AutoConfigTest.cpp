@@ -227,7 +227,7 @@ namespace {
   };
 }
 
-TEST_F(AutoConfigTest, OpenRegistry) {
+TEST_F(AutoConfigTest, WhenFn) {
   AutoRequired<SliderManager> mgr;
   AutoRequired<ClassWithBoundsField> cwbf;
 
