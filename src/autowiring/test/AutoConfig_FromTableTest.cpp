@@ -12,6 +12,9 @@ class AutoConfig_FromTableTest :
 {};
 
 namespace {
+  // An example object that might be responsible for downloading data from a server.  The
+  // path and timeout parameters, which such a class might use, are described in a config
+  // descriptor.
   class DataDownloader {
   public:
     std::string api_path;
@@ -63,10 +66,9 @@ static std::unordered_map<std::string, std::string> sc_allusers[] = {
 };
 
 namespace {
+  // A single user in a hypothetical database of users
   class UserTest {
   public:
-    // This key is loaded in from the root context
-
     // These are specific to this context:
     std::string user_name;
     std::string user_email;
@@ -94,8 +96,16 @@ TEST_F(AutoConfig_FromTableTest, HeirarchialAssignment) {
   // Then start creating subcontexts for all of the user classes:
   for (auto& user_key : sc_allusers) {
     AutoCreateContext child;
-    AutoRequired<UserTest> ut;
+
+    // Set all configuration keys in the configuration block:
     for (auto& key : user_key)
       child->Config.Set(key.first.c_str(), key.second.c_str());
+
+    // Inject after the fact, verify key assignments are all correct
+    AutoRequired<UserTest> ut{ child };
+    ASSERT_EQ(user_key["user_name"], ut->user_name);
+    ASSERT_EQ(user_key["user_email"], ut->user_email);
+    ASSERT_EQ(user_key["user_age"], std::to_string(ut->user_age));
+    ASSERT_EQ(user_key["user_valid"] == "true", ut->user_valid);
   }
 }
