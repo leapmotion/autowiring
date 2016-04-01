@@ -43,27 +43,19 @@ namespace autowiring {
     return sc_marshaller;
   }
 
-  template<typename T, typename... Args>
-  struct has_bind
-  {
-    template<class U>
-    static std::true_type select(typename std::result_of<decltype(U::bind)(Args...)>::type*);
-
-    template<class U>
-    static std::false_type select(...);
-
-    static const bool value = decltype(select<T>(nullptr))::value;
+  template<typename T>
+  struct matched_arg {
+    static T& value(void);
   };
 
   template<typename T, typename... Args>
-  struct has_contextual_bind
+  struct has_bind
   {
     template<class U>
     static std::true_type select(
       decltype(
         static_cast<U*>(nullptr)->bind(
-          std::declval<config_field>(),
-          *static_cast<Args*>(nullptr)...
+          matched_arg<Args>::value()...
         )
       )*
     );
@@ -94,53 +86,26 @@ namespace autowiring {
     virtual const void* value(void) const = 0;
   };
 
-  template<typename M, typename = void>
+  template<typename M>
   struct metadata :
     metadata_base
   {
     metadata(void) = delete;
     metadata(const M& value) : m_value(value) {}
 
-    const M m_value;
-
-    // Noop, M doesn't have a bind routine
-    template<typename T>
-    void bind(const config_field&, T&) {}
-
-    auto_id id(void) const override { return auto_id_t<M>{}; }
-    const void* value(void) const override { return &m_value; }
-  };
-
-  template<typename M>
-  struct metadata<M, typename std::enable_if<has_bind<M>::value>::type> :
-    metadata_base
-  {
-    metadata(void) = delete;
-    metadata(const M& value) : m_value(value) {}
-
     M m_value;
 
     template<typename T>
-    void bind(const config_field&, T& field) { m_value.bind(field); }
-
-    auto_id id(void) const override { return auto_id_t<M>{}; }
-    const void* value(void) const override { return &m_value; }
-  };
-
-  template<typename M>
-  struct metadata<M, typename std::enable_if<has_contextual_bind<M>::value>::type> :
-    metadata_base
-  {
-    metadata(void) = delete;
-    metadata(const M& value) : m_value(value) {}
-
-    M m_value;
-
+    typename std::enable_if<has_bind<M, T>::value>::type bind(const config_field&, T& field) {
+      m_value.bind(field);
+    }
     template<typename T>
-    void bind(const config_field& fieldDesc, T& field) { m_value.bind(fieldDesc, field); }
-    const void* value(void) const override { return &m_value; }
+    typename std::enable_if<has_bind<M, const config_field&, T>::value>::type bind(const config_field& fieldDesc, T& field) {
+      m_value.bind(fieldDesc, field);
+    }
 
     auto_id id(void) const override { return auto_id_t<M>{}; }
+    const void* value(void) const override { return &m_value; }
   };
 
   struct metadata_pack_base {
@@ -236,7 +201,7 @@ namespace autowiring {
       offset(reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*memptr))),
       default_value(std::make_shared<typename std::remove_cv<U>::type>()),
       marshaller{ &get_marshaller<U>() },
-      metadata(new metadata_pack<T, Ms...>{ std::forward<Ms>(ms)... })
+      metadata(new metadata_pack<U, Ms...>{ std::forward<Ms>(ms)... })
     {
       noop(
         (HandleMetadata(memptr, ms), false)...

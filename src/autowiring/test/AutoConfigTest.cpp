@@ -77,7 +77,7 @@ static_assert(aw::is_multi<multi_meta>::value, "Multi metadata type not correctl
 static_assert(aw::has_getconfigdescriptor<MyConfigurableClass>::value, "Static new not correctly detected");
 static_assert(!aw::has_getconfigdescriptor<BadClass>::value, "Bad class cannot have a configuration descriptor");
 static_assert(!aw::has_bind<aw::bounds<int>, int>::value, "Bind incorrectly detected on bounds field");
-static_assert(aw::has_contextual_bind<multi_meta, int>::value, "Contextual bind not detected on multimeta type");
+static_assert(aw::has_bind<multi_meta, aw::config_field, int>::value, "Contextual bind not detected on multimeta type");
 
 TEST_F(AutoConfigTest, ConfigFieldAssign) {
   autowiring::config<std::string> x{ "Hello world!" };
