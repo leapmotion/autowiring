@@ -14,7 +14,7 @@ class AutoConfigTest:
 namespace {
   class multi_meta {
   public:
-    static const bool multi = true;
+    static const bool is_multi = true;
 
     std::string name;
 
@@ -33,7 +33,11 @@ namespace {
     {}
 
     const char* name;
-    static const bool multi = false;
+
+    // The default is for configuration metadata to be treated as a "single" entry.  This means that the
+    // entry cannot be specified more than once in a configuration descriptor.  It is not necessary for
+    // users to specify is_multi in this case.
+    //static const bool is_multi = false;
   };
 
   class MyConfigurableClass {

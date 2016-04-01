@@ -17,7 +17,7 @@ namespace autowiring {
   template<typename T>
   struct is_multi {
     template<typename U>
-    static std::integral_constant<bool, U::multi> select(decltype(U::multi)*);
+    static std::integral_constant<bool, U::is_multi> select(decltype(U::is_multi)*);
 
     template<typename U>
     static std::false_type select(...);
