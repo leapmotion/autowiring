@@ -64,7 +64,7 @@ TEST_F(AutoFilterSatisfiabilityTest, TransitiveUnsatisfiability) {
 
 TEST_F(AutoFilterSatisfiabilityTest, RvalueMarkUnsatisfiableTest) {
   auto refCalled = std::make_shared<bool>(false);
-  *factory += [refCalled] (Decoration<1>&& ref) {
+  *factory += autowiring::altitude::Lowest, [refCalled] (Decoration<1>&& ref) {
     *refCalled = true;
   };
 
@@ -102,7 +102,7 @@ TEST_F(AutoFilterSatisfiabilityTest, RvalueTransitiveUnsatisfiability) {
 
   // This verifies that we do have correct transitive unsatisfiability behavior
   auto called3 = std::make_shared<bool>(false);
-  *factory += [called3] (std::shared_ptr<Decoration<2>>&&) {
+  *factory += [called3] (std::shared_ptr<const Decoration<2>>) {
     *called3 = true;
   };
 

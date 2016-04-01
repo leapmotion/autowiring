@@ -114,7 +114,7 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
       // otherwise insert it to the right position so that the modifiers vector is sorted by altitude
       auto it = entry.m_modifiers.begin();
       while (it != entry.m_modifiers.end()) {
-        if (it->altitude == satCounter.GetAltitude() && it->is_shared == pCur->is_shared) {
+        if (it->altitude == satCounter.GetAltitude()) {
           std::stringstream ss;
           ss << "Added multiple rvalue decorations with same altitudes for type " << autowiring::demangle(pCur->id);
           throw autowiring_error(ss.str());
