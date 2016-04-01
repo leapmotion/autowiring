@@ -30,16 +30,14 @@ void ConfigManager::Register(void* pObj, const config_descriptor& desc) {
         static_cast<uint8_t*>(pObj) + field_desc.offset
       );
 
+      Entry::Attachment& attachment = entry.attached.back();
       if (entry.value)
         // This configuration entry specifies a default value, we will take that value and store
         // it in the manager to be advertised during query
-        entry.attached.back().configField->marshaller->unmarshal(
-          entry.attached.back().pField,
-          entry.value->c_str()
-        );
+        attachment.configField->marshaller->unmarshal(attachment.pField, entry.value->c_str());
 
       // Deferred signalling on all watcher collections.  This part causes When handlers to be invoked.
-      const std::vector<const metadata_base*>& all_metadata = field_desc.metadata->get_list();
+      const std::vector<const metadata_base*>& all_metadata = attachment.bound_metadata->get_list();
       for (const auto& m : all_metadata) {
         auto q = metadata_collection.emplace(
           std::piecewise_construct,
