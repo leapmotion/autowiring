@@ -104,6 +104,12 @@ namespace autowiring {
       m_value.bind(fieldDesc, field);
     }
 
+    template<typename T>
+    typename std::enable_if<
+      !has_bind<M, T>::value &&
+      !has_bind<M, const config_field&, T>::value
+    >::type bind(const config_field&, T&) {}
+
     auto_id id(void) const override { return auto_id_t<M>{}; }
     const void* value(void) const override { return &m_value; }
   };
@@ -178,7 +184,7 @@ namespace autowiring {
   template<typename T>
   struct default_value_t {
     default_value_t(T&& value) :
-      value(std::move(value))
+      value(std::forward<T>(value))
     {}
 
     T value;
