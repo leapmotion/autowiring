@@ -116,14 +116,15 @@ namespace autowiring {
     metadata_base
   {
     metadata(void) = delete;
-    metadata(const M& value) : value(value) {}
+    metadata(const M& value) : m_value(value) {}
 
-    M value;
+    M m_value;
 
     template<typename T>
-    void bind(const config_field&, T& field) { value.bind(field); }
+    void bind(const config_field&, T& field) { m_value.bind(field); }
 
     auto_id id(void) const override { return auto_id_t<M>{}; }
+    const void* value(void) const override { return &m_value; }
   };
 
   template<typename M>
@@ -131,12 +132,13 @@ namespace autowiring {
     metadata_base
   {
     metadata(void) = delete;
-    metadata(const M& value) : value(value) {}
+    metadata(const M& value) : m_value(value) {}
 
-    M value;
+    M m_value;
 
     template<typename T>
-    void bind(const config_field& fieldDesc, T& field) { value.bind(fieldDesc, field); }
+    void bind(const config_field& fieldDesc, T& field) { m_value.bind(fieldDesc, field); }
+    const void* value(void) const override { return &m_value; }
 
     auto_id id(void) const override { return auto_id_t<M>{}; }
   };
