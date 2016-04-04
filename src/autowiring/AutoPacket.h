@@ -254,7 +254,7 @@ public:
     static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
 
     const T* retVal;
-    if (!Get(retVal, tshift))
+    if (!Get(retVal, tshift) || !retVal)
       ThrowNotDecoratedException(DecorationKey(auto_id_t<T>{}, tshift));
     return *retVal;
   }
@@ -373,7 +373,7 @@ public:
     static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
 
     const T* retVal;
-    if (!Get(retVal, tshift))
+    if (!Get(retVal, tshift) || !retVal)
       ThrowNotDecoratedException(DecorationKey(auto_id_t<T>{}, tshift));
     return std::move(const_cast<T&>(*retVal));
   }

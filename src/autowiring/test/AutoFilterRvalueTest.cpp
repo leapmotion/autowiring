@@ -186,26 +186,26 @@ TEST_F(AutoFilterRvalueTest, SharedPtrAltitudeTest) {
   // This should get called first
   *factory += [&] (Decoration<0> in, std::shared_ptr<Decoration<1>>& out) {
     out.reset(new Decoration<1>);
-    out->i = called;
+    out->i = 0;
     results[called++] = out->i;
   };
 
   // This should get called third
   *factory += autowiring::altitude::Dispatch, [&](std::shared_ptr<Decoration<1>>&& sp) {
     sp.reset(new Decoration<1>);
-    sp->i = called;
+    sp->i = 1;
     results[called++] = sp->i;
   };
 
   // This should get called forth
   *factory += autowiring::altitude::Realtime, [&](Decoration<1>&& dec1) {
-    dec1.i = called;
+    dec1.i = 2;
     results[called++] = dec1.i;
   };
 
   // This should get called second
   *factory += autowiring::altitude::Highest, [&](Decoration<1>&& dec1) {
-    dec1.i = called;
+    dec1.i = 3;
     results[called++] = dec1.i;
   };
 
@@ -224,7 +224,7 @@ TEST_F(AutoFilterRvalueTest, SharedPtrAltitudeTest) {
   packet->Decorate(Decoration<0>());
   ASSERT_EQ(5, called);
 
-  int expected[] = {0, 2, 3, 1, -1, -1};
+  int expected[] = {0, 3, 1, 2, -1, -1};
   for (int i = 0; i < 6; i++)
     ASSERT_EQ(expected[i], results[i]);
 }

@@ -281,39 +281,25 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
     }
   };
 
-  // The shared pointer modifiers need to be called first in case they reset the shared pointer
-  // and remove the decoration as a result
   for (auto modifier : disposition.m_modifiers) {
     auto& satCounter = *modifier.satCounter;
-    if (modifier.is_shared &&
-      (disposition.m_decorations.size() == 0 || disposition.m_decorations.size() == 1)) {
-      if (satCounter.Decrement())
-        callQueue.push_back(&satCounter);
+    if (modifier.is_shared || disposition.m_decorations.size() == 1) {
+      // Optional
+      if (satCounter.Decrement()) {
+        lk.unlock();
+        {
+          AutoCurrentPacketPusher apkt(*this);
+          satCounter.GetCall()(satCounter.GetAutoFilter().ptr(), *this);
+        }
+        lk.lock();
+      }
+    } else if (disposition.m_decorations.size() == 0) {
+        MarkOutputsUnsat(satCounter);
     }
-  }
-
-  if (!callQueue.empty()) {
-    lk.unlock();
-    {
-      AutoCurrentPacketPusher apkt(*this);
-      for (SatCounter* call : callQueue)
-        call->GetCall()(call->GetAutoFilter().ptr(), *this);
-    }
-    callQueue.clear();
-    lk.lock();
   }
 
   switch (disposition.m_decorations.size()) {
   case 0:
-    // No decorations here whatsoever.
-    for (auto modifier : disposition.m_modifiers) {
-      auto& satCounter = *modifier.satCounter;
-      if (!modifier.is_shared) {
-        // Non-optional
-        MarkOutputsUnsat(satCounter);
-      }
-    }
-
     // Subscribers that cannot be invoked should have their outputs recursively marked unsatisfiable.
     // Subscribers that can be invoked should be.
     for (auto subscriber : disposition.m_subscribers) {
@@ -338,20 +324,11 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
     }
     break;
   case 1:
-    {
-      // One unique decoration available.  We should be able to call everyone.
-      for (auto modifier : disposition.m_modifiers) {
-        auto& satCounter = *modifier.satCounter;
-        if (!modifier.is_shared) {
-          if (satCounter.Decrement())
-            callQueue.push_back(&satCounter);
-        }
-      }
-      for (auto subscriber : disposition.m_subscribers) {
-        auto& satCounter = *subscriber.satCounter;
-        if (satCounter.Decrement())
-          callQueue.push_back(&satCounter);
-      }
+    // One unique decoration available.  We should be able to call everyone.
+    for (auto subscriber : disposition.m_subscribers) {
+      auto& satCounter = *subscriber.satCounter;
+      if (satCounter.Decrement())
+        callQueue.push_back(&satCounter);
     }
     break;
   default:
