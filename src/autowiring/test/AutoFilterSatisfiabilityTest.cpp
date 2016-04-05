@@ -63,21 +63,27 @@ TEST_F(AutoFilterSatisfiabilityTest, TransitiveUnsatisfiability) {
 }
 
 TEST_F(AutoFilterSatisfiabilityTest, RvalueMarkUnsatisfiableTest) {
-  auto refCalled = std::make_shared<bool>(false);
-  *factory += autowiring::altitude::Lowest, [refCalled] (Decoration<1>&& ref) {
-    *refCalled = true;
+  auto called0 = std::make_shared<bool>(false);
+  *factory += autowiring::altitude::Lowest, [called0] (Decoration<1>&& ref) {
+    *called0 = true;
   };
 
-  auto sharedCalled = std::make_shared<bool>(false);
-  *factory += [sharedCalled] (std::shared_ptr<Decoration<1>>&& sp) {
+  auto called1 = std::make_shared<bool>(false);
+  *factory += [called1] (std::shared_ptr<Decoration<1>>&& sp) {
     sp.reset(new Decoration<1>);
-    *sharedCalled = true;
+    *called1 = true;
+  };
+
+  auto called2 = std::make_shared<bool>(false);
+  *factory += autowiring::altitude::Highest, [called2] (Decoration<1>&& ref) {
+    *called2 = true;
   };
 
   auto packet = factory->NewPacket();
   packet->MarkUnsatisfiable<Decoration<1>>();
-  ASSERT_FALSE(*refCalled);
-  ASSERT_TRUE(*sharedCalled);
+  ASSERT_TRUE(*called0);
+  ASSERT_TRUE(*called1);
+  ASSERT_FALSE(*called2);
 }
 
 TEST_F(AutoFilterSatisfiabilityTest, RvalueTransitiveUnsatisfiability) {

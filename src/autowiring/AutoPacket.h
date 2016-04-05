@@ -379,7 +379,7 @@ public:
   }
 
   /// <returns>
-  /// The Rvalue shared pointer decoration for the specified type and time shift, or nullptr if such a type cannot be found
+  /// The Rvalue shared pointer decoration for the specified type and time shift, or throws an exception is such a type cannot be found
   /// </returns>
   template<class T>
   std::shared_ptr<T>&& GetRvalueShared(int tshift = 0) {
@@ -391,20 +391,21 @@ public:
     std::lock_guard<std::mutex> lk(m_lock);
     auto q = m_decoration_map.find(key);
     if (q == m_decoration_map.end() || q->second.m_state != DispositionState::Complete)
-      return std::move(std::shared_ptr<T>());
+      ThrowNotDecoratedException(key);
 
     DecorationDisposition* pDisposition =  &q->second;
     switch (pDisposition->m_decorations.size()) {
-      case 0:
-        // Simple non-availability, trivial return
-        return std::move(std::shared_ptr<T>());
-      case 1:
-        // Single decoration available, we can return here
-        return std::move(pDisposition->m_decorations[0].as<T>());
-      default:
-        ThrowMultiplyDecoratedException(key);
+    case 0:
+      // No shared pointer decorations available, we have add one
+      pDisposition->m_decorations.emplace_back();
+      break;
+    case 1:
+      // Single decoration available, we can return this later
+      break;
+    default:
+      ThrowMultiplyDecoratedException(key);
     }
-    return std::move(std::shared_ptr<T>());
+    return std::move(pDisposition->m_decorations[0].as<T>());
   }
 
   /// <summary>
