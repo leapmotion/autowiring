@@ -282,6 +282,8 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   };
 
   for (auto modifier : disposition.m_modifiers) {
+    if (!modifier.satCounter)
+      continue;
     auto& satCounter = *modifier.satCounter;
     if (modifier.is_shared) {
       if (disposition.m_decorations.size() > 1)
