@@ -89,34 +89,44 @@ TEST_F(AutoFilterRvalueTest, MultipleModifiersWithSameAltitude) {
 
 TEST_F(AutoFilterRvalueTest, MultipleModifiersWithDifferentAltitude) {
   int called = 0;
+  int order[] = {-1, -1, -1, -1, -1, -1};
 
   *factory += [&](Decoration<1> dec1, Decoration<0>& dec0) {
-    called++;
     dec0.i = dec1.i;
+    order[0] = called++;
   };
 
   *factory += [&](Decoration<0>&& dec0) {
-    called++;
     dec0.i = 999;
+    order[1] = called++;
   };
 
   *factory += autowiring::altitude::Lowest, [&](Decoration<0>&& dec0) {
-    called++;
     dec0.i = 1000;
+    order[2] = called++;
   };
 
   *factory += [&](Decoration<0> dec0) {
-    called++;
+    order[3] = called++;
   };
 
   auto packet = factory->NewPacket();
   packet->AddRecipient(AutoFilterDescriptor([&] (Decoration<0>&& dec0) {
-    called++;
     dec0.i = 2000;
+    order[4] = called++;
   }, autowiring::altitude::Highest));
 
+  packet->AddRecipient(AutoFilterDescriptor([&] (Decoration<0>&& dec0) {
+    dec0.i = 2000;
+    order[5] = called++;
+  }, autowiring::altitude::Realtime));
+
   packet->Decorate(Decoration<1>{555});
-  ASSERT_EQ(5, called) << "AutoFilters was not called as expected when there are multiple R-value AutoFilter with different altitude ";
+  ASSERT_EQ(6, called) << "AutoFilters was not called as expected when there are multiple R-value AutoFilter with different altitude ";
+
+  int expected[] = {0, 3, 4, 5, 1, 2};
+  for (int i = 0; i < 6; i++)
+    EXPECT_EQ(expected[i], order[i]);
 
   const Decoration<0>& dec0 = packet->Get<Decoration<0>>();
   ASSERT_EQ(1000, dec0.i) << "AutoFilters was not called in the correct order when there are multiple R-value AutoFilter with different altitude";

@@ -87,19 +87,16 @@ struct DecorationDisposition
 
     Modifier(const Modifier& rhs) = default;
 
-    Modifier& operator=(Modifier rhs) {
-      std::swap(*this, rhs);
-      return *this;
-    }
+    Modifier& operator=(const Modifier& rhs) = default;
 
     // True if a shared pointer will be taken, false otherwise
-    const bool is_shared;
+    bool is_shared;
 
     // The altitude of the satisfaction counter
-    const autowiring::altitude altitude;
+    autowiring::altitude altitude;
 
     // The pointer to the satisfaction counter, it should never be nullptr
-    SatCounter* const satCounter;
+    SatCounter* satCounter;
   };
 
   // Modifiers of this decoration, ordered by altitude.
