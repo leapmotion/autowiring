@@ -283,23 +283,31 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
 
   for (auto modifier : disposition.m_modifiers) {
     auto& satCounter = *modifier.satCounter;
-    if (modifier.is_shared || disposition.m_decorations.size() == 1) {
-      // Optional
+    if (modifier.is_shared) {
       if (satCounter.Decrement()) {
         lk.unlock();
+        callQueue.push_back(&satCounter);
         {
           AutoCurrentPacketPusher apkt(*this);
-          satCounter.GetCall()(satCounter.GetAutoFilter().ptr(), *this);
+          for (SatCounter* call : callQueue)
+            call->GetCall()(call->GetAutoFilter().ptr(), *this);
         }
+        callQueue.clear();
         lk.lock();
       }
-    } else if (disposition.m_decorations.size() == 0) {
+    } else {
+      if (disposition.m_decorations.size() == 0) {
         MarkOutputsUnsat(satCounter);
+      } else if (disposition.m_decorations.size() == 1) {
+        if (satCounter.Decrement())
+          callQueue.push_back(&satCounter);
+      }
     }
   }
 
   switch (disposition.m_decorations.size()) {
   case 0:
+    // No decorations here whatsoever.
     // Subscribers that cannot be invoked should have their outputs recursively marked unsatisfiable.
     // Subscribers that can be invoked should be.
     for (auto subscriber : disposition.m_subscribers) {
