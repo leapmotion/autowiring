@@ -135,4 +135,5 @@ TEST_F(AutoConfig_SliderTest, ConcurrentModification) {
       slider->assigner(1);
 
   ASSERT_TRUE(mic->WaitFor(std::chrono::seconds{ 5 })) << "Counter class did not exit in time";
+  ASSERT_TRUE(mic->succeeded) << "Values received out-of-rder in the sequence checker";
 }
