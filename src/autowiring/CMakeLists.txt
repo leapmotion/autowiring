@@ -121,6 +121,7 @@ set(Autowiring_SRCS
   index_tuple.h
   InterlockedExchange.h
   is_any.h
+  is_input_iterator.h
   is_shared_ptr.h
   ManualThreadPool.h
   ManualThreadPool.cpp
