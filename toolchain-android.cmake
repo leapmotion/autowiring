@@ -1,17 +1,3 @@
-if(NOT ANDROID_NDK_TOOL_PREFIX)
-  # Default to the 32-bit toolchain version for legacy compatibility
-  if(0.9.0 VERSION_LESS autowiring_VERSION)
-    message(FATAL_ERROR "Eliminate this compatibility hack")
-  endif()
-
-  if($ENV{ARMv8})
-    include(${CMAKE_CURRENT_LIST_DIR}/toolchain-android64.cmake)
-  else()
-    include(${CMAKE_CURRENT_LIST_DIR}/toolchain-android32.cmake)
-  endif()
-  return()
-endif()
-
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 set(CMAKE_SYSTEM_VERSION 1)
