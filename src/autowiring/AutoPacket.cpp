@@ -281,13 +281,14 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
     }
   };
 
+  if (!disposition.m_modifiers.empty() && disposition.m_decorations.size() > 1)
+    throw autowiring_error("An AutoFilter was detected which has single-decorate rvalue argument in a graph with multi-decorate outputs");
+
   for (auto modifier : disposition.m_modifiers) {
     if (!modifier.satCounter)
       continue;
     auto& satCounter = *modifier.satCounter;
     if (modifier.is_shared) {
-      if (disposition.m_decorations.size() > 1)
-        throw autowiring_error("An AutoFilter was detected which has single-decorate rvalue shared pointer argument in a graph with multi-decorate outputs");
       if (satCounter.Decrement()) {
         lk.unlock();
         callQueue.push_back(&satCounter);
@@ -309,6 +310,7 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
           callQueue.push_back(&satCounter);
         break;
       default:
+        // should not reach here
         throw autowiring_error("An AutoFilter was detected which has single-decorate rvalue argument in a graph with multi-decorate outputs");
       }
     }
