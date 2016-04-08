@@ -281,9 +281,6 @@ target_include_directories(
   "$<INSTALL_INTERFACE:include>"
 )
 
-# Install public header files
-install_headers(TARGET Autowiring DESTINATION include/autowiring COMPONENT autowiring)
-
 # Need multithreading services if available
 find_package(Threads)
 if(Threads_FOUND)
@@ -295,11 +292,9 @@ endif()
 #
 # Install library
 #
-
-if(NOT AUTOWIRING_IS_EMBEDDED)
-  install(TARGETS Autowiring EXPORT AutowiringTargets
-    DESTINATION lib
-    COMPONENT autowiring
-    CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
-  )
-endif()
+install(TARGETS Autowiring EXPORT AutowiringTargets
+  DESTINATION lib
+  COMPONENT autowiring
+  CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+)
+install_headers(TARGET Autowiring DESTINATION include/autowiring COMPONENT autowiring)
