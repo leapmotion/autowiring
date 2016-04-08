@@ -59,6 +59,7 @@ set(AutowiringTest_SRCS
   SnoopTest.cpp
   ThreadPoolTest.cpp
   TupleTest.cpp
+  TweakTest.cpp
   TestFixtures/custom_exception.hpp
   TestFixtures/ExitRaceThreaded.hpp
   TestFixtures/SimpleInterface.hpp
