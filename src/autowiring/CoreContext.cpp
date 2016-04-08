@@ -272,6 +272,10 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
   if(!traits.subscriber.empty())
     AddPacketSubscriber(traits.subscriber);
 
+  // All configuration watchers
+  if (traits.pConfigWatcher)
+    AddConfigWatcher(traits.pConfigWatcher);
+
   // Signal listeners that a new object has been created
   newObject(traits);
 }
@@ -851,6 +855,11 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
 
 void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
   Inject<AutoPacketFactory>()->AddSubscriber(rhs);
+}
+
+void CoreContext::AddConfigWatcher(const std::shared_ptr<autowiring::ConfigWatcherBase>& rhs) {
+  rhs->SetSelf(rhs);
+  Config.When(rhs);
 }
 
 void CoreContext::TryTransitionChildrenState(void) {

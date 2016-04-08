@@ -5,11 +5,41 @@
 #include <autowiring/ConfigRegistry.h>
 #include <autowiring/observable.h>
 
+namespace aw = autowiring;
+
 class AutoConfigTest:
   public testing::Test
 {};
 
 namespace {
+  class multi_meta {
+  public:
+    static const bool is_multi = true;
+
+    std::string name;
+
+    template<typename T>
+    void bind(const aw::config_field& field, T&) {
+      name = field.name;
+    }
+  };
+
+  static_assert(aw::valid<int, multi_meta>::value, "Float metadata field not detected as being valid");
+
+  class single_meta {
+  public:
+    single_meta(const char* name) :
+      name(name)
+    {}
+
+    const char* name;
+
+    // The default is for configuration metadata to be treated as a "single" entry.  This means that the
+    // entry cannot be specified more than once in a configuration descriptor.  It is not necessary for
+    // users to specify is_multi in this case.
+    //static const bool is_multi = false;
+  };
+
   class MyConfigurableClass {
   public:
     autowiring::config<std::string> a{ "Hello world!" };
@@ -23,9 +53,9 @@ namespace {
 
     static autowiring::config_descriptor GetConfigDescriptor(void) {
       return {
-        { "a", "Field A description", &MyConfigurableClass::a, "Hello world!" },
-        { "b", "Field B description", &MyConfigurableClass::b, 929 },
-        { "bUnsigned", &MyConfigurableClass::bUnsigned },
+        { "a", "Field A description", &MyConfigurableClass::a, aw::default_value<std::string>("Hello world!") },
+        { "b", "Field B description", &MyConfigurableClass::b, aw::default_value(929), aw::bounds<int>{ 0, 1000 }, multi_meta{}, multi_meta{} },
+        { "bUnsigned", "Description", &MyConfigurableClass::bUnsigned, aw::default_value(4444), single_meta{"Hello world!"} },
         { "c", &MyConfigurableClass::c },
         { "d", &MyConfigurableClass::d },
         { "e", &MyConfigurableClass::e },
@@ -41,8 +71,13 @@ namespace {
   };
 }
 
-static_assert(autowiring::has_getconfigdescriptor<MyConfigurableClass>::value, "Static new not correctly detected");
-static_assert(!autowiring::has_getconfigdescriptor<BadClass>::value, "Bad class cannot have a configuration descriptor");
+static_assert(!aw::is_multi<aw::bounds<int>>::value, "Bounds should not have been marked as a multi-select type");
+static_assert(!aw::is_multi<single_meta>::value, "Single metadata type incorrectly detected as supporting multiple instantiations");
+static_assert(aw::is_multi<multi_meta>::value, "Multi metadata type not correctly detecting as supporting multiple instantiations");
+static_assert(aw::has_getconfigdescriptor<MyConfigurableClass>::value, "Static new not correctly detected");
+static_assert(!aw::has_getconfigdescriptor<BadClass>::value, "Bad class cannot have a configuration descriptor");
+static_assert(!aw::has_bind<aw::bounds<int>, int>::value, "Bind incorrectly detected on bounds field");
+static_assert(aw::has_bind<multi_meta, aw::config_field, int>::value, "Contextual bind not detected on multimeta type");
 
 TEST_F(AutoConfigTest, ConfigFieldAssign) {
   autowiring::config<std::string> x{ "Hello world!" };
@@ -51,8 +86,6 @@ TEST_F(AutoConfigTest, ConfigFieldAssign) {
 
 TEST_F(AutoConfigTest, String) {
   MyConfigurableClass c;
-
-  autowiring::config_field cf("a", "Field A description", &MyConfigurableClass::a, std::string{ "Hello world!" });
 
   std::string expected{ "Forescore and seven years ago" };
   autowiring::ConfigSet("a", c, expected.c_str());
@@ -156,4 +189,51 @@ TEST_F(AutoConfigTest, ContextSetAfter) {
 
   AutoRequired<MyConfigurableClass> mcc;
   ASSERT_EQ(mcc->b, 10442);
+}
+
+namespace {
+  class slider
+  {
+  public:
+    template<typename U>
+    struct valid {
+      static const bool value = std::is_arithmetic<U>::value;
+    };
+  };
+
+  static_assert(aw::valid<float, slider>::value, "Float metadata field not detected as being valid");
+  static_assert(!slider::valid<std::string>::value, "Slider should not believe strings are valid");
+  static_assert(!aw::valid<std::string, slider>::value, "String metadata field incorrectly detected as being valid");
+
+  class SliderManager {
+  public:
+    SliderManager(void) {
+      AutoCurrentContext ctxt;
+      ctxt->Config.WhenFn(
+        [this] (const aw::config_event&, const slider& slider) {
+          sliderReg.push_back(slider);
+        }
+      );
+    }
+
+    std::vector<slider> sliderReg;
+  };
+
+  class ClassWithBoundsField {
+  public:
+    std::atomic<int> b{ 929 };
+
+    static autowiring::config_descriptor GetConfigDescriptor(void) {
+      return{
+        aw::config_field { "b", "Field B description", &ClassWithBoundsField::b, 929, slider{}, aw::bounds<int>{ 10, 423 } },
+      };
+    }
+  };
+}
+
+TEST_F(AutoConfigTest, WhenFn) {
+  AutoRequired<SliderManager> mgr;
+  AutoRequired<ClassWithBoundsField> cwbf;
+
+  ASSERT_EQ(1UL, mgr->sliderReg.size()) << "Slider registration count did not match expectations";
 }

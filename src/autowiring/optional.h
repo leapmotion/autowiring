@@ -102,9 +102,10 @@ public:
   >::type& operator=(U&& rhs) {
     if (m_valid)
       _value() = std::forward<U&&>(rhs);
-    else
+    else {
       new(val) T{ std::forward<U&&>(rhs) };
-    m_valid = true;
+      m_valid = true;
+    }
     return *this;
   }
 

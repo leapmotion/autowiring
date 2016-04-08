@@ -3,6 +3,7 @@
 #include "AnySharedPointer.h"
 #include "once.h"
 
+class CoreContext;
 struct CoreObjectDescriptor;
 class DeferrableAutowiring;
 
@@ -15,7 +16,7 @@ struct MemoEntry {
   MemoEntry(const MemoEntry& rhs) = delete;
 
   // A signal which would be fired on the satisfaction of this entry
-  autowiring::once onSatisfied;
+  autowiring::once_signal<CoreContext> onSatisfied;
 
   // A back reference to the concrete type from which this memo was generated.  This field may be null
   // if there is no corresponding concrete type.

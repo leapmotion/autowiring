@@ -8,7 +8,7 @@
 #include THREAD_HEADER
 
 TEST(OnceTest, NoRepeatedCall) {
-  autowiring::once o;
+  autowiring::once_signal<void> o;
 
   int val = 0;
   o += [&] { val++; };
@@ -20,7 +20,7 @@ TEST(OnceTest, NoRepeatedCall) {
 }
 
 TEST(OnceTest, CallAfterSet) {
-  autowiring::once o;
+  autowiring::once_signal<void> o;
 
   int val1 = 0;
   o += [&] { val1++; };
@@ -34,7 +34,7 @@ TEST(OnceTest, CallAfterSet) {
 }
 
 TEST(OnceTest, NoLeaks) {
-  autowiring::once o;
+  autowiring::once_signal<void> o;
   auto v = std::make_shared<bool>(false);
   o += [v] {};
   ASSERT_EQ(2UL, v.use_count()) << "Shared pointer not properly captured by once flag";
@@ -46,7 +46,7 @@ TEST(OnceTest, NoLeaks) {
 }
 
 TEST(OnceTest, MultiLambdaPending) {
-  autowiring::once o;
+  autowiring::once_signal<void> o;
   std::atomic<int> x{ 0 };
   std::atomic<int> y{ 0 };
   bool go = true;
@@ -79,7 +79,7 @@ public:
 };
 
 TEST(OnceTest, SignalSetWhileCalling) {
-  autowiring::once sig;
+  autowiring::once_signal<void> sig;
   sig += [&] {
     ASSERT_TRUE(sig) << "Flag was not set while handler was being invoked";
   };
@@ -96,7 +96,7 @@ TEST(OnceTest, OwnedSignal) {
 }
 
 TEST(OnceTest, UnregisterHandler) {
-  autowiring::once sig;
+  autowiring::once_signal<void> sig;
 
   bool hit = false;
   auto reg = sig += [&hit] {

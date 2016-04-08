@@ -57,12 +57,15 @@ set(Autowiring_SRCS
   Bolt.h
   BoltBase.cpp
   BoltBase.h
+  bounds.h
   callable.h
   CallExtractor.h
   CallExtractor.cpp
   config.h
   config_descriptor.h
   config_descriptor.cpp
+  ConfigBolt.h
+  ConfigBolt.cpp
   ConfigManager.h
   ConfigManager.cpp
   ConfigRegistry.h
@@ -165,6 +168,7 @@ set(Autowiring_SRCS
   TypeUnifier.h
   uuid.h
   var_logic.h
+  vector_from_tuple.h
 )
 
 add_conditional_sources(

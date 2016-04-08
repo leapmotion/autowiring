@@ -5,6 +5,7 @@
 #include "AutoFilterDescriptor.h"
 #include "BoltBase.h"
 #include "ConfigRegistry.h"
+#include "ConfigBolt.h"
 #include "ContextMember.h"
 #include "CoreObject.h"
 #include "CoreRunnable.h"
@@ -44,6 +45,7 @@ struct CoreObjectDescriptor {
     stump(&SlotInformationStump<T>::s_stump),
     value(value),
     subscriber(MakeAutoFilterDescriptor<T>(value)),
+    pConfigWatcher(autowiring::fast_pointer_cast<autowiring::ConfigWatcherBase>(value)),
     pCoreObject(autowiring::fast_pointer_cast<CoreObject>(value)),
     pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
     pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),
@@ -118,6 +120,7 @@ struct CoreObjectDescriptor {
   AutoFilterDescriptor subscriber;
 
   // There are a lot of interfaces we support, here they all are:
+  std::shared_ptr<autowiring::ConfigWatcherBase> pConfigWatcher;
   std::shared_ptr<CoreObject> pCoreObject;
   std::shared_ptr<ContextMember> pContextMember;
   std::shared_ptr<CoreRunnable> pCoreRunnable;

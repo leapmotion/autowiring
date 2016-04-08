@@ -8,6 +8,7 @@
 #include "CallExtractor.h"
 #include "CoreRunnable.h"
 #include "ConfigManager.h"
+#include "ConfigBolt.h"
 #include "ContextMember.h"
 #include "CoreContextStateBlock.h"
 #include "CoreObjectDescriptor.h"
@@ -313,9 +314,15 @@ protected:
 
   /// \internal
   /// <summary>
-  /// Forwarding routine, recursively adds a packet subscriber to the internal packet factory
+  /// Forwarding routine, adds a packet subscriber to the internal packet factory
   /// </summary>
   void AddPacketSubscriber(const AutoFilterDescriptor& rhs);
+
+  /// \internal
+  /// <summary>
+  /// Registers a configuration watcher with the configuration manager type
+  /// </summary>
+  void AddConfigWatcher(const std::shared_ptr<autowiring::ConfigWatcherBase>& rhs);
 
   /// \internal
   /// <summary>
