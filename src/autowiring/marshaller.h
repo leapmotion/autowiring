@@ -130,15 +130,15 @@ namespace autowiring {
       int power = static_cast<int>(std::log10(value));
 
       // We will be assembling the number backwards, need to keep track of the
-      // current digit
+      // index of the current digit in the reassembled number.
       int curDigit = std::numeric_limits<type>::digits10 - power;
 
       // We only want a certain number of digits, this digit count will fit in
       // a large integer and elimintes the loss of precision we experience when
       // using floating point math to try to do digit shifts
-      uint64_t digits = static_cast<uint64_t>(value * std::pow(10.0, curDigit));
+      uint64_t digits = static_cast<uint64_t>(value * std::pow(10.0, curDigit) + 0.5);
 
-      // Trailing zero introduction
+      // Trailing zero introduction for integer multiples of 10
       if (power > std::numeric_limits<type>::digits10)
         retVal.append(power - std::numeric_limits<type>::digits10, '0');
 
