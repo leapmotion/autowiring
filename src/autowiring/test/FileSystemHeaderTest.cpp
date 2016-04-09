@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/C++11/cpp11.h>
 #include <gtest/gtest.h>
