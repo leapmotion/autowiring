@@ -263,6 +263,7 @@ target_include_directories(
   Autowiring
   PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/contrib/autoboost>"
   INTERFACE
   "$<INSTALL_INTERFACE:include>"
 )
