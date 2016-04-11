@@ -8,19 +8,14 @@
 #include RVALUE_HEADER
 #include MEMORY_HEADER
 
-template<class T>
-T* DefaultCreate(void) {
-  return new T;
-}
+template<typename T>
+void DefaultPlacement(T* ptr) { new(ptr) T; }
 
 template<typename T>
 void DefaultInitialize(T&){}
 
 template<typename T>
 void DefaultFinalize(T&){}
-
-template<typename T>
-void DefaultPlacement(T* ptr) { new(ptr) T; }
 
 namespace autowiring {
   struct placement_t {};
@@ -56,20 +51,18 @@ public:
     *this = std::move(rhs);
   }
 
-  DEPRECATED(ObjectPool(
+  ObjectPool(
     size_t limit,
     size_t maxPooled = ~0,
-    const std::function<T*()>& alloc = &DefaultCreate<T>,
+    const std::function<void(T*)>& placement = &DefaultPlacement<T>,
     const std::function<void(T&)>& initial = &DefaultInitialize<T>,
     const std::function<void(T&)>& final = &DefaultFinalize<T>
-  ), "Superceded by the placement construction version");
-
-  /// <param name="alloc">An allocator to be used when creating objects.</param>
-  DEPRECATED(ObjectPool(
-    const std::function<T*()>& alloc,
-    const std::function<void(T&)>& initial = &DefaultInitialize<T>,
-    const std::function<void(T&)>& final = &DefaultFinalize<T>
-  ), "Superceded by the placement construction version");
+  ) :
+    m_monitor(std::make_shared<ObjectPoolMonitorT<T>>(this, initial, final)),
+    m_maxPooled(maxPooled),
+    m_limit(limit),
+    m_placement(placement)
+  {};
 
   /// <param name="placement">
   /// A placement constructor to be used on the memory allocated for objects
@@ -107,31 +100,32 @@ protected:
   std::condition_variable m_setCondition;
 
   struct PoolEntry {
-    PoolEntry(ObjectPool& pool, size_t poolVersion, T* ptr) :
+    PoolEntry(ObjectPool& pool, size_t poolVersion, const std::function<void(T*)>& placement) :
       monitor(pool.m_monitor),
-      poolVersion(poolVersion),
-      ptr(ptr)
-    {}
-
-    ~PoolEntry(void) {
-      delete ptr;
+      poolVersion(poolVersion)
+    {
+      placement(reinterpret_cast<T*>(obj));
     }
 
-    void Clean(void) {
-      // Finalize object before destruction or return to pool.
-      monitor->fnl(*ptr);
+    ~PoolEntry(void) {
+      reinterpret_cast<T*>(obj)->~T();
+    }
 
-      bool inPool = false;
-      {
-        // Obtain lock before deciding whether to delete or return to pool.
-        std::lock_guard<std::mutex> lk(*monitor);
-        if (!monitor->IsAbandoned())
-          // Attempt to return object to pool
-          inPool = monitor->owner->ReturnUnsafe(this);
-      }
-      if (!inPool)
-        // Destroy returning object outside of lock.
-        delete ptr;
+    /// <summary>
+    /// Returns this pool entry to the parent monitor object
+    /// </summary>
+    bool Return(void) {
+      // Finalize object before destruction or return to pool.
+      monitor->fnl(*reinterpret_cast<T*>(obj));
+
+      // Obtain lock before deciding whether to delete or return to pool.
+      std::lock_guard<std::mutex> lk(*monitor);
+
+      // Attempt to return object to pool, allow the caller to handle failure
+      return
+        monitor->IsAbandoned() ?
+        false :
+        monitor->owner->ReturnUnsafe(this);
     }
 
     // Pointer to the monitor used to get us back to our pool when we're returned
@@ -140,9 +134,8 @@ protected:
     // Pool version at the time of construction
     const size_t poolVersion;
 
-    // TODO:  This should be an embedded member.  As soon as we can deprecate the allocating
-    // ctor overload of ObjectPool::ObjectPool, do so.
-    T* const ptr;
+    // The requested object itself.
+    uint8_t obj[sizeof(T)];
   };
 
   // The set of pooled objects, and the pool version.  The pool version is incremented every
@@ -158,7 +151,6 @@ protected:
   size_t m_outstanding = 0;
 
   // Allocator, placement ctor:
-  std::function<T*()> m_alloc { &DefaultCreate<T> };
   std::function<void(T*)> m_placement{ [](T*) {} };
 
   /// <summary>
@@ -170,13 +162,19 @@ protected:
   /// </remarks>
   std::shared_ptr<T> Wrap(PoolEntry* entry) {
     // Create the shared pointer which will delegate cleanup
-    std::shared_ptr<PoolEntry> pe(entry, [](PoolEntry* entry) { entry->Clean(); });
+    std::shared_ptr<PoolEntry> pe(
+      entry,
+      [] (PoolEntry* entry) {
+        if(!entry->Return())
+          delete entry;
+      }
+    );
 
     // Initialize the issued object, now that a shared pointer has been created for it.
-    m_monitor->initial(*entry->ptr);
+    m_monitor->initial(*reinterpret_cast<T*>(entry->obj));
 
     // All done, use an aliased shared pointer here
-    return std::shared_ptr<T>(std::move(pe), entry->ptr);
+    return std::shared_ptr<T>(std::move(pe), reinterpret_cast<T*>(entry->obj));
   }
 
   bool ReturnUnsafe(PoolEntry* ptr) {
@@ -225,9 +223,9 @@ protected:
       lk.unlock();
 
       // We failed to recover an object, create a new one:
-      T* pObj = m_alloc();
-      m_placement(pObj);
-      return Wrap(new PoolEntry(*this, poolVersion, pObj));
+      return Wrap(
+        new PoolEntry(*this, poolVersion, m_placement)
+      );
     }
 
     // Transition from pooled to issued:
@@ -303,7 +301,7 @@ public:
   void SetOutstandingLimit(size_t limit) {
     std::lock_guard<std::mutex> lk(*m_monitor);
     if(!m_limit && limit)
-      // We're throwing an exception if the limit is currently zero and the user is trying to set it 
+      // We're throwing an exception if the limit is currently zero and the user is trying to set it
       // to something other than zero.
       throw autowiring_error("Attempted to set the limit to a nonzero value after it was set to zero");
     m_limit = limit;
@@ -447,36 +445,9 @@ public:
     m_limit = rhs.m_limit;
     m_outstanding = rhs.m_outstanding;
     std::swap(m_objs, rhs.m_objs);
-    std::swap(m_alloc, rhs.m_alloc);
     std::swap(m_placement, rhs.m_placement);
 
     // Now we can take ownership of this monitor object:
     m_monitor->owner = this;
   }
 };
-
-template<typename T>
-ObjectPool<T>::ObjectPool(
-  size_t limit,
-  size_t maxPooled,
-  const std::function<T*()>& alloc,
-  const std::function<void(T&)>& initial,
-  const std::function<void(T&)>& final
-) :
-  m_monitor(std::make_shared<ObjectPoolMonitorT<T>>(this, initial, final)),
-  m_maxPooled(maxPooled),
-  m_limit(limit),
-  m_alloc(alloc)
-{}
-
-template<typename T>
-ObjectPool<T>::ObjectPool(
-  const std::function<T*()>& alloc,
-  const std::function<void(T&)>& initial,
-  const std::function<void(T&)>& final
-) :
-  m_monitor(std::make_shared<ObjectPoolMonitorT<T>>(this, initial, final)),
-  m_maxPooled(~0),
-  m_limit(~0),
-  m_alloc(alloc)
-{}

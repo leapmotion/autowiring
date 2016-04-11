@@ -51,6 +51,15 @@ public:
   }
   const T& value(void) const { return const_cast<optional*>(this)->value(); }
 
+  /// <summary>
+  /// Passes a pointer to the internal object space to the passed callback
+  /// </remarks>
+  template<typename Fn>
+  void placement(const Fn& placement) {
+    placement(reinterpret_cast<T*>(val));
+    m_valid = true;
+  }
+
   // Indirection operators:
   T* operator->(void) { return &value(); }
   const T* operator->(void) const { return &value(); }
