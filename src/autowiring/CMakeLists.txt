@@ -50,6 +50,7 @@ set(Autowiring_SRCS
   AutowiringDebug.cpp
   autowiring_error.cpp
   autowiring_error.h
+  basic_timer.h
   BasicThread.cpp
   BasicThread.h
   BasicThreadStateBlock.cpp
@@ -61,6 +62,7 @@ set(Autowiring_SRCS
   callable.h
   CallExtractor.h
   CallExtractor.cpp
+  chrono_types.h
   config.h
   config_descriptor.h
   config_descriptor.cpp
