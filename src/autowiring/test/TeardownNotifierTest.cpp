@@ -34,14 +34,14 @@ TEST_F(TeardownNotifierTest, ReferenceMemberInTeardown) {
     AutoRequired <SimpleMember> member;
     std::weak_ptr<SimpleMember> memberWeak(member);
 
-    ctxt->AddTeardownListener([memberWeak, &hit] {
+    ctxt->onTeardown += [memberWeak, &hit] (const CoreContext&) {
       try
       {
         if (!memberWeak.expired())
           hit = true;
       }
       catch (autowiring_error) {}
-    });
+    };
   }
 
   ASSERT_TRUE(hit) << "Failed to reference a member of a context in it's teardown listener";
@@ -53,10 +53,10 @@ TEST_F(TeardownNotifierTest, CanAutowireInTeardown) {
   {
     AutoCreateContext ctxt;
     AutoRequired<SimpleMember> sm(ctxt);
-    ctxt->AddTeardownListener([&foundSimpleMember, &calledNotifier](const CoreContext& ctxt) {
+    ctxt->onTeardown += [&foundSimpleMember, &calledNotifier](const CoreContext& ctxt) {
       foundSimpleMember = AutowiredFast<SimpleMember>(&ctxt).IsAutowired();
       calledNotifier = true;
-    });
+    };
   }
 
   ASSERT_TRUE(foundSimpleMember) << "Failed to find a context member in teardown with AutowiredFast";
