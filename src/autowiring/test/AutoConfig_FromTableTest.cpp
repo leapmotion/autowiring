@@ -105,7 +105,10 @@ TEST_F(AutoConfig_FromTableTest, HeirarchialAssignment) {
     AutoRequired<UserTest> ut{ child };
     ASSERT_EQ(user_key["user_name"], ut->user_name);
     ASSERT_EQ(user_key["user_email"], ut->user_email);
-    ASSERT_EQ(user_key["user_age"], std::to_string(ut->user_age));
+
+    std::stringstream ss;
+    ss << ut->user_age;
+    ASSERT_EQ(user_key["user_age"], ss.str());
     ASSERT_EQ(user_key["user_valid"] == "true", ut->user_valid);
   }
 }
