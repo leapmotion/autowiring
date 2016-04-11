@@ -50,6 +50,7 @@ set(Autowiring_SRCS
   AutowiringDebug.cpp
   autowiring_error.cpp
   autowiring_error.h
+  basic_timer.h
   BasicThread.cpp
   BasicThread.h
   BasicThreadStateBlock.cpp
