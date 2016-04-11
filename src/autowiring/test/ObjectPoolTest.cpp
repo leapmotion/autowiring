@@ -50,8 +50,10 @@ public:
   }
 
   static ObjectPool<LifeCycle>* NewObjectPool(size_t limit = ~0, size_t maxPooled = ~0) {
-    return new ObjectPool<LifeCycle>(limit, maxPooled,
-      [] { return new LifeCycle(); },
+    return new ObjectPool<LifeCycle>(
+      limit,
+      maxPooled,
+      [] (LifeCycle* ptr) { new (ptr) LifeCycle; },
       [] (LifeCycle& life) { life.Initialize(); },
       [] (LifeCycle& life) { life.Finalize(); }
     );
@@ -369,7 +371,8 @@ TEST_F(ObjectPoolTest, VerifyInitializerFinalizer) {
   auto termFlag = std::make_shared<bool>(false);
 
   ObjectPool<bool> pool(
-    &DefaultCreate<bool>,
+    autowiring::placement,
+    &DefaultPlacement<bool>,
     [initFlag](bool&) { *initFlag = true; },
     [termFlag](bool&) { *termFlag = true; }
   );
