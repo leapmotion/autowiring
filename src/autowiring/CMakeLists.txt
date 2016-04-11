@@ -61,6 +61,7 @@ set(Autowiring_SRCS
   callable.h
   CallExtractor.h
   CallExtractor.cpp
+  chrono_types.h
   config.h
   config_descriptor.h
   config_descriptor.cpp
