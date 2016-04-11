@@ -140,8 +140,8 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
       }
 
       if (pCur->is_output) {
-        if (!entry.m_publishers.empty())
-          for (const auto& subscriber : entry.m_subscribers)
+        if (!entry.m_publishers.empty()) {
+          for (const auto& subscriber : entry.m_subscribers) {
             for (auto pOther = subscriber.satCounter->GetAutoFilterArguments(); *pOther; pOther++) {
               if (pOther->id == pCur->id && !pOther->is_multi) {
                 std::stringstream ss;
@@ -149,6 +149,14 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
                 throw autowiring_error(ss.str());
               }
             }
+          }
+
+          if (!entry.m_modifiers.empty()) {
+            std::stringstream ss;
+            ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->id) << " with existing modifier.";
+            throw autowiring_error(ss.str());
+          }
+        }
         entry.m_publishers.push_back(&satCounter);
       }
     }
