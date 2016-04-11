@@ -6,7 +6,8 @@ include_directories(
   .
 )
 
+add_subdirectory(autoboost)
 add_subdirectory(autonet)
-add_subdirectory(autowiring)
 add_subdirectory(autotesting)
+add_subdirectory(autowiring)
 add_subdirectory(benchmark)

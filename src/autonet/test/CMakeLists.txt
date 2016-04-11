@@ -10,9 +10,8 @@ set(AutoNetTest_SRCS
   WebsocketTest.cpp
 )
 
-add_pch(AutoNetTest_SRCS "stdafx.h" "stdafx.cpp")
-
 add_executable(AutoNetTest ${AutoNetTest_SRCS})
+add_pch(AutoNetTest "stdafx.h" "stdafx.cpp")
 target_link_libraries(AutoNetTest AutoTesting AutoNet Autowiring)
 
 # This is a unit test, let CMake know this

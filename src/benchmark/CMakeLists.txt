@@ -16,6 +16,6 @@ set(AutoBench_SRCS
   PrintableDuration.h
 )
 
-add_pch(AutoBench_SRCS "stdafx.h" "stdafx.cpp")
 add_executable(AutoBench ${AutoBench_SRCS})
+add_pch(AutoBench "stdafx.h" "stdafx.cpp")
 target_link_libraries(AutoBench Autowiring AutowiringFixture AutoTesting)

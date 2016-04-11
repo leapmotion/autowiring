@@ -13,10 +13,8 @@ set(AutoNet_SRCS
   ${PROJECT_SOURCE_DIR}/contrib/json11/json11.hpp
 )
 
-# All include files are located in /autowiring from here, so prepend that to all sources
-add_pch(AutoNet_SRCS "stdafx.h" "stdafx.cpp")
-
 add_library(AutoNet STATIC ${AutoNet_SRCS})
+add_pch(AutoNet "stdafx.h" "stdafx.cpp")
 target_link_libraries(AutoNet PRIVATE Autowiring)
 set_target_properties(AutoNet PROPERTIES INTERFACE_LINK_LIBRARIES Autowiring)
 

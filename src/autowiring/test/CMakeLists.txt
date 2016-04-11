@@ -91,12 +91,12 @@ set(AutowiringFixture_SRCS
   SelfSelectingFixture.cpp
 )
 
-add_pch(AutowiringFixture_SRCS "stdafx.h" "stdafx.cpp")
 add_library(AutowiringFixture ${AutowiringFixture_SRCS})
+add_pch(AutowiringFixture stdafx.h stdafx.cpp)
 target_include_directories(AutowiringFixture PRIVATE "${CMAKE_SOURCE_DIR}/contrib/autoboost")
 
-add_pch(AutowiringTest_SRCS "stdafx.h" "stdafx.cpp")
 add_executable(AutowiringTest ${AutowiringTest_SRCS})
+add_pch(AutowiringTest stdafx.h stdafx.cpp)
 target_link_libraries(AutowiringTest Autowiring AutowiringFixture AutoTesting)
 target_include_directories(AutowiringTest PRIVATE "${CMAKE_SOURCE_DIR}/contrib/autoboost")
 
