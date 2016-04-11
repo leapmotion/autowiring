@@ -143,6 +143,36 @@ class auto_arg<const std::shared_ptr<const T>&>:
 {};
 
 /// <summary>
+/// Specialization for "std::shared_ptr<T>&&" ~ auto_in<T&&> and auto_out<T&&>.
+/// </summary>
+template<class T>
+class auto_arg<std::shared_ptr<T>&&>
+{
+public:
+  typedef std::shared_ptr<T>&& type;
+  typedef type arg_type;
+  typedef auto_id_t<T> id_type;
+  static const bool is_input = true;
+  static const bool is_output = true;
+  static const bool is_rvalue = true;
+  static const bool is_shared = true;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+
+  template<class C>
+  static std::shared_ptr<T>&& arg(C& packet) {
+    (void) auto_id_t_init<T, false>::init;
+    return packet.template GetRvalueShared<T>();
+  }
+
+  template<class C>
+  static void Commit(C& packet, std::shared_ptr<T> val) {
+    if (!val)
+      packet.template RemoveDecoration<T>();
+  }
+};
+
+/// <summary>
 /// Specialization for "T*" ~ auto_in<T*>.  T must be const-qualified in order to be an input parameter.
 /// </summary>
 template<class T>
@@ -253,7 +283,7 @@ public:
 };
 
 /// <summary>
-/// Specialization for "std::shared_ptr<T>&" ~ auto_in<T>
+/// Specialization for "std::shared_ptr<T>&" ~ auto_out<T>
 /// </summary>
 template<class T>
 class auto_arg<std::shared_ptr<T>&>:

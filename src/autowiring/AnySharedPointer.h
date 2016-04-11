@@ -71,6 +71,11 @@ public:
     return *reinterpret_cast<const std::shared_ptr<T>*>(&m_ptr);
   }
 
+  template<class T>
+  std::shared_ptr<T>& as(void) {
+    return *reinterpret_cast<std::shared_ptr<T>*>(&m_ptr);
+  }
+
   bool operator==(const AnySharedPointer& rhs) const {
     // Need to compare the control blocks, not the pointer values, because we could be pointing to
     // different spots in the same object.

@@ -73,8 +73,8 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
       auto type = cur.first.id;
 
       for (auto& modifier : decoration.m_modifiers)
-        if (!modifier->remaining)
-          RecordDelivery(type, *modifier, DeliveryEdge::ArgType::Rvalue);
+        if (modifier.satCounter && !modifier.satCounter->remaining)
+          RecordDelivery(type, *modifier.satCounter, DeliveryEdge::ArgType::Rvalue);
 
       for (auto& publisher : decoration.m_publishers)
         if (!publisher->remaining)

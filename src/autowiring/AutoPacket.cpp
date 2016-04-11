@@ -114,20 +114,17 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
       // otherwise insert it to the right position so that the modifiers vector is sorted by altitude
       auto it = entry.m_modifiers.begin();
       while (it != entry.m_modifiers.end()) {
-        if (*it == nullptr)
-          continue;
-
-        if ((*it)->GetAltitude() == satCounter.GetAltitude()) {
+        if (it->altitude == satCounter.GetAltitude()) {
           std::stringstream ss;
           ss << "Added multiple rvalue decorations with same altitudes for type " << autowiring::demangle(pCur->id);
           throw autowiring_error(ss.str());
         }
 
-        if ((*it)->GetAltitude() < satCounter.GetAltitude())
+        if (it->altitude < satCounter.GetAltitude())
           break;
         it++;
       }
-      entry.m_modifiers.insert(it, &satCounter);
+      entry.m_modifiers.emplace(it, pCur->is_shared, satCounter.GetAltitude(), &satCounter);
     } else {
       if (pCur->is_input) {
           entry.m_subscribers.emplace(
@@ -143,8 +140,8 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
       }
 
       if (pCur->is_output) {
-        if (!entry.m_publishers.empty())
-          for (const auto& subscriber : entry.m_subscribers)
+        if (!entry.m_publishers.empty()) {
+          for (const auto& subscriber : entry.m_subscribers) {
             for (auto pOther = subscriber.satCounter->GetAutoFilterArguments(); *pOther; pOther++) {
               if (pOther->id == pCur->id && !pOther->is_multi) {
                 std::stringstream ss;
@@ -152,6 +149,14 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
                 throw autowiring_error(ss.str());
               }
             }
+          }
+
+          if (!entry.m_modifiers.empty()) {
+            std::stringstream ss;
+            ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->id) << " with existing modifier.";
+            throw autowiring_error(ss.str());
+          }
+        }
         entry.m_publishers.push_back(&satCounter);
       }
     }
@@ -204,8 +209,8 @@ void AutoPacket::RemoveSatCounterUnsafe(const SatCounter& satCounter) {
         std::remove_if(
           entry.m_modifiers.begin(),
           entry.m_modifiers.end(),
-          [&satCounter](SatCounter* modifier){
-            return modifier && *modifier == satCounter;
+          [&satCounter](const DecorationDisposition::Modifier& modifier){
+            return modifier.satCounter && *modifier.satCounter == satCounter;
           }),
         entry.m_modifiers.end()
       );
@@ -274,6 +279,50 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
 
   // Recursively mark unsatisfiable any single-output arguments on these subscribers:
   std::vector<const AutoFilterArgument*> unsatOutputArgs;
+  auto MarkOutputsUnsat = [&unsatOutputArgs] (const SatCounter& satCounter) {
+    const auto* args = satCounter.GetAutoFilterArguments();
+    for (size_t i = satCounter.GetArity(); i--;) {
+      // Only consider output arguments:
+      if (args[i].is_output)
+        // This output is transitively unsatisfiable, include it for later removal
+        unsatOutputArgs.push_back(&args[i]);
+    }
+  };
+
+  if (!disposition.m_modifiers.empty() && disposition.m_decorations.size() > 1)
+    throw autowiring_error("An AutoFilter was detected which has single-decorate rvalue argument in a graph with multi-decorate outputs");
+
+  for (auto modifier : disposition.m_modifiers) {
+    if (!modifier.satCounter)
+      continue;
+    auto& satCounter = *modifier.satCounter;
+    if (modifier.is_shared) {
+      if (satCounter.Decrement()) {
+        lk.unlock();
+        callQueue.push_back(&satCounter);
+        {
+          AutoCurrentPacketPusher apkt(*this);
+          for (SatCounter* call : callQueue)
+            call->GetCall()(call->GetAutoFilter().ptr(), *this);
+        }
+        callQueue.clear();
+        lk.lock();
+      }
+    } else {
+      switch(disposition.m_decorations.size()) {
+      case 0:
+        MarkOutputsUnsat(satCounter);
+        break;
+      case 1:
+        if (satCounter.Decrement())
+          callQueue.push_back(&satCounter);
+        break;
+      default:
+        // should not reach here
+        throw autowiring_error("An AutoFilter was detected which has single-decorate rvalue argument in a graph with multi-decorate outputs");
+      }
+    }
+  }
 
   switch (disposition.m_decorations.size()) {
   case 0:
@@ -295,33 +344,18 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
           callQueue.push_back(&satCounter);
         break;
       case DecorationDisposition::Subscriber::Type::Normal:
-        {
-          // Non-optional, consider outputs and recursively invalidate
-          const auto* args = satCounter.GetAutoFilterArguments();
-          for (size_t i = satCounter.GetArity(); i--;) {
-            // Only consider output arguments:
-            if (args[i].is_output)
-              // This output is transitively unsatisfiable, include it for later removal
-              unsatOutputArgs.push_back(&args[i]);
-          }
-        }
+        // Non-optional, consider outputs and recursively invalidate
+        MarkOutputsUnsat(satCounter);
         break;
       }
     }
     break;
   case 1:
-    {
-      // One unique decoration available.  We should be able to call everyone.
-      for (auto pMod : disposition.m_modifiers) {
-        if (pMod && pMod->Decrement()) {
-          callQueue.push_back(pMod);
-        }
-      }
-      for (auto subscriber : disposition.m_subscribers) {
-        auto& satCounter = *subscriber.satCounter;
-        if (satCounter.Decrement())
-          callQueue.push_back(&satCounter);
-      }
+    // One unique decoration available.  We should be able to call everyone.
+    for (auto subscriber : disposition.m_subscribers) {
+      auto& satCounter = *subscriber.satCounter;
+      if (satCounter.Decrement())
+        callQueue.push_back(&satCounter);
     }
     break;
   default:
@@ -464,6 +498,15 @@ void AutoPacket::Decorate(const AnySharedPointer& ptr, DecorationKey key) {
   );
 }
 
+void AutoPacket::RemoveDecoration(DecorationKey key) {
+  std::lock_guard<std::mutex> lk(m_lock);
+
+  auto q = m_decoration_map.find(key);
+  if (q == m_decoration_map.end())
+    return;
+  q->second.m_decorations.clear();
+}
+
 const DecorationDisposition* AutoPacket::GetDisposition(const DecorationKey& key) const {
   std::lock_guard<std::mutex> lk(m_lock);
 
@@ -531,7 +574,7 @@ bool AutoPacket::IsUnsatisfiable(const auto_id& id) const
     // We have never heard of this type
     return false;
   if (!pDisposition->m_decorations.empty())
-    // We have some actual decorations, we know this is not satisfiable
+    // We have some actual decorations, we know this is not unsatisfiable
     return false;
   if (pDisposition->m_nProducersRun != pDisposition->m_publishers.size())
     // Some producers have not yet run, we could still feasibly get a decoration back

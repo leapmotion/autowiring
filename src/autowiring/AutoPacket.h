@@ -171,6 +171,9 @@ protected:
   /// <summary>Runtime counterpart to Decorate</summary>
   void Decorate(const AnySharedPointer& ptr, DecorationKey key);
 
+  /// <summary>Runtime counterpart to RemoveDecoration</summary>
+  void RemoveDecoration(DecorationKey key);
+
   /// <summary>
   /// The portion of Successor that must run under a lock
   /// </summary>
@@ -251,7 +254,7 @@ public:
     static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
 
     const T* retVal;
-    if (!Get(retVal, tshift))
+    if (!Get(retVal, tshift) || !retVal)
       ThrowNotDecoratedException(DecorationKey(auto_id_t<T>{}, tshift));
     return *retVal;
   }
@@ -370,9 +373,39 @@ public:
     static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
 
     const T* retVal;
-    if (!Get(retVal, tshift))
+    if (!Get(retVal, tshift) || !retVal)
       ThrowNotDecoratedException(DecorationKey(auto_id_t<T>{}, tshift));
     return std::move(const_cast<T&>(*retVal));
+  }
+
+  /// <returns>
+  /// The Rvalue shared pointer decoration for the specified type and time shift, or throws an exception is such a type cannot be found
+  /// </returns>
+  template<class T>
+  std::shared_ptr<T>&& GetRvalueShared(int tshift = 0) {
+    static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
+
+    typedef typename std::remove_const<T>::type TActual;
+    const DecorationKey key(auto_id_t<TActual>{}, tshift);
+
+    std::lock_guard<std::mutex> lk(m_lock);
+    auto q = m_decoration_map.find(key);
+    if (q == m_decoration_map.end() || q->second.m_state != DispositionState::Complete)
+      ThrowNotDecoratedException(key);
+
+    DecorationDisposition* pDisposition =  &q->second;
+    switch (pDisposition->m_decorations.size()) {
+    case 0:
+      // No shared pointer decorations available, we have add one
+      pDisposition->m_decorations.emplace_back();
+      break;
+    case 1:
+      // Single decoration available, we can return this later
+      break;
+    default:
+      ThrowMultiplyDecoratedException(key);
+    }
+    return std::move(pDisposition->m_decorations[0].as<T>());
   }
 
   /// <summary>
@@ -572,6 +605,15 @@ public:
       );
     }),
     PulseSatisfactionUnsafe(std::move(lk), pTypeSubs, 1 + sizeof...(Ts));
+  }
+
+  /// <summary>
+  /// Remove decorations on this packet with a particular type
+  /// </summary>
+  template<class T>
+  void RemoveDecoration(void) {
+    DecorationKey key(auto_id_t<T>{}, 0);
+    RemoveDecoration(key);
   }
 
   /// <summary>

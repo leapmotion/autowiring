@@ -11,11 +11,11 @@ public:
   AutoFilterRvalueTest(void) {
     AutoCurrentContext()->Initiate();
   }
+
+  AutoRequired<AutoPacketFactory> factory;
 };
 
 TEST_F(AutoFilterRvalueTest, SimpleCallCheck) {
-  AutoRequired<AutoPacketFactory> factory;
-
   // Register an r-value filter that will receive our decoration
   bool called = false;
   *factory += [&] (Decoration<0>&& dec) { called = true; };
@@ -26,8 +26,6 @@ TEST_F(AutoFilterRvalueTest, SimpleCallCheck) {
 }
 
 TEST_F(AutoFilterRvalueTest, CanModifyInPlace) {
-  AutoRequired<AutoPacketFactory> factory;
-
   // Register an r-value filter that will receive our decoration
   *factory += [&](Decoration<0>&& dec) { dec.i = 129; };
 
@@ -39,7 +37,6 @@ TEST_F(AutoFilterRvalueTest, CanModifyInPlace) {
 
 TEST_F(AutoFilterRvalueTest, CallOrderCorrect) {
   std::vector<std::pair<size_t, Decoration<0>>> observations;
-  AutoRequired<AutoPacketFactory> factory;
 
   // Register a bunch of lambdas that will take observations of the decoration
   for (size_t i = 0; i < 10; i++)
@@ -57,8 +54,6 @@ TEST_F(AutoFilterRvalueTest, CallOrderCorrect) {
 }
 
 TEST_F(AutoFilterRvalueTest, CanUseInTheChain) {
-  AutoRequired<AutoPacketFactory> factory;
-
   *factory += [](Decoration<0> dec0, Decoration<1>& dec1) {
     dec1.i = dec0.i;
   };
@@ -79,8 +74,6 @@ TEST_F(AutoFilterRvalueTest, CanUseInTheChain) {
 }
 
 TEST_F(AutoFilterRvalueTest, MultipleModifiersWithSameAltitude) {
-  AutoRequired<AutoPacketFactory> factory;
-
   *factory += [](Decoration<0>&& dec0) {
     dec0.i = 999;
   };
@@ -95,44 +88,51 @@ TEST_F(AutoFilterRvalueTest, MultipleModifiersWithSameAltitude) {
 }
 
 TEST_F(AutoFilterRvalueTest, MultipleModifiersWithDifferentAltitude) {
-  AutoRequired<AutoPacketFactory> factory;
   int called = 0;
+  int order[] = {-1, -1, -1, -1, -1, -1};
 
   *factory += [&](Decoration<1> dec1, Decoration<0>& dec0) {
-    called++;
     dec0.i = dec1.i;
+    order[0] = called++;
   };
 
   *factory += [&](Decoration<0>&& dec0) {
-    called++;
     dec0.i = 999;
+    order[1] = called++;
   };
 
   *factory += autowiring::altitude::Lowest, [&](Decoration<0>&& dec0) {
-    called++;
     dec0.i = 1000;
+    order[2] = called++;
   };
 
   *factory += [&](Decoration<0> dec0) {
-    called++;
+    order[3] = called++;
   };
 
   auto packet = factory->NewPacket();
   packet->AddRecipient(AutoFilterDescriptor([&] (Decoration<0>&& dec0) {
-    called++;
     dec0.i = 2000;
+    order[4] = called++;
   }, autowiring::altitude::Highest));
 
+  packet->AddRecipient(AutoFilterDescriptor([&] (Decoration<0>&& dec0) {
+    dec0.i = 2000;
+    order[5] = called++;
+  }, autowiring::altitude::Realtime));
+
   packet->Decorate(Decoration<1>{555});
-  ASSERT_EQ(5, called) << "AutoFilters was not called as expected when there are multiple R-value AutoFilter with different altitude ";
+  ASSERT_EQ(6, called) << "AutoFilters was not called as expected when there are multiple R-value AutoFilter with different altitude ";
+
+  int expected[] = {0, 3, 4, 5, 1, 2};
+  for (int i = 0; i < 6; i++)
+    EXPECT_EQ(expected[i], order[i]);
 
   const Decoration<0>& dec0 = packet->Get<Decoration<0>>();
   ASSERT_EQ(1000, dec0.i) << "AutoFilters was not called in the correct order when there are multiple R-value AutoFilter with different altitude";
 }
 
 TEST_F(AutoFilterRvalueTest, DetectCycle) {
-  AutoRequired<AutoPacketFactory> factory;
-
   *factory += [](Decoration<0> dec0, Decoration<1>&& dec1) {
     dec1.i = dec0.i;
   };
@@ -145,7 +145,6 @@ TEST_F(AutoFilterRvalueTest, DetectCycle) {
 }
 
 TEST_F(AutoFilterRvalueTest, RecipientRemovalTest) {
-  AutoRequired<AutoPacketFactory> factory;
   auto called = std::make_shared<bool>(false);
 
   // Add a recipient and then remove it, verify it doesn't get called
@@ -160,4 +159,82 @@ TEST_F(AutoFilterRvalueTest, RecipientRemovalTest) {
   packet->Decorate(Decoration<0>());
 
   ASSERT_FALSE(*called) << "A recipient that should have been removed was called";
+}
+
+TEST_F(AutoFilterRvalueTest, SharedPtrTest) {
+  auto called0 = std::make_shared<bool>(false);
+  *factory += [called0] (Decoration<0> in, std::shared_ptr<Decoration<1>>& out) {
+    out.reset(new Decoration<1>);
+    out->i = in.i;
+    *called0 = true;
+  };
+
+  auto called1 = std::make_shared<bool>(false);
+  *factory += [called1] (std::shared_ptr<Decoration<1>>&& sp) {
+    sp.reset(new Decoration<1>);
+    *called1 = true;
+  };
+
+  auto called2 = std::make_shared<bool>(false);
+  *factory += [called2] (Decoration<1> in) {
+    *called2 = true;
+  };
+
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>());
+  ASSERT_TRUE(*called0);
+  ASSERT_TRUE(*called1);
+  ASSERT_TRUE(*called2);
+  const Decoration<1>& dec1 = packet->Get<Decoration<1>>();
+  ASSERT_EQ(1, dec1.i) << "R-value shared pointer AutoFilter was not able to modify a decoration value before passing on to the next Autofilter";
+}
+
+TEST_F(AutoFilterRvalueTest, SharedPtrAltitudeTest) {
+  int called = 0;
+  int results[] = {-1, -1, -1, -1, -1, -1};
+
+  // This should get called first
+  *factory += [&] (Decoration<0> in, std::shared_ptr<Decoration<1>>& out) {
+    out.reset(new Decoration<1>);
+    out->i = 0;
+    results[called++] = out->i;
+  };
+
+  // This should get called third
+  *factory += autowiring::altitude::Dispatch, [&](std::shared_ptr<Decoration<1>>&& sp) {
+    sp.reset(new Decoration<1>);
+    sp->i = 1;
+    results[called++] = sp->i;
+  };
+
+  // This should get called forth
+  *factory += autowiring::altitude::Realtime, [&](Decoration<1>&& dec1) {
+    dec1.i = 2;
+    results[called++] = dec1.i;
+  };
+
+  // This should get called second
+  *factory += autowiring::altitude::Highest, [&](Decoration<1>&& dec1) {
+    dec1.i = 3;
+    results[called++] = dec1.i;
+  };
+
+  // This should get called fifth
+  *factory += [&] (std::shared_ptr<Decoration<1>>&& sp) {
+    sp.reset();
+    called++;
+  };
+
+  // This should never gets called because of the reset above
+  *factory += autowiring::altitude::Lowest, [&](Decoration<1> in) {
+    results[called++] = in.i;
+  };
+
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>());
+  ASSERT_EQ(5, called);
+
+  int expected[] = {0, 3, 1, 2, -1, -1};
+  for (int i = 0; i < 6; i++)
+    ASSERT_EQ(expected[i], results[i]);
 }
