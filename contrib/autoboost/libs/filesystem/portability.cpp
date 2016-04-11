@@ -11,7 +11,6 @@
 
 // define AUTOBOOST_FILESYSTEM_SOURCE so that <autoboost/filesystem/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
-#include "stdafx.h"
 #define AUTOBOOST_FILESYSTEM_SOURCE
 
 #ifndef AUTOBOOST_SYSTEM_NO_DEPRECATED

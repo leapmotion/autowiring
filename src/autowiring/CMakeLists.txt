@@ -173,50 +173,6 @@ set(Autowiring_SRCS
 
 add_conditional_sources(
   Autowiring_SRCS
-  "ON"
-  GROUP_NAME "Autoboost"
-  FILES
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/system/src/error_code.cpp
-)
-
-add_conditional_sources(
-  Autowiring_SRCS
-  "NOT MSVC"
-  GROUP_NAME "Autoboost"
-  FILES
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/process_cpu_clocks.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/thread_clock.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/chrono.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/once_atomic.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/thread.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/future.cpp
-)
-
-add_conditional_sources(
-  Autowiring_SRCS
-  "ON"
-  GROUP_NAME "Autoboost"
-  FILES
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/codecvt_error_category.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/operations.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/path.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/path_traits.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/portability.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/unique_path.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/utf8_codecvt_facet.cpp
-)
-
-add_conditional_sources(
-  Autowiring_SRCS
-  "MSVC"
-  GROUP_NAME "Autoboost"
-  FILES
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/windows_file_codecvt.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/windows_file_codecvt.hpp
-)
-
-add_conditional_sources(
-  Autowiring_SRCS
   "TRUE"
   GROUP_NAME "C++11"
   FILES
@@ -288,12 +244,59 @@ if(WIN32 AND NOT BUILD_64_BIT)
   enable_language(ASM_MASM)
 endif()
 
-add_conditional_sources(Autowiring_SRCS "NOT WIN32 AND NOT APPLE"
+add_conditional_sources(
+  Autowiring_SRCS
+  "NOT WIN32 AND NOT APPLE"
   GROUP_NAME "Linux Source"
   FILES CoreThreadLinux.cpp
 )
 
 add_pch(Autowiring_SRCS "stdafx.h" "stdafx.cpp")
+
+# We don't want these source files to be compiled with a PCH, so we include them after the pch statement
+add_conditional_sources(
+  Autowiring_SRCS
+  "ON"
+  GROUP_NAME "Autoboost"
+  FILES
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/system/src/error_code.cpp
+)
+
+add_conditional_sources(
+  Autowiring_SRCS
+  "NOT MSVC"
+  GROUP_NAME "Autoboost"
+  FILES
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/process_cpu_clocks.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/thread_clock.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/chrono.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/once_atomic.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/thread.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/future.cpp
+)
+
+add_conditional_sources(
+  Autowiring_SRCS
+  "ON"
+  GROUP_NAME "Autoboost"
+  FILES
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/codecvt_error_category.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/operations.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/path.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/path_traits.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/portability.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/unique_path.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/utf8_codecvt_facet.cpp
+)
+
+add_conditional_sources(
+  Autowiring_SRCS
+  "MSVC"
+  GROUP_NAME "Autoboost"
+  FILES
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/windows_file_codecvt.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/windows_file_codecvt.hpp
+)
 
 #
 # Configure library
@@ -303,8 +306,6 @@ add_library(Autowiring STATIC ${Autowiring_SRCS})
 
 target_include_directories(
   Autowiring
-  PRIVATE
-  .
   PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/contrib/autoboost>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>"

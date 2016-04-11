@@ -9,7 +9,6 @@
 
 //  Old standard library configurations, particularly MingGW, don't support wide strings.
 //  Report this with an explicit error message.
-#include "stdafx.h"
 #include <autoboost/config.hpp>
 # if defined( AUTOBOOST_NO_STD_WSTRING )
 #   error Configuration not supported: Boost.Filesystem V3 and later requires std::wstring support

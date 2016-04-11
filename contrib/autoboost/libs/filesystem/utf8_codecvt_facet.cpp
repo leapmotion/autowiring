@@ -5,7 +5,6 @@
 
 // For HP-UX, request that WCHAR_MAX and WCHAR_MIN be defined as macros,
 // not casts. See ticket 5048
-#include "stdafx.h"
 #define _INCLUDE_STDCSOURCE_199901
 
 #ifndef AUTOBOOST_SYSTEM_NO_DEPRECATED

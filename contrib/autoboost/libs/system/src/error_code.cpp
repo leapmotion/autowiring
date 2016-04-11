@@ -11,7 +11,6 @@
 
 // define AUTOBOOST_SYSTEM_SOURCE so that <autoboost/system/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
-#include "stdafx.h"
 #define AUTOBOOST_SYSTEM_SOURCE
 
 #include <autoboost/system/error_code.hpp>

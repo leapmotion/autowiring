@@ -8,8 +8,6 @@
 //  Library home page at http://www.boost.org/libs/filesystem
 
 //--------------------------------------------------------------------------------------//
-
-#include "stdafx.h"
 #include <autoboost/config/warning_disable.hpp>
 
 // define AUTOBOOST_FILESYSTEM_SOURCE so that <autoboost/filesystem/config.hpp> knows
