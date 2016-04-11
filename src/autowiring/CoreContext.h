@@ -389,31 +389,6 @@ protected:
   template<class Factory>
   void RegisterFactory(const Factory&, autowiring::member_new_type<Factory, autowiring::factorytype::none>) {}
 
-  // Internal resolvers, used to determine which teardown style the user would like to use
-  /// \internal
-  template<class Fx>
-  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void)) {
-    onTeardown += [fx](const CoreContext&) { fx(); };
-  }
-
-  /// \internal
-  template<class Fx>
-  void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&)) {
-    onTeardown += std::move(fx);
-  }
-
-  /// \internal
-  template<class Fx>
-  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void) const) {
-    onTeardown += [fx](const CoreContext&) { fx(); };
-  }
-
-  /// \internal
-  template<class Fx>
-  void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&) const) {
-    onTeardown += std::move(fx);
-  }
-
 public:
   // Accessor methods:
   /// True if and only if this is the global context.
@@ -979,22 +954,11 @@ public:
   }
 
   /// <summary>
-  /// Adds a teardown notifier which receives a pointer to this context on destruction
-  /// </summary>
-  template<class Fx>
-  void DEPRECATED(AddTeardownListener(Fx&& fx), "Superceded by onTeardown");
-
-  /// <summary>
   /// Utility debug method for writing a snapshot of this context to the specified output stream
   /// </summary>
   void Dump(std::ostream& os) const;
 };
 
-
-template<class Fx>
-void CoreContext::AddTeardownListener(Fx&& fx) {
-  AddTeardownListener2<Fx>(std::forward<Fx&&>(fx), &Fx::operator());
-}
 
 namespace autowiring {
   /// <summary>
