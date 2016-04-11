@@ -261,9 +261,10 @@ target_link_libraries(Autowiring INTERFACE Autoboost)
 
 target_include_directories(
   Autowiring
+  PRIVATE
+  "${PROJECT_SOURCE_DIR}/contrib/autoboost"
   PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/contrib/autoboost>"
   INTERFACE
   "$<INSTALL_INTERFACE:include>"
 )
