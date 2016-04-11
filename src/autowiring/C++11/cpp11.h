@@ -343,6 +343,11 @@
   #define _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
 #endif
 
+/**
+ * Filesystem
+ */
+#define FILESYSTEM_HEADER <autowiring/C++11/filesystem.h>
+
 /*********************
  * Deprecation convenience macro
  *********************/

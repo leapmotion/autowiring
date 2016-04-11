@@ -17,7 +17,7 @@
 namespace autowiring {
 
 // <summary>
-// Holds a ptr in thread local storage. Same interface as boost::thread_specific_ptr
+// Holds a ptr in thread local storage. Same interface as autoboost::thread_specific_ptr
 // </summary>
 template<typename T>
 class thread_specific_ptr {

@@ -194,6 +194,29 @@ add_conditional_sources(
 
 add_conditional_sources(
   Autowiring_SRCS
+  "ON"
+  GROUP_NAME "Autoboost"
+  FILES
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/codecvt_error_category.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/operations.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/path.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/path_traits.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/portability.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/unique_path.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/utf8_codecvt_facet.cpp
+)
+
+add_conditional_sources(
+  Autowiring_SRCS
+  "MSVC"
+  GROUP_NAME "Autoboost"
+  FILES
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/windows_file_codecvt.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/windows_file_codecvt.hpp
+)
+
+add_conditional_sources(
+  Autowiring_SRCS
   "TRUE"
   GROUP_NAME "C++11"
   FILES
@@ -214,6 +237,7 @@ add_conditional_sources(
   C++11/chrono_with_profiling_clock.h
   C++11/cpp11.h
   C++11/empty_file.h
+  C++11/filesystem.h
   C++11/make_unique.h
   C++11/memory.h
   C++11/memory_nostl11.h
@@ -279,8 +303,11 @@ add_library(Autowiring STATIC ${Autowiring_SRCS})
 
 target_include_directories(
   Autowiring
+  PRIVATE
+  .
   PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/contrib/autoboost>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>"
   INTERFACE
   "$<INSTALL_INTERFACE:include>"
 )
