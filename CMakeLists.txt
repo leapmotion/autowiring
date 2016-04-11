@@ -157,15 +157,13 @@ install(FILES
   COMPONENT autowiring
 )
 
-# Install autoboost headers on ARM, which still requires them
-if(CMAKE_COMPILER_IS_GNUCC AND ("${CMAKE_CXX_COMPILER}" MATCHES "androideabi"))
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
-    install(
-      DIRECTORY ${PROJECT_SOURCE_DIR}/contrib/autoboost/autoboost
-      DESTINATION include
-      COMPONENT autowiring
-    )
-  endif()
+# Autoboost headers required everywhere but on Windows, which doesn't rely on filesystem
+if(NOT MSVC)
+  install(
+    DIRECTORY ${PROJECT_SOURCE_DIR}/contrib/autoboost/autoboost
+    DESTINATION include
+    COMPONENT autowiring
+  )
 endif()
 
 # Targets file is needed in order to describe how to link Autowiring to the rest of the system
