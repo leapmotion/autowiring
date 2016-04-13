@@ -164,7 +164,6 @@ set(Autowiring_SRCS
   thread_specific_ptr.h
   ThreadPool.h
   ThreadPool.cpp
-  TypeIdentifier.h
   TypeRegistry.cpp
   TypeRegistry.h
   TypeUnifier.h
