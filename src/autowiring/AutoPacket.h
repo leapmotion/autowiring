@@ -622,7 +622,7 @@ public:
   template<class Fx>
   const AutoPacket& operator+=(Fx&& fx) const {
     static_assert(
-      !autowiring::Decompose<decltype(&Fx::operator())>::template any<arg_is_out>::value,
+      !autowiring::Decompose<decltype(&Fx::operator())>::template any<autowiring::arg_is_out>::value,
       "Cannot add an AutoFilter to a const AutoPacket if any of its arguments are output types"
     );
     *const_cast<AutoPacket*>(this) += std::forward<Fx&&>(fx);
@@ -873,49 +873,52 @@ namespace autowiring {
   };
 }
 
-/// <summary>
-/// AutoPacket specialization
-/// </summary>
-/// <remarks>
-/// Because this type is immediately satisfied, it is neither an input nor an output
-/// </remarks>
-template<>
-class autowiring::auto_arg<AutoPacket&>
-{
-public:
-  typedef AutoPacket& type;
-  typedef AutoPacket& arg_type;
-  typedef auto_id_t<AutoPacket> id_type;
-  static const bool is_input = false;
-  static const bool is_output = false;
-  static const bool is_rvalue = false;
-  static const bool is_shared = false;
-  static const bool is_multi = false;
-  static const int tshift = 0;
+namespace autowiring {
 
-  static AutoPacket& arg(AutoPacket& packet) {
-    return packet;
-  }
-};
+  /// <summary>
+  /// AutoPacket specialization
+  /// </summary>
+  /// <remarks>
+  /// Because this type is immediately satisfied, it is neither an input nor an output
+  /// </remarks>
+  template<>
+  class auto_arg<AutoPacket&>
+  {
+  public:
+    typedef AutoPacket& type;
+    typedef AutoPacket& arg_type;
+    typedef auto_id_t<AutoPacket> id_type;
+    static const bool is_input = false;
+    static const bool is_output = false;
+    static const bool is_rvalue = false;
+    static const bool is_shared = false;
+    static const bool is_multi = false;
+    static const int tshift = 0;
 
-/// <summary>
-/// AutoPacket specialization for shared pointer
-/// </summary>
-template<>
-class autowiring::auto_arg<std::shared_ptr<AutoPacket>>
-{
-public:
-  typedef AutoPacket& type;
-  typedef AutoPacket& arg_type;
-  typedef AutoPacket id_type;
-  static const bool is_input = false;
-  static const bool is_output = false;
-  static const bool is_rvalue = false;
-  static const bool is_shared = false;
-  static const bool is_multi = false;
-  static const int tshift = 0;
+    static AutoPacket& arg(AutoPacket& packet) {
+      return packet;
+    }
+  };
 
-  static std::shared_ptr<AutoPacket> arg(AutoPacket& packet) {
-    return packet.shared_from_this();
-  }
-};
+  /// <summary>
+  /// AutoPacket specialization for shared pointer
+  /// </summary>
+  template<>
+  class auto_arg<std::shared_ptr<AutoPacket>>
+  {
+  public:
+    typedef AutoPacket& type;
+    typedef AutoPacket& arg_type;
+    typedef AutoPacket id_type;
+    static const bool is_input = false;
+    static const bool is_output = false;
+    static const bool is_rvalue = false;
+    static const bool is_shared = false;
+    static const bool is_multi = false;
+    static const int tshift = 0;
+
+    static std::shared_ptr<AutoPacket> arg(AutoPacket& packet) {
+      return packet.shared_from_this();
+    }
+  };
+}
