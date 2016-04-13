@@ -128,7 +128,7 @@ public:
   }
 
   void operator=(std::nullptr_t) {
-    m_ti = auto_id{ nullptr };
+    m_ti = {};
     m_ptr = {};
   }
 

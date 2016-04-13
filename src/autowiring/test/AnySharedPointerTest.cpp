@@ -254,6 +254,7 @@ TEST_F(AnySharedPointerTest, NullAfterMove) {
 
 TEST_F(AnySharedPointerTest, NullPtrConstruction) {
   AnySharedPointer x{ nullptr };
+  ASSERT_EQ(auto_id_t<void>{}, auto_id{}) << "Default auto_id is expected to be void";
   ASSERT_EQ(auto_id_t<void>{}, x.type()) << "nullptr type_id should have been void";
 
   AnySharedPointer y;

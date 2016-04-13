@@ -99,17 +99,44 @@ namespace autowiring {
   };
 }
 
+struct auto_id;
+
+/// <summary>
+/// Identifier sigil structure
+/// </summary>
+/// <remarks>
+/// This structure is used to avoid uses of the very inefficient std::type_info comparison
+/// and hashing operators.
+/// </remarks>
+template<class T>
+struct auto_id_t
+{
+  // The identifier block proper
+  static autowiring::auto_id_block s_block;
+
+  bool operator==(const auto_id& rhs) const { return rhs == *this; }
+  bool operator!=(const auto_id& rhs) const { return rhs != *this; }
+};
+
+// Recursive auto_id_t definitions are not allowed, don't try to use them
+template<typename T>
+struct auto_id_t<auto_id_t<T>>;
+
 /// <summary>
 /// Base type identifier structure
 /// </summary>
 struct auto_id {
-  auto_id(void) = default;
-  auto_id(const autowiring::auto_id_block* block) :
-    block(block)
+  template<typename T = void>
+  auto_id(const auto_id_t<T>& = auto_id_t<T>{}) :
+    auto_id(auto_id_t<T>::s_block)
+  {}
+
+  auto_id(const autowiring::auto_id_block& block) :
+    block(&block)
   {}
 
   // A pointer to the identifier block containing the index
-  const autowiring::auto_id_block* block = nullptr;
+  const autowiring::auto_id_block* block;
 
   bool operator==(auto_id rhs) const {
     return block == rhs.block;
@@ -119,9 +146,29 @@ struct auto_id {
     return block != rhs.block;
   }
 
+  template<typename T>
+  bool operator==(const auto_id_t<T>) const {
+    return block == &auto_id_t<T>::s_block;
+  }
+
+  template<typename T>
+  bool operator!=(const auto_id_t<T>) const {
+    return block != &auto_id_t<T>::s_block;
+  }
+
   explicit operator bool(void) const {
     return block && block->index;
   }
+};
+
+template<>
+struct auto_id_t<void>
+{
+  // Void is defined to have an index of zero, so we can mark it const
+  static const autowiring::auto_id_block s_block;
+
+  bool operator==(const auto_id& rhs) const { return rhs == *this; }
+  bool operator!=(const auto_id& rhs) const { return rhs != *this; }
 };
 
 namespace std {
@@ -132,43 +179,6 @@ namespace std {
     }
   };
 }
-
-/// <summary>
-/// Identifier sigil structure
-/// </summary>
-/// <remarks>
-/// This structure is used to avoid uses of the very inefficient std::type_info comparison
-/// and hashing operators.
-/// </remarks>
-template<class T>
-struct auto_id_t:
-  auto_id
-{
-  // The identifier block proper
-  static autowiring::auto_id_block s_block;
-
-  auto_id_t(void) :
-    auto_id(&s_block)
-  {
-    static_assert(sizeof(auto_id_t) == sizeof(auto_id), "auto_id_t must not define additional members");
-  }
-};
-
-// Recursive auto_id_t definitions are not allowed, don't try to use them
-template<typename T>
-struct auto_id_t<auto_id_t<T>>;
-
-template<>
-struct auto_id_t<void>:
-  auto_id
-{
-  // Void is defined to have an index of zero
-  static const autowiring::auto_id_block s_block;
-
-  auto_id_t(void) :
-    auto_id(&s_block)
-  {}
-};
 
 /// <summary>
 /// Invokes the ctor for the auto_id_t field.
