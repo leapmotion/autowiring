@@ -15,10 +15,6 @@
   #define STL11_ALLOWED 1
 #endif
 
-// Deprecated macros, provided here until we can be sure that they aren't used downstream
-#define throw_rethrowable throw
-#define EXCEPTION_PTR_HEADER <stdexcept>
-
 #define IS_CLANG defined(__clang_major__)
 #define CLANG_CHECK(maj, min) (__clang_major__ == maj && __clang_minor__ >= min || __clang_major__ > maj)
 #define GCC_CHECK(maj, min) (__GNUC__ == maj && __GNUC_MINOR__  >= min || __GNUC__ > maj)
@@ -213,11 +209,17 @@
  * noexcept support
  *********************/
 #ifdef _MSC_VER
-  #define AUTOWIRE_cxx_noexcept 0
-  #define NOEXCEPT(x)
+  #if _MSC_VER >= 1900
+    #define AUTO_NOEXCEPT noexcept
+  #else
+    #define AUTO_NOEXCEPT throw()
+  #endif
 #else
-  #define AUTOWIRE_cxx_noexcept 1
-  #define NOEXCEPT(x) x noexcept
+  #if __has_feature(cxx_noexcept)
+    #define AUTO_NOEXCEPT noexcept
+  #else
+    #define AUTO_NOEXCEPT
+  #endif
 #endif
 
 /*********************

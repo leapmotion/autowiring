@@ -405,7 +405,7 @@ namespace autowiring {
     /// </summary>
     /// <param name="args">
     template<typename... FnArgs>
-    void operator()(FnArgs&&... args) const {
+    void operator()(FnArgs&&... args) const AUTO_NOEXCEPT {
       for (;;) {
         SignalState state = SignalState::Free;
         if (m_state.compare_exchange_weak(state, SignalState::Asserting, std::memory_order_acquire, std::memory_order_relaxed)) {
@@ -422,7 +422,7 @@ namespace autowiring {
         case SignalState::Free:
         case SignalState::Updating:
           // Spurious failure, or insertion.
-          // We cannot delegate control to insertion, and spurious failure should be retried.
+          // We cannot delegate signalling to insertion, and spurious failure should be retried.
           continue;
         case SignalState::Asserting:
         case SignalState::Deferred:

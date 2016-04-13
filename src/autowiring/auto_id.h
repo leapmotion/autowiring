@@ -36,8 +36,8 @@ namespace autowiring {
       pFromObj(NullFromObj)
     {}
 
-    static std::shared_ptr<CoreObject> NullToObj(const std::shared_ptr<void>&);
-    static std::shared_ptr<void> NullFromObj(const std::shared_ptr<CoreObject>&);
+    static std::shared_ptr<CoreObject> NullToObj(const std::shared_ptr<void>&) AUTO_NOEXCEPT;
+    static std::shared_ptr<void> NullFromObj(const std::shared_ptr<CoreObject>&) AUTO_NOEXCEPT;
 
     template<class T>
     auto_id_block(
@@ -51,10 +51,10 @@ namespace autowiring {
       ncb(sizeof(T)),
       align(safe_align_of<T>::value),
       pToObj(
-        reinterpret_cast<std::shared_ptr<CoreObject>(*)(const std::shared_ptr<void>&)>(pToObj)
+        reinterpret_cast<std::shared_ptr<CoreObject>(*)(const std::shared_ptr<void>&) AUTO_NOEXCEPT>(pToObj)
       ),
       pFromObj(
-        reinterpret_cast<std::shared_ptr<void>(*)(const std::shared_ptr<CoreObject>&)>(pFromObj)
+        reinterpret_cast<std::shared_ptr<void>(*)(const std::shared_ptr<CoreObject>&) AUTO_NOEXCEPT>(pFromObj)
       )
     {}
 
@@ -64,8 +64,8 @@ namespace autowiring {
       const std::type_info* ti_synth,
       size_t ncb,
       size_t align,
-      std::shared_ptr<CoreObject>(*pToObj)(const std::shared_ptr<void>&),
-      std::shared_ptr<void>(*pFromObj)(const std::shared_ptr<CoreObject>&)
+      std::shared_ptr<CoreObject>(*pToObj)(const std::shared_ptr<void>&) AUTO_NOEXCEPT,
+      std::shared_ptr<void>(*pFromObj)(const std::shared_ptr<CoreObject>&) AUTO_NOEXCEPT
     ):
       index(index),
       ti(ti),
@@ -91,8 +91,8 @@ namespace autowiring {
     size_t align;
 
     // Generic fast casters to CoreObject
-    std::shared_ptr<CoreObject>(*pToObj)(const std::shared_ptr<void>&);
-    std::shared_ptr<void>(*pFromObj)(const std::shared_ptr<CoreObject>&);
+    std::shared_ptr<CoreObject>(*pToObj)(const std::shared_ptr<void>&) AUTO_NOEXCEPT;
+    std::shared_ptr<void>(*pFromObj)(const std::shared_ptr<CoreObject>&) AUTO_NOEXCEPT;
 
     bool operator==(const auto_id_block& rhs) const { return index == rhs.index && ti == rhs.ti; }
     bool operator!=(const auto_id_block& rhs) const { return !(*this == rhs); }
