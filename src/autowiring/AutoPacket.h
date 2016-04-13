@@ -219,7 +219,7 @@ public:
   template<class T>
   bool Has(int tshift=0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    return HasUnsafe(DecorationKey(auto_id_t<T>{}, tshift));
+    return HasUnsafe(autowiring::DecorationKey(auto_id_t<T>{}, tshift));
   }
 
   /// <summary>
@@ -231,7 +231,7 @@ public:
 
     const T* retVal;
     if (!Get(retVal, tshift) || !retVal)
-      ThrowNotDecoratedException(DecorationKey(auto_id_t<T>{}, tshift));
+      ThrowNotDecoratedException(autowiring::DecorationKey(auto_id_t<T>{}, tshift));
     return *retVal;
   }
 
@@ -244,8 +244,8 @@ public:
   /// </remarks>
   template<class T>
   bool Get(const T*& out, int tshift=0) const {
-    DecorationKey key(auto_id_t<T>{}, tshift);
-    const DecorationDisposition* pDisposition = GetDisposition(key);
+    autowiring::DecorationKey key(auto_id_t<T>{}, tshift);
+    const autowiring::DecorationDisposition* pDisposition = GetDisposition(key);
     if (pDisposition) {
       switch (pDisposition->m_decorations.size()) {
       case 0:
@@ -288,8 +288,8 @@ public:
     typedef typename std::remove_const<T>::type TActual;
 
     // Decoration must be present and the shared pointer itself must also be present
-    DecorationKey key(auto_id_t<TActual>{}, tshift);
-    const DecorationDisposition* pDisposition = GetDisposition(key);
+    autowiring::DecorationKey key(auto_id_t<TActual>{}, tshift);
+    const autowiring::DecorationDisposition* pDisposition = GetDisposition(key);
     if (!pDisposition) {
       out = nullptr;
       return false;
@@ -319,8 +319,8 @@ public:
   template<class T>
   bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto deco = m_decoration_map.find(DecorationKey(auto_id_t<T>{}, tshift));
-    if(deco != m_decoration_map.end() && deco->second.m_state == DispositionState::Complete) {
+    auto deco = m_decoration_map.find(autowiring::DecorationKey(auto_id_t<T>{}, tshift));
+    if(deco != m_decoration_map.end() && deco->second.m_state == autowiring::DispositionState::Complete) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
         out = disposition.m_decorations[0].as<T>();
@@ -350,7 +350,7 @@ public:
 
     const T* retVal;
     if (!Get(retVal, tshift) || !retVal)
-      ThrowNotDecoratedException(DecorationKey(auto_id_t<T>{}, tshift));
+      ThrowNotDecoratedException(autowiring::DecorationKey(auto_id_t<T>{}, tshift));
     return std::move(const_cast<T&>(*retVal));
   }
 
@@ -362,14 +362,14 @@ public:
     static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
 
     typedef typename std::remove_const<T>::type TActual;
-    const DecorationKey key(auto_id_t<TActual>{}, tshift);
+    const autowiring::DecorationKey key(auto_id_t<TActual>{}, tshift);
 
     std::lock_guard<std::mutex> lk(m_lock);
     auto q = m_decoration_map.find(key);
-    if (q == m_decoration_map.end() || q->second.m_state != DispositionState::Complete)
+    if (q == m_decoration_map.end() || q->second.m_state != autowiring::DispositionState::Complete)
       ThrowNotDecoratedException(key);
 
-    DecorationDisposition* pDisposition =  &q->second;
+    autowiring::DecorationDisposition* pDisposition =  &q->second;
     switch (pDisposition->m_decorations.size()) {
     case 0:
       // No shared pointer decorations available, we have add one
@@ -393,7 +393,7 @@ public:
     std::lock_guard<std::mutex> lk(m_lock);
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decoration_map.find(DecorationKey(auto_id_t<T>{}, tshift));
+    auto q = m_decoration_map.find(autowiring::DecorationKey(auto_id_t<T>{}, tshift));
     if (q == m_decoration_map.end())
       return std::unique_ptr<const T*[]>{
         new const T*[1] {nullptr}
@@ -418,7 +418,7 @@ public:
     typedef typename std::remove_const<T>::type TActual;
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decoration_map.find(DecorationKey(auto_id_t<TActual>{}, tshift));
+    auto q = m_decoration_map.find(autowiring::DecorationKey(auto_id_t<TActual>{}, tshift));
     if (q == m_decoration_map.end())
       return std::unique_ptr<std::shared_ptr<const T>[]>{
         new std::shared_ptr<const T>[1] {nullptr}
@@ -454,7 +454,7 @@ public:
   /// </remarks>
   template<class T>
   void MarkUnsatisfiable(void) {
-    MarkUnsatisfiable(DecorationKey(auto_id_t<T>{}, 0));
+    MarkUnsatisfiable(autowiring::DecorationKey(auto_id_t<T>{}, 0));
   }
 
   /// <summary>
@@ -469,7 +469,7 @@ public:
   /// </remarks>
   template<class T>
   void Decorate(const std::shared_ptr<T>& ptr) {
-    DecorationKey key(auto_id_t<T>{}, 0);
+    autowiring::DecorationKey key(auto_id_t<T>{}, 0);
 
     // We don't want to see this overload used on a const T
     static_assert(!std::is_const<T>::value, "Cannot decorate a shared pointer to const T with this overload");
@@ -513,7 +513,7 @@ public:
     auto ptr = std::make_shared<TActual>(std::forward<T&&>(t));
     Decorate(
       AnySharedPointer(ptr),
-      DecorationKey(auto_id_t<TActual>{}, 0)
+      autowiring::DecorationKey(auto_id_t<TActual>{}, 0)
     );
     return *ptr;
   }
@@ -533,7 +533,7 @@ public:
     auto ptr = std::make_shared<T>(std::forward<Args&&>(args)...);
     Decorate(
       AnySharedPointer(ptr),
-      DecorationKey(auto_id_t<T>(), 0)
+      autowiring::DecorationKey(auto_id_t<T>(), 0)
     );
     return *ptr;
   }
@@ -554,15 +554,15 @@ public:
     // None of the inputs may be shared pointers--if any of the inputs are shared pointers, they must be attached
     // to this packet via Decorate, or else dereferenced and used that way.
     static_assert(
-      !is_any<is_shared_ptr<T>::value, is_shared_ptr<Ts>::value...>::value,
+      !autowiring::is_any<is_shared_ptr<T>::value, is_shared_ptr<Ts>::value...>::value,
       "DecorateImmediate must not be used to attach a shared pointer, use Decorate on such a decoration instead"
     );
 
     // Perform standard decoration with a short initialization:
     std::unique_lock<std::mutex> lk(m_lock);
     DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)] = {
-      &DecorateImmediateUnsafe(DecorationKey(auto_id_t<T>(), 0), &immed),
-      &DecorateImmediateUnsafe(DecorationKey(auto_id_t<Ts>(), 0), &immeds)...
+      &DecorateImmediateUnsafe(autowiring::DecorationKey(auto_id_t<T>(), 0), &immed),
+      &DecorateImmediateUnsafe(autowiring::DecorationKey(auto_id_t<Ts>(), 0), &immeds)...
     };
 
     // Pulse satisfaction:
@@ -576,8 +576,8 @@ public:
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
       autowiring::noop(
-        (MarkUnsatisfiable(DecorationKey(auto_id_t<T>(), 0)), false),
-        (MarkUnsatisfiable(DecorationKey(auto_id_t<Ts>(), 0)), false)...
+        (MarkUnsatisfiable(autowiring::DecorationKey(auto_id_t<T>(), 0)), false),
+        (MarkUnsatisfiable(autowiring::DecorationKey(auto_id_t<Ts>(), 0)), false)...
       );
     }),
     PulseSatisfactionUnsafe(std::move(lk), pTypeSubs, 1 + sizeof...(Ts));
@@ -588,7 +588,7 @@ public:
   /// </summary>
   template<class T>
   void RemoveDecoration(void) {
-    DecorationKey key(auto_id_t<T>{}, 0);
+    autowiring::DecorationKey key(auto_id_t<T>{}, 0);
     RemoveDecoration(key);
   }
 
@@ -644,13 +644,13 @@ public:
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   template<typename T>
   bool HasSubscribers(void) const {
-    return HasSubscribers(DecorationKey{auto_id_t<T>{}, 0});
+    return HasSubscribers(autowiring::DecorationKey{auto_id_t<T>{}, 0});
   }
 
   /// <returns>Zero if there are no publishers, otherwise the number of publishers</returns>
   template<typename T>
   size_t HasPublishers(void) const {
-    return HasPublishers(DecorationKey{auto_id_t<T>{}, 0});
+    return HasPublishers(autowiring::DecorationKey{auto_id_t<T>{}, 0});
   }
 
   struct SignalStub {
@@ -706,7 +706,7 @@ public:
 
     // Add the filter that will ultimately be invoked
     *this += std::move(autoFilter);
-    return Wait(cv, Decompose<decltype(&Fx::operator())>::template Enumerate<AutoFilterArgument, AutoFilterArgumentT>::types, duration);
+    return Wait(cv, autowiring::Decompose<decltype(&Fx::operator())>::template Enumerate<autowiring::AutoFilterArgument, autowiring::AutoFilterArgumentT>::types, duration);
   }
 
   /// <summary>
@@ -715,9 +715,9 @@ public:
   template<class... Decorations>
   bool Wait(std::condition_variable& cv)
   {
-    static const AutoFilterArgument inputs [] = {
+    static const autowiring::AutoFilterArgument inputs [] = {
       static_cast<auto_arg<Decorations>*>(nullptr)...,
-      AutoFilterArgument()
+      autowiring::AutoFilterArgument()
     };
 
     return Wait(cv, inputs, std::chrono::nanoseconds::max());
@@ -729,9 +729,9 @@ public:
   template<class... Args>
   bool Wait(std::chrono::nanoseconds duration, std::condition_variable& cv)
   {
-    static const AutoFilterArgument inputs [] = {
-      AutoFilterArgumentT<Args>()...,
-      AutoFilterArgument()
+    static const autowiring::AutoFilterArgument inputs [] = {
+      autowiring::AutoFilterArgumentT<Args>()...,
+      autowiring::AutoFilterArgument()
     };
 
     return Wait(cv, inputs, duration);
@@ -760,7 +760,7 @@ public:
     // Completely unnecessary.  Call will avoid making unneeded copies, and this is guaranteed
     // by a unit test.  Dereference your shared pointers before passing them in.
     static_assert(
-      !is_any<is_shared_ptr<Outputs>::value...>::value,
+      !autowiring::is_any<is_shared_ptr<Outputs>::value...>::value,
       "Do not use shared pointer arguments as output arguments with Call"
     );
 
@@ -786,7 +786,7 @@ public:
     // Completely unnecessary.  Call will avoid making unneeded copies, and this is guaranteed
     // by a unit test.  Dereference your shared pointers before passing them in.
     static_assert(
-      !is_any<is_shared_ptr<Outputs>::value...>::value,
+      !autowiring::is_any<is_shared_ptr<Outputs>::value...>::value,
       "Do not use shared pointer arguments as output arguments with Call"
     );
 
