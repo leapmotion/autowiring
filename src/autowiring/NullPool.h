@@ -44,4 +44,5 @@ public:
   std::shared_ptr<void> Start(void) override;
   bool Submit(std::unique_ptr<DispatchThunkBase>&& thunk) override;
 };
+
 }

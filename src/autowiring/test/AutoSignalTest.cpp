@@ -3,8 +3,6 @@
 #include <autowiring/autowiring.h>
 #include <thread>
 
-using namespace autowiring;
-
 namespace {
   class CountsCopies {
   public:
@@ -148,7 +146,7 @@ struct ContainsRaises {
   }
 
   ~ContainsRaises() {
-    static int i = 0; 
+    static int i = 0;
     i++;
   }
   Autowired<RaisesASignal> ras;
@@ -198,31 +196,31 @@ TEST_F(AutoSignalTest, ConstructorAutowiredRegistration) {
 
 TEST_F(AutoSignalTest, MultipleSlotsTest) {
   autowiring::signal<void(void)> signal;
-  
+
   bool handler_called1 = false;
   bool handler_called2 = false;
-  
+
   auto registration1 =
     signal += [&] {
       handler_called1 = true;
     };
-  
+
   // Registration 2
   signal += [&] {
     handler_called2 = true;
   };
-  
+
   // Trivially raise the signal:
   signal();
   ASSERT_TRUE(handler_called1) << "Handler 1 was not called on a stack-allocated signal";
   ASSERT_TRUE(handler_called2) << "Handler 2 was not called on a stack-allocated signal";
-  
+
   // Unregister the first signal and reset the variables
   signal -= registration1;
-  
+
   handler_called1 = false;
   handler_called2 = false;
-  
+
   // Verify that registration 2 can still receive the signals
   signal();
   ASSERT_FALSE(handler_called1) << "Handler 1 was called after being unregistered";
@@ -232,19 +230,19 @@ TEST_F(AutoSignalTest, MultipleSlotsTest) {
 TEST_F(AutoSignalTest, RaiseASignalWithinASlotTest) {
   autowiring::signal<void(void)> signal1;
   autowiring::signal<void(void)> signal2;
-  
+
   bool handler_called1 = false;
   bool handler_called2 = false;
-  
+
   signal1 += [&] {
     handler_called1 = true;
     signal2();
   };
-  
+
   signal2 += [&] {
     handler_called2 = true;
   };
-  
+
   // Trivially raise the signal:
   signal1();
   ASSERT_TRUE(handler_called1) << "Handler 1 was not called on a stack-allocated signal";
@@ -260,14 +258,14 @@ TEST_F(AutoSignalTest, NodeRemoval) {
 
   auto registration1 = signal1 += [&] { handler_called1 = true; };
   auto registration2 = signal2 += [&] { handler_called2 = true; };
-  
+
   ASSERT_ANY_THROW(signal1 -= registration2) << "Removing a registration from a different signal than it was registered to failed to throw an exception";
 
   signal1 -= registration1;
 
   signal1();
   signal2();
-  
+
   ASSERT_FALSE(handler_called1) << "Handler1 was called after being unregistered";
   ASSERT_TRUE(handler_called2) << "Handler2 was removed after an invalid -= operation";
 }
@@ -315,13 +313,13 @@ TEST_F(AutoSignalTest, SelfReferencingCall) {
 TEST_F(AutoSignalTest, SelfModifyingCall) {
   typedef autowiring::signal<void(int)> signal_t;
   signal_t signal1;
-  
+
   int handler_called1 = 0;
   int handler_called2 = 0;
   int handler_called3 = 0;
-  
+
   int magic_number = 123;
-  
+
   registration_t registration1 =
     signal1 += [&](registration_t reg, int magic) {
       ASSERT_EQ(magic, magic_number);
@@ -329,7 +327,7 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
       ++handler_called1;
       signal1 -= reg;
     };
-  
+
   auto lambda3 = [&](int magic) {
     ++handler_called3;
   };
@@ -339,16 +337,16 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
       ASSERT_EQ(magic, magic_number);
       ASSERT_EQ(registration2, reg);
       ++handler_called2;
-    
+
       //+= is an append operation, but because when we're traveling the list and we grab the next pointer
       //*before* the function get's called, this append won't be picked up until the 2nd pass.
       signal1 += std::move(lambda3);
       signal1 -= reg;
     };
-  
+
   signal1(magic_number);
   signal1(magic_number);
-  
+
   ASSERT_EQ(handler_called1, 1) << "Handler was unable to remove itself!";
   ASSERT_EQ(handler_called2, 1) << "Specific handler was unable to remove itself";
   ASSERT_EQ(handler_called3, 1) << "Handler was unable to append to itself or was called prematurely.";

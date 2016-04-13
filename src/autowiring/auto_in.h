@@ -6,6 +6,8 @@
 
 class AutoPacket;
 
+namespace autowiring {
+
 template<class T>
 class auto_arg;
 
@@ -69,3 +71,5 @@ template<class T>
 class auto_arg<auto_in<T>> :
   public auto_arg<T>
 {};
+
+}

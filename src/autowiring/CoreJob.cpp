@@ -4,6 +4,8 @@
 #include "CoreContext.h"
 #include FUTURE_HEADER
 
+using namespace autowiring;
+
 // Arm doesn't have std::future, but does have std::chrono. We need to convert from std::chrono
 // to autoboost::chrono when passing arguments to "std::future"(alias to autoboost::future) on arm.
 #if __ANDROID__ && !GCC_CHECK(4, 9)

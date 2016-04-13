@@ -5,11 +5,12 @@
 #include <ostream>
 #include <memory>
 
-struct AutoFilterDescriptor;
 class AutoPacket;
 class CoreContext;
 
 namespace autowiring {
+  struct AutoFilterDescriptor;
+
   namespace dbg {
 
     /// <returns>

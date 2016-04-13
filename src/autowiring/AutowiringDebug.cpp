@@ -134,7 +134,7 @@ const AutoFilterDescriptor* autowiring::dbg::DescriptorByName(const char* name) 
   if (!factory)
     return nullptr;
 
-  return DescriptorByName(name, factory->GetAutoFilters());
+  return ::DescriptorByName(name, factory->GetAutoFilters());
 }
 
 std::string autowiring::dbg::AutoFilterInfo(const char* name) {
@@ -146,7 +146,7 @@ std::string autowiring::dbg::AutoFilterInfo(const char* name) {
   const std::vector<AutoFilterDescriptor> descs = factory->GetAutoFilters();
 
   // Need the root descriptor first
-  const AutoFilterDescriptor* desc = DescriptorByName(name, descs);
+  const AutoFilterDescriptor* desc = ::DescriptorByName(name, descs);
   if (!desc)
     return "Filter not found";
 

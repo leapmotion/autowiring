@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include "AnySharedPointer.h"
 
+using namespace autowiring;
+
 AnySharedPointer::AnySharedPointer(AnySharedPointer&& rhs) :
   m_ti(rhs.m_ti),
   m_ptr(std::move(rhs.m_ptr))

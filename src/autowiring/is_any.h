@@ -3,6 +3,8 @@
 #include "C++11/cpp11.h"
 #include TYPE_TRAITS_HEADER
 
+namespace autowiring {
+
 /// <summary>
 /// Check if any T is true
 /// </summary>
@@ -53,3 +55,5 @@ struct is_any_repeated<T, U, Us...>:
     is_any_repeated<U, Us...>::value
   >
 {};
+
+}

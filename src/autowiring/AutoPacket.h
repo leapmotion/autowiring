@@ -23,42 +23,18 @@
 class AutoPacketInternal;
 class AutoPacketFactory;
 class CoreContext;
-struct AutoFilterDescriptor;
-
-template<class T>
-class auto_arg;
 
 namespace autowiring {
   template<class MemFn, class Index>
   struct CE;
 
-  template<typename T>
-  struct is_shared_ptr:
-    std::false_type
-  {};
-
-  template<typename T>
-  struct is_shared_ptr<std::shared_ptr<T>> :
-    std::true_type
-  {};
-
-  template<typename T>
-  struct is_shared_ptr<std::shared_ptr<const T>> :
-    std::true_type
-  {};
-
-  template<typename T>
-  struct is_shared_ptr<const T> :
-    is_shared_ptr<T>
-  {};
-
-  template<typename T>
-  struct is_shared_ptr<T&> :
-    is_shared_ptr<T>
-  {};
-
   template<typename Arg, typename Pack, typename = void>
   struct choice;
+
+  struct AutoFilterDescriptor;
+
+  template<class T>
+  class auto_arg;
 }
 
 /// <summary>
@@ -72,7 +48,7 @@ namespace autowiring {
 /// </remarks>
 class AutoPacket:
   public std::enable_shared_from_this<AutoPacket>,
-  public TeardownNotifier
+  public autowiring::TeardownNotifier
 {
 public:
   AutoPacket(const AutoPacket& rhs) = delete;
@@ -85,7 +61,7 @@ public:
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
   // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
-  typedef std::unordered_map<DecorationKey, DecorationDisposition> t_decorationMap;
+  typedef std::unordered_map<autowiring::DecorationKey, autowiring::DecorationDisposition> t_decorationMap;
 
 protected:
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
@@ -101,7 +77,7 @@ protected:
   const std::shared_ptr<void> m_outstanding;
 
   // Pointer to a forward linked list of saturation counters, constructed when the packet is created
-  SatCounter* m_firstCounter = nullptr;
+  autowiring::SatCounter* m_firstCounter = nullptr;
 
   t_decorationMap m_decoration_map;
 
@@ -115,30 +91,30 @@ protected:
   /// available.  Thus, callers are either satisfied at the point of decoration, or will not be satisfied for that
   /// type.
   /// </remarks>
-  DecorationDisposition& DecorateImmediateUnsafe(const DecorationKey& key, const void* pvImmed);
+  autowiring::DecorationDisposition& DecorateImmediateUnsafe(const autowiring::DecorationKey& key, const void* pvImmed);
 
   /// <summary>
   /// Adds all AutoFilter argument information for a recipient
   /// </summary>
-  void AddSatCounterUnsafe(SatCounter& satCounter);
+  void AddSatCounterUnsafe(autowiring::SatCounter& satCounter);
 
   /// <summary>
   /// Remove all AutoFilter argument information for a recipient
-  void RemoveSatCounterUnsafe(const SatCounter& satCounter);
+  void RemoveSatCounterUnsafe(const autowiring::SatCounter& satCounter);
 
   /// <summary>
   /// Detect cycle in the auto filter graph using DFS
-  void DetectCycle(SatCounter& satCounter, std::unordered_set<SatCounter*>& tempVisited, std::unordered_set<SatCounter*>& permVisited);
+  void DetectCycle(autowiring::SatCounter& satCounter, std::unordered_set<autowiring::SatCounter*>& tempVisited, std::unordered_set<autowiring::SatCounter*>& permVisited);
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
-  void MarkUnsatisfiable(const DecorationKey& key);
+  void MarkUnsatisfiable(const autowiring::DecorationKey& key);
 
   /// <summary>
   /// Marks timeshifted decorations on successor packets as unsatisfiable
   /// </summary>
-  void MarkSuccessorsUnsatisfiable(DecorationKey type);
+  void MarkSuccessorsUnsatisfiable(autowiring::DecorationKey type);
 
   /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
@@ -149,7 +125,7 @@ protected:
   /// This method results in a call to the AutoFilter method on any subscribers which are
   /// satisfied by this decoration.  This method must be called with m_lock held.
   /// </remarks>
-  void UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const DecorationDisposition& disposition);
+  void UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const autowiring::DecorationDisposition& disposition);
 
   /// <summary>
   /// Performs a "satisfaction pulse", which will avoid notifying any deferred filters
@@ -158,21 +134,21 @@ protected:
   /// A satisfaction pulse will call any AutoFilter instances which are satisfied by the
   /// decoration of the passed decoration types.
   /// </remarks>
-  void PulseSatisfactionUnsafe(std::unique_lock<std::mutex> lk, DecorationDisposition* pTypeSubs [], size_t nInfos);
+  void PulseSatisfactionUnsafe(std::unique_lock<std::mutex> lk, autowiring::DecorationDisposition* pTypeSubs [], size_t nInfos);
 
   /// <summary>Unsynchronized runtime counterpart to Has</summary>
-  bool HasUnsafe(const DecorationKey& key) const;
+  bool HasUnsafe(const autowiring::DecorationKey& key) const;
 
   /// <summary>
   /// Performs a decoration operation but does not attach priors to successors.
   /// </summary>
-  void DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key);
+  void DecorateNoPriors(const AnySharedPointer& ptr, autowiring::DecorationKey key);
 
   /// <summary>Runtime counterpart to Decorate</summary>
-  void Decorate(const AnySharedPointer& ptr, DecorationKey key);
+  void Decorate(const AnySharedPointer& ptr, autowiring::DecorationKey key);
 
   /// <summary>Runtime counterpart to RemoveDecoration</summary>
-  void RemoveDecoration(DecorationKey key);
+  void RemoveDecoration(autowiring::DecorationKey key);
 
   /// <summary>
   /// The portion of Successor that must run under a lock
@@ -183,29 +159,29 @@ protected:
   /// Retrieves the decoration disposition corresponding to some type
   /// </summary>
   /// <returns>The disposition, if the decoration exists and is satisfied, otherwise nullptr</returns>
-  const DecorationDisposition* GetDisposition(const DecorationKey& ti) const;
+  const autowiring::DecorationDisposition* GetDisposition(const autowiring::DecorationKey& ti) const;
 
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
-  bool HasSubscribers(const DecorationKey& key) const;
+  bool HasSubscribers(const autowiring::DecorationKey& key) const;
 
   /// <returns>Zero if there are no publishers, otherwise the number of publishers</returns>
-  size_t HasPublishers(const DecorationKey& key) const;
+  size_t HasPublishers(const autowiring::DecorationKey& key) const;
 
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>
   /// If the type is not a subscriber GetSatisfaction().GetType() == nullptr will be true
   /// </remarks>
-  const SatCounter& GetSatisfaction(auto_id subscriber) const;
+  const autowiring::SatCounter& GetSatisfaction(auto_id subscriber) const;
 
   /// <summary>
   /// Throws a formatted runtime error corresponding to the case where an absent decoration was demanded
   /// </summary>
-  static void ThrowNotDecoratedException(const DecorationKey& key);
+  static void ThrowNotDecoratedException(const autowiring::DecorationKey& key);
 
   /// <summary>
   /// Throws a formatted runtime error corresponding to the case where a decoration was demanded and more than one such decoration was present
   /// </summary>
-  static void ThrowMultiplyDecoratedException(const DecorationKey& key);
+  static void ThrowMultiplyDecoratedException(const autowiring::DecorationKey& key);
 
 public:
   /// <returns>
@@ -623,21 +599,21 @@ public:
   /// This method is idempotent. The returned Recipient structure may be used to remove
   /// the recipient safely at any point.
   /// </remarks>
-  const SatCounter* AddRecipient(const AutoFilterDescriptor& descriptor);
+  const autowiring::SatCounter* AddRecipient(const autowiring::AutoFilterDescriptor& descriptor);
 
   /// <summary>
   /// Removes a previously added packet recipient
   /// The user is responsible to free the memeory for recipient.
   /// TODO: seems like a bad design, need refactor
   /// </summary>
-  void RemoveRecipient(const SatCounter& recipient);
+  void RemoveRecipient(const autowiring::SatCounter& recipient);
 
   /// <summary>
   /// Convenience overload, identical in behavior to AddRecipient
   /// </summary>
   template<class Fx>
-  const SatCounter* operator+=(Fx&& fx) {
-    return AddRecipient(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
+  const autowiring::SatCounter* operator+=(Fx&& fx) {
+    return AddRecipient({ std::forward<Fx&&>(fx) });
   }
 
   /// <summary>
@@ -658,7 +634,7 @@ public:
   /// If the type is not a subscriber GetSatisfaction().GetType() == nullptr will be true
   /// </remarks>
   template<class T>
-  inline const SatCounter& GetSatisfaction(void) const { return GetSatisfaction(auto_id_t<T>{}); }
+  inline const autowiring::SatCounter& GetSatisfaction(void) const { return GetSatisfaction(auto_id_t<T>{}); }
 
   /// <summary>
   /// Returns the next packet that will be issued by the packet factory in this context relative to this context
@@ -703,7 +679,7 @@ public:
   /// by this filter have been satisfied on this packet.  When this function returns, the specified filter will have
   /// been called.
   /// </remarks>
-  bool Wait(std::condition_variable& cv, const AutoFilterArgument* inputs, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max());
+  bool Wait(std::condition_variable& cv, const autowiring::AutoFilterArgument* inputs, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max());
 
   /// <summary>
   /// Blocks until the passed lambda function can be called
@@ -770,7 +746,7 @@ public:
   static AutoPacket& CurrentPacket(void);
 
   template<typename Fn, typename Args, int... N>
-  static void CallWithChoiceTuple(Fn& fn, Args&& args, index_tuple<N...>) {
+  static void CallWithChoiceTuple(Fn& fn, Args&& args, autowiring::index_tuple<N...>) {
     fn(autowiring::get<N>(args).value...);
   }
 
@@ -779,7 +755,7 @@ public:
   /// </summary>
   template<typename... InArgs, typename... Outputs>
   void Call(void(*pfn)(InArgs...), Outputs&... outputs) {
-    typedef typename make_index_tuple<sizeof...(InArgs)>::type t_index;
+    typedef typename autowiring::make_index_tuple<sizeof...(InArgs)>::type t_index;
 
     // Completely unnecessary.  Call will avoid making unneeded copies, and this is guaranteed
     // by a unit test.  Dereference your shared pointers before passing them in.
@@ -904,7 +880,7 @@ namespace autowiring {
 /// Because this type is immediately satisfied, it is neither an input nor an output
 /// </remarks>
 template<>
-class auto_arg<AutoPacket&>
+class autowiring::auto_arg<AutoPacket&>
 {
 public:
   typedef AutoPacket& type;
@@ -926,7 +902,7 @@ public:
 /// AutoPacket specialization for shared pointer
 /// </summary>
 template<>
-class auto_arg<std::shared_ptr<AutoPacket>>
+class autowiring::auto_arg<std::shared_ptr<AutoPacket>>
 {
 public:
   typedef AutoPacket& type;

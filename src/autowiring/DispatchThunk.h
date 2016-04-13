@@ -3,6 +3,8 @@
 #include CHRONO_HEADER
 #include <memory>
 
+namespace autowiring {
+
 /// <summary>
 /// A simple virtual class used to hold a trivial thunk
 /// </summary>
@@ -80,3 +82,5 @@ public:
   }
   void operator=(const DispatchThunkDelayed&) const = delete;
 };
+
+}

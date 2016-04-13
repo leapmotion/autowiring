@@ -6,6 +6,8 @@
 #include "SatCounter.h"
 #include <algorithm>
 
+using namespace autowiring;
+
 AutoPacketInternal::AutoPacketInternal(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding) :
   AutoPacket(factory, std::move(outstanding))
 {}

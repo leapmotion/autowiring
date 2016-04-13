@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include "BasicThreadStateBlock.h"
 
+using namespace autowiring;
+
 BasicThreadStateBlock::BasicThreadStateBlock(void)
 {}
 

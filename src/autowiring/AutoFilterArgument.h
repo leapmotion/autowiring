@@ -3,6 +3,8 @@
 #include "auto_arg.h"
 #include <typeinfo>
 
+namespace autowiring {
+
 /// <summary>
 /// AutoFilter argument disposition
 /// </summary>
@@ -58,3 +60,5 @@ struct AutoFilterArgumentT:
     )
   {}
 };
+
+}

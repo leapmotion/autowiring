@@ -4,6 +4,8 @@
 #include "at_exit.h"
 #include <assert.h>
 
+using namespace autowiring;
+
 DispatchQueue::DispatchQueue(void) {}
 
 DispatchQueue::DispatchQueue(size_t dispatchCap):

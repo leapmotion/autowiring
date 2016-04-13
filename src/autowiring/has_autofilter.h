@@ -4,6 +4,10 @@
 #include "Deferred.h"
 #include "is_any.h"
 
+class AutoPacket;
+
+namespace autowiring {
+
 //=======================================
 // Test whether return type is meaningful
 //=======================================
@@ -88,8 +92,6 @@ struct has_unambiguous_autofilter
       >::value;
 };
 
-class AutoPacket;
-
 // Inheriting from this class ensures the existence of a valid AutoFilter method.
 // This is used to distinguish between a no AutoFilter methods
 // and multiple AutoFilter definitions.
@@ -117,3 +119,5 @@ struct has_autofilter {
     "Cannot define more than one AutoFilter method and all AutoFilter methods must be public and all AutoFilter reference-output arguments must be completely defined"
   );
 };
+
+}

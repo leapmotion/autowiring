@@ -6,6 +6,8 @@
 #include "thread_specific_ptr.h"
 #include MEMORY_HEADER
 
+using namespace autowiring;
+
 // Special file-level allocation with a no-op dtor, because all stack locations are stack-allocated
 static autowiring::thread_specific_ptr<SlotInformationStackLocation> tss([](SlotInformationStackLocation*) {});
 

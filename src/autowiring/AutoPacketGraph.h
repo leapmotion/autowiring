@@ -23,7 +23,7 @@ struct DeliveryEdge
   auto_id type_info;
 
   // The AutoFilterDescriptor
-  AutoFilterDescriptor descriptor;
+  autowiring::AutoFilterDescriptor descriptor;
 
   // Specifies if the argument is an input (type -> descriptor) or output (descriptor -> type)
   // or rvalue (type <-> descriptor)
@@ -84,9 +84,9 @@ protected:
   /// <summary>
   /// Record the delivery of a packet and increment the number of times the packet has been delivered
   /// </summary>
-  void RecordDelivery(auto_id id, const AutoFilterDescriptor& descriptor, DeliveryEdge::ArgType arg_type);
+  void RecordDelivery(auto_id id, const autowiring::AutoFilterDescriptor& descriptor, DeliveryEdge::ArgType arg_type);
 
-  void NewObject(CoreContext&, const CoreObjectDescriptor&);
+  void NewObject(CoreContext&, const autowiring::CoreObjectDescriptor&);
 
   /// CoreRunnable overrides
   virtual bool OnStart(void) override;

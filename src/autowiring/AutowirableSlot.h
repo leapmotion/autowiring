@@ -9,11 +9,13 @@
 #include "SlotInformation.h"
 #include MEMORY_HEADER
 
-struct MemoEntry;
 class CoreContext;
 class CoreObject;
-class DeferrableAutowiring;
 class GlobalCoreContext;
+
+namespace autowiring {
+
+struct MemoEntry;
 
 /// <summary>
 /// Utility class which represents any kind of autowiring entry that may be deferred to a later date
@@ -27,10 +29,10 @@ public:
 
 protected:
   // Lock for fields on this type
-  autowiring::spin_lock m_lock;
+  spin_lock m_lock;
 
   // All registrations attached to this object:
-  std::vector<autowiring::registration_t> m_autowired_notifications;
+  std::vector<registration_t> m_autowired_notifications;
 
   // The held shared pointer.
   AnySharedPointer m_ptr;
@@ -122,7 +124,7 @@ public:
       if (!reg)
         return;
 
-      std::lock_guard<autowiring::spin_lock> lk(m_lock);
+      std::lock_guard<spin_lock> lk(m_lock);
       m_autowired_notifications.push_back(std::move(reg));
     }
   }
@@ -161,7 +163,7 @@ public:
     // of this type MUST be available.  The reason for this is that, if the user wishes to know if a
     // type is autowired, they are required at a minimum to know what that type's inheritance relations
     // are to other types in the system.
-    (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) fast_pointer_cast_initializer<T, CoreObject>::sc_init;
     (void) auto_id_t_init<T>::init;
     return DeferrableAutowiring::IsAutowired();
   }
@@ -171,7 +173,7 @@ public:
   /// </remarks>
   T* get(void) const {
     // For now, we require that the full type be available to use this method
-    (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) fast_pointer_cast_initializer<T, CoreObject>::sc_init;
     (void) auto_id_t_init<T>::init;
     return get_unsafe();
   }
@@ -196,23 +198,23 @@ public:
     // Initialize any blind fast casts to the actually desired type.  This is one of a few points
     // where we can guarantee that the type will be completely defined, because the user is about
     // to make use of this type.
-    (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) fast_pointer_cast_initializer<T, CoreObject>::sc_init;
     (void) auto_id_t_init<T>::init;
 
     auto retVal = get();
     if (!retVal)
-      throw autowiring::deref_error(*this);
+      throw deref_error(*this);
     return retVal;
   }
 
   T& operator*(void) const {
     auto retVal = get();
     if (!retVal)
-      throw autowiring::deref_error(*this);
+      throw deref_error(*this);
 
     // We have to initialize here, in the operator context, because we don't actually know if the
     // user will be making use of this type.
-    (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void) fast_pointer_cast_initializer<T, CoreObject>::sc_init;
     (void) auto_id_t_init<T>::init;
 
     return *retVal;
@@ -222,4 +224,6 @@ public:
 template<typename T>
 bool operator==(const std::shared_ptr<T>& lhs, const AutowirableSlot<T>& rhs) {
   return rhs == lhs;
+}
+
 }

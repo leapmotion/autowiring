@@ -11,7 +11,7 @@ class CoreContext;
 /// </summary>
 class ContextMember:
   public CoreObject,
-  public TeardownNotifier,
+  public autowiring::TeardownNotifier,
   public std::enable_shared_from_this<ContextMember>
 {
 protected:

@@ -6,6 +6,8 @@
 #include "SatCounter.h"
 #include <cmath>
 
+using namespace autowiring;
+
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory")
 {}

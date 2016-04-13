@@ -6,6 +6,8 @@
 
 class AutoPacket;
 
+namespace autowiring {
+
 template<class T>
 class auto_arg;
 
@@ -90,7 +92,7 @@ public:
       m_decoration = t;
     }
   };
-  
+
 private:
   std::shared_ptr<auto_out_impl> m_auto_out_impl;
 
@@ -136,3 +138,5 @@ public:
     // Do nothing -- auto_out does its own deferred decoration.
   }
 };
+
+}

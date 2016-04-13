@@ -6,6 +6,8 @@
 template<class T>
 class ObjectPool;
 
+namespace autowiring {
+
 /// <summary>
 /// Interior state object of the object pool, provided to allow out-of-order teardown on the object pool
 /// </summary>
@@ -61,3 +63,5 @@ public:
   const std::function<void(T&)> initial;
   const std::function<void(T&)> fnl;
 };
+
+}

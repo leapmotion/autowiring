@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "C++11/cpp11.h"
 #include CHRONO_HEADER
 #include MEMORY_HEADER
 #include MUTEX_HEADER
@@ -17,7 +18,7 @@ class CoreRunnable {
 public:
   CoreRunnable(void);
   virtual ~CoreRunnable(void);
-  
+
 private:
   // Set to true if this runnable was ever signaled to start
   bool m_wasStarted = false;

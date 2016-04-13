@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include "ObjectPoolMonitor.h"
 
+using namespace autowiring;
+
 ObjectPoolMonitor::ObjectPoolMonitor(void) {}
 
 void ObjectPoolMonitor::Abandon(void) {

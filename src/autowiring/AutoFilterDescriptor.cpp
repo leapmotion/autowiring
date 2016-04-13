@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include "AutoFilterDescriptor.h"
 
+using namespace autowiring;
+
 AutoFilterDescriptorStub::AutoFilterDescriptorStub(auto_id type, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, autowiring::t_extractedCall pCall) :
   m_type(type),
   m_altitude(altitude),
@@ -11,7 +13,7 @@ AutoFilterDescriptorStub::AutoFilterDescriptorStub(auto_id type, autowiring::alt
 {
   for(auto pArg = m_pArgs; *pArg; pArg++) {
     m_arity++;
-      
+
     // time shifted arguments arn't required
     if (pArg->is_input)
       ++m_requiredCount;

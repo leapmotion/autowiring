@@ -30,7 +30,7 @@ namespace autowiring {
     static const bool value = false;
     static const size_t index = 0;
   };
-  
+
   template<typename T, typename Arg, typename... Args>
   struct find<T, Arg, Args...> {
     // Holds true if T is found, false otherwise

@@ -48,11 +48,11 @@ protected:
   std::atomic<uint64_t> m_version{1};
 
   // The dispatch queue proper.  A vector is used, here, not a queue, because this collection is frequently emptied.
-  DispatchThunkBase* m_pHead = nullptr;
-  DispatchThunkBase* m_pTail = nullptr;
+  autowiring::DispatchThunkBase* m_pHead = nullptr;
+  autowiring::DispatchThunkBase* m_pTail = nullptr;
 
   // Priority queue of non-ready events:
-  std::priority_queue<DispatchThunkDelayed> m_delayedQueue;
+  std::priority_queue<autowiring::DispatchThunkDelayed> m_delayedQueue;
 
   // A lock held when the dispatch queue must be updated:
   std::mutex m_dispatchLock;
@@ -100,14 +100,14 @@ protected:
   void Pend(_Fx&& fx) {
     PendExisting(
       std::unique_lock<std::mutex>(m_dispatchLock),
-      new DispatchThunk<_Fx>(std::forward<_Fx&&>(fx))
+      new autowiring::DispatchThunk<_Fx>(std::forward<_Fx&&>(fx))
     );
   }
 
   /// <summary>
   /// Attaches an element to the end of the dispatch queue without any checks.
   /// </summary>
-  void PendExisting(std::unique_lock<std::mutex>&& lk, DispatchThunkBase* thunk);
+  void PendExisting(std::unique_lock<std::mutex>&& lk, autowiring::DispatchThunkBase* thunk);
 
   /// <summary>
   /// Updates the upper bound on the number of allowed pending dispatchers
@@ -238,7 +238,7 @@ public:
   /// <summary>
   /// Explicit overload for already-constructed dispatch thunk types
   /// </summary>
-  void AddExisting(std::unique_ptr<DispatchThunkBase>&& pBase) {
+  void AddExisting(std::unique_ptr<autowiring::DispatchThunkBase>&& pBase) {
     std::unique_lock<std::mutex> lk(m_dispatchLock);
     if (m_count < m_dispatchCap)
       PendExisting(std::move(lk), pBase.release());
@@ -364,7 +364,7 @@ public:
   /// <remarks>
   /// This overload will always succeed and does not consult the dispatch cap
   /// </remarks>
-  void operator+=(DispatchThunkDelayed&& rhs);
+  void operator+=(autowiring::DispatchThunkDelayed&& rhs);
 
   /// <summary>
   /// Generic overload which will pend an arbitrary dispatch type

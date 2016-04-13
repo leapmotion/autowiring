@@ -10,6 +10,8 @@
 #include "is_shared_ptr.h"
 #include MEMORY_HEADER
 
+namespace autowiring {
+
 /// <summary>
 /// The unbound part of an AutoFilter, includes everything except the AnySharedPointer representing the filter proper
 /// </summary>
@@ -255,26 +257,24 @@ public:
   bool operator!=(const AutoFilterDescriptor& rhs) const { return !(*this == rhs); }
 };
 
-namespace autowiring {
-  namespace detail {
-    /// <summary>
-    /// Alias for AutoFilterDescriptor(ptr)
-    /// </summary>
-    template<class T>
-    AutoFilterDescriptor MakeAFDescriptor(const std::shared_ptr<T>& ptr, std::true_type) {
-      return AutoFilterDescriptor(ptr);
-    }
+namespace detail {
+  /// <summary>
+  /// Alias for AutoFilterDescriptor(ptr)
+  /// </summary>
+  template<class T>
+  AutoFilterDescriptor MakeAFDescriptor(const std::shared_ptr<T>& ptr, std::true_type) {
+    return AutoFilterDescriptor(ptr);
+  }
 
-    /// <summary>
-    /// Utility routine to support the creation of an AutoFilterDescriptor from T::AutoFilter
-    /// </summary>
-    /// <remarks>
-    /// This method will return an empty descriptor in the case that T::AutoFilter is not defined
-    /// </remarks>
-    template<class T>
-    AutoFilterDescriptor MakeAFDescriptor(const std::shared_ptr<T>&, std::false_type) {
-      return AutoFilterDescriptor();
-    }
+  /// <summary>
+  /// Utility routine to support the creation of an AutoFilterDescriptor from T::AutoFilter
+  /// </summary>
+  /// <remarks>
+  /// This method will return an empty descriptor in the case that T::AutoFilter is not defined
+  /// </remarks>
+  template<class T>
+  AutoFilterDescriptor MakeAFDescriptor(const std::shared_ptr<T>&, std::false_type) {
+    return AutoFilterDescriptor();
   }
 }
 
@@ -289,11 +289,13 @@ AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr) {
   return autowiring::detail::MakeAFDescriptor(ptr, std::integral_constant<bool, has_autofilter<T>::value>());
 }
 
+}
+
 namespace std {
   template<>
-  struct hash<AutoFilterDescriptor>
+  struct hash<autowiring::AutoFilterDescriptor>
   {
-    size_t operator()(const AutoFilterDescriptor& subscriber) const {
+    size_t operator()(const autowiring::AutoFilterDescriptor& subscriber) const {
       return (size_t) subscriber.GetAutoFilter().ptr();
     }
   };

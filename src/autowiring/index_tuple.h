@@ -1,6 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 
+namespace autowiring {
+
 /// <summary>
 /// Utility type which enables the composition of a sequence [0, sizeof...(Ts))
 /// </summary>
@@ -22,3 +24,5 @@ static_assert(
   >::value,
   "Index tuple base case was not correctly specialized"
 );
+
+}

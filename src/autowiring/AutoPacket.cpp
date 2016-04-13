@@ -74,7 +74,7 @@ DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& 
 
   if (dec.m_state != DispositionState::Unsatisfied) {
     std::stringstream ss;
-    ss << "Cannot perform immediate decoration with type " << autowiring::demangle(key.id)
+    ss << "Cannot perform immediate decoration with type " << demangle(key.id)
        << ", the requested decoration already exists";
     throw autowiring_error(ss.str());
   }
@@ -98,7 +98,7 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
     if (pCur->is_input) {
       if (entry.m_publishers.size() > 1 && !pCur->is_multi) {
         std::stringstream ss;
-        ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->id);
+        ss << "Cannot add listener for multi-broadcast type " << demangle(pCur->id);
         throw autowiring_error(ss.str());
       }
       if (entry.m_state == DispositionState::Complete) {
@@ -116,7 +116,7 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
       while (it != entry.m_modifiers.end()) {
         if (it->altitude == satCounter.GetAltitude()) {
           std::stringstream ss;
-          ss << "Added multiple rvalue decorations with same altitudes for type " << autowiring::demangle(pCur->id);
+          ss << "Added multiple rvalue decorations with same altitudes for type " << demangle(pCur->id);
           throw autowiring_error(ss.str());
         }
 
@@ -145,7 +145,7 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
             for (auto pOther = subscriber.satCounter->GetAutoFilterArguments(); *pOther; pOther++) {
               if (pOther->id == pCur->id && !pOther->is_multi) {
                 std::stringstream ss;
-                ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->id) << " with existing subscriber.";
+                ss << "Added identical data broadcasts of type " << demangle(pCur->id) << " with existing subscriber.";
                 throw autowiring_error(ss.str());
               }
             }
@@ -153,7 +153,7 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
 
           if (!entry.m_modifiers.empty()) {
             std::stringstream ss;
-            ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->id) << " with existing modifier.";
+            ss << "Added identical data broadcasts of type " << demangle(pCur->id) << " with existing modifier.";
             throw autowiring_error(ss.str());
           }
         }
@@ -170,7 +170,7 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
 void AutoPacket::DetectCycle(SatCounter& satCounter, std::unordered_set<SatCounter*>& tempVisited, std::unordered_set<SatCounter*>& permVisited) {
   if (tempVisited.count(&satCounter)) {
     std::stringstream ss;
-    ss << "Detected cycle in the auto filter graph involving type " << autowiring::demangle(satCounter.GetType());
+    ss << "Detected cycle in the auto filter graph involving type " << demangle(satCounter.GetType());
     throw autowiring_error(ss.str());
   }
 
@@ -461,10 +461,10 @@ void AutoPacket::DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key
       std::stringstream ss;
       if (disposition->m_decorations.empty())
         // Completed with no decorations, unsatisfiable
-        ss << "Cannot check out decoration of type " << autowiring::demangle(ptr)
+        ss << "Cannot check out decoration of type " << demangle(ptr)
           << ", it has been marked unsatisfiable";
       else
-        ss << "Cannot decorate this packet with type " << autowiring::demangle(ptr)
+        ss << "Cannot decorate this packet with type " << demangle(ptr)
           << ", the requested decoration is already satisfied";
       throw autowiring_error(ss.str());
     }
@@ -545,13 +545,13 @@ const SatCounter& AutoPacket::GetSatisfaction(auto_id subscriber) const {
 
 void AutoPacket::ThrowNotDecoratedException(const DecorationKey& key) {
   std::stringstream ss;
-  ss << "Attempted to obtain a type " << autowiring::demangle(key.id) << " which was not decorated on this packet";
+  ss << "Attempted to obtain a type " << demangle(key.id) << " which was not decorated on this packet";
   throw autowiring_error(ss.str());
 }
 
 void AutoPacket::ThrowMultiplyDecoratedException(const DecorationKey& key) {
   std::stringstream ss;
-  ss << "Attempted to obtain a type " << autowiring::demangle(key.id) << " which was decorated more than once on this packet";
+  ss << "Attempted to obtain a type " << demangle(key.id) << " which was decorated more than once on this packet";
   throw autowiring_error(ss.str());
 }
 
@@ -684,7 +684,7 @@ bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterArgument* inp
       stub,
       AutoFilterDescriptorStub(
         auto_id_t<AutoPacketFactory>{},
-        autowiring::altitude::Dispatch,
+        altitude::Dispatch,
         inputs,
         false,
         [] (const void* pObj, AutoPacket&) {

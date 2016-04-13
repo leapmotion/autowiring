@@ -1,6 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 
+namespace autowiring {
+
 /// <summary>
 /// Stores the passed value in the specified space, and returns the value that was previously located there
 /// </summary>
@@ -21,4 +23,6 @@ void* compare_exchange(void** dest, void* exchange, const void* comparand);
 template<class T>
 T* compare_exchange(const T*const* dest, T* exchange, const T* comparand) {
   return (T*)compare_exchange((void**) dest, exchange, comparand);
+}
+
 }

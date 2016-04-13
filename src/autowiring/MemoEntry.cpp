@@ -2,4 +2,7 @@
 #include "stdafx.h"
 #include "MemoEntry.h"
 
+using namespace autowiring;
+
+
 MemoEntry::MemoEntry(void) {}

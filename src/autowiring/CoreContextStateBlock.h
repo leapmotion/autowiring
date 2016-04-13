@@ -5,25 +5,26 @@
 #include MUTEX_HEADER
 
 class CoreContext;
-struct CoreContextStateBlock;
 
 namespace autowiring {
-  /// <summary>
-  /// Container type used for state block referencing
-  /// </summary>
-  class RunCounter:
-    public CoreObject
-  {
-  public:
-    RunCounter(const std::shared_ptr<CoreContextStateBlock>& stateBlock, const std::shared_ptr<CoreContext>& owner);
-    ~RunCounter(void);
 
-  private:
-    const std::shared_ptr<CoreContextStateBlock> stateBlock;
-    const std::shared_ptr<RunCounter> parentCount;
-    std::shared_ptr<CoreContext> owner;
-  };
-}
+struct CoreContextStateBlock;
+
+/// <summary>
+/// Container type used for state block referencing
+/// </summary>
+class RunCounter:
+  public CoreObject
+{
+public:
+  RunCounter(const std::shared_ptr<CoreContextStateBlock>& stateBlock, const std::shared_ptr<CoreContext>& owner);
+  ~RunCounter(void);
+
+private:
+  const std::shared_ptr<CoreContextStateBlock> stateBlock;
+  const std::shared_ptr<RunCounter> parentCount;
+  std::shared_ptr<CoreContext> owner;
+};
 
 struct CoreContextStateBlock:
   std::enable_shared_from_this<CoreContextStateBlock>
@@ -61,3 +62,4 @@ public:
   std::shared_ptr<autowiring::RunCounter> IncrementOutstandingThreadCount(std::shared_ptr<CoreContext> owner);
 };
 
+}

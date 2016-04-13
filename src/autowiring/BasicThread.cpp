@@ -12,6 +12,8 @@
 #include <cassert>
 #include ATOMIC_HEADER
 
+using namespace autowiring;
+
 static auto mainTID = std::this_thread::get_id();
 
 BasicThread::BasicThread(const char* pName):

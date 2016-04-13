@@ -3,6 +3,8 @@
 #include "ContextEnumerator.h"
 #include "CoreContext.h"
 
+using namespace autowiring;
+
 ContextEnumerator::ContextEnumerator(void) :
   m_root(CoreContext::CurrentContext())
 {}

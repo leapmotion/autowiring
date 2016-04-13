@@ -6,9 +6,10 @@
 #include MEMORY_HEADER
 
 class DispatchQueue;
-class DispatchThunkBase;
 
 namespace autowiring {
+
+class DispatchThunkBase;
 
 /// <summary>
 /// Generic interface for a thread pool

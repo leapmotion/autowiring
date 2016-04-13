@@ -2,6 +2,8 @@
 #pragma once
 #include "auto_arg.h"
 
+namespace autowiring {
+
 template<class T>
 class auto_arg;
 
@@ -26,7 +28,7 @@ public:
   const T& operator*(void) const {
     return *value;
   }
-  
+
   const T* operator->(void) const {
     return value;
   }
@@ -56,3 +58,5 @@ public:
     return retVal;
   }
 };
+
+}

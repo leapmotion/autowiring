@@ -1,6 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 
+namespace autowiring {
+
 /// <summary>
 /// Detects whether the specified type T has a static method with the name Validate
 /// </summary>
@@ -27,6 +29,8 @@ struct CallValidate {
 template<class T, class Validator>
 struct CallValidate<T, Validator, true> {
   static bool Call(const T& obj) {
-    return Validator::Validate(obj); 
+    return Validator::Validate(obj);
   }
 };
+
+}

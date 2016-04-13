@@ -3,8 +3,7 @@
 #include "atomic_list.h"
 #include <mutex>
 
-using autowiring::callable_base;
-using autowiring::atomic_list;
+using namespace autowiring;
 
 atomic_list::~atomic_list(void) {
   callable_base* next;

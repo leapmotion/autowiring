@@ -8,8 +8,9 @@
 #include SYSTEM_ERROR_HEADER
 #include ARRAY_HEADER
 
-struct CoreObjectDescriptor;
-struct TypeIdentifierBase;
+namespace autowiring {
+  struct CoreObjectDescriptor;
+}
 
 // Protocol layer for AutoNet
 class AutoNetServerImpl:
@@ -63,7 +64,7 @@ public:
   /// </summary>
   /// <param name="ctxt">Context containing the object</param>
   /// <param name="obj">The object</param>
-  void NewObject(CoreContext& ctxt, const CoreObjectDescriptor& obj);
+  void NewObject(CoreContext& ctxt, const autowiring::CoreObjectDescriptor& obj);
 
 protected:
   /// <summary>

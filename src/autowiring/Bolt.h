@@ -32,7 +32,7 @@ public:
     return false;
   }
 
-  static_assert(!is_any_same<void, Sigil...>::value, "Can't use 'void' as a sigil type");
+  static_assert(!autowiring::is_any_same<void, Sigil...>::value, "Can't use 'void' as a sigil type");
 };
 
 template<>

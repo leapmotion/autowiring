@@ -3,6 +3,8 @@
 #include "C++11/cpp11.h"
 #include RVALUE_HEADER
 
+namespace autowiring {
+
 /// <summary>
 /// Maintains a list of lambdas to be invoked when the enclosing object is being destroyed
 /// </summary>
@@ -78,3 +80,4 @@ public:
     AddTeardownListenerInternal(new Entry<Fx>(std::forward<Fx&&>(listener)));
   }
 };
+}
