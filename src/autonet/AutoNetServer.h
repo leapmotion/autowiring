@@ -81,7 +81,7 @@ public:
       event,
       std::forward<Fx&&>(handler),
       &Fx::operator(),
-      typename make_index_tuple<Decompose<decltype(&Fx::operator())>::N>::type()
+      typename autowiring::make_index_tuple<autowiring::Decompose<decltype(&Fx::operator())>::N>::type()
     );
   }
 

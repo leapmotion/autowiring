@@ -298,9 +298,9 @@ public:
     void operator,(_Fx&& fx) {
       // Let the parent handle this one directly after composing a delayed dispatch thunk r-value
       if (m_delay.count())
-        *m_pParent += DispatchThunkDelayed(
+        *m_pParent += autowiring::DispatchThunkDelayed(
           std::chrono::steady_clock::now() + m_delay,
-          new DispatchThunk<_Fx>(std::forward<_Fx&&>(fx))
+          new autowiring::DispatchThunk<_Fx>(std::forward<_Fx&&>(fx))
         );
       else
         *m_pParent += std::forward<_Fx&&>(fx);
@@ -322,9 +322,9 @@ public:
     template<class _Fx>
     void operator,(_Fx&& fx) {
       // Let the parent handle this one directly after composing a delayed dispatch thunk r-value
-      *m_pParent += DispatchThunkDelayed(
+      *m_pParent += autowiring::DispatchThunkDelayed(
         m_wakeup,
-        new DispatchThunk<_Fx>(std::forward<_Fx>(fx))
+        new autowiring::DispatchThunk<_Fx>(std::forward<_Fx>(fx))
       );
     }
   };

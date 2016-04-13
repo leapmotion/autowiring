@@ -99,7 +99,7 @@ class Autowired:
 public:
   Autowired(Autowired&&) = delete;
   Autowired(const Autowired& rhs) :
-    autowiring::AutowirableSlot<T>(static_cast<AutowirableSlot<T>&>(rhs))
+    autowiring::AutowirableSlot<T>(static_cast<autowiring::AutowirableSlot<T>&>(rhs))
   {}
 
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
@@ -181,7 +181,7 @@ public:
 
   void operator=(Autowired<T>&& rhs) = delete;
   void operator=(const Autowired<T>& rhs) {
-    *this = *static_cast<AutowirableSlot<T>*>(this);
+    *this = *static_cast<autowiring::AutowirableSlot<T>*>(this);
   }
 };
 

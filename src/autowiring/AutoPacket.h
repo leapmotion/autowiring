@@ -716,7 +716,7 @@ public:
   bool Wait(std::condition_variable& cv)
   {
     static const autowiring::AutoFilterArgument inputs [] = {
-      static_cast<auto_arg<Decorations>*>(nullptr)...,
+      static_cast<autowiring::auto_arg<Decorations>*>(nullptr)...,
       autowiring::AutoFilterArgument()
     };
 
@@ -781,7 +781,7 @@ public:
   /// </summary>
   template<typename Fx, typename... InArgs, typename... Outputs>
   void Call(Fx&& fx, void (Fx::*memfn)(InArgs...) const, Outputs&... outputs) {
-    typedef typename make_index_tuple<Decompose<decltype(&Fx::operator())>::N>::type t_index;
+    typedef typename autowiring::make_index_tuple<autowiring::Decompose<decltype(&Fx::operator())>::N>::type t_index;
 
     // Completely unnecessary.  Call will avoid making unneeded copies, and this is guaranteed
     // by a unit test.  Dereference your shared pointers before passing them in.
@@ -839,7 +839,7 @@ namespace autowiring {
     Arg,
     autowiring::tuple<Outputs...>,
     typename std::enable_if<
-      auto_arg<Arg>::is_output &&
+    autowiring::auto_arg<Arg>::is_output &&
       find<
         typename std::decay<Arg>::type,
         typename std::decay<Outputs>::type...
@@ -860,7 +860,7 @@ namespace autowiring {
     Arg,
     Pack,
     typename std::enable_if<
-      !auto_arg<Arg>::is_output
+      !autowiring::auto_arg<Arg>::is_output
     >::type
   >
   {

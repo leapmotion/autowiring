@@ -10,14 +10,14 @@ DECLARE_UUID(MyX, "01234567-89AB-CDEF-FEDC-BA9876543210"){};
 
 TEST_F(UuidTest, VerifySimpleUuid) {
   // Verify table properties:
-  ASSERT_EQ(0xE, UUID_MAPPING_TABLE['e' - '0']) << "Hex character 'e' in the mapping table was not correctly mapped"; 
+  ASSERT_EQ(0xE, UUID_MAPPING_TABLE['e' - '0']) << "Hex character 'e' in the mapping table was not correctly mapped";
   ASSERT_EQ(0xA, UUID_MAPPING_TABLE['A' - '0']) << "Hex character 'A' in the mapping table was not correctly mapped";
-  
+
   // Verify the queried UUID:
   uuid test_uuid = uuid_of<MyX>::Uuid();
 
   ASSERT_EQ(0x1234567UL, test_uuid.Data1) << "Data1 was not defined properly";
-  
+
   ASSERT_EQ(0x89ABUL, test_uuid.Data2) << "Data2 was not defined properly";
   ASSERT_EQ(0xCDEFUL, test_uuid.Data3) << "Data3 was not defined properly";
   ASSERT_EQ(0x1032547698badcfe, (long long&) test_uuid.Data4) << "Data4 was not defined properly";

@@ -137,7 +137,7 @@ public:
 
     template<class Fx>
     autowiring::AutoFilterDescriptor operator,(Fx&& fx) {
-      return factory.AddSubscriber(AutoFilterDescriptor(std::forward<Fx&&>(fx), altitude));
+      return factory.AddSubscriber(autowiring::AutoFilterDescriptor(std::forward<Fx&&>(fx), altitude));
     }
   };
 

@@ -136,13 +136,15 @@ struct uuid
 /// </summary>
 #define DECLARE_UUID(clazz, id) \
   class clazz; \
-  template<> \
-  struct uuid_of<clazz> \
-  { \
-    static const bool value = true; \
-    static const char* UuidStr(void) {return id;} \
-    static const uuid Uuid(void) { return uuid(id); }; \
-  }; \
+  namespace autowiring { \
+    template<> \
+    struct uuid_of<clazz> \
+    { \
+      static const bool value = true; \
+      static const char* UuidStr(void) {return id;} \
+      static const uuid Uuid(void) { return uuid(id); }; \
+    }; \
+  } \
   class DECL_UUID(id) clazz
 
 /// <summary>

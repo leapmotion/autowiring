@@ -885,7 +885,7 @@ public:
   /// </remarks>
   template<class T>
   void AddSnooper(const std::shared_ptr<T>& pSnooper) {
-    AddSnooper(CoreObjectDescriptor(pSnooper, (T*)nullptr));
+    AddSnooper(autowiring::CoreObjectDescriptor(pSnooper, (T*)nullptr));
   }
 
   /// <summary>
@@ -894,7 +894,7 @@ public:
   template<class T>
   void AddSnooper(const Autowired<T>& snooper) {
     AddSnooper(
-      CoreObjectDescriptor(
+      autowiring::CoreObjectDescriptor(
         static_cast<const std::shared_ptr<T>&>(snooper),
         (T*)nullptr
       )
@@ -914,7 +914,7 @@ public:
   /// </remarks>
   template<class T>
   void RemoveSnooper(const std::shared_ptr<T>& pSnooper) {
-    RemoveSnooper(CoreObjectDescriptor(pSnooper, (T*)nullptr));
+    RemoveSnooper(autowiring::CoreObjectDescriptor(pSnooper, (T*)nullptr));
   }
 
   /// <summary>
@@ -923,7 +923,7 @@ public:
   template<class T>
   void RemoveSnooper(const Autowired<T>& snooper) {
     RemoveSnooper(
-      CoreObjectDescriptor(
+      autowiring::CoreObjectDescriptor(
         static_cast<const std::shared_ptr<T>&>(snooper),
         (T*)nullptr
       )
@@ -951,7 +951,7 @@ public:
     // Ensure we instantiate casters for type T, regardless of whether the listener intends to use it
     autowiring::instantiate<T>();
 
-    MemoEntry& memo = FindByType(auto_id_t<T>{});
+    autowiring::MemoEntry& memo = FindByType(auto_id_t<T>{});
     CurrentContextPusher pshr(*this);
     memo.onSatisfied += std::forward<Fn&&>(listener);
   }
