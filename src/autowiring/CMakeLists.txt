@@ -131,7 +131,6 @@ set(Autowiring_SRCS
   member_new_type.h
   MemoEntry.h
   MemoEntry.cpp
-  MicroAutoFilter.h
   MicroBolt.h
   noop.h
   NullPool.h
