@@ -124,7 +124,12 @@ public:
   // Allows dynamic assignment of the type directly from an auto_id field
   void operator=(auto_id ti) {
     m_ti = ti;
-    m_ptr.reset();
+    m_ptr = {};
+  }
+
+  void operator=(std::nullptr_t) {
+    m_ti = auto_id{ nullptr };
+    m_ptr = {};
   }
 
   /// <summary>

@@ -262,5 +262,7 @@ TEST_F(AnySharedPointerTest, NullPtrConstruction) {
 
   ASSERT_EQ(x, y) << "Nullptr initialization was not null";
   ASSERT_EQ(x, z) << "Nullptr assignment was not null";
+  ASSERT_EQ(auto_id_t<void>{}, x.type());
   ASSERT_EQ(auto_id_t<void>{}, y.type());
+  ASSERT_EQ(auto_id_t<void>{}, z.type());
 }
