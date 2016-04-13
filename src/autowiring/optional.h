@@ -3,13 +3,14 @@
 #include <memory>
 #include <stdexcept>
 
+namespace autowiring {
+
 /// <summary>
 /// Implements the "optional" concept
 /// </summary>
 /// <remarks>
 /// TODO:  Replace this with a typedef to std::optional once the STL provides it
 /// </remarks>
-namespace autowiring {
 template<typename T>
 struct optional {
 public:

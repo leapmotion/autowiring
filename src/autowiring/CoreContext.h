@@ -28,7 +28,6 @@
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 
-struct CoreContextStateBlock;
 class BasicThread;
 class BoltBase;
 class GlobalCoreContext;
@@ -41,6 +40,10 @@ struct Boltable;
 
 template<class T>
 class CoreContextT;
+
+namespace autowiring {
+  struct CoreContextStateBlock;
+}
 
 /// \file
 /// CoreContext definitions.
@@ -131,7 +134,7 @@ public:
   autowiring::signal<void(const CoreContext&)> onTeardown;
 
   // Asserted any time a new object is added to the context
-  autowiring::signal<void(const CoreObjectDescriptor&)> newObject;
+  autowiring::signal<void(const autowiring::CoreObjectDescriptor&)> newObject;
 
   // The one and only configuration manager type
   autowiring::ConfigManager Config;
@@ -155,7 +158,7 @@ protected:
   const auto_id m_sigilType;
 
   // State block for this context:
-  std::shared_ptr<CoreContextStateBlock> m_stateBlock;
+  std::shared_ptr<autowiring::CoreContextStateBlock> m_stateBlock;
 
   enum class State {
     // Not yet started
@@ -208,10 +211,10 @@ protected:
   class AutoFactoryFn;
 
   // Simple list of concrete types
-  std::list<CoreObjectDescriptor> m_concreteTypes;
+  std::list<autowiring::CoreObjectDescriptor> m_concreteTypes;
 
   // This is a memoization map used to memoize any already-detected interfaces.
-  mutable std::unordered_map<auto_id, MemoEntry> m_typeMemos;
+  mutable std::unordered_map<auto_id, autowiring::MemoEntry> m_typeMemos;
 
   // All known context members, exception filters:
   std::vector<ContextMember*> m_contextMembers;
@@ -277,13 +280,13 @@ protected:
   /// <summary>
   /// Updates slots related to a single autowired field
   /// </summary>
-  void UpdateDeferredElement(std::unique_lock<std::mutex>&& lk, MemoEntry& entry);
+  void UpdateDeferredElement(std::unique_lock<std::mutex>&& lk, autowiring::MemoEntry& entry);
 
   /// \internal
   /// <summary>
   /// Updates all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
-  void UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry, bool local);
+  void UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const autowiring::CoreObjectDescriptor& entry, bool local);
 
   /// \internal
   /// <summary>
@@ -315,7 +318,7 @@ protected:
   /// <summary>
   /// Forwarding routine, adds a packet subscriber to the internal packet factory
   /// </summary>
-  void AddPacketSubscriber(const AutoFilterDescriptor& rhs);
+  void AddPacketSubscriber(const autowiring::AutoFilterDescriptor& rhs);
 
   /// \internal
   /// <summary>
@@ -327,7 +330,7 @@ protected:
   /// <summary>
   /// Internal type introduction routine
   /// </summary>
-  void AddInternal(const CoreObjectDescriptor& traits);
+  void AddInternal(const autowiring::CoreObjectDescriptor& traits);
 
   /// \internal
   /// <summary>
@@ -339,7 +342,7 @@ protected:
   /// <summary>
   /// Unsynchronized version of FindByType
   /// </summary>
-  MemoEntry& FindByTypeUnsafe(auto_id type, bool nonrecursive = false) const;
+  autowiring::MemoEntry& FindByTypeUnsafe(auto_id type, bool nonrecursive = false) const;
 
   /// \internal
   /// <summary>
@@ -357,7 +360,7 @@ protected:
   /// <summary>
   /// Forwarding routine, only removes from this context
   /// </summary>
-  void UnsnoopAutoPacket(const CoreObjectDescriptor& traits);
+  void UnsnoopAutoPacket(const autowiring::CoreObjectDescriptor& traits);
 
   /// \internal
   /// <summary>
@@ -553,10 +556,10 @@ public:
   /// </returns>
   /// <param name="type">The type to be located</param>
   /// <param name="nonrecursive">False if ancestor contexts should not be searched</param>
-  MemoEntry& FindByType(auto_id type, bool nonrecursive = false) const;
+  autowiring::MemoEntry& FindByType(auto_id type, bool nonrecursive = false) const;
 
   template<typename T>
-  MemoEntry& FindByType(std::shared_ptr<T>& ptr, bool nonrecursive = false) const {
+  autowiring::MemoEntry& FindByType(std::shared_ptr<T>& ptr, bool nonrecursive = false) const {
     auto& retVal = FindByType(auto_id_t<T>{}, nonrecursive);
     ptr = retVal.m_value.template as<T>();
     return retVal;
@@ -575,7 +578,7 @@ public:
 
     // Add this type to the TypeRegistry, also ensure that we initialize support for blind
     // fast pointer cast to CoreObject.
-    (void) RegType<T>::r;
+    (void) autowiring::RegType<T>::r;
     (void) autowiring::fast_pointer_cast_initializer<CoreObject, T>::sc_init;
 
     // First see if the base object type has already been injected.  This is also necessary to
@@ -592,7 +595,7 @@ public:
     std::shared_ptr<typename CreationRules::TActual> retVal(
       CreationRules::New(*this, std::forward<Args>(args)...)
     );
-    CoreObjectDescriptor objDesc(retVal, (T*)nullptr);
+    autowiring::CoreObjectDescriptor objDesc(retVal, (T*)nullptr);
 
     // Configure if the object is configurable, use a static check rather than checking the
     // value of pConfigDesc because it's a little faster and one necessarily follows the other
@@ -601,7 +604,7 @@ public:
       Config.Register(static_cast<T*>(retVal.get()), *objDesc.pConfigDesc);
 
     // AutoInit if sensible to do so:
-    CallAutoInit(*retVal, has_autoinit<T>());
+    CallAutoInit(*retVal, autowiring::has_autoinit<T>());
 
     try {
       // Pass control to the insertion routine, which will handle injection from this point:
@@ -866,7 +869,7 @@ public:
   /// <summary>
   /// Runtime version of AddSnooper
   /// </summary>
-  void AddSnooper(const CoreObjectDescriptor& traits);
+  void AddSnooper(const autowiring::CoreObjectDescriptor& traits);
 
   /// <summary>
   /// Registers the specified event receiver to receive messages from this context
@@ -881,7 +884,7 @@ public:
   /// </remarks>
   template<class T>
   void AddSnooper(const std::shared_ptr<T>& pSnooper) {
-    AddSnooper(CoreObjectDescriptor(pSnooper, (T*)nullptr));
+    AddSnooper(autowiring::CoreObjectDescriptor(pSnooper, (T*)nullptr));
   }
 
   /// <summary>
@@ -890,7 +893,7 @@ public:
   template<class T>
   void AddSnooper(const Autowired<T>& snooper) {
     AddSnooper(
-      CoreObjectDescriptor(
+      autowiring::CoreObjectDescriptor(
         static_cast<const std::shared_ptr<T>&>(snooper),
         (T*)nullptr
       )
@@ -900,7 +903,7 @@ public:
   /// <summary>
   /// Runtime version of RemoveSnooper
   /// </summary>
-  void RemoveSnooper(const CoreObjectDescriptor& traits);
+  void RemoveSnooper(const autowiring::CoreObjectDescriptor& traits);
 
   /// <summary>
   /// Unregisters a snooper previously registered to receive snooped events
@@ -910,7 +913,7 @@ public:
   /// </remarks>
   template<class T>
   void RemoveSnooper(const std::shared_ptr<T>& pSnooper) {
-    RemoveSnooper(CoreObjectDescriptor(pSnooper, (T*)nullptr));
+    RemoveSnooper(autowiring::CoreObjectDescriptor(pSnooper, (T*)nullptr));
   }
 
   /// <summary>
@@ -919,7 +922,7 @@ public:
   template<class T>
   void RemoveSnooper(const Autowired<T>& snooper) {
     RemoveSnooper(
-      CoreObjectDescriptor(
+      autowiring::CoreObjectDescriptor(
         static_cast<const std::shared_ptr<T>&>(snooper),
         (T*)nullptr
       )
@@ -947,7 +950,7 @@ public:
     // Ensure we instantiate casters for type T, regardless of whether the listener intends to use it
     autowiring::instantiate<T>();
 
-    MemoEntry& memo = FindByType(auto_id_t<T>{});
+    autowiring::MemoEntry& memo = FindByType(auto_id_t<T>{});
     CurrentContextPusher pshr(*this);
     memo.onSatisfied += std::forward<Fn&&>(listener);
   }

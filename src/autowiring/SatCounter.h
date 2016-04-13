@@ -2,6 +2,8 @@
 #pragma once
 #include "AutoFilterDescriptor.h"
 
+namespace autowiring {
+
 /// <summary>
 /// A single subscription counter entry
 /// </summary>
@@ -43,11 +45,13 @@ struct SatCounter:
   }
 };
 
+}
+
 namespace std {
   template<>
-  struct hash<SatCounter>
+  struct hash<autowiring::SatCounter>
   {
-    size_t operator()(const SatCounter& satCounter) const {
+    size_t operator()(const autowiring::SatCounter& satCounter) const {
       return (size_t)satCounter.GetAutoFilter().ptr();
     }
   };

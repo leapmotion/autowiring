@@ -3,6 +3,8 @@
 #include "auto_arg.h"
 #include "CoreContext.h"
 
+using namespace autowiring;
+
 CoreContext& auto_arg<CoreContext&>::arg(AutoPacket&) {
   return *CoreContext::CurrentContext();
 }

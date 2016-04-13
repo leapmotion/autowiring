@@ -1,6 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 
+namespace autowiring {
+
 template<class T>
 struct is_shared_ptr:
   public std::false_type
@@ -22,3 +24,5 @@ struct is_shared_ptr<std::shared_ptr<T>> :
 {
   typedef T type;
 };
+
+}

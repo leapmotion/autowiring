@@ -6,9 +6,9 @@
 #include MEMORY_HEADER
 
 namespace autowiring {
-  template<typename T>
-  void InjectCurrent(void);
-}
+
+template<typename T>
+void InjectCurrent(void);
 
 struct TypeRegistryEntry:
   public TypeIdentifierBase
@@ -90,4 +90,4 @@ public:
 
 template<class T>
 const TypeRegistryEntryT<T> RegType<T>::r;
-
+}

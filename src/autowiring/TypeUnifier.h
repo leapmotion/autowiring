@@ -4,6 +4,7 @@
 #include RVALUE_HEADER
 #include TYPE_TRAITS_HEADER
 
+namespace autowiring {
 class TypeUnifier: public CoreObject {};
 
 template<class T>
@@ -40,3 +41,4 @@ template<class T>
 struct SelectTypeUnifier<T, false> {
   typedef TypeUnifierComplex<T> type;
 };
+}

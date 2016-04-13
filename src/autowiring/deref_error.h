@@ -3,13 +3,13 @@
 #include "autowiring_error.h"
 #include <typeinfo>
 
-template<class T>
-class AutowirableSlot;
-
 template<typename T>
 class AutowiredFast;
 
 namespace autowiring {
+  template<class T>
+  class AutowirableSlot;
+
   std::string GenerateExceptionTextAWF(const std::type_info& ti);
   std::string GenerateExceptionTextAW(const std::type_info& ti);
 

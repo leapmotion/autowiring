@@ -4,6 +4,8 @@
 #include "demangle.h"
 #include <sstream>
 
+using namespace autowiring;
+
 autowiring_error::autowiring_error(const std::string& what):
   m_what(what)
 {}

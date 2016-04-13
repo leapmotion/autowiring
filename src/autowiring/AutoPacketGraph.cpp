@@ -13,6 +13,8 @@
 #include FUNCTIONAL_HEADER
 #include STL_UNORDERED_SET
 
+using namespace autowiring;
+
 AutoPacketGraph::AutoPacketGraph(void)
 {
   AutoCurrentContext()->newObject += [this] (const CoreObjectDescriptor&) { LoadEdges(); };

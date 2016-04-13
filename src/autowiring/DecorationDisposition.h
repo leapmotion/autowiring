@@ -7,6 +7,8 @@
 #include <set>
 #include <vector>
 
+namespace autowiring {
+
 struct SatCounter;
 
 struct DecorationKey {
@@ -28,15 +30,6 @@ struct DecorationKey {
     return id == rhs.id && tshift == rhs.tshift;
   }
 };
-
-namespace std {
-  template<>
-  struct hash<DecorationKey> {
-    size_t operator()(const DecorationKey& key) const {
-      return key.tshift + (size_t)key.id.block;
-    }
-  };
-}
 
 // The possible states for a DecorationDisposition
 enum class DispositionState {
@@ -195,3 +188,14 @@ struct DecorationDisposition
     m_state = DispositionState::Unsatisfied;
   }
 };
+
+}
+
+namespace std {
+  template<>
+  struct hash<autowiring::DecorationKey> {
+    size_t operator()(const autowiring::DecorationKey& key) const {
+      return key.tshift + (size_t)key.id.block;
+    }
+  };
+}

@@ -2,9 +2,11 @@
 #include "stdafx.h"
 #include "TypeRegistry.h"
 
+using namespace autowiring;
+
 // Head of a linked list which will have node for every event type
-const TypeRegistryEntry* g_pFirstTypeEntry = nullptr;
-size_t g_typeEntryCount = 0;
+const TypeRegistryEntry* autowiring::g_pFirstTypeEntry = nullptr;
+size_t autowiring::g_typeEntryCount = 0;
 
 TypeRegistryEntry::TypeRegistryEntry(const std::type_info& ti) :
   pFlink(g_pFirstTypeEntry),

@@ -24,7 +24,7 @@ HeteroBlock::HeteroBlock(const HeteroBlockEntry* pFirst, const HeteroBlockEntry*
 
   // Allocate enough space for everything:
   size_t ncb = 0;
-  
+
   size_t temp;
   size_t* sizePrior = &temp;
 

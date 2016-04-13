@@ -41,7 +41,7 @@ class ObjectPool
 {
 public:
   ObjectPool(void) :
-    m_monitor(std::make_shared<ObjectPoolMonitorT<T>>(this, &DefaultInitialize<T>, &DefaultFinalize<T>)),
+    m_monitor(std::make_shared<autowiring::ObjectPoolMonitorT<T>>(this, &DefaultInitialize<T>, &DefaultFinalize<T>)),
     m_maxPooled(~0),
     m_limit(~0)
   {}
@@ -58,7 +58,7 @@ public:
     const std::function<void(T&)>& initial = &DefaultInitialize<T>,
     const std::function<void(T&)>& final = &DefaultFinalize<T>
   ) :
-    m_monitor(std::make_shared<ObjectPoolMonitorT<T>>(this, initial, final)),
+    m_monitor(std::make_shared<autowiring::ObjectPoolMonitorT<T>>(this, initial, final)),
     m_maxPooled(maxPooled),
     m_limit(limit),
     m_placement(placement)
@@ -79,7 +79,7 @@ public:
     const std::function<void(T&)>& initial = &DefaultInitialize<T>,
     const std::function<void(T&)>& final = &DefaultFinalize<T>
   ) :
-    m_monitor(std::make_shared<ObjectPoolMonitorT<T>>(this, initial, final)),
+    m_monitor(std::make_shared<autowiring::ObjectPoolMonitorT<T>>(this, initial, final)),
     m_placement(placement)
   {}
 
@@ -96,7 +96,7 @@ public:
   }
 
 protected:
-  std::shared_ptr<ObjectPoolMonitorT<T>> m_monitor;
+  std::shared_ptr<autowiring::ObjectPoolMonitorT<T>> m_monitor;
   std::condition_variable m_setCondition;
 
   struct PoolEntry {
@@ -129,7 +129,7 @@ protected:
     }
 
     // Pointer to the monitor used to get us back to our pool when we're returned
-    const std::shared_ptr<ObjectPoolMonitorT<T>> monitor;
+    const std::shared_ptr<autowiring::ObjectPoolMonitorT<T>> monitor;
 
     // Pool version at the time of construction
     const size_t poolVersion;

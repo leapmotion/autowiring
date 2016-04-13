@@ -8,6 +8,7 @@
 #include <iostream>
 #include FUTURE_HEADER
 
+using namespace autowiring;
 using json11::Json;
 
 #ifdef _MSC_VER

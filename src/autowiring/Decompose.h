@@ -3,6 +3,8 @@
 #include "is_any.h"
 #include <typeinfo>
 
+namespace autowiring {
+
 template<class... Ts>
 struct TemplatePack {
   static const int N = sizeof...(Ts);
@@ -71,3 +73,5 @@ struct Decompose<R(*)(Args...)> :
   typedef void type;
   typedef R retType;
 };
+
+}

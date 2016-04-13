@@ -24,7 +24,7 @@ public:
   void Initialize(bool isFirstPacket);
 
   /// <summary>
-  /// 
+  ///
   /// </summary>
   std::shared_ptr<AutoPacketInternal> SuccessorInternal(void);
 };

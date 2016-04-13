@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 
+namespace autowiring {
 /*
  Variadic generalizations of boolean operations.
  Single argument cases are equal to the argument.
@@ -28,3 +29,5 @@ template<bool Head, bool... Tail>
 struct var_and<Head, Tail...> {
   static const bool value = Head && var_and<Tail...>::value;
 };
+
+}

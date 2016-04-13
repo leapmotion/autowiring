@@ -4,6 +4,8 @@
 #include MUTEX_HEADER
 #include THREAD_HEADER
 
+namespace autowiring {
+
 struct BasicThreadStateBlock:
   std::enable_shared_from_this<BasicThreadStateBlock>
 {
@@ -20,3 +22,5 @@ struct BasicThreadStateBlock:
   // Completion condition, true when this thread is no longer running and has run at least once
   bool m_completed = false;
 };
+
+}

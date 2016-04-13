@@ -94,16 +94,16 @@ typedef AutoCreateContextT<void> AutoCreateContext;
 /// </remarks>
 template<typename T>
 class Autowired:
-  public AutowirableSlot<T>
+  public autowiring::AutowirableSlot<T>
 {
 public:
   Autowired(Autowired&&) = delete;
   Autowired(const Autowired& rhs) :
-    AutowirableSlot<T>(static_cast<AutowirableSlot<T>&>(rhs))
+    autowiring::AutowirableSlot<T>(static_cast<autowiring::AutowirableSlot<T>&>(rhs))
   {}
 
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
-    AutowirableSlot<T>(ctxt)
+    autowiring::AutowirableSlot<T>(ctxt)
   {}
 
   operator const std::shared_ptr<T>&(void) const {
@@ -181,7 +181,7 @@ public:
 
   void operator=(Autowired<T>&& rhs) = delete;
   void operator=(const Autowired<T>& rhs) {
-    *this = *static_cast<AutowirableSlot<T>*>(this);
+    *this = *static_cast<autowiring::AutowirableSlot<T>*>(this);
   }
 };
 

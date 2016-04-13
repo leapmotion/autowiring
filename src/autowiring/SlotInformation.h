@@ -5,6 +5,8 @@
 #include <typeinfo>
 #include MEMORY_HEADER
 
+namespace autowiring {
+
 class DeferrableAutowiring;
 
 /// <summary>
@@ -144,3 +146,5 @@ public:
   /// </summary>
   static void RegisterSlot(DeferrableAutowiring* pAutowiring);
 };
+
+}

@@ -6,6 +6,8 @@
 #include "SatCounter.h"
 #include <cmath>
 
+using namespace autowiring;
+
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory")
 {}
@@ -207,9 +209,9 @@ void AutoPacketFactory::ResetPacketStatistics(void) {
   m_packetDurationSqSum = 0.0;
 }
 
-template struct SlotInformationStump<AutoPacketFactory, false>;
+template struct autowiring ::SlotInformationStump<AutoPacketFactory, false>;
 template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPacketFactory, CoreObject>(const std::shared_ptr<CoreObject>& Other);
-template class RegType<AutoPacketFactory>;
+template class autowiring::RegType<AutoPacketFactory>;
 template struct autowiring::fast_pointer_cast_blind<CoreObject, AutoPacketFactory>;
 template struct autowiring::fast_pointer_cast_initializer<CoreObject, AutoPacketFactory>;
 template struct autowiring::fast_pointer_cast_blind<AutoPacketFactory, CoreObject>;

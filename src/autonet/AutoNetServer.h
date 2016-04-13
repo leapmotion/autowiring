@@ -81,7 +81,7 @@ public:
       event,
       std::forward<Fx&&>(handler),
       &Fx::operator(),
-      typename make_index_tuple<Decompose<decltype(&Fx::operator())>::N>::type()
+      typename autowiring::make_index_tuple<autowiring::Decompose<decltype(&Fx::operator())>::N>::type()
     );
   }
 
@@ -104,7 +104,7 @@ private:
 
   // Extract arguments from list of strings, parse and pass to handler
   template<typename Fx, typename... Args, int... N>
-  void AddEventHandler(const std::string& event, Fx&& handler, void (Fx::*pfn)(Args...) const, index_tuple<N...>) {
+  void AddEventHandler(const std::string& event, Fx&& handler, void (Fx::*pfn)(Args...) const, autowiring::index_tuple<N...>) {
     AddEventHandlerInternal(
       event,
       [this, handler, pfn] (const std::vector<std::string>& args) {

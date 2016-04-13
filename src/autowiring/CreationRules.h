@@ -7,13 +7,14 @@
 
 class CoreContext;
 
+namespace autowiring {
+
 template<typename T>
 struct is_injectable
 {
-  static const bool value = autowiring::has_simple_constructor<T>::value || autowiring::has_static_new<T>::value;
+  static const bool value = has_simple_constructor<T>::value || has_static_new<T>::value;
 };
 
-namespace autowiring {
 enum class construction_strategy {
   // Just use new
   standard,
@@ -83,7 +84,7 @@ struct crh<construction_strategy::factory_new, T, Args...>
 {
   // Actual constructed type is directly the specified type
   typedef T TActual;
-  
+
   static_assert(
     std::is_base_of<CoreObject, T>::value,
     "If type T provides a static New method, then the constructed type MUST directly inherit Object"

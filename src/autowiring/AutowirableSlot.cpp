@@ -6,6 +6,7 @@
 #include <cassert>
 #include <stdexcept>
 
+using namespace autowiring;
 using namespace std;
 
 void DeferrableAutowiring::Handler::operator()() {
@@ -16,7 +17,7 @@ void DeferrableAutowiring::Handler::operator()() {
   // only sets the size to zero.
   auto autowired_notifications =
     (
-      std::lock_guard<autowiring::spin_lock>{ parent.m_lock },
+      std::lock_guard<spin_lock>{ parent.m_lock },
       std::move(parent.m_autowired_notifications)
     );
 }
@@ -34,7 +35,7 @@ DeferrableAutowiring::DeferrableAutowiring(AnySharedPointer&& witness, const std
 
   // We need to know when the type itself becomes available:
   MemoEntry& memo = context->FindByType(witness.type(), false);
-  autowiring::registration_t reg =
+  registration_t reg =
     memo.onSatisfied += Handler{ *this, memo };
 
   if (!reg)
@@ -64,11 +65,11 @@ void DeferrableAutowiring::reset(void) {
   // Local versions of the members we are clearing out
   std::weak_ptr<CoreContext> contextWeak;
   AnySharedPointer ptr;
-  std::vector<autowiring::registration_t> autowired_notifications;
-  
+  std::vector<registration_t> autowired_notifications;
+
   // Move and handle resources under lock
   {
-    std::lock_guard<autowiring::spin_lock> lk{ m_lock };
+    std::lock_guard<spin_lock> lk{ m_lock };
     autowired_notifications = std::move(m_autowired_notifications);
     ptr = std::move(m_ptr);
     contextWeak = std::move(m_context);

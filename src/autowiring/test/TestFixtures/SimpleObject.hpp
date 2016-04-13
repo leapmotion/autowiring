@@ -24,7 +24,7 @@ public:
 static_assert(
   std::is_same<
     SimpleObject,
-    typename SelectTypeUnifier<SimpleObject>::type
+    typename autowiring::SelectTypeUnifier<SimpleObject>::type
   >::value,
   "The SimpleObject was incorrectly identified as needing a type unifier"
 );

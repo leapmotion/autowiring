@@ -17,15 +17,15 @@
 #include MEMORY_HEADER
 
 namespace autowiring {
-  /// <summary>
-  /// Instantiates all casters and traits for type T
-  /// </summary>
-  template<typename T>
-  void instantiate(void) {
-    (void)fast_pointer_cast_initializer<CoreObject, T>::sc_init;
-    (void)fast_pointer_cast_initializer<T, CoreObject>::sc_init;
-    (void)auto_id_t_init<T>::init;
-  }
+
+/// <summary>
+/// Instantiates all casters and traits for type T
+/// </summary>
+template<typename T>
+void instantiate(void) {
+  (void)fast_pointer_cast_initializer<CoreObject, T>::sc_init;
+  (void)fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+  (void)auto_id_t_init<T>::init;
 }
 
 /// <summary>
@@ -45,14 +45,14 @@ struct CoreObjectDescriptor {
     stump(&SlotInformationStump<T>::s_stump),
     value(value),
     subscriber(MakeAutoFilterDescriptor<T>(value)),
-    pConfigWatcher(autowiring::fast_pointer_cast<autowiring::ConfigWatcherBase>(value)),
-    pCoreObject(autowiring::fast_pointer_cast<CoreObject>(value)),
-    pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
-    pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),
-    pBasicThread(autowiring::fast_pointer_cast<BasicThread>(value)),
-    pFilter(autowiring::fast_pointer_cast<ExceptionFilter>(value)),
-    pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
-    pConfigDesc(autowiring::config_registry_entry<T>::desc()),
+    pConfigWatcher(autowiring::fast_pointer_cast<ConfigWatcherBase>(value)),
+    pCoreObject(autowiring::fast_pointer_cast<::CoreObject>(value)),
+    pContextMember(autowiring::fast_pointer_cast<::ContextMember>(value)),
+    pCoreRunnable(autowiring::fast_pointer_cast<::CoreRunnable>(value)),
+    pBasicThread(autowiring::fast_pointer_cast<::BasicThread>(value)),
+    pFilter(autowiring::fast_pointer_cast<::ExceptionFilter>(value)),
+    pBoltBase(autowiring::fast_pointer_cast<::BoltBase>(value)),
+    pConfigDesc(config_registry_entry<T>::desc()),
     primitiveOffset(
       reinterpret_cast<size_t>(
         static_cast<T*>(
@@ -110,7 +110,7 @@ struct CoreObjectDescriptor {
   ///
   /// The linked list is guaranteed to be in reverse-sorted order
   /// </remarks>
-  const SlotInformationStumpBase* stump;
+  const autowiring::SlotInformationStumpBase* stump;
 
   // A holder to store the original shared pointer, to ensure that type information propagates
   // correctly on the right-hand side of our map
@@ -120,17 +120,19 @@ struct CoreObjectDescriptor {
   AutoFilterDescriptor subscriber;
 
   // There are a lot of interfaces we support, here they all are:
-  std::shared_ptr<autowiring::ConfigWatcherBase> pConfigWatcher;
-  std::shared_ptr<CoreObject> pCoreObject;
-  std::shared_ptr<ContextMember> pContextMember;
-  std::shared_ptr<CoreRunnable> pCoreRunnable;
-  std::shared_ptr<BasicThread> pBasicThread;
-  std::shared_ptr<ExceptionFilter> pFilter;
-  std::shared_ptr<BoltBase> pBoltBase;
+  std::shared_ptr<ConfigWatcherBase> pConfigWatcher;
+  std::shared_ptr<::CoreObject> pCoreObject;
+  std::shared_ptr<::ContextMember> pContextMember;
+  std::shared_ptr<::CoreRunnable> pCoreRunnable;
+  std::shared_ptr<::BasicThread> pBasicThread;
+  std::shared_ptr<::ExceptionFilter> pFilter;
+  std::shared_ptr<::BoltBase> pBoltBase;
 
   // Configuration descriptor, if the object provides one
-  const autowiring::config_descriptor* pConfigDesc;
+  const config_descriptor* pConfigDesc;
 
   // Distance from TActual to T
   size_t primitiveOffset;
 };
+
+}

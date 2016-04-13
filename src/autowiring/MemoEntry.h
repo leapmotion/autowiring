@@ -4,6 +4,9 @@
 #include "once.h"
 
 class CoreContext;
+
+namespace autowiring {
+
 struct CoreObjectDescriptor;
 class DeferrableAutowiring;
 
@@ -30,3 +33,4 @@ struct MemoEntry {
   bool m_local = true;
 };
 
+}

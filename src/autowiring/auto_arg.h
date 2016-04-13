@@ -3,8 +3,11 @@
 #include "auto_id.h"
 
 class AutoPacket;
-template <class T> class auto_in;
 class CoreContext;
+
+namespace autowiring {
+
+template <class T> class auto_in;
 
 /*
  The auto_arg<T> classes are used to generate of auto_in and auto_out types
@@ -456,3 +459,5 @@ template<class T>
 struct arg_is_out {
   static const bool value = auto_arg<T>::is_output;
 };
+
+}

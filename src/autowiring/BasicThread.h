@@ -7,9 +7,12 @@
 #include MEMORY_HEADER
 #include MUTEX_HEADER
 
-struct BasicThreadStateBlock;
 class BasicThread;
 class CoreContext;
+
+namespace autowiring {
+  struct BasicThreadStateBlock;
+}
 
 /// <summary>
 /// Thread priority classifications from low to high.
@@ -115,7 +118,7 @@ protected:
   // Internally held thread status block.  This has to be a shared pointer because we need to signal
   // the held state condition after releasing all shared pointers to ourselves, and this could mean
   // we're actually signalling this event after we free ourselves.
-  const std::shared_ptr<BasicThreadStateBlock> m_state;
+  const std::shared_ptr<autowiring::BasicThreadStateBlock> m_state;
 
   // Flag indicating that this thread was started at some point
   bool m_wasStarted = false;

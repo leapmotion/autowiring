@@ -59,6 +59,8 @@
 /// </summary>
 #define UUID_KNOWN(clazz) uuid_of<clazz>::value
 
+namespace autowiring {
+
 #ifndef _MSC_VER
 struct UUID {
   unsigned long  Data1;
@@ -73,10 +75,10 @@ struct UUID {
 // of this name, as not all consumers of this header will be including Windows.h
 struct uuid
 {
-    unsigned long Data1;
-    unsigned short Data2;
-    unsigned short Data3;
-    unsigned long long Data4;
+  unsigned long Data1;
+  unsigned short Data2;
+  unsigned short Data3;
+  unsigned long long Data4;
   /// <summary>
   /// Trivial constructor
   /// </summary>
@@ -86,18 +88,18 @@ struct uuid
   /// Equality Operators [stubbed for unit-testing, need better implementations]
   /// </summary>
 
-  bool friend operator== (const uuid& lhs, const uuid& rhs){
-    return  (lhs.Data1 == rhs.Data1) && 
-            (lhs.Data2 == rhs.Data2) &&
-            (lhs.Data3 == rhs.Data3) && 
-            (lhs.Data4 == rhs.Data4);
+  bool friend operator== (const uuid& lhs, const uuid& rhs) {
+    return  (lhs.Data1 == rhs.Data1) &&
+      (lhs.Data2 == rhs.Data2) &&
+      (lhs.Data3 == rhs.Data3) &&
+      (lhs.Data4 == rhs.Data4);
   }
-  bool friend operator!= (const uuid& lhs, const uuid& rhs){return !(lhs == rhs);}
+  bool friend operator!= (const uuid& lhs, const uuid& rhs) { return !(lhs == rhs); }
 
   /// <summary>
   /// Convenience constructor:
   /// </summary>
-  uuid(unsigned long Data1,unsigned short Data2,unsigned short Data3, unsigned long long Data4)
+  uuid(unsigned long Data1, unsigned short Data2, unsigned short Data3, unsigned long long Data4)
   {
     this->Data1 = Data1;
     this->Data2 = Data2;
@@ -112,7 +114,7 @@ struct uuid
   /// Initializes UUIDs of the form:
   ///  58910B93-C20B-42C2-AD8E-B80587D89D87
   ///</remarks>
-  uuid(const char (&val)[37]) {
+  uuid(const char(&val)[37]) {
     *this = uuid(COMPOSE_UUID(val, 0));
   }
 
@@ -123,7 +125,7 @@ struct uuid
   /// Initializes UUIDs of the form:
   ///  {58910B93-C20B-42C2-AD8E-B80587D89D87}
   ///</remarks>
-  uuid(const char (&val)[39]) {
+  uuid(const char(&val)[39]) {
     *this = uuid(COMPOSE_UUID(val, 1));
   }
 };
@@ -134,13 +136,15 @@ struct uuid
 /// </summary>
 #define DECLARE_UUID(clazz, id) \
   class clazz; \
-  template<> \
-  struct uuid_of<clazz> \
-  { \
-    static const bool value = true; \
-    static const char* UuidStr(void) {return id;} \
-    static const uuid Uuid(void) { return uuid(id); }; \
-  }; \
+  namespace autowiring { \
+    template<> \
+    struct uuid_of<clazz> \
+    { \
+      static const bool value = true; \
+      static const char* UuidStr(void) {return id;} \
+      static const uuid Uuid(void) { return uuid(id); }; \
+    }; \
+  } \
   class DECL_UUID(id) clazz
 
 /// <summary>
@@ -152,7 +156,7 @@ template<class T>
 struct uuid_of
 {
   static const bool value = false;
-  static const char* UuidStr(void) {return nullptr;}
+  static const char* UuidStr(void) { return nullptr; }
 
   static uuid Uuid(void) {
     return uuid(0, 0, 0, 0);
@@ -173,3 +177,4 @@ struct uuid_hash {
     return (long long&)val.Data4;
   }
 };
+}

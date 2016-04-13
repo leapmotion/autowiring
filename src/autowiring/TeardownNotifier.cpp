@@ -3,7 +3,9 @@
 #include "TeardownNotifier.h"
 #include "InterlockedExchange.h"
 
-TeardownNotifier::TeardownNotifier(void) 
+using namespace autowiring;
+
+TeardownNotifier::TeardownNotifier(void)
 {}
 
 TeardownNotifier::~TeardownNotifier(void) {

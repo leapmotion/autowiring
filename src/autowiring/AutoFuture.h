@@ -4,6 +4,8 @@
 #include "fast_pointer_cast.h"
 #include <vector>
 
+namespace autowiring {
+
 /// <summary>
 /// Represents a collection of CoreThread entities that can be waited upon
 /// </summary>
@@ -46,3 +48,5 @@ public:
     return true;
   }
 };
+
+}

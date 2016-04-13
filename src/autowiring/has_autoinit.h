@@ -2,6 +2,8 @@
 #pragma once
 #include "Decompose.h"
 
+namespace autowiring {
+
 template<class T>
 struct has_valid_autoinit {
   template<class Fn, Fn>
@@ -43,3 +45,4 @@ static void CallAutoInit(T& obj, std::true_type) {
 template<class T>
 static void CallAutoInit(T&, std::false_type) {}
 
+}

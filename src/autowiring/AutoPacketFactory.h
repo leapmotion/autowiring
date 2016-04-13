@@ -29,13 +29,13 @@ public:
 private:
   // Lock for this type
   mutable std::mutex m_lock;
-  
+
   // State change notification
   std::condition_variable m_stateCondition;
 
   // Internal outstanding reference for issued packet:
   std::weak_ptr<void> m_outstandingInternal;
-  
+
   // The most recently issued packet:
   std::weak_ptr<AutoPacketInternal> m_curPacket;
 
@@ -43,7 +43,7 @@ private:
   std::shared_ptr<AutoPacketInternal> m_nextPacket;
 
   // Collection of known subscribers
-  typedef std::set<AutoFilterDescriptor> t_autoFilterSet;
+  typedef std::set<autowiring::AutoFilterDescriptor> t_autoFilterSet;
   t_autoFilterSet m_autoFilters;
 
   // Accumulators used to compute statistics about AutoPacket lifespan.
@@ -70,13 +70,13 @@ public:
   /// <returns>
   /// A copy of all AutoFilter instances on this class
   /// </returns>
-  std::vector<AutoFilterDescriptor> GetAutoFilters(void) const;
+  std::vector<autowiring::AutoFilterDescriptor> GetAutoFilters(void) const;
 
   /// <summary>
   /// Creates a linked list of saturation counters
   /// </summary>
   /// <returns>The first element in the list, or nullptr if the list is empty</returns>
-  SatCounter* CreateSatCounterList(void) const;
+  autowiring::SatCounter* CreateSatCounterList(void) const;
 
   // CoreRunnable overrides:
   bool OnStart(void) override;
@@ -101,7 +101,7 @@ public:
   /// <remarks>
   /// This method is idempotent
   /// </remarks>
-  const AutoFilterDescriptor& AddSubscriber(const AutoFilterDescriptor& rhs);
+  const autowiring::AutoFilterDescriptor& AddSubscriber(const autowiring::AutoFilterDescriptor& rhs);
 
   /// <summary>
   /// Convenience override of AddSubscriber
@@ -111,8 +111,8 @@ public:
   /// For this call to be valid, T::AutoFilter must be defined and must be a compliant AutoFilter
   /// </remarks>
   template<class T>
-  AutoFilterDescriptor AddSubscriber(const std::shared_ptr<T>& rhs) {
-    return AddSubscriber(AutoFilterDescriptor(rhs));
+  autowiring::AutoFilterDescriptor AddSubscriber(const std::shared_ptr<T>& rhs) {
+    return AddSubscriber({ rhs });
   }
 
   /// <summary>
@@ -124,7 +124,7 @@ public:
   /// AutoFilter on it.  Only packets that are issued after this method returns will lack the presence of
   /// the autoFilter described by the parameter.
   /// </remarks>
-  void RemoveSubscriber(const AutoFilterDescriptor& autoFilter);
+  void RemoveSubscriber(const autowiring::AutoFilterDescriptor& autoFilter);
 
   struct AutoPacketFactoryExpression {
     AutoPacketFactoryExpression(AutoPacketFactory& factory, autowiring::altitude altitude):
@@ -136,8 +136,8 @@ public:
     autowiring::altitude altitude;
 
     template<class Fx>
-    AutoFilterDescriptor operator,(Fx&& fx) {
-      return factory.AddSubscriber(AutoFilterDescriptor(std::forward<Fx&&>(fx), altitude));
+    autowiring::AutoFilterDescriptor operator,(Fx&& fx) {
+      return factory.AddSubscriber(autowiring::AutoFilterDescriptor(std::forward<Fx&&>(fx), altitude));
     }
   };
 
@@ -152,14 +152,14 @@ public:
   /// This method provides a way to attach a lambda function directly to the factory
   /// </remarks>
   template<class Fx>
-  AutoFilterDescriptor operator+= (Fx&& fx) {
-    return AddSubscriber(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
+  autowiring::AutoFilterDescriptor operator+= (Fx&& fx) {
+    return AddSubscriber({ std::forward<Fx&&>(fx) });
   }
 
   /// <summary>
   /// Overloaded counterpart to RemoveSubscriber
   /// </summary>
-  void operator-=(const AutoFilterDescriptor& desc);
+  void operator-=(const autowiring::AutoFilterDescriptor& desc);
 
 protected:
   /// <summary>
@@ -168,7 +168,7 @@ protected:
   /// <remarks>
   /// If a matching description was not found GetTypeDescriptor(type).GetAutoFilterTypeInfo() == nullptr
   /// </remarks>
-  AutoFilterDescriptor GetTypeDescriptorUnsafe(auto_id nodeType);
+  autowiring::AutoFilterDescriptor GetTypeDescriptorUnsafe(auto_id nodeType);
 
   static bool IsAutoPacketType(const std::type_info& dataType);
 
@@ -232,9 +232,9 @@ public:
 // @cond
 // Extern explicit template instantiation declarations added to prevent
 // exterior instantation of internally used template instances
-extern template struct SlotInformationStump<AutoPacketFactory, false>;
+extern template struct autowiring::SlotInformationStump<AutoPacketFactory, false>;
 extern template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPacketFactory, CoreObject>(const std::shared_ptr<CoreObject>& Other);
-extern template class RegType<AutoPacketFactory>;
+extern template class autowiring::RegType<AutoPacketFactory>;
 extern template struct autowiring::fast_pointer_cast_blind<CoreObject, AutoPacketFactory>;
 extern template struct autowiring::fast_pointer_cast_initializer<CoreObject, AutoPacketFactory>;
 extern template struct autowiring::fast_pointer_cast_blind<AutoPacketFactory, CoreObject>;
