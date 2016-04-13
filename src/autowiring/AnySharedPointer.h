@@ -9,6 +9,9 @@ public:
   AnySharedPointer(void) = default;
   AnySharedPointer(AnySharedPointer&& rhs);
   AnySharedPointer(const AnySharedPointer& rhs) = default;
+  AnySharedPointer(std::nullptr_t) :
+    AnySharedPointer()
+  {}
 
   template<class T>
   AnySharedPointer(const std::shared_ptr<T>& rhs) :
