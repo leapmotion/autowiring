@@ -9,6 +9,9 @@ public:
   AnySharedPointer(void) = default;
   AnySharedPointer(AnySharedPointer&& rhs);
   AnySharedPointer(const AnySharedPointer& rhs) = default;
+  AnySharedPointer(std::nullptr_t) :
+    AnySharedPointer()
+  {}
 
   template<class T>
   AnySharedPointer(const std::shared_ptr<T>& rhs) :
@@ -89,6 +92,10 @@ public:
     return m_ptr == rhs;
   }
 
+  bool operator==(std::nullptr_t) const {
+    return !m_ptr;
+  }
+
   bool operator!=(std::nullptr_t) const {
     return !!m_ptr;
   }
@@ -117,7 +124,12 @@ public:
   // Allows dynamic assignment of the type directly from an auto_id field
   void operator=(auto_id ti) {
     m_ti = ti;
-    m_ptr.reset();
+    m_ptr = {};
+  }
+
+  void operator=(std::nullptr_t) {
+    m_ti = {};
+    m_ptr = {};
   }
 
   /// <summary>

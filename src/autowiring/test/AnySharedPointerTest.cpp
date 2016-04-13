@@ -129,7 +129,7 @@ TEST_F(AnySharedPointerTest, TrivialRelease) {
 
   ASSERT_TRUE(a.unique()) << "Expected reassignment of a slot to release a formerly held instance";
   ASSERT_FALSE(b.unique()) << "Expected slot to hold a reference to the second specified instance";
-  
+
   // Now release, and verify that a release actually took place
   slot.reset();
   ASSERT_TRUE(b.unique()) << "Releasing a slot did not actually release the held value as expected";
@@ -250,4 +250,20 @@ TEST_F(AnySharedPointerTest, NullAfterMove) {
   AnySharedPointer p3;
   p3 = std::move(p2);
   ASSERT_FALSE(p2) << "Move assignment of AnySharedPointer did not nullify rhs";
+}
+
+TEST_F(AnySharedPointerTest, NullPtrConstruction) {
+  AnySharedPointer x{ nullptr };
+  ASSERT_EQ(auto_id_t<void>{}, auto_id{}) << "Default auto_id is expected to be void";
+  ASSERT_EQ(auto_id_t<void>{}, x.type()) << "nullptr type_id should have been void";
+
+  AnySharedPointer y;
+  AnySharedPointer z;
+  y = nullptr;
+
+  ASSERT_EQ(x, y) << "Nullptr initialization was not null";
+  ASSERT_EQ(x, z) << "Nullptr assignment was not null";
+  ASSERT_EQ(auto_id_t<void>{}, x.type());
+  ASSERT_EQ(auto_id_t<void>{}, y.type());
+  ASSERT_EQ(auto_id_t<void>{}, z.type());
 }
