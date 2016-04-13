@@ -635,7 +635,7 @@ public:
   /// </remarks>
   template<typename T>
   const std::shared_ptr<T>& Await(void) {
-    return Await(auto_id_t<T>{}).as<T>();
+    return Await(auto_id_t<T>{}).template as<T>();
   }
 
   /// <summary>
@@ -644,7 +644,7 @@ public:
   /// <returns>An instance of type T, or nullptr if the timeout has been reached</returns>
   template<typename T>
   std::shared_ptr<T> Await(std::chrono::nanoseconds timeout) {
-    return Await(auto_id_t<T>{}, timeout).as<T>();
+    return Await(auto_id_t<T>{}, timeout).template as<T>();
   }
 
   /// <summary>
