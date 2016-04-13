@@ -51,10 +51,10 @@ namespace autowiring {
       ncb(sizeof(T)),
       align(safe_align_of<T>::value),
       pToObj(
-        reinterpret_cast<std::shared_ptr<CoreObject>(*)(const std::shared_ptr<void>&)>(pToObj)
+        reinterpret_cast<std::shared_ptr<CoreObject>(*)(const std::shared_ptr<void>&) AUTO_NOEXCEPT>(pToObj)
       ),
       pFromObj(
-        reinterpret_cast<std::shared_ptr<void>(*)(const std::shared_ptr<CoreObject>&)>(pFromObj)
+        reinterpret_cast<std::shared_ptr<void>(*)(const std::shared_ptr<CoreObject>&) AUTO_NOEXCEPT>(pFromObj)
       )
     {}
 
