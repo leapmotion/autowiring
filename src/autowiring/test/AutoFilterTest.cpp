@@ -6,7 +6,6 @@
 #include <autowiring/Deferred.h>
 #include <autowiring/demangle.h>
 #include <autowiring/ObjectPool.h>
-#include <autowiring/AutoTimeStamp.h>
 #include <autowiring/SatCounter.h>
 #include THREAD_HEADER
 
@@ -578,21 +577,6 @@ TEST_F(AutoFilterTest, NoDeferredImmediateSatisfaction) {
   ASSERT_EQ(0UL, wfil->GetDispatchQueueLength()) << "Deferred AutoFilter incorrectly received an immediate-mode decoration";
 }
 
-TEST_F(AutoFilterTest, AutoTimeStampTest) {
-  AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<AutoTimeStamp> stamper;
-  auto then = std::chrono::high_resolution_clock::now();
-  auto packet = factory->NewPacket();
-  const std::chrono::high_resolution_clock::time_point* pLater;
-  ASSERT_TRUE(packet->Get(pLater)) << "Failed to stamp packet on initialization";
-
-  auto now = std::chrono::high_resolution_clock::now();
-
-  // Ensure that events happened in the order expected
-  ASSERT_LE(then, *pLater) << "Packet timestamp is from a point in time before the test was started";
-  ASSERT_LE(*pLater, now) << "Packet timestampe is dated after test conclusion";
-}
-
 TEST_F(AutoFilterTest, WaitWhilePacketOutstanding) {
   AutoRequired<AutoPacketFactory> factory;
   auto packet = factory->NewPacket();
@@ -786,17 +770,17 @@ void print_decorations(const std::string &label, const AutoPacket::t_decorationM
 }
 
 TEST_F(AutoFilterTest, AutoOut2) {
-  
+
   // NOTE: this test uses implementation details of DecorationDisposition, which is not part of the public API,
   // and should be refactored once that part is cleaned up (in particular, AutoPacket::GetDecorations is
   // what is exposing that, and should be moved into autowiring::dbg, out of the public API for AutoPacket).
-  
+
   AutoRequired<AutoPacketFactory> factory;
   {
     auto packet = factory->NewPacket();
     auto d = packet->GetDecorations();
     ASSERT_EQ(0, d.size()) << "Unexpected number of AutoFilter parameters.";
-    
+
     packet->Decorate(123.45);
     d = packet->GetDecorations();
     ASSERT_EQ(1, d.size()) << "Unexpected number of AutoFilter parameters.";
@@ -811,12 +795,12 @@ TEST_F(AutoFilterTest, AutoOut2) {
     auto filter_1 = [&filter_1_called](int y) {
       filter_1_called = true;
     };
-    
+
     ASSERT_FALSE(filter_0_called) << "We expected filter_0 to not have been called by now.";
     ASSERT_FALSE(filter_1_called) << "We expected filter_1 to not have been called by now.";
-    
+
     *packet += filter_0;
-    
+
     ASSERT_TRUE(filter_0_called) << "We expected filter_0 to have been called by now.";
     ASSERT_FALSE(filter_1_called) << "We expected filter_0 to not have been called by now.";
     d = packet->GetDecorations();
@@ -835,11 +819,11 @@ TEST_F(AutoFilterTest, AutoOut2) {
 }
 
 TEST_F(AutoFilterTest, AutoOut3) {
-  
+
   // NOTE: this test uses implementation details of DecorationDisposition, which is not part of the public API,
   // and should be refactored once that part is cleaned up (in particular, AutoPacket::GetDecorations is
   // what is exposing that, and should be moved into autowiring::dbg, out of the public API for AutoPacket).
-  
+
   AutoRequired<AutoPacketFactory> factory;
   {
     auto packet = factory->NewPacket();
@@ -851,7 +835,7 @@ TEST_F(AutoFilterTest, AutoOut3) {
       filter_1_called = true;
     };
     *packet += filter_1;
-    
+
     packet->Decorate(123.45);
     d = packet->GetDecorations();
     ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
@@ -864,12 +848,12 @@ TEST_F(AutoFilterTest, AutoOut3) {
     auto filter_0 = [&filter_0_called](const double &x, auto_out<int> y) {
       filter_0_called = true;
     };
-    
+
     ASSERT_FALSE(filter_0_called) << "We expected filter_0 to not have been called by now.";
     ASSERT_FALSE(filter_1_called) << "We expected filter_1 to not have been called by now.";
-    
+
     *packet += filter_0;
-    
+
     ASSERT_TRUE(filter_0_called) << "We expected filter_0 to have been called by now.";
     ASSERT_FALSE(filter_1_called) << "We expected filter_0 to not have been called by now.";
     d = packet->GetDecorations();
@@ -887,11 +871,11 @@ TEST_F(AutoFilterTest, AutoOut3) {
 }
 
 TEST_F(AutoFilterTest, AutoOut4) {
-  
+
   // NOTE: this test uses implementation details of DecorationDisposition, which is not part of the public API,
   // and should be refactored once that part is cleaned up (in particular, AutoPacket::GetDecorations is
   // what is exposing that, and should be moved into autowiring::dbg, out of the public API for AutoPacket).
-  
+
   AutoRequired<AutoPacketFactory> factory;
   {
     auto packet = factory->NewPacket();
@@ -903,7 +887,7 @@ TEST_F(AutoFilterTest, AutoOut4) {
       filter_1_called = true;
     };
     *packet += filter_1;
-    
+
     packet->Decorate(123.45);
     d = packet->GetDecorations();
     ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
@@ -918,12 +902,12 @@ TEST_F(AutoFilterTest, AutoOut4) {
       ao = std::move(y);
       filter_0_called = true;
     };
-    
+
     ASSERT_FALSE(filter_0_called) << "We expected filter_0 to not have been called by now.";
     ASSERT_FALSE(filter_1_called) << "We expected filter_1 to not have been called by now.";
-    
+
     *packet += filter_0;
-    
+
     ASSERT_TRUE(filter_0_called) << "We expected filter_0 to have been called by now.";
     ASSERT_FALSE(filter_1_called) << "We expected filter_0 to not have been called by now.";
     d = packet->GetDecorations();
@@ -938,7 +922,7 @@ TEST_F(AutoFilterTest, AutoOut4) {
     // Assign to ao, thereby decorating the packet with int.
     *ao = 42;
     ao.reset();
-    
+
     ASSERT_TRUE(filter_0_called) << "We expected filter_0 to have been called by now.";
     ASSERT_TRUE(filter_1_called) << "We expected filter_0 to have been called by now.";
     d = packet->GetDecorations();
