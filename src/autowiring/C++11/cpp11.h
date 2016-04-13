@@ -15,9 +15,6 @@
   #define STL11_ALLOWED 1
 #endif
 
-// Deprecated macros, provided here until we can be sure that they aren't used downstream
-#define EXCEPTION_PTR_HEADER <stdexcept>
-
 #define IS_CLANG defined(__clang_major__)
 #define CLANG_CHECK(maj, min) (__clang_major__ == maj && __clang_minor__ >= min || __clang_major__ > maj)
 #define GCC_CHECK(maj, min) (__GNUC__ == maj && __GNUC_MINOR__  >= min || __GNUC__ > maj)
