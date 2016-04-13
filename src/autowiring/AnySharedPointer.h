@@ -92,6 +92,10 @@ public:
     return m_ptr == rhs;
   }
 
+  bool operator==(std::nullptr_t) const {
+    return !m_ptr;
+  }
+
   bool operator!=(std::nullptr_t) const {
     return !!m_ptr;
   }
