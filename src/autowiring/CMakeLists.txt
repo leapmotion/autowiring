@@ -146,7 +146,6 @@ set(Autowiring_SRCS
   Parallel.h
   Parallel.cpp
   registration.h
-  result_or_default.h
   SatCounter.h
   signal.h
   signal.cpp
