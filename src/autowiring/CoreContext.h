@@ -20,7 +20,6 @@
 #include "member_new_type.h"
 #include "MemoEntry.h"
 #include "once.h"
-#include "result_or_default.h"
 #include "TypeRegistry.h"
 #include "TypeUnifier.h"
 
