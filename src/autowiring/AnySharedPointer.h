@@ -46,7 +46,7 @@ public:
   /// Attempts to dynamically assign this slot to the specified object without changing the current type
   /// </summary>
   /// <returns>True if the assignment succeeds</returns>
-  bool try_assign(const std::shared_ptr<CoreObject>& rhs) {
+  bool try_assign(const std::shared_ptr<CoreObject>& rhs) AUTO_NOEXCEPT {
     if (!m_ti.block->pFromObj)
       return false;
     auto ptr = m_ti.block->pFromObj(rhs);
