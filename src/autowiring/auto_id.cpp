@@ -17,7 +17,7 @@ const auto_id_block auto_id_t<void>::s_block{
   nullptr
 };
 
-int CreateIndex(void) {
+int autowiring::CreateIndex(void) {
   return s_index++;
 }
 

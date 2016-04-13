@@ -371,11 +371,11 @@ public:
   /// </summary>
   template<class _Fx>
   bool operator+=(_Fx&& fx) {
-    static_assert(!std::is_base_of<DispatchThunkBase, _Fx>::value, "Overload resolution malfunction, must not doubly wrap a dispatch thunk");
+    static_assert(!std::is_base_of<autowiring::DispatchThunkBase, _Fx>::value, "Overload resolution malfunction, must not doubly wrap a dispatch thunk");
     static_assert(!std::is_pointer<_Fx>::value, "Cannot pend a pointer to a function, we must have direct ownership");
 
     // Create the thunk first to reduce the amount of time we spend in lock:
-    auto thunk = new DispatchThunk<_Fx>(std::forward<_Fx>(fx));
+    auto thunk = new autowiring::DispatchThunk<_Fx>(std::forward<_Fx>(fx));
 
     m_dispatchLock.lock();
     if (m_count >= m_dispatchCap) {

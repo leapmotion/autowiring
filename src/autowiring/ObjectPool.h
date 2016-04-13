@@ -41,7 +41,7 @@ class ObjectPool
 {
 public:
   ObjectPool(void) :
-    m_monitor(std::make_shared<ObjectPoolMonitorT<T>>(this, &DefaultInitialize<T>, &DefaultFinalize<T>)),
+    m_monitor(std::make_shared<autowiring::ObjectPoolMonitorT<T>>(this, &DefaultInitialize<T>, &DefaultFinalize<T>)),
     m_maxPooled(~0),
     m_limit(~0)
   {}

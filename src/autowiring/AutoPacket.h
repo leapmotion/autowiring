@@ -554,13 +554,13 @@ public:
     // None of the inputs may be shared pointers--if any of the inputs are shared pointers, they must be attached
     // to this packet via Decorate, or else dereferenced and used that way.
     static_assert(
-      !autowiring::is_any<is_shared_ptr<T>::value, is_shared_ptr<Ts>::value...>::value,
+      !autowiring::is_any<autowiring::is_shared_ptr<T>::value, autowiring::is_shared_ptr<Ts>::value...>::value,
       "DecorateImmediate must not be used to attach a shared pointer, use Decorate on such a decoration instead"
     );
 
     // Perform standard decoration with a short initialization:
     std::unique_lock<std::mutex> lk(m_lock);
-    DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)] = {
+    autowiring::DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)] = {
       &DecorateImmediateUnsafe(autowiring::DecorationKey(auto_id_t<T>(), 0), &immed),
       &DecorateImmediateUnsafe(autowiring::DecorationKey(auto_id_t<Ts>(), 0), &immeds)...
     };
@@ -569,9 +569,9 @@ public:
     MakeAtExit([this, &pTypeSubs] {
       // Mark entries as unsatisfiable:
       // IMPORTANT: isCheckedOut = true prevents subsequent decorations of this type
-      for(DecorationDisposition*  pEntry : pTypeSubs) {
+      for(autowiring::DecorationDisposition* pEntry : pTypeSubs) {
         pEntry->m_pImmediate = nullptr;
-        pEntry->m_state = DispositionState::Complete;
+        pEntry->m_state = autowiring::DispositionState::Complete;
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
@@ -622,7 +622,7 @@ public:
   template<class Fx>
   const AutoPacket& operator+=(Fx&& fx) const {
     static_assert(
-      !Decompose<decltype(&Fx::operator())>::template any<arg_is_out>::value,
+      !autowiring::Decompose<decltype(&Fx::operator())>::template any<arg_is_out>::value,
       "Cannot add an AutoFilter to a const AutoPacket if any of its arguments are output types"
     );
     *const_cast<AutoPacket*>(this) += std::forward<Fx&&>(fx);
@@ -760,7 +760,7 @@ public:
     // Completely unnecessary.  Call will avoid making unneeded copies, and this is guaranteed
     // by a unit test.  Dereference your shared pointers before passing them in.
     static_assert(
-      !autowiring::is_any<is_shared_ptr<Outputs>::value...>::value,
+      !autowiring::is_any<autowiring::is_shared_ptr<Outputs>::value...>::value,
       "Do not use shared pointer arguments as output arguments with Call"
     );
 
@@ -786,7 +786,7 @@ public:
     // Completely unnecessary.  Call will avoid making unneeded copies, and this is guaranteed
     // by a unit test.  Dereference your shared pointers before passing them in.
     static_assert(
-      !autowiring::is_any<is_shared_ptr<Outputs>::value...>::value,
+      !autowiring::is_any<autowiring::is_shared_ptr<Outputs>::value...>::value,
       "Do not use shared pointer arguments as output arguments with Call"
     );
 
