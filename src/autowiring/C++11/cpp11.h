@@ -209,11 +209,17 @@
  * noexcept support
  *********************/
 #ifdef _MSC_VER
-  #define AUTOWIRE_cxx_noexcept 0
-  #define NOEXCEPT(x)
+  #if _MSC_VER >= 1900
+    #define AUTO_NOEXCEPT noexcept
+  #else
+    #define AUTO_NOEXCEPT throw()
+  #endif
 #else
-  #define AUTOWIRE_cxx_noexcept 1
-  #define NOEXCEPT(x) x noexcept
+  #if __has_feature(cxx_noexcept)
+    #define AUTO_NOEXCEPT noexcept
+  #else
+    #define AUTO_NOEXCEPT
+  #endif
 #endif
 
 /*********************
