@@ -16,7 +16,6 @@
 #endif
 
 // Deprecated macros, provided here until we can be sure that they aren't used downstream
-#define throw_rethrowable throw
 #define EXCEPTION_PTR_HEADER <stdexcept>
 
 #define IS_CLANG defined(__clang_major__)
