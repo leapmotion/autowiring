@@ -39,7 +39,6 @@ set(Autowiring_SRCS
   AutoPacketFactory.h
   AutoPacketGraph.cpp
   AutoPacketGraph.h
-  AutoTimeStamp.h
   AutowirableSlot.cpp
   AutowirableSlot.h
   Autowired.cpp
