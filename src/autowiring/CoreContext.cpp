@@ -261,6 +261,10 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
     UpdateDeferredElements(std::move(lk), m_concreteTypes.back(), true);
   }
 
+  // Tell anyone interested that we are done adding the type
+  m_stateBlock->m_stateChanged.notify_all();
+
+  // All bolts--this also performs retroactive bolting
   if (traits.pBoltBase)
     AddBolt(traits.pBoltBase);
 
@@ -635,6 +639,43 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
     q->SetCurrent();
     pBase->ContextCreated();
   }
+}
+
+AnySharedPointer CoreContext::Await(auto_id id) {
+  std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
+  MemoEntry& memo = FindByTypeUnsafe(id);
+  if (!memo.m_value)
+    // Need to wait for this value to be satisfied
+    m_stateBlock->m_stateChanged.wait(
+      lk,
+      [this, &memo] {
+        if(IsShutdown())
+          throw dispatch_aborted_exception{};
+        return memo.m_value != nullptr;
+      }
+    );
+
+  return memo.m_value;
+}
+
+AnySharedPointer CoreContext::Await(auto_id id, std::chrono::nanoseconds timeout) {
+  std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
+  MemoEntry& memo = FindByTypeUnsafe(id);
+  if (!memo.m_value)
+    // Need to wait for this value to be satisfied
+    if(!m_stateBlock->m_stateChanged.wait_for(
+        lk,
+        timeout,
+        [this, &memo] {
+          if(IsShutdown())
+            throw dispatch_aborted_exception{};
+          return memo.m_value != nullptr;
+        }
+      )
+    )
+      return{};
+
+  return memo.m_value;
 }
 
 void CoreContext::BuildCurrentState(void) {

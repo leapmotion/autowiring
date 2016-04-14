@@ -589,3 +589,50 @@ TEST_F(CoreContextTest, ChildContextSignalOrder) {
   ctxt->Initiate();
   ASSERT_TRUE(gotStartObservation) << "Start observation obtained";
 }
+
+TEST_F(CoreContextTest, Await) {
+  AutoCurrentContext x;
+  std::thread injector {
+    [x] {
+      std::this_thread::sleep_for(std::chrono::milliseconds{1});
+      x->Inject<ChildListener>();
+    }
+  };
+
+  auto t = x->Await<ChildListener>();
+  AutowiredFast<ChildListener> l;
+  ASSERT_EQ(l, t);
+
+  injector.join();
+}
+
+TEST_F(CoreContextTest, AwaitWithShutdown) {
+  AutoCurrentContext x;
+  std::thread killer{
+    [x] {
+      std::this_thread::sleep_for(std::chrono::milliseconds{ 1 });
+      x->SignalShutdown();
+    }
+  };
+
+  ASSERT_THROW(x->Await<ChildListener>(), dispatch_aborted_exception) << "A context was terminated during await but did not throw as expected";
+  killer.join();
+}
+
+TEST_F(CoreContextTest, AwaitTimed) {
+  AutoCurrentContext x;
+  ASSERT_EQ(nullptr, x->Await<ChildListener>(std::chrono::microseconds{ 1 }));
+
+  std::thread injector {
+    [x] {
+      std::this_thread::sleep_for(std::chrono::milliseconds{1});
+      x->Inject<ChildListener>();
+    }
+  };
+
+  auto t = x->Await<ChildListener>(std::chrono::seconds{ 10 });
+  AutowiredFast<ChildListener> l;
+  ASSERT_EQ(l, t);
+
+  injector.join();
+}

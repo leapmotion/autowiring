@@ -628,6 +628,38 @@ public:
   }
 
   /// <summary>
+  /// Similar to Inject, except will block until the specified type is available in the context
+  /// </summary>
+  /// <returns>An instance of type T</returns>
+  /// <remarks>
+  /// This method will throw an exception if the context is terminated when the call is made or while
+  /// waiting for injection to take place.
+  /// </remarks>
+  template<typename T>
+  const std::shared_ptr<T>& Await(void) {
+    return Await(auto_id_t<T>{}).template as<T>();
+  }
+
+  /// <summary>
+  /// Timed version of Await
+  /// </summary>
+  /// <returns>An instance of type T, or nullptr if the timeout has been reached</returns>
+  template<typename T>
+  std::shared_ptr<T> Await(std::chrono::nanoseconds timeout) {
+    return Await(auto_id_t<T>{}, timeout).template as<T>();
+  }
+
+  /// <summary>
+  /// Runtime Await variant
+  /// </summary>
+  AnySharedPointer Await(auto_id id);
+
+  /// <summary>
+  /// Runtime Await variant
+  /// </summary>
+  AnySharedPointer Await(auto_id id, std::chrono::nanoseconds timeout);
+
+  /// <summary>
   /// Injects a type into the current context.
   /// </summary>
   template<typename T>
