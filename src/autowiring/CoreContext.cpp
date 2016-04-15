@@ -798,6 +798,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     }
     lk.unlock();
 
+    // Fire off notifications that satisfaction has taken place
     for (auto e: entries)
       e->onSatisfied();
   }

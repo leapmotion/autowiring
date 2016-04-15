@@ -348,19 +348,6 @@ TEST_F(PostConstructTest, PostConstructGetsCalled) {
   ASSERT_TRUE(cwai->m_postConstructed) << "Auto-initialization routine was not called on an initializable type";
 }
 
-struct PostConstructThrowsException {
-  void AutoInit(void) const {
-    throw std::runtime_error("Autoinit crashing for no reason");
-  }
-};
-
-TEST_F(PostConstructTest, PostConstructCanSafelyThrow) {
-  ASSERT_ANY_THROW(AutoRequired<PostConstructThrowsException>()) << "AutoInit call threw an exception, but it was incorrectly eaten by Autowiring";
-
-  Autowired<PostConstructThrowsException> pcte;
-  ASSERT_FALSE(pcte.IsAutowired()) << "A context member which threw an exception post-construction was incorrectly introduced into a context";
-}
-
 namespace {
   class EmptyType : public CoreObject {};
 }
@@ -426,4 +413,20 @@ TEST_F(PostConstructTest, CorrectContextAssignment) {
   });
 
   ASSERT_EQ(child, currentCtxt) << "Current context was not correctly assigned in a post-satisfied NotifyWhenAutowired handler";
+}
+
+namespace {
+  class ThrowsInAutoInit {
+  public:
+    void AutoInit(void) {
+      throw std::runtime_error("Failure!");
+    }
+  };
+}
+
+TEST_F(PostConstructTest, ThrowingAutoInit) {
+  AutoCurrentContext ctxt;
+  ASSERT_FALSE(ctxt->IsShutdown());
+  ASSERT_THROW(AutoRequired<ThrowsInAutoInit>{}, std::runtime_error);
+  ASSERT_TRUE(ctxt->IsShutdown());
 }
