@@ -68,6 +68,8 @@ public:
     return obj && try_assign(obj);
   }
 
+  const std::shared_ptr<void>& as_void(void) const { return m_ptr; }
+
   template<class T>
   const std::shared_ptr<T>& as(void) const {
     // The safety of this routine is verified by the AnySharedPointer unit tests
