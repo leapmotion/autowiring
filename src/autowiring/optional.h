@@ -30,6 +30,11 @@ public:
   {
     new(val) T{ std::move(value) };
   }
+  optional(const T& value) :
+    m_valid(true)
+  {
+    new(val) T{ value };
+  }
 
   ~optional(void) {
     if (m_valid)
