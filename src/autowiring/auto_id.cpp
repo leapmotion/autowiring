@@ -21,12 +21,12 @@ int autowiring::CreateIndex(void) {
   return s_index++;
 }
 
-std::shared_ptr<CoreObject> auto_id_block::NullToObj(const std::shared_ptr<void>&)
+std::shared_ptr<CoreObject> auto_id_block::NullToObj(const std::shared_ptr<void>&) AUTO_NOEXCEPT
 {
   return nullptr;
 }
 
-std::shared_ptr<void> auto_id_block::NullFromObj(const std::shared_ptr<CoreObject>&)
+std::shared_ptr<void> auto_id_block::NullFromObj(const std::shared_ptr<CoreObject>&) AUTO_NOEXCEPT
 {
   return nullptr;
 }
