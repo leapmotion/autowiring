@@ -603,9 +603,6 @@ public:
     if(autowiring::has_getconfigdescriptor<T>::value)
       Config.Register(static_cast<T*>(retVal.get()), *objDesc.pConfigDesc);
 
-    // AutoInit if sensible to do so:
-    CallAutoInit(*retVal, autowiring::has_autoinit<T>());
-
     try {
       // Pass control to the insertion routine, which will handle injection from this point:
       AddInternal(objDesc);
@@ -618,6 +615,17 @@ public:
       // Construct.
       auto& memo = FindByType(auto_id_t<typename CreationRules::TActual>{}, true);
       retVal = memo.m_value.template as<typename CreationRules::TActual>();
+    }
+
+    try {
+      // AutoInit if sensible to do so, we've proven to ourselves that
+      CallAutoInit(*retVal, autowiring::has_autoinit<T>());
+    }
+    catch (...) {
+      // The object is already in the context, it can't refuse to initialize.  Throwing from
+      // here results in teardown unconditionally.
+      SignalShutdown();
+      throw;
     }
 
     // Factory registration if sensible to do so, but only after the underlying type has been added

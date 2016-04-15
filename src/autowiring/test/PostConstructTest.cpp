@@ -427,3 +427,19 @@ TEST_F(PostConstructTest, CorrectContextAssignment) {
 
   ASSERT_EQ(child, currentCtxt) << "Current context was not correctly assigned in a post-satisfied NotifyWhenAutowired handler";
 }
+
+namespace {
+  class ThrowsInAutoInit {
+  public:
+    void AutoInit(void) {
+      throw std::runtime_error("Failure!");
+    }
+  };
+}
+
+TEST_F(PostConstructTest, ThrowingAutoInit) {
+  AutoCurrentContext ctxt;
+  ASSERT_FALSE(ctxt->IsShutdown());
+  ASSERT_THROW(AutoRequired<ThrowsInAutoInit>{}, std::runtime_error);
+  ASSERT_TRUE(ctxt->IsShutdown());
+}
