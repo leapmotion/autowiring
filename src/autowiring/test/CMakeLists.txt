@@ -53,6 +53,7 @@ set(AutowiringTest_SRCS
   ObjectPoolTest.cpp
   ObservableTest.cpp
   OnceTest.cpp
+  OptionalTest.cpp
   ParallelTest.cpp
   PostConstructTest.cpp
   SelfSelectingFixtureTest.cpp
