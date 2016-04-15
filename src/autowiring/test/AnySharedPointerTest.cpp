@@ -267,3 +267,9 @@ TEST_F(AnySharedPointerTest, NullPtrConstruction) {
   ASSERT_EQ(auto_id_t<void>{}, y.type());
   ASSERT_EQ(auto_id_t<void>{}, z.type());
 }
+
+TEST_F(AnySharedPointerTest, VoidSharedPointer) {
+  auto p = std::make_shared<int>(101);
+  AnySharedPointer x = p;
+  ASSERT_EQ(std::static_pointer_cast<void>(p), x.as_void()) << "Void cast of shared pointer did not hold the expected value";
+}
