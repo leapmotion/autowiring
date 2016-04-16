@@ -5,6 +5,7 @@
 using namespace autowiring;
 
 std::atomic<config_registry_entry_base*> autowiring::g_pFirstEntry;
+const config_descriptor config_registry_entry_default::desc = {};
 
 config_registry_entry_base::config_registry_entry_base(void) {
   while (!g_pFirstEntry.compare_exchange_weak(pFlink, this));

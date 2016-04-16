@@ -595,15 +595,16 @@ public:
     );
     autowiring::CoreObjectDescriptor objDesc(retVal, (T*)nullptr);
 
-    // Configure if the object is configurable, use a static check rather than checking the
-    // value of pConfigDesc because it's a little faster and one necessarily follows the other
-    // We also want this to happen before the AutoInit call is made
-    if(autowiring::has_getconfigdescriptor<T>::value)
-      Config.Register(static_cast<T*>(retVal.get()), *objDesc.pConfigDesc);
-
     try {
       // Pass control to the insertion routine, which will handle injection from this point:
       AddInternal(objDesc);
+
+      // Configure if the object is configurable, use a static check rather than checking the
+      // value of pConfigDesc because it's a little faster and one necessarily follows the other
+      // We also want this to happen before the AutoInit call is made, but after we have
+      // determined that the AutoInit call is inevitable.
+      if (autowiring::has_getconfigdescriptor<T>::value)
+        Config.Register(static_cast<T*>(retVal.get()), *objDesc.pConfigDesc);
     }
     catch(autowiring_error&) {
       // We know why this exception occurred.  It's because, while we were constructing our
@@ -615,7 +616,8 @@ public:
     }
 
     try {
-      // AutoInit if sensible to do so, we've proven to ourselves that
+      // AutoInit if sensible to do so, we've proven to ourselves that we are the only owner
+      // at this point
       CallAutoInit(*retVal, autowiring::has_autoinit<T>());
     }
     catch (...) {

@@ -661,6 +661,13 @@ namespace {
     }
 
     AutoRequired<HoldsMutexAndCount> hmac;
+    int c = 100;
+
+    static autowiring::config_descriptor GetConfigDescriptor(void) {
+      return{
+        { "c", &DelaysWithNwa::c }
+      };
+    }
   };
 }
 
@@ -685,4 +692,7 @@ TEST_F(CoreContextTest, SimultaneousMultiInject) {
 
   // Only one of those two instances should still be around
   ASSERT_EQ(1, hmac->instanceCount);
+
+  // Verify that there's no config block still present
+  ASSERT_NO_THROW(ctxt->Config.Get("c"));
 }
