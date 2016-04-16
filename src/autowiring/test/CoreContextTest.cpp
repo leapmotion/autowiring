@@ -636,3 +636,47 @@ TEST_F(CoreContextTest, AwaitTimed) {
 
   injector.join();
 }
+
+namespace {
+  class HoldsMutexAndCount {
+  public:
+    int initCount = 0;
+    int instanceCount = 0;
+    std::mutex lk;
+  };
+
+  class DelaysWithNwa {
+  public:
+    DelaysWithNwa(void) {
+      std::lock_guard<std::mutex>{ hmac->lk };
+
+      hmac->initCount++;
+      hmac->instanceCount++;
+    }
+
+    virtual ~DelaysWithNwa(void) {
+      hmac->instanceCount--;
+    }
+
+    AutoRequired<HoldsMutexAndCount> hmac;
+  };
+}
+
+TEST_F(CoreContextTest, SimultaneousMultiInject) {
+  AutoCreateContext ctxt;
+  AutoRequired<HoldsMutexAndCount> hmac{ ctxt };
+
+  std::unique_lock<std::mutex> lk{ hmac->lk };
+  std::thread a([ctxt] { ctxt->Inject<DelaysWithNwa>(); });
+  std::thread b([ctxt] { ctxt->Inject<DelaysWithNwa>(); });
+  lk.unlock();
+
+  a.join();
+  b.join();
+
+  // Two initializations should have taken place due to the barrier
+  ASSERT_EQ(2, hmac->initCount);
+
+  // Only one of those two instances should still be around
+  ASSERT_EQ(1, hmac->instanceCount);
+}

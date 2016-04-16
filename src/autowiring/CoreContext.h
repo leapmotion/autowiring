@@ -590,6 +590,10 @@ public:
         return memo.m_value.template as<T>();
     }
 
+    // Need the memo for the actual type at this point, if we don't hold this down then this
+    // entry might not get constructed.
+    auto& memo = FindByType(auto_id_t<typename CreationRules::TActual>{}, true);
+
     // We must make ourselves current for the remainder of this call:
     CurrentContextPusher pshr(shared_from_this());
     std::shared_ptr<typename CreationRules::TActual> retVal(
@@ -613,7 +617,6 @@ public:
       // we will simply eat this exception, and handle it silently by returning the type that
       // someone else has already attempted to construct, as per the documented behavior of
       // Construct.
-      auto& memo = FindByType(auto_id_t<typename CreationRules::TActual>{}, true);
       retVal = memo.m_value.template as<typename CreationRules::TActual>();
     }
 
