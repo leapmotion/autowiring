@@ -310,12 +310,6 @@ protected:
 
   /// \internal
   /// <summary>
-  /// Overload of Add based on ContextMember
-  /// </summary>
-  void AddContextMember(const std::shared_ptr<ContextMember>& ptr);
-
-  /// \internal
-  /// <summary>
   /// Forwarding routine, adds a packet subscriber to the internal packet factory
   /// </summary>
   void AddPacketSubscriber(const autowiring::AutoFilterDescriptor& rhs);
