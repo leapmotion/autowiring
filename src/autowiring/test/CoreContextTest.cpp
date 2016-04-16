@@ -640,6 +640,7 @@ TEST_F(CoreContextTest, AwaitTimed) {
 namespace {
   class HoldsMutexAndCount {
   public:
+    volatile int hitCount = 0;
     int initCount = 0;
     int instanceCount = 0;
     std::mutex lk;
@@ -648,6 +649,7 @@ namespace {
   class DelaysWithNwa {
   public:
     DelaysWithNwa(void) {
+      hmac->hitCount++;
       std::lock_guard<std::mutex>{ hmac->lk };
 
       hmac->initCount++;
@@ -669,6 +671,10 @@ TEST_F(CoreContextTest, SimultaneousMultiInject) {
   std::unique_lock<std::mutex> lk{ hmac->lk };
   std::thread a([ctxt] { ctxt->Inject<DelaysWithNwa>(); });
   std::thread b([ctxt] { ctxt->Inject<DelaysWithNwa>(); });
+
+  // Poor man's barrier
+  while (hmac->hitCount != 2)
+    std::this_thread::yield();
   lk.unlock();
 
   a.join();
