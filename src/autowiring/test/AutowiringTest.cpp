@@ -23,6 +23,7 @@ TEST_F(AutowiringTest, VerifyAutowiredFast) {
   // Verify that AutowiredFast can find this object
   AutowiredFast<SimpleObject> sobj;
   ASSERT_TRUE(sobj.IsAutowired()) << "Failed to autowire an object which was just injected into a context";
+  ASSERT_NE(sobj, nullptr);
 }
 
 TEST_F(AutowiringTest, VerifyAutowiredFastNontrivial) {
@@ -35,10 +36,12 @@ TEST_F(AutowiringTest, VerifyAutowiredFastNontrivial) {
   // Now we add the object
   AutoRequired<SimpleReceiver>();
   ASSERT_FALSE(ciEmpty.IsAutowired()) << "An AutowiredFast field was incorrectly satisfied post-hoc";
+  ASSERT_EQ(nullptr, ciEmpty);
 
   // Verify that AutowiredFast can find this object from its interface
   AutowiredFast<CallableInterface> ci;
   ASSERT_TRUE(ci.IsAutowired()) << "Failed to autowire an interface advertised by a newly-inserted object";
+  ASSERT_NE(nullptr, ci);
 }
 
 template<int N>
@@ -118,6 +121,7 @@ TEST_F(AutowiringTest, PostHocTypeAdvertisement) {
   Autowired<PrivateBase> pb;
 
   ASSERT_FALSE(pb.IsAutowired()) << "Private base type was present in the context before it was advertised";
+
   ctxt->Add(
     std::shared_ptr<PrivateBase>{
       dcdt,
@@ -240,4 +244,35 @@ TEST_F(AutowiringTest, FastNullDereferenceTest) {
   catch (autowiring::deref_error& dre) {
     ASSERT_STREQ("Attempted to dereference a null AutowiredFast<SimpleObject>", dre.what());
   }
+}
+
+TEST_F(AutowiringTest, ComparisonOverloadTest) {
+  Autowired<SimpleObject> sobj;
+
+  // These two tests actually resolve to different overloads, so we need to ensure both expressions do get called
+  ASSERT_EQ(nullptr, sobj);
+  ASSERT_TRUE(sobj == nullptr);
+
+  // The remainder of the test will be on the positive comparison case, so we can inject now
+  AutoRequired<SimpleObject>{};
+
+  // Same here as above
+  ASSERT_NE(sobj, nullptr);
+  ASSERT_NE(nullptr, sobj);
+
+  // Another test to verify our shared pointer casts all resolve properly
+  ASSERT_EQ(static_cast<const std::shared_ptr<SimpleObject>&>(sobj), sobj);
+  ASSERT_EQ(sobj, static_cast<const std::shared_ptr<SimpleObject>&>(sobj));
+
+  // We should also be able to handle casted versions of the same
+  std::shared_ptr<ContextMember> base;
+  ASSERT_NE(base, sobj);
+  ASSERT_NE(sobj, base);
+  base = sobj;
+  ASSERT_EQ(base, sobj);
+  ASSERT_EQ(sobj, base);
+
+  // Finally we also support primitive pointer comparisons
+  ASSERT_EQ(sobj.get(), sobj);
+  ASSERT_EQ(sobj, sobj.get());
 }

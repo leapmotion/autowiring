@@ -102,7 +102,7 @@ public:
     autowiring::AutowirableSlot<T>(static_cast<autowiring::AutowirableSlot<T>&>(rhs))
   {}
 
-  Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
+  explicit Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
     autowiring::AutowirableSlot<T>(ctxt)
   {}
 
@@ -110,9 +110,25 @@ public:
     return static_cast<const AnySharedPointerT<T>&>(this->m_ptr).get();
   }
 
+  template<typename U>
+  operator std::shared_ptr<U>(void) const {
+    return static_cast<const AnySharedPointerT<T>&>(this->m_ptr).get();
+  }
+
   operator std::weak_ptr<T>(void) const {
     return this->operator const std::shared_ptr<T>&();
   }
+
+  bool operator==(std::nullptr_t) const { return !this->m_ptr; }
+  bool operator!=(std::nullptr_t) const { return !!this->m_ptr; }
+  bool operator==(const std::shared_ptr<T>& rhs) const { return this->m_ptr == rhs; }
+  bool operator!=(const std::shared_ptr<T>& rhs) const { return this->m_ptr != rhs; }
+
+  template<typename U>
+  bool operator==(const std::shared_ptr<U>& rhs) const { return this->m_ptr == rhs; }
+
+  template<typename U>
+  bool operator!=(const std::shared_ptr<U>& rhs) const { return this->m_ptr != rhs; }
 
   operator T*(void) const {
     return this->operator const std::shared_ptr<T>&().get();
@@ -184,6 +200,12 @@ public:
     *this = *static_cast<autowiring::AutowirableSlot<T>*>(this);
   }
 };
+
+template<typename T, typename U>
+bool operator==(const std::shared_ptr<T>& lhs, const Autowired<U>& rhs) { return rhs == lhs; }
+
+template<typename T, typename U>
+bool operator!=(const std::shared_ptr<T>& lhs, const Autowired<U>& rhs) { return rhs != lhs; }
 
 /// <summary>
 /// Autowires the specified dependency, creating a new instance if one does not already exist.
