@@ -247,13 +247,12 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
       }
     }
 
-    // Add the new concrete type:
+    // These are all trivial containers that we take the opportunity to update here while we are
+    // under lock.  Changes to these containers do not cause any signals to be asserted so we are
+    // safe to do this.
     m_concreteTypes.push_back(traits);
-
-    // Insert each context element:
     if(traits.pContextMember)
-      AddContextMember(traits.pContextMember);
-
+      m_contextMembers.push_back(traits.pContextMember.get());
     if(traits.pFilter)
       m_filters.push_back(traits.pFilter.get());
 
@@ -796,6 +795,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
       // Store if it was injected from the local context or not
       value.m_local = local;
     }
+
     lk.unlock();
 
     // Fire off notifications that satisfaction has taken place
@@ -888,11 +888,6 @@ void CoreContext::InsertSnooper(const AnySharedPointer& snooper) {
 void CoreContext::RemoveSnooper(const AnySharedPointer& snooper) {
   (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
   m_snoopers.erase(snooper);
-}
-
-void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
-  // Always add to the set of context members
-  m_contextMembers.push_back(ptr.get());
 }
 
 void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
