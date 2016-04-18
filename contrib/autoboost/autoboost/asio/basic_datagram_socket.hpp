@@ -2,7 +2,7 @@
 // basic_datagram_socket.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2014 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -792,7 +792,7 @@ public:
     autoboost::asio::detail::throw_error(ec, "receive_from");
     return s;
   }
-  
+
   /// Receive a datagram with the endpoint of the sender.
   /**
    * This function is used to receive a datagram. The function call will block
@@ -819,7 +819,7 @@ public:
     autoboost::asio::detail::throw_error(ec, "receive_from");
     return s;
   }
-  
+
   /// Receive a datagram with the endpoint of the sender.
   /**
    * This function is used to receive a datagram. The function call will block

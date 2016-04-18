@@ -3,7 +3,7 @@
 // ~~~~~~~~~~~~~~~~~~~~
 //
 // Copyright (c) 2005 Voipster / Indrek dot Juhani at voipster dot com
-// Copyright (c) 2005-2014 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2005-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -67,6 +67,8 @@ struct context::dh_cleanup
 context::context(context::method m)
   : handle_(0)
 {
+  ::ERR_clear_error();
+
   switch (m)
   {
 #if defined(OPENSSL_NO_SSL2)
@@ -87,6 +89,14 @@ context::context(context::method m)
     handle_ = ::SSL_CTX_new(::SSLv2_server_method());
     break;
 #endif // defined(OPENSSL_NO_SSL2)
+#if defined(OPENSSL_NO_SSL3)
+  case context::sslv3:
+  case context::sslv3_client:
+  case context::sslv3_server:
+    autoboost::asio::detail::throw_error(
+        autoboost::asio::error::invalid_argument, "context");
+    break;
+#else // defined(OPENSSL_NO_SSL3)
   case context::sslv3:
     handle_ = ::SSL_CTX_new(::SSLv3_method());
     break;
@@ -96,6 +106,7 @@ context::context(context::method m)
   case context::sslv3_server:
     handle_ = ::SSL_CTX_new(::SSLv3_server_method());
     break;
+#endif // defined(OPENSSL_NO_SSL3)
   case context::tlsv1:
     handle_ = ::SSL_CTX_new(::TLSv1_method());
     break;
@@ -142,14 +153,14 @@ context::context(context::method m)
   case context::tlsv12_server:
     handle_ = ::SSL_CTX_new(::TLSv1_2_server_method());
     break;
-#else // defined(SSL_TXT_TLSV1_2) 
+#else // defined(SSL_TXT_TLSV1_2)
   case context::tlsv12:
   case context::tlsv12_client:
   case context::tlsv12_server:
     autoboost::asio::detail::throw_error(
         autoboost::asio::error::invalid_argument, "context");
     break;
-#endif // defined(SSL_TXT_TLSV1_2) 
+#endif // defined(SSL_TXT_TLSV1_2)
   default:
     handle_ = ::SSL_CTX_new(0);
     break;
@@ -329,6 +340,8 @@ void context::load_verify_file(const std::string& filename)
 autoboost::system::error_code context::load_verify_file(
     const std::string& filename, autoboost::system::error_code& ec)
 {
+  ::ERR_clear_error();
+
   if (::SSL_CTX_load_verify_locations(handle_, filename.c_str(), 0) != 1)
   {
     ec = autoboost::system::error_code(
@@ -386,6 +399,8 @@ void context::set_default_verify_paths()
 autoboost::system::error_code context::set_default_verify_paths(
     autoboost::system::error_code& ec)
 {
+  ::ERR_clear_error();
+
   if (::SSL_CTX_set_default_verify_paths(handle_) != 1)
   {
     ec = autoboost::system::error_code(
@@ -408,6 +423,8 @@ void context::add_verify_path(const std::string& path)
 autoboost::system::error_code context::add_verify_path(
     const std::string& path, autoboost::system::error_code& ec)
 {
+  ::ERR_clear_error();
+
   if (::SSL_CTX_load_verify_locations(handle_, 0, path.c_str()) != 1)
   {
     ec = autoboost::system::error_code(
@@ -500,6 +517,8 @@ autoboost::system::error_code context::use_certificate_file(
     }
   }
 
+  ::ERR_clear_error();
+
   if (::SSL_CTX_use_certificate_file(handle_, filename.c_str(), file_type) != 1)
   {
     ec = autoboost::system::error_code(
@@ -547,11 +566,15 @@ autoboost::system::error_code context::use_certificate_chain(
       return ec;
     }
 
+#if (OPENSSL_VERSION_NUMBER >= 0x10002000L) && !defined(LIBRESSL_VERSION_NUMBER)
+    ::SSL_CTX_clear_chain_certs(handle_);
+#else
     if (handle_->extra_certs)
     {
       ::sk_X509_pop_free(handle_->extra_certs, X509_free);
       handle_->extra_certs = 0;
     }
+#endif // (OPENSSL_VERSION_NUMBER >= 0x10002000L)
 
     while (X509* cacert = ::PEM_read_bio_X509(bio.p, 0,
           handle_->default_passwd_callback,
@@ -565,7 +588,7 @@ autoboost::system::error_code context::use_certificate_chain(
         return ec;
       }
     }
-  
+
     result = ::ERR_peek_last_error();
     if ((ERR_GET_LIB(result) == ERR_LIB_PEM)
         && (ERR_GET_REASON(result) == PEM_R_NO_START_LINE))
@@ -592,6 +615,8 @@ void context::use_certificate_chain_file(const std::string& filename)
 autoboost::system::error_code context::use_certificate_chain_file(
     const std::string& filename, autoboost::system::error_code& ec)
 {
+  ::ERR_clear_error();
+
   if (::SSL_CTX_use_certificate_chain_file(handle_, filename.c_str()) != 1)
   {
     ec = autoboost::system::error_code(
@@ -628,7 +653,9 @@ autoboost::system::error_code context::use_private_key(
       evp_private_key.p = ::d2i_PrivateKey_bio(bio.p, 0);
       break;
     case context_base::pem:
-      evp_private_key.p = ::PEM_read_bio_PrivateKey(bio.p, 0, 0, 0);
+      evp_private_key.p = ::PEM_read_bio_PrivateKey(
+          bio.p, 0, handle_->default_passwd_callback,
+          handle_->default_passwd_callback_userdata);
       break;
     default:
       {
@@ -685,7 +712,9 @@ autoboost::system::error_code context::use_rsa_private_key(
       rsa_private_key.p = ::d2i_RSAPrivateKey_bio(bio.p, 0);
       break;
     case context_base::pem:
-      rsa_private_key.p = ::PEM_read_bio_RSAPrivateKey(bio.p, 0, 0, 0);
+      rsa_private_key.p = ::PEM_read_bio_RSAPrivateKey(
+          bio.p, 0, handle_->default_passwd_callback,
+          handle_->default_passwd_callback_userdata);
       break;
     default:
       {
@@ -730,6 +759,8 @@ autoboost::system::error_code context::use_private_key_file(
     }
   }
 
+  ::ERR_clear_error();
+
   if (::SSL_CTX_use_PrivateKey_file(handle_, filename.c_str(), file_type) != 1)
   {
     ec = autoboost::system::error_code(
@@ -770,6 +801,8 @@ autoboost::system::error_code context::use_rsa_private_key_file(
     }
   }
 
+  ::ERR_clear_error();
+
   if (::SSL_CTX_use_RSAPrivateKey_file(
         handle_, filename.c_str(), file_type) != 1)
   {
@@ -793,6 +826,8 @@ void context::use_tmp_dh(const const_buffer& dh)
 autoboost::system::error_code context::use_tmp_dh(
     const const_buffer& dh, autoboost::system::error_code& ec)
 {
+  ::ERR_clear_error();
+
   bio_cleanup bio = { make_buffer_bio(dh) };
   if (bio.p)
   {
@@ -815,6 +850,8 @@ void context::use_tmp_dh_file(const std::string& filename)
 autoboost::system::error_code context::use_tmp_dh_file(
     const std::string& filename, autoboost::system::error_code& ec)
 {
+  ::ERR_clear_error();
+
   bio_cleanup bio = { ::BIO_new_file(filename.c_str(), "r") };
   if (bio.p)
   {
@@ -925,7 +962,8 @@ int context::password_callback_function(
     strcpy_s(buf, size, passwd.c_str());
 #else // defined(AUTOBOOST_ASIO_HAS_SECURE_RTL)
     *buf = '\0';
-    strncat(buf, passwd.c_str(), size);
+    if (size > 0)
+      strncat(buf, passwd.c_str(), size - 1);
 #endif // defined(AUTOBOOST_ASIO_HAS_SECURE_RTL)
 
     return static_cast<int>(strlen(buf));

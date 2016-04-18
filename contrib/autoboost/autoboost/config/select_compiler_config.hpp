@@ -1,6 +1,6 @@
 //  Boost compiler configuration selection header file
 
-//  (C) Copyright John Maddock 2001 - 2003. 
+//  (C) Copyright John Maddock 2001 - 2003.
 //  (C) Copyright Martin Wille 2003.
 //  (C) Copyright Guillaume Melquiond 2003.
 //
@@ -11,7 +11,7 @@
 //  See http://www.boost.org/ for most recent version.
 
 // locate which compiler we are using and define
-// AUTOBOOST_COMPILER_CONFIG as needed: 
+// AUTOBOOST_COMPILER_CONFIG as needed:
 
 #if defined __CUDACC__
 //  NVIDIA CUDA C++ compiler for GPU
@@ -39,7 +39,7 @@
 //  Intel
 #   define AUTOBOOST_COMPILER_CONFIG "autoboost/config/compiler/intel.hpp"
 
-#elif defined __clang__ && !defined(__CUDACC__)
+#elif defined __clang__ && !defined(__CUDACC__) && !defined(__ibmxl__)
 // when using clang and cuda at same time, you want to appear as gcc
 //  Clang C++ emulates GCC, so it has to appear early.
 #   define AUTOBOOST_COMPILER_CONFIG "autoboost/config/compiler/clang.hpp"
@@ -48,7 +48,7 @@
 //  Digital Mars C++
 #   define AUTOBOOST_COMPILER_CONFIG "autoboost/config/compiler/digitalmars.hpp"
 
-# elif defined __GNUC__
+# elif defined(__GNUC__) && !defined(__ibmxl__)
 //  GNU C++:
 #   define AUTOBOOST_COMPILER_CONFIG "autoboost/config/compiler/gcc.hpp"
 
@@ -92,8 +92,12 @@
 //  MPW MrCpp or SCpp
 #   define AUTOBOOST_COMPILER_CONFIG "autoboost/config/compiler/mpw.hpp"
 
+#elif defined(__ibmxl__)
+// IBM XL C/C++ for Linux (Little Endian)
+#   define AUTOBOOST_COMPILER_CONFIG "autoboost/config/compiler/xlcpp.hpp"
+
 #elif defined(__IBMCPP__)
-//  IBM Visual Age
+//  IBM Visual Age or IBM XL C/C++ for Linux (Big Endian)
 #   define AUTOBOOST_COMPILER_CONFIG "autoboost/config/compiler/vacpp.hpp"
 
 #elif defined(__PGI)
@@ -110,7 +114,7 @@
 #elif defined (AUTOBOOST_ASSERT_CONFIG)
 // this must come last - generate an error if we don't
 // recognise the compiler:
-#  error "Unknown compiler - please configure (http://www.boost.org/libs/config/config.htm#configuring) and report the results to the main boost mailing list (http://www.boost.org/more/mailing_lists.htm#main)"
+#  error "Unknown compiler - please configure (http://www.boost.org/libs/config/config.htm#configuring) and report the results to the main autoboost mailing list (http://www.boost.org/more/mailing_lists.htm#main)"
 
 #endif
 

@@ -3,7 +3,7 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
 // Copyright (c) 2005 Voipster / Indrek dot Juhani at voipster dot com
-// Copyright (c) 2005-2014 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2005-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -61,12 +61,12 @@ private:
       , io_service_(io_service)
       , work_(io_service)
     {}
-    
+
     void do_func(const autoboost::system::error_code& error, size_t size)
     {
       func_(error, size);
     }
-        
+
     void set_operation(openssl_operation<Stream>* op) { op_ = op; }
     void set_func(func_t func) { func_ = func; }
 
@@ -84,7 +84,7 @@ private:
 
   // Handler for asynchronous IO (write/read) operations
   template<typename Stream, typename Handler>
-  class io_handler 
+  class io_handler
     : public base_handler<Stream>
   {
   public:
@@ -93,7 +93,7 @@ private:
       , handler_(handler)
     {
       this->set_func(autoboost::bind(
-        &io_handler<Stream, Handler>::handler_impl, 
+        &io_handler<Stream, Handler>::handler_impl,
         this, autoboost::arg<1>(), autoboost::arg<2>() ));
     }
 
@@ -104,7 +104,7 @@ private:
       std::auto_ptr<io_handler<Stream, Handler> > this_ptr(this);
       handler_(error, size);
     }
-  };  // class io_handler 
+  };  // class io_handler
 
   // Handler for asyncrhonous handshake (connect, accept) functions
   template <typename Stream, typename Handler>
@@ -117,7 +117,7 @@ private:
       , handler_(handler)
     {
       this->set_func(autoboost::bind(
-        &handshake_handler<Stream, Handler>::handler_impl, 
+        &handshake_handler<Stream, Handler>::handler_impl,
         this, autoboost::arg<1>(), autoboost::arg<2>() ));
     }
 
@@ -140,9 +140,9 @@ private:
     shutdown_handler(Handler handler, autoboost::asio::io_service& io_service)
       : base_handler<Stream>(io_service),
         handler_(handler)
-    { 
+    {
       this->set_func(autoboost::bind(
-        &shutdown_handler<Stream, Handler>::handler_impl, 
+        &shutdown_handler<Stream, Handler>::handler_impl,
         this, autoboost::arg<1>(), autoboost::arg<2>() ));
     }
 
@@ -244,7 +244,7 @@ public:
   {
     typedef handshake_handler<Stream, Handler> connect_handler;
 
-    connect_handler* local_handler = 
+    connect_handler* local_handler =
       new connect_handler(handler, get_io_service());
 
     openssl_operation<Stream>* op = new openssl_operation<Stream>
@@ -258,7 +258,7 @@ public:
       impl->ext_bio,
       autoboost::bind
       (
-        &base_handler<Stream>::do_func, 
+        &base_handler<Stream>::do_func,
         local_handler,
         autoboost::arg<1>(),
         autoboost::arg<2>()
@@ -301,7 +301,7 @@ public:
   {
     typedef shutdown_handler<Stream, Handler> disconnect_handler;
 
-    disconnect_handler* local_handler = 
+    disconnect_handler* local_handler =
       new disconnect_handler(handler, get_io_service());
 
     openssl_operation<Stream>* op = new openssl_operation<Stream>
@@ -313,8 +313,8 @@ public:
       impl->ext_bio,
       autoboost::bind
       (
-        &base_handler<Stream>::do_func, 
-        local_handler, 
+        &base_handler<Stream>::do_func,
+        local_handler,
         autoboost::arg<1>(),
         autoboost::arg<2>()
       ),
@@ -322,7 +322,7 @@ public:
     );
     local_handler->set_operation(op);
 
-    strand_.post(autoboost::bind(&openssl_operation<Stream>::start, op));        
+    strand_.post(autoboost::bind(&openssl_operation<Stream>::start, op));
   }
 
   // Write some data to the stream.
@@ -347,7 +347,7 @@ public:
       }
 
       autoboost::function<int (SSL*)> send_func =
-        autoboost::bind(autoboost::type<int>(), &::SSL_write, autoboost::arg<1>(),  
+        autoboost::bind(autoboost::type<int>(), &::SSL_write, autoboost::arg<1>(),
             autoboost::asio::buffer_cast<const void*>(buffer),
             static_cast<int>(buffer_size));
       openssl_operation<Stream> op(
@@ -406,8 +406,8 @@ public:
       impl->ext_bio,
       autoboost::bind
       (
-        &base_handler<Stream>::do_func, 
-        local_handler, 
+        &base_handler<Stream>::do_func,
+        local_handler,
         autoboost::arg<1>(),
         autoboost::arg<2>()
       ),
@@ -415,7 +415,7 @@ public:
     );
     local_handler->set_operation(op);
 
-    strand_.post(autoboost::bind(&openssl_operation<Stream>::start, op));        
+    strand_.post(autoboost::bind(&openssl_operation<Stream>::start, op));
   }
 
   // Read some data from the stream.
@@ -499,8 +499,8 @@ public:
       impl->ext_bio,
       autoboost::bind
       (
-        &base_handler<Stream>::do_func, 
-        local_handler, 
+        &base_handler<Stream>::do_func,
+        local_handler,
         autoboost::arg<1>(),
         autoboost::arg<2>()
       ),
@@ -508,7 +508,7 @@ public:
     );
     local_handler->set_operation(op);
 
-    strand_.post(autoboost::bind(&openssl_operation<Stream>::start, op));        
+    strand_.post(autoboost::bind(&openssl_operation<Stream>::start, op));
   }
 
   // Peek at the incoming data on the stream.
@@ -529,11 +529,11 @@ public:
     return 0;
   }
 
-private:  
+private:
   autoboost::asio::io_service::strand strand_;
 
   typedef autoboost::asio::detail::mutex mutex_type;
-  
+
   template<typename Mutex>
   struct ssl_wrap
   {
@@ -544,19 +544,19 @@ private:
       typename Mutex::scoped_lock lock(ssl_mutex_);
       return ::SSL_accept(ssl);
     }
-  
+
     static int SSL_connect(SSL *ssl)
     {
       typename Mutex::scoped_lock lock(ssl_mutex_);
       return ::SSL_connect(ssl);
     }
-  
+
     static int SSL_shutdown(SSL *ssl)
     {
       typename Mutex::scoped_lock lock(ssl_mutex_);
-      return ::SSL_shutdown(ssl);  
-    }    
-  };  
+      return ::SSL_shutdown(ssl);
+    }
+  };
 };
 
 template<typename Mutex>

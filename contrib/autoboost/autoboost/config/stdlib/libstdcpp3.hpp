@@ -36,7 +36,8 @@
         || defined(_GLIBCXX__PTHREADS) \
         || defined(_GLIBCXX_HAS_GTHREADS) \
         || defined(_WIN32) \
-        || defined(_AIX)
+        || defined(_AIX) \
+        || defined(__HAIKU__)
       //
       // If the std lib has thread support turned on, then turn it on in Boost
       // as well.  We do this because some gcc-3.4 std lib headers define _REENTANT
@@ -122,12 +123,12 @@
 #ifdef __clang__
 
 #if __has_include(<experimental/any>)
-#  define AUTOBOOST_LIBSTDCXX_VERSION 50000
+#  define AUTOBOOST_LIBSTDCXX_VERSION 50100
 #elif __has_include(<shared_mutex>)
 #  define AUTOBOOST_LIBSTDCXX_VERSION 40900
 #elif __has_include(<ext/cmath>)
 #  define AUTOBOOST_LIBSTDCXX_VERSION 40800
-#elif __has_include(<chrono>)
+#elif __has_include(<scoped_allocator>)
 #  define AUTOBOOST_LIBSTDCXX_VERSION 40700
 #elif __has_include(<typeindex>)
 #  define AUTOBOOST_LIBSTDCXX_VERSION 40600
@@ -143,6 +144,14 @@
 //  However, we have no test for these as the headers were present but broken
 //  in early GCC versions.
 //
+#endif
+
+#if defined(__SUNPRO_CC) && (__SUNPRO_CC >= 0x5130) && (__cplusplus >= 201103L)
+//
+// Oracle Solaris compiler uses it's own verison of libstdc++ but doesn't
+// set __GNUC__
+//
+#define AUTOBOOST_LIBSTDCXX_VERSION 40800
 #endif
 
 #if !defined(AUTOBOOST_LIBSTDCXX_VERSION)
@@ -170,8 +179,8 @@
 #  define AUTOBOOST_NO_CXX11_HDR_SYSTEM_ERROR
 #  define AUTOBOOST_NO_CXX11_SMART_PTR
 #else
-#  define AUTOBOOST_HAS_TR1_COMPLEX_INVERSE_TRIG 
-#  define AUTOBOOST_HAS_TR1_COMPLEX_OVERLOADS 
+#  define AUTOBOOST_HAS_TR1_COMPLEX_INVERSE_TRIG
+#  define AUTOBOOST_HAS_TR1_COMPLEX_OVERLOADS
 #endif
 
 //  C++0x features in GCC 4.5.0 and later
@@ -204,6 +213,8 @@
 #  define AUTOBOOST_NO_CXX11_HDR_ATOMIC
 #  define AUTOBOOST_NO_CXX11_HDR_THREAD
 #endif
+//  C++0x features in GCC 4.9.0 and later
+//
 #if (AUTOBOOST_LIBSTDCXX_VERSION < 40900) || !defined(AUTOBOOST_LIBSTDCXX11)
 // Although <regex> is present and compilable against, the actual implementation is not functional
 // even for the simplest patterns such as "\d" or "[0-9]". This is the case at least in gcc up to 4.8, inclusively.
@@ -214,13 +225,37 @@
 // As of clang-3.6, libstdc++ header <atomic> throws up errors with clang:
 #  define AUTOBOOST_NO_CXX11_HDR_ATOMIC
 #endif
-
-//  C++0x headers not yet (fully!) implemented
 //
+//  C++0x features in GCC 5.1 and later
+//
+#if (AUTOBOOST_LIBSTDCXX_VERSION < 50100) || !defined(AUTOBOOST_LIBSTDCXX11)
 #  define AUTOBOOST_NO_CXX11_HDR_TYPE_TRAITS
 #  define AUTOBOOST_NO_CXX11_HDR_CODECVT
 #  define AUTOBOOST_NO_CXX11_ATOMIC_SMART_PTR
 #  define AUTOBOOST_NO_CXX11_STD_ALIGN
+#endif
+
+#if defined(__has_include)
+#if !__has_include(<shared_mutex>)
+#  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#elif __cplusplus <= 201103
+#  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#endif
+#elif __cplusplus < 201402 || (AUTOBOOST_LIBSTDCXX_VERSION < 40900) || !defined(AUTOBOOST_LIBSTDCXX11)
+#  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#endif
+
+//
+// Headers not present on Solaris with the Oracle compiler:
+#if defined(__SUNPRO_CC)
+#define AUTOBOOST_NO_CXX11_HDR_FUTURE
+#define AUTOBOOST_NO_CXX11_HDR_FORWARD_LIST
+#define AUTOBOOST_NO_CXX11_HDR_ATOMIC
+// shared_ptr is present, but is not convertible to bool
+// which causes all kinds of problems especially in Boost.Thread
+// but probably elsewhere as well.
+#define AUTOBOOST_NO_CXX11_SMART_PTR
+#endif
 
 #if (!defined(_GLIBCXX_HAS_GTHREADS) || !defined(_GLIBCXX_USE_C99_STDINT_TR1))
    // Headers not always available:
@@ -232,6 +267,9 @@
 #  endif
 #  ifndef AUTOBOOST_NO_CXX11_HDR_THREAD
 #     define AUTOBOOST_NO_CXX11_HDR_THREAD
+#  endif
+#  ifndef AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#     define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
 #  endif
 #endif
 

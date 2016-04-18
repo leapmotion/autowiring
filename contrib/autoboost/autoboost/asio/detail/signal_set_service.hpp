@@ -2,7 +2,7 @@
 // detail/signal_set_service.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2014 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -46,7 +46,7 @@ enum { max_signal_number = 128 };
 
 extern AUTOBOOST_ASIO_DECL struct signal_state* get_signal_state();
 
-extern "C" AUTOBOOST_ASIO_DECL void boost_asio_signal_handler(int signal_number);
+extern "C" AUTOBOOST_ASIO_DECL void autoboost_asio_signal_handler(int signal_number);
 
 class signal_set_service
 {

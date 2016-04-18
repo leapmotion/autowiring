@@ -9,7 +9,7 @@
 //  * A test case, before any other headers, or,
 //  * A library source file before any other headers.
 //
-//  IT SHOULD NOT BE INCLUDED BY ANY AUTOBOOST HEADER.
+//  IT SHOULD NOT BE INCLUDED BY ANY BOOST HEADER.
 //
 //  YOU SHOULD NOT INCLUDE IT IF YOU CAN REASONABLY FIX THE WARNING.
 //
@@ -17,7 +17,7 @@
 //
 //  * Quite unreasonably pedantic.
 //  * Generally only emitted by a single compiler.
-//  * Can't easily be fixed: for example if the vendors own std lib 
+//  * Can't easily be fixed: for example if the vendors own std lib
 //    code emits these warnings!
 //
 //  Note that THIS HEADER MUST NOT INCLUDE ANY OTHER HEADERS:
@@ -30,7 +30,7 @@
 #ifndef AUTOBOOST_CONFIG_WARNING_DISABLE_HPP
 #define AUTOBOOST_CONFIG_WARNING_DISABLE_HPP
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1400) 
+#if defined(_MSC_VER) && (_MSC_VER >= 1400)
    // Error 'function': was declared deprecated
    // http://msdn2.microsoft.com/en-us/library/ttcz0bys(VS.80).aspx
    // This error is emitted when you use some perfectly conforming

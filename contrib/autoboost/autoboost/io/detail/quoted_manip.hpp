@@ -9,8 +9,8 @@
 
 //--------------------------------------------------------------------------------------//
 
-#ifndef BOOST_IO_QUOTED_MANIP
-#define BOOST_IO_QUOTED_MANIP
+#ifndef AUTOBOOST_IO_QUOTED_MANIP
+#define AUTOBOOST_IO_QUOTED_MANIP
 
 #include <iosfwd>
 #include <ios>
@@ -187,4 +187,4 @@ namespace autoboost
   }  // namespace io
 }  // namespace boost
 
-#endif // BOOST_IO_QUOTED_MANIP
+#endif // AUTOBOOST_IO_QUOTED_MANIP
