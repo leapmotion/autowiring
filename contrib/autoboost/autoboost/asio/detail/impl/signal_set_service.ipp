@@ -2,7 +2,7 @@
 // detail/impl/signal_set_service.ipp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2014 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -57,7 +57,7 @@ signal_state* get_signal_state()
   return &state;
 }
 
-void boost_asio_signal_handler(int signal_number)
+void autoboost_asio_signal_handler(int signal_number)
 {
 #if defined(AUTOBOOST_ASIO_WINDOWS) \
   || defined(AUTOBOOST_ASIO_WINDOWS_RUNTIME) \
@@ -77,7 +77,7 @@ void boost_asio_signal_handler(int signal_number)
        //   || defined(__CYGWIN__)
 
 #if defined(AUTOBOOST_ASIO_HAS_SIGNAL) && !defined(AUTOBOOST_ASIO_HAS_SIGACTION)
-  ::signal(signal_number, boost_asio_signal_handler);
+  ::signal(signal_number, autoboost_asio_signal_handler);
 #endif // defined(AUTOBOOST_ASIO_HAS_SIGNAL) && !defined(AUTOBOOST_ASIO_HAS_SIGACTION)
 }
 
@@ -274,11 +274,11 @@ autoboost::system::error_code signal_set_service::add(
       using namespace std; // For memset.
       struct sigaction sa;
       memset(&sa, 0, sizeof(sa));
-      sa.sa_handler = boost_asio_signal_handler;
+      sa.sa_handler = autoboost_asio_signal_handler;
       sigfillset(&sa.sa_mask);
       if (::sigaction(signal_number, &sa, 0) == -1)
 # else // defined(AUTOBOOST_ASIO_HAS_SIGACTION)
-      if (::signal(signal_number, boost_asio_signal_handler) == SIG_ERR)
+      if (::signal(signal_number, autoboost_asio_signal_handler) == SIG_ERR)
 # endif // defined(AUTOBOOST_ASIO_HAS_SIGACTION)
       {
 # if defined(AUTOBOOST_ASIO_WINDOWS) || defined(__CYGWIN__)

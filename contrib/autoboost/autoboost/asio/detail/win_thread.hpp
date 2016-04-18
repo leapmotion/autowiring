@@ -2,7 +2,7 @@
 // detail/win_thread.hpp
 // ~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2014 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,9 @@
 
 #include <autoboost/asio/detail/config.hpp>
 
-#if defined(AUTOBOOST_ASIO_WINDOWS) && !defined(UNDER_CE)
+#if defined(AUTOBOOST_ASIO_WINDOWS) \
+  && !defined(AUTOBOOST_ASIO_WINDOWS_APP) \
+  && !defined(UNDER_CE)
 
 #include <autoboost/asio/detail/noncopyable.hpp>
 #include <autoboost/asio/detail/socket_types.hpp>
@@ -136,6 +138,8 @@ private:
 # include <autoboost/asio/detail/impl/win_thread.ipp>
 #endif // defined(AUTOBOOST_ASIO_HEADER_ONLY)
 
-#endif // defined(AUTOBOOST_ASIO_WINDOWS) && !defined(UNDER_CE)
+#endif // defined(AUTOBOOST_ASIO_WINDOWS)
+       // && !defined(AUTOBOOST_ASIO_WINDOWS_APP)
+       // && !defined(UNDER_CE)
 
 #endif // AUTOBOOST_ASIO_DETAIL_WIN_THREAD_HPP

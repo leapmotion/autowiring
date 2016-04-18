@@ -36,7 +36,7 @@ namespace ssl {
 namespace old {
 namespace detail {
 
-typedef autoboost::function<int (::SSL*)> ssl_primitive_func; 
+typedef autoboost::function<int (::SSL*)> ssl_primitive_func;
 typedef autoboost::function<void (const autoboost::system::error_code&, int)>
   user_handler_func;
 
@@ -58,21 +58,21 @@ public:
   }
   unsigned char* get_unused_start() { return data_end_; }
   unsigned char* get_data_start() { return data_start_; }
-  size_t get_unused_len() { return (NET_BUF_SIZE - (data_end_ - buf_)); }    
-  size_t get_data_len() { return (data_end_ - data_start_); }    
+  size_t get_unused_len() { return (NET_BUF_SIZE - (data_end_ - buf_)); }
+  size_t get_data_len() { return (data_end_ - data_start_); }
   void data_added(size_t count)
-  { 
-    data_end_ += count; 
-    data_end_ = data_end_ > (buf_ + NET_BUF_SIZE)? 
+  {
+    data_end_ += count;
+    data_end_ = data_end_ > (buf_ + NET_BUF_SIZE)?
       (buf_ + NET_BUF_SIZE):
-      data_end_; 
+      data_end_;
   }
-  void data_removed(size_t count) 
-  { 
-    data_start_ += count; 
-    if (data_start_ >= data_end_) reset(); 
+  void data_removed(size_t count)
+  {
+    data_start_ += count;
+    if (data_start_ >= data_end_) reset();
   }
-  void reset() { data_start_ = buf_; data_end_ = buf_; }               
+  void reset() { data_start_ = buf_; data_end_ = buf_; }
   bool has_data() { return (data_start_ < data_end_); }
 }; // class net_buffer
 
@@ -103,15 +103,15 @@ public:
     , session_(session)
   {
     write_ = autoboost::bind(
-      &openssl_operation::do_async_write, 
+      &openssl_operation::do_async_write,
       this, autoboost::arg<1>(), autoboost::arg<2>()
     );
     read_ = autoboost::bind(
-      &openssl_operation::do_async_read, 
+      &openssl_operation::do_async_read,
       this
     );
     handler_= autoboost::bind(
-      &openssl_operation::async_user_handler, 
+      &openssl_operation::async_user_handler,
       this, autoboost::arg<1>(), autoboost::arg<2>()
     );
   }
@@ -128,17 +128,17 @@ public:
     , socket_(socket)
     , ssl_bio_(ssl_bio)
     , session_(session)
-  {      
+  {
     write_ = autoboost::bind(
-      &openssl_operation::do_sync_write, 
+      &openssl_operation::do_sync_write,
       this, autoboost::arg<1>(), autoboost::arg<2>()
     );
     read_ = autoboost::bind(
-      &openssl_operation::do_sync_read, 
+      &openssl_operation::do_sync_read,
       this
     );
     handler_ = autoboost::bind(
-      &openssl_operation::sync_user_handler, 
+      &openssl_operation::sync_user_handler,
       this, autoboost::arg<1>(), autoboost::arg<2>()
       );
   }
@@ -150,7 +150,7 @@ public:
   {
     int rc = primitive_( session_ );
 
-    bool is_operation_done = (rc > 0);  
+    bool is_operation_done = (rc > 0);
                 // For connect/accept/shutdown, the operation
                 // is done, when return code is 1
                 // for write, it is done, when is retcode > 0
@@ -158,7 +158,7 @@ public:
 
     int error_code =  !is_operation_done ?
           ::SSL_get_error( session_, rc ) :
-          0;        
+          0;
     int sys_error_code = ERR_get_error();
 
     if (error_code == SSL_ERROR_SSL)
@@ -168,10 +168,10 @@ public:
     bool is_read_needed = (error_code == SSL_ERROR_WANT_READ);
     bool is_write_needed = (error_code == SSL_ERROR_WANT_WRITE ||
                               ::BIO_ctrl_pending( ssl_bio_ ));
-    bool is_shut_down_received = 
-      ((::SSL_get_shutdown( session_ ) & SSL_RECEIVED_SHUTDOWN) == 
+    bool is_shut_down_received =
+      ((::SSL_get_shutdown( session_ ) & SSL_RECEIVED_SHUTDOWN) ==
           SSL_RECEIVED_SHUTDOWN);
-    bool is_shut_down_sent = 
+    bool is_shut_down_sent =
       ((::SSL_get_shutdown( session_ ) & SSL_SENT_SHUTDOWN) ==
             SSL_SENT_SHUTDOWN);
 
@@ -185,20 +185,20 @@ public:
       // abort our action...
       return handler_(autoboost::asio::error::shut_down, 0);
 
-    if (!is_operation_done && !is_read_needed && !is_write_needed 
+    if (!is_operation_done && !is_read_needed && !is_write_needed
       && !is_shut_down_sent)
     {
-      // The operation has failed... It is not completed and does 
+      // The operation has failed... It is not completed and does
       // not want network communication nor does want to send shutdown out...
       if (error_code == SSL_ERROR_SYSCALL)
       {
         return handler_(autoboost::system::error_code(
-              sys_error_code, autoboost::asio::error::system_category), rc); 
+              sys_error_code, autoboost::asio::error::system_category), rc);
       }
       else
       {
         return handler_(autoboost::system::error_code(
-              sys_error_code, autoboost::asio::error::get_ssl_category()), rc); 
+              sys_error_code, autoboost::asio::error::get_ssl_category()), rc);
       }
     }
 
@@ -209,10 +209,10 @@ public:
       {
         // Pass the buffered data to SSL
         int written = ::BIO_write
-        ( 
-          ssl_bio_, 
-          recv_buf_.get_data_start(), 
-          recv_buf_.get_data_len() 
+        (
+          ssl_bio_,
+          recv_buf_.get_data_start(),
+          recv_buf_.get_data_len()
         );
 
         if (written > 0)
@@ -237,7 +237,7 @@ public:
     }
 
     // Continue with operation, flush any SSL data out to network...
-    return write_(is_operation_done, rc); 
+    return write_(is_operation_done, rc);
   }
 
 // Private implementation
@@ -253,7 +253,7 @@ private:
   write_func  write_;
   read_func  read_;
   int_handler_func handler_;
-    
+
   net_buffer send_buf_; // buffers for network IO
 
   // The recv buffer is owned by the stream, not the operation, since there can
@@ -274,7 +274,7 @@ private:
 
     throw autoboost::system::system_error(error);
   }
-    
+
   int async_user_handler(autoboost::system::error_code error, int rc)
   {
     if (rc < 0)
@@ -289,50 +289,50 @@ private:
   }
 
   // Writes bytes asynchronously from SSL to NET
-  int  do_async_write(bool is_operation_done, int rc) 
+  int  do_async_write(bool is_operation_done, int rc)
   {
     int len = ::BIO_ctrl_pending( ssl_bio_ );
     if ( len )
-    { 
+    {
       // There is something to write into net, do it...
-      len = (int)send_buf_.get_unused_len() > len? 
-        len: 
+      len = (int)send_buf_.get_unused_len() > len?
+        len:
         send_buf_.get_unused_len();
-        
+
       if (len == 0)
       {
-        // In case our send buffer is full, we have just to wait until 
+        // In case our send buffer is full, we have just to wait until
         // previous send to complete...
         return 0;
       }
 
       // Read outgoing data from bio
-      len = ::BIO_read( ssl_bio_, send_buf_.get_unused_start(), len); 
-         
+      len = ::BIO_read( ssl_bio_, send_buf_.get_unused_start(), len);
+
       if (len > 0)
       {
         unsigned char *data_start = send_buf_.get_unused_start();
         send_buf_.data_added(len);
- 
+
         AUTOBOOST_ASIO_ASSERT(strand_);
         autoboost::asio::async_write
-        ( 
-          socket_, 
+        (
+          socket_,
           autoboost::asio::buffer(data_start, len),
           strand_->wrap
           (
             autoboost::bind
             (
-              &openssl_operation::async_write_handler, 
-              this, 
+              &openssl_operation::async_write_handler,
+              this,
               is_operation_done,
-              rc, 
-              autoboost::asio::placeholders::error, 
+              rc,
+              autoboost::asio::placeholders::error,
               autoboost::asio::placeholders::bytes_transferred
             )
           )
         );
-                  
+
         return 0;
       }
       else if (!BIO_should_retry(ssl_bio_))
@@ -343,22 +343,22 @@ private:
         return 0;
       }
     }
-    
+
     if (is_operation_done)
     {
       // Finish the operation, with success
       handler_(autoboost::system::error_code(), rc);
       return 0;
     }
-    
+
     // OPeration is not done and writing to net has been made...
     // start operation again
     start();
-          
+
     return 0;
   }
 
-  void async_write_handler(bool is_operation_done, int rc, 
+  void async_write_handler(bool is_operation_done, int rc,
     const autoboost::system::error_code& error, size_t bytes_sent)
   {
     if (!error)
@@ -372,7 +372,7 @@ private:
         // Since the operation was not completed, try it again...
         start();
     }
-    else 
+    else
       handler_(error, rc);
   }
 
@@ -381,16 +381,16 @@ private:
     // Wait for new data
     AUTOBOOST_ASIO_ASSERT(strand_);
     socket_.async_read_some
-    ( 
+    (
       autoboost::asio::buffer(recv_buf_.get_unused_start(),
         recv_buf_.get_unused_len()),
       strand_->wrap
       (
         autoboost::bind
         (
-          &openssl_operation::async_read_handler, 
-          this, 
-          autoboost::asio::placeholders::error, 
+          &openssl_operation::async_read_handler,
+          this,
+          autoboost::asio::placeholders::error,
           autoboost::asio::placeholders::bytes_transferred
         )
       )
@@ -407,10 +407,10 @@ private:
 
       // Pass the received data to SSL
       int written = ::BIO_write
-      ( 
-        ssl_bio_, 
-        recv_buf_.get_data_start(), 
-        recv_buf_.get_data_len() 
+      (
+        ssl_bio_,
+        recv_buf_.get_data_start(),
+        recv_buf_.get_data_len()
       );
 
       if (written > 0)
@@ -443,25 +443,25 @@ private:
   {
     int len = ::BIO_ctrl_pending( ssl_bio_ );
     if ( len )
-    { 
+    {
       // There is something to write into net, do it...
-      len = (int)send_buf_.get_unused_len() > len? 
-        len: 
+      len = (int)send_buf_.get_unused_len() > len?
+        len:
         send_buf_.get_unused_len();
-        
+
       // Read outgoing data from bio
-      len = ::BIO_read( ssl_bio_, send_buf_.get_unused_start(), len); 
-         
+      len = ::BIO_read( ssl_bio_, send_buf_.get_unused_start(), len);
+
       if (len > 0)
       {
-        size_t sent_len = autoboost::asio::write( 
-                  socket_, 
+        size_t sent_len = autoboost::asio::write(
+                  socket_,
                   autoboost::asio::buffer(send_buf_.get_unused_start(), len)
                   );
 
         send_buf_.data_added(len);
         send_buf_.data_removed(sent_len);
-      }          
+      }
       else if (!BIO_should_retry(ssl_bio_))
       {
         // Seems like fatal error
@@ -469,11 +469,11 @@ private:
         throw autoboost::system::system_error(autoboost::asio::error::no_recovery);
       }
     }
-    
+
     if (is_operation_done)
       // Finish the operation, with success
       return rc;
-                
+
     // Operation is not finished, start again.
     return start();
   }
@@ -481,7 +481,7 @@ private:
   int do_sync_read()
   {
     size_t len = socket_.read_some
-      ( 
+      (
         autoboost::asio::buffer(recv_buf_.get_unused_start(),
           recv_buf_.get_unused_len())
       );
@@ -491,10 +491,10 @@ private:
 
     // Pass the received data to SSL
     int written = ::BIO_write
-    ( 
-      ssl_bio_, 
-      recv_buf_.get_data_start(), 
-      recv_buf_.get_data_len() 
+    (
+      ssl_bio_,
+      recv_buf_.get_data_start(),
+      recv_buf_.get_data_len()
     );
 
     if (written > 0)

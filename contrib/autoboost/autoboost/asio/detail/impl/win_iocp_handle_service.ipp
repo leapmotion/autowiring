@@ -2,7 +2,7 @@
 // detail/impl/win_iocp_handle_service.ipp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2014 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 // Copyright (c) 2008 Rep Invariant Systems, Inc. (info@repinvariant.com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -40,7 +40,7 @@ public:
     OffsetHigh = 0;
 
     // Create a non-signalled manual-reset event, for GetOverlappedResult.
-    hEvent = ::CreateEvent(0, TRUE, FALSE, 0);
+    hEvent = ::CreateEventW(0, TRUE, FALSE, 0);
     if (hEvent)
     {
       // As documented in GetQueuedCompletionStatus, setting the low order
@@ -163,7 +163,7 @@ void win_iocp_handle_service::destroy(
     win_iocp_handle_service::implementation_type& impl)
 {
   close_for_destruction(impl);
-  
+
   // Remove implementation from linked list of all implementations.
   autoboost::asio::detail::mutex::scoped_lock lock(mutex_);
   if (impl_list_ == &impl)
@@ -316,13 +316,13 @@ size_t win_iocp_handle_service::do_write(
     return 0;
   }
 
-  // Write the data. 
+  // Write the data.
   overlapped.Offset = offset & 0xFFFFFFFF;
   overlapped.OffsetHigh = (offset >> 32) & 0xFFFFFFFF;
   BOOL ok = ::WriteFile(impl.handle_,
       autoboost::asio::buffer_cast<LPCVOID>(buffer),
       static_cast<DWORD>(autoboost::asio::buffer_size(buffer)), 0, &overlapped);
-  if (!ok) 
+  if (!ok)
   {
     DWORD last_error = ::GetLastError();
     if (last_error != ERROR_IO_PENDING)
@@ -396,7 +396,7 @@ size_t win_iocp_handle_service::do_read(
     ec = autoboost::asio::error::bad_descriptor;
     return 0;
   }
-  
+
   // A request to read 0 bytes on a stream handle is a no-op.
   if (autoboost::asio::buffer_size(buffer) == 0)
   {
@@ -416,7 +416,7 @@ size_t win_iocp_handle_service::do_read(
   BOOL ok = ::ReadFile(impl.handle_,
       autoboost::asio::buffer_cast<LPVOID>(buffer),
       static_cast<DWORD>(autoboost::asio::buffer_size(buffer)), 0, &overlapped);
-  if (!ok) 
+  if (!ok)
   {
     DWORD last_error = ::GetLastError();
     if (last_error != ERROR_IO_PENDING && last_error != ERROR_MORE_DATA)

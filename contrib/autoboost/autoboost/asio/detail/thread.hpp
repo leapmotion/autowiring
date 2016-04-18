@@ -2,7 +2,7 @@
 // detail/thread.hpp
 // ~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2014 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -20,8 +20,8 @@
 #if !defined(AUTOBOOST_ASIO_HAS_THREADS)
 # include <autoboost/asio/detail/null_thread.hpp>
 #elif defined(AUTOBOOST_ASIO_WINDOWS)
-# if defined(UNDER_CE)
-#  include <autoboost/asio/detail/wince_thread.hpp>
+# if defined(AUTOBOOST_ASIO_WINDOWS_APP) || defined(UNDER_CE)
+#  include <autoboost/asio/detail/winapi_thread.hpp>
 # else
 #  include <autoboost/asio/detail/win_thread.hpp>
 # endif
@@ -40,8 +40,8 @@ namespace detail {
 #if !defined(AUTOBOOST_ASIO_HAS_THREADS)
 typedef null_thread thread;
 #elif defined(AUTOBOOST_ASIO_WINDOWS)
-# if defined(UNDER_CE)
-typedef wince_thread thread;
+# if defined(AUTOBOOST_ASIO_WINDOWS_APP) || defined(UNDER_CE)
+typedef winapi_thread thread;
 # else
 typedef win_thread thread;
 # endif

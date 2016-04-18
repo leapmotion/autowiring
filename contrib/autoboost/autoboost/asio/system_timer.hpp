@@ -2,7 +2,7 @@
 // system_timer.hpp
 // ~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2014 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -52,7 +52,7 @@ typedef basic_waitable_timer<autoboost::chrono::system_clock> system_timer;
 } // namespace asio
 } // namespace autoboost
 
-#endif // defined(AUTOBOOST_ASIO_HAS_STD_CHRONO) 
+#endif // defined(AUTOBOOST_ASIO_HAS_STD_CHRONO)
        //   || defined(AUTOBOOST_ASIO_HAS_AUTOBOOST_CHRONO)
        //   || defined(GENERATING_DOCUMENTATION)
 

@@ -2,7 +2,7 @@
 // posix/descriptor_base.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2014 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -42,7 +42,7 @@ public:
    *
    * @par Example
    * @code
-   * autoboost::asio::posix::stream_descriptor descriptor(io_service); 
+   * autoboost::asio::posix::stream_descriptor descriptor(io_service);
    * ...
    * autoboost::asio::descriptor_base::non_blocking_io command(true);
    * descriptor.io_control(command);
@@ -64,7 +64,7 @@ public:
    *
    * @par Example
    * @code
-   * autoboost::asio::posix::stream_descriptor descriptor(io_service); 
+   * autoboost::asio::posix::stream_descriptor descriptor(io_service);
    * ...
    * autoboost::asio::descriptor_base::bytes_readable command(true);
    * descriptor.io_control(command);
