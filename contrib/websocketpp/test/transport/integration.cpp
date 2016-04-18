@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -218,19 +218,19 @@ void run_time_limited_client(client & c, std::string uri, long timeout,
 }
 
 void run_dummy_server(int port) {
-    using boost::asio::ip::tcp;
+    using autoboost::asio::ip::tcp;
 
     try {
-        boost::asio::io_service io_service;
+        autoboost::asio::io_service io_service;
         tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v6(), port));
         tcp::socket socket(io_service);
 
         acceptor.accept(socket);
         for (;;) {
             char data[512];
-            boost::system::error_code ec;
-            socket.read_some(boost::asio::buffer(data), ec);
-            if (ec == boost::asio::error::eof) {
+            autoboost::system::error_code ec;
+            socket.read_some(autoboost::asio::buffer(data), ec);
+            if (ec == autoboost::asio::error::eof) {
                 break;
             } else if (ec) {
                 // other error
@@ -239,27 +239,27 @@ void run_dummy_server(int port) {
         }
     } catch (std::exception & e) {
         std::cout << e.what() << std::endl;
-    } catch (boost::system::error_code & ec) {
+    } catch (autoboost::system::error_code & ec) {
         std::cout << ec.message() << std::endl;
     }
 }
 
 void run_dummy_client(std::string port) {
-    using boost::asio::ip::tcp;
+    using autoboost::asio::ip::tcp;
 
     try {
-        boost::asio::io_service io_service;
+        autoboost::asio::io_service io_service;
         tcp::resolver resolver(io_service);
         tcp::resolver::query query("localhost", port);
         tcp::resolver::iterator iterator = resolver.resolve(query);
         tcp::socket socket(io_service);
 
-        boost::asio::connect(socket, iterator);
+        autoboost::asio::connect(socket, iterator);
         for (;;) {
             char data[512];
-            boost::system::error_code ec;
-            socket.read_some(boost::asio::buffer(data), ec);
-            if (ec == boost::asio::error::eof) {
+            autoboost::system::error_code ec;
+            socket.read_some(autoboost::asio::buffer(data), ec);
+            if (ec == autoboost::asio::error::eof) {
                 break;
             } else if (ec) {
                 // other error
@@ -268,16 +268,17 @@ void run_dummy_client(std::string port) {
         }
     } catch (std::exception & e) {
         std::cout << e.what() << std::endl;
-    } catch (boost::system::error_code & ec) {
+    } catch (autoboost::system::error_code & ec) {
         std::cout << ec.message() << std::endl;
     }
 }
 
-bool on_ping(websocketpp::connection_hdl, std::string payload) {
+bool on_ping(server * s, websocketpp::connection_hdl, std::string) {
+    s->get_alog().write(websocketpp::log::alevel::app,"got ping");
     return false;
 }
 
-void cancel_on_open(server * s, websocketpp::connection_hdl hdl) {
+void cancel_on_open(server * s, websocketpp::connection_hdl) {
     s->stop_listening();
 }
 
@@ -291,28 +292,30 @@ void stop_on_close(server * s, websocketpp::connection_hdl hdl) {
 template <typename T>
 void ping_on_open(T * c, std::string payload, websocketpp::connection_hdl hdl) {
     typename T::connection_ptr con = c->get_con_from_hdl(hdl);
-    con->ping(payload);
+    websocketpp::lib::error_code ec;
+    con->ping(payload,ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 }
 
-void fail_on_pong(websocketpp::connection_hdl hdl, std::string payload) {
+void fail_on_pong(websocketpp::connection_hdl, std::string) {
     BOOST_FAIL( "expected no pong handler" );
 }
 
-void fail_on_pong_timeout(websocketpp::connection_hdl hdl, std::string payload) {
+void fail_on_pong_timeout(websocketpp::connection_hdl, std::string) {
     BOOST_FAIL( "expected no pong timeout" );
 }
 
-void req_pong(std::string expected_payload, websocketpp::connection_hdl hdl,
+void req_pong(std::string expected_payload, websocketpp::connection_hdl,
     std::string payload)
 {
     BOOST_CHECK_EQUAL( expected_payload, payload );
 }
 
-void fail_on_open(websocketpp::connection_hdl hdl) {
+void fail_on_open(websocketpp::connection_hdl) {
     BOOST_FAIL( "expected no open handler" );
 }
 
-void delay(websocketpp::connection_hdl hdl, long duration) {
+void delay(websocketpp::connection_hdl, long duration) {
     sleep(duration);
 }
 
@@ -382,7 +385,7 @@ BOOST_AUTO_TEST_CASE( pong_timeout ) {
     server s;
     client c;
 
-    s.set_ping_handler(on_ping);
+    s.set_ping_handler(bind(&on_ping, &s,::_1,::_2));
     s.set_close_handler(bind(&stop_on_close,&s,::_1));
 
     c.set_fail_handler(bind(&check_ec<client>,&c,
@@ -395,7 +398,7 @@ BOOST_AUTO_TEST_CASE( pong_timeout ) {
         websocketpp::lib::error_code(),::_1));
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
-    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,10));
     tthread.detach();
 
     run_client(c, "http://localhost:9005",false);
@@ -413,7 +416,7 @@ BOOST_AUTO_TEST_CASE( client_open_handshake_timeout ) {
         websocketpp::error::open_handshake_timeout,::_1));
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_dummy_server,9005));
-    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,10));
     sthread.detach();
     tthread.detach();
 
@@ -430,7 +433,7 @@ BOOST_AUTO_TEST_CASE( server_open_handshake_timeout ) {
         websocketpp::error::open_handshake_timeout,::_1));
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
-    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,10));
     tthread.detach();
 
     run_dummy_client("9005");
@@ -453,7 +456,7 @@ BOOST_AUTO_TEST_CASE( client_self_initiated_close_handshake_timeout ) {
         websocketpp::error::close_handshake_timeout,::_1));
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
-    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,10));
     tthread.detach();
 
     run_client(c, "http://localhost:9005", false);
@@ -485,7 +488,7 @@ BOOST_AUTO_TEST_CASE( server_self_initiated_close_handshake_timeout ) {
     c.set_open_handler(bind(&delay,::_1,1));
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
-    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,10));
     tthread.detach();
 
     run_client(c, "http://localhost:9005",false);
@@ -563,7 +566,7 @@ BOOST_AUTO_TEST_CASE( stop_listening ) {
     c.set_open_handler(bind(&close<client>,&c,::_1));
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
-    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,2));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,5));
     tthread.detach();
 
     run_client(c, "http://localhost:9005",false);
@@ -575,17 +578,17 @@ BOOST_AUTO_TEST_CASE( pause_reading ) {
     iostream_server s;
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
     char buffer[2] = { char(0x81), char(0x80) };
-    
+
     // suppress output (it needs a place to go to avoid error but we don't care what it is)
     std::stringstream null_output;
     s.register_ostream(&null_output);
-    
+
     iostream_server::connection_ptr con = s.get_connection();
     con->start();
 
     // read handshake, should work
     BOOST_CHECK_EQUAL( con->read_some(handshake.data(), handshake.length()), handshake.length());
-    
+
     // pause reading and try again. The first read should work, the second should return 0
     // the first read was queued already after the handshake so it will go through because
     // reading wasn't paused when it was queued. The byte it reads wont be enough to
@@ -604,3 +607,11 @@ BOOST_AUTO_TEST_CASE( pause_reading ) {
 BOOST_AUTO_TEST_CASE( server_connection_cleanup ) {
     server_tls s;
 }
+
+#ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
+BOOST_AUTO_TEST_CASE( move_construct_transport ) {
+    server s1;
+
+    server s2(std::move(s1));
+}
+#endif // _WEBSOCKETPP_MOVE_SEMANTICS_

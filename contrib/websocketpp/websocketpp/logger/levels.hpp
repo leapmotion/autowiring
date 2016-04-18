@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -141,6 +141,13 @@ struct alevel {
     static level const devel = 0x400;
     /// Special channel for application specific logs. Not used by the library.
     static level const app = 0x800;
+    /// Access related to HTTP requests
+    static level const http = 0x1000;
+    /// One line for each failed WebSocket connection with details
+    static level const fail = 0x2000;
+    /// Aggregate package representing the commonly used core access channels
+    /// Connect, Disconnect, Fail, and HTTP
+    static level const access_core = 0x00003003;
     /// Special aggregate value representing "all levels"
     static level const all = 0xffffffff;
 
@@ -180,6 +187,10 @@ struct alevel {
                 return "devel";
             case app:
                 return "application";
+            case http:
+                return "http";
+            case fail:
+                return "fail";
             default:
                 return "unknown";
         }

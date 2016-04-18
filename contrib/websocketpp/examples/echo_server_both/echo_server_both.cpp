@@ -41,15 +41,16 @@ std::string get_password() {
 
 context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
     std::cout << "on_tls_init called with hdl: " << hdl.lock().get() << std::endl;
-    context_ptr ctx(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
+    context_ptr ctx(new autoboost::asio::ssl::context(autoboost::asio::ssl::context::tlsv1));
 
     try {
-        ctx->set_options(boost::asio::ssl::context::default_workarounds |
-                         boost::asio::ssl::context::no_sslv2 |
-                         boost::asio::ssl::context::single_dh_use);
+        ctx->set_options(autoboost::asio::ssl::context::default_workarounds |
+                         autoboost::asio::ssl::context::no_sslv2 |
+                         autoboost::asio::ssl::context::no_sslv3 |
+                         autoboost::asio::ssl::context::single_dh_use);
         ctx->set_password_callback(bind(&get_password));
         ctx->use_certificate_chain_file("server.pem");
-        ctx->use_private_key_file("server.pem", boost::asio::ssl::context::pem);
+        ctx->use_private_key_file("server.pem", autoboost::asio::ssl::context::pem);
     } catch (std::exception& e) {
         std::cout << e.what() << std::endl;
     }
@@ -59,7 +60,7 @@ context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
 int main() {
     // set up an external io_service to run both endpoints on. This is not
     // strictly necessary, but simplifies thread management a bit.
-    boost::asio::io_service ios;
+    autoboost::asio::io_service ios;
 
     // set up plain endpoint
     server_plain endpoint_plain;

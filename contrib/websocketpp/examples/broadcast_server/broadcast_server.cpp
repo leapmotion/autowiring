@@ -3,6 +3,7 @@
 #include <websocketpp/server.hpp>
 
 #include <iostream>
+#include <set>
 
 /*#include <autoboost/thread.hpp>
 #include <autoboost/thread/mutex.hpp>
@@ -18,6 +19,7 @@ using websocketpp::lib::bind;
 
 using websocketpp::lib::thread;
 using websocketpp::lib::mutex;
+using websocketpp::lib::lock_guard;
 using websocketpp::lib::unique_lock;
 using websocketpp::lib::condition_variable;
 
@@ -59,42 +61,41 @@ public:
         m_server.listen(port);
 
         // Start the server accept loop
-	    m_server.start_accept();
+        m_server.start_accept();
 
-	    // Start the ASIO io_service run loop
+        // Start the ASIO io_service run loop
         try {
             m_server.run();
         } catch (const std::exception & e) {
             std::cout << e.what() << std::endl;
-        } catch (websocketpp::lib::error_code e) {
-            std::cout << e.message() << std::endl;
-        } catch (...) {
-            std::cout << "other exception" << std::endl;
         }
     }
 
     void on_open(connection_hdl hdl) {
-        unique_lock<mutex> lock(m_action_lock);
-        //std::cout << "on_open" << std::endl;
-        m_actions.push(action(SUBSCRIBE,hdl));
-        lock.unlock();
+        {
+            lock_guard<mutex> guard(m_action_lock);
+            //std::cout << "on_open" << std::endl;
+            m_actions.push(action(SUBSCRIBE,hdl));
+        }
         m_action_cond.notify_one();
     }
 
     void on_close(connection_hdl hdl) {
-        unique_lock<mutex> lock(m_action_lock);
-        //std::cout << "on_close" << std::endl;
-        m_actions.push(action(UNSUBSCRIBE,hdl));
-        lock.unlock();
+        {
+            lock_guard<mutex> guard(m_action_lock);
+            //std::cout << "on_close" << std::endl;
+            m_actions.push(action(UNSUBSCRIBE,hdl));
+        }
         m_action_cond.notify_one();
     }
 
     void on_message(connection_hdl hdl, server::message_ptr msg) {
         // queue message up for sending by processing thread
-        unique_lock<mutex> lock(m_action_lock);
-        //std::cout << "on_message" << std::endl;
-        m_actions.push(action(MESSAGE,hdl,msg));
-        lock.unlock();
+        {
+            lock_guard<mutex> guard(m_action_lock);
+            //std::cout << "on_message" << std::endl;
+            m_actions.push(action(MESSAGE,hdl,msg));
+        }
         m_action_cond.notify_one();
     }
 
@@ -112,13 +113,13 @@ public:
             lock.unlock();
 
             if (a.type == SUBSCRIBE) {
-                unique_lock<mutex> con_lock(m_connection_lock);
+                lock_guard<mutex> guard(m_connection_lock);
                 m_connections.insert(a.hdl);
             } else if (a.type == UNSUBSCRIBE) {
-                unique_lock<mutex> con_lock(m_connection_lock);
+                lock_guard<mutex> guard(m_connection_lock);
                 m_connections.erase(a.hdl);
             } else if (a.type == MESSAGE) {
-                unique_lock<mutex> con_lock(m_connection_lock);
+                lock_guard<mutex> guard(m_connection_lock);
 
                 con_list::iterator it;
                 for (it = m_connections.begin(); it != m_connections.end(); ++it) {
@@ -130,7 +131,7 @@ public:
         }
     }
 private:
-    typedef std::set<connection_hdl,std::owner_less<connection_hdl>> con_list;
+    typedef std::set<connection_hdl,std::owner_less<connection_hdl> > con_list;
 
     server m_server;
     con_list m_connections;
@@ -142,18 +143,18 @@ private:
 };
 
 int main() {
-	try {
-	broadcast_server server_instance;
+    try {
+    broadcast_server server_instance;
 
-	// Start a thread to run the processing loop
-	thread t(bind(&broadcast_server::process_messages,&server_instance));
+    // Start a thread to run the processing loop
+    thread t(bind(&broadcast_server::process_messages,&server_instance));
 
-	// Run the asio loop with the main thread
-	server_instance.run(9002);
+    // Run the asio loop with the main thread
+    server_instance.run(9002);
 
-	t.join();
+    t.join();
 
-	} catch (std::exception & e) {
-	    std::cout << e.what() << std::endl;
-	}
+    } catch (websocketpp::exception const & e) {
+        std::cout << e.what() << std::endl;
+    }
 }

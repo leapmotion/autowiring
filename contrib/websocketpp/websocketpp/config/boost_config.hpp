@@ -25,7 +25,7 @@
  *
  */
 
- // This header defines WebSocket++ macros for C++11 compatibility based on the 
+ // This header defines WebSocket++ macros for C++11 compatibility based on the
  // Boost.Config library. This will correctly configure most target platforms
  // simply by including this header before any other WebSocket++ header.
 
@@ -41,7 +41,7 @@
     #define _WEBSOCKETPP_CPP11_FUNCTIONAL_
 #endif
 
-#ifndef BOOST_ASIO_HAS_STD_CHRONO
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
     #define _WEBSOCKETPP_CPP11_CHRONO_
 #endif
 
