@@ -673,6 +673,8 @@ namespace {
 
 TEST_F(CoreContextTest, SimultaneousMultiInject) {
   AutoCreateContext ctxt;
+  ctxt->Config.Set("c", "10");
+
   AutoRequired<HoldsMutexAndCount> hmac{ ctxt };
 
   std::unique_lock<std::mutex> lk{ hmac->lk };
