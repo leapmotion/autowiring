@@ -241,9 +241,9 @@ AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
 basic_xml_oarchive<Archive>::init(){
     // xml header
     this->This()->put("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>\n");
-    this->This()->put("<!DOCTYPE boost_serialization>\n");
+    this->This()->put("<!DOCTYPE autoboost_serialization>\n");
     // xml document wrapper - outer root
-    this->This()->put("<boost_serialization");
+    this->This()->put("<autoboost_serialization");
     write_attribute("signature", AUTOBOOST_ARCHIVE_SIGNATURE());
     write_attribute("version", AUTOBOOST_ARCHIVE_VERSION());
     this->This()->put(">\n");
@@ -264,7 +264,7 @@ AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
 basic_xml_oarchive<Archive>::~basic_xml_oarchive(){
     if(0 == (this->get_flags() & no_header)){
         AUTOBOOST_TRY{
-                this->This()->put("</boost_serialization>\n");
+                this->This()->put("</autoboost_serialization>\n");
         }
         AUTOBOOST_CATCH(...){}
         AUTOBOOST_CATCH_END

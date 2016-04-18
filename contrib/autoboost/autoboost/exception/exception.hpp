@@ -184,7 +184,7 @@ autoboost
 
         char const * get_diagnostic_information( exception const &, char const * );
 
-        void copy_boost_exception( exception *, exception const * );
+        void copy_autoboost_exception( exception *, exception const * );
 
         template <class E,class Tag,class T>
         E const & set_info( E const &, error_info<Tag,T> const & );
@@ -264,7 +264,7 @@ autoboost
         friend struct exception_detail::get_info<throw_function>;
         friend struct exception_detail::get_info<throw_file>;
         friend struct exception_detail::get_info<throw_line>;
-        friend void exception_detail::copy_boost_exception( exception *, exception const * );
+        friend void exception_detail::copy_autoboost_exception( exception *, exception const * );
 #endif
         mutable exception_detail::refcount_ptr<exception_detail::error_info_container> data_;
         mutable char const * throw_function_;
@@ -344,10 +344,10 @@ autoboost
 #endif
 
         struct large_size { char c[256]; };
-        large_size dispatch_boost_exception( exception const * );
+        large_size dispatch_autoboost_exception( exception const * );
 
         struct small_size { };
-        small_size dispatch_boost_exception( void const * );
+        small_size dispatch_autoboost_exception( void const * );
 
         template <class,int>
         struct enable_error_info_helper;
@@ -370,7 +370,7 @@ autoboost
         struct
         enable_error_info_return_type
             {
-            typedef typename enable_error_info_helper<T,sizeof(exception_detail::dispatch_boost_exception(static_cast<T *>(0)))>::type type;
+            typedef typename enable_error_info_helper<T,sizeof(exception_detail::dispatch_autoboost_exception(static_cast<T *>(0)))>::type type;
             };
         }
 
@@ -415,7 +415,7 @@ autoboost
 
         inline
         void
-        copy_boost_exception( exception * a, exception const * b )
+        copy_autoboost_exception( exception * a, exception const * b )
             {
             refcount_ptr<error_info_container> data;
             if( error_info_container * d=b->data_.get() )
@@ -428,7 +428,7 @@ autoboost
 
         inline
         void
-        copy_boost_exception( void *, void const * )
+        copy_autoboost_exception( void *, void const * )
             {
             }
 
@@ -442,7 +442,7 @@ autoboost
             clone_impl( clone_impl const & x, clone_tag ):
                 T(x)
                 {
-                copy_boost_exception(this,&x);
+                copy_autoboost_exception(this,&x);
                 }
 
             public:
@@ -451,7 +451,7 @@ autoboost
             clone_impl( T const & x ):
                 T(x)
                 {
-                copy_boost_exception(this,&x);
+                copy_autoboost_exception(this,&x);
                 }
 
             ~clone_impl() throw()

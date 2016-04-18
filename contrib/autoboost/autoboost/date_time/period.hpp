@@ -2,10 +2,10 @@
 #define AB_DATE_TIME_PERIOD_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
- * Author: Jeff Garland, Bart Garst 
+ * Author: Jeff Garland, Bart Garst
  * $Date$
  */
 
@@ -25,23 +25,23 @@ namespace date_time {
   //!Provides generalized period type useful in date-time systems
   /*!This template uses a class to represent a time point within the period
     and another class to represent a duration.  As a result, this class is
-    not appropriate for use when the number and duration representation 
+    not appropriate for use when the number and duration representation
     are the same (eg: in the regular number domain).
-    
-    A period can be specified by providing either the begining point and 
-    a duration or the begining point and the end point( end is NOT part 
+
+    A period can be specified by providing either the begining point and
+    a duration or the begining point and the end point( end is NOT part
     of the period but 1 unit past it. A period will be "invalid" if either
-    end_point <= begin_point or the given duration is <= 0. Any valid period 
+    end_point <= begin_point or the given duration is <= 0. Any valid period
     will return false for is_null().
-    
+
     Zero length periods are also considered invalid. Zero length periods are
-    periods where the begining and end points are the same, or, the given 
-    duration is zero. For a zero length period, the last point will be one 
+    periods where the begining and end points are the same, or, the given
+    duration is zero. For a zero length period, the last point will be one
     unit less than the begining point.
 
-    In the case that the begin and last are the same, the period has a 
+    In the case that the begin and last are the same, the period has a
     length of one unit.
-    
+
     The best way to handle periods is usually to provide a begining point and
     a duration.  So, day1 + 7 days is a week period which includes all of the
     first day and 6 more days (eg: Sun to Sat).
@@ -49,8 +49,8 @@ namespace date_time {
    */
   template<class point_rep, class duration_rep>
   class period : private
-      autoboost::less_than_comparable<period<point_rep, duration_rep> 
-    , autoboost::equality_comparable< period<point_rep, duration_rep> 
+      autoboost::less_than_comparable<period<point_rep, duration_rep>
+    , autoboost::equality_comparable< period<point_rep, duration_rep>
     > >
   {
   public:
@@ -87,9 +87,9 @@ namespace date_time {
    */
   template<class point_rep, class duration_rep>
   inline
-  period<point_rep,duration_rep>::period(point_rep first_point, 
-                                         point_rep end_point) : 
-    begin_(first_point), 
+  period<point_rep,duration_rep>::period(point_rep first_point,
+                                         point_rep end_point) :
+    begin_(first_point),
     last_(end_point - duration_rep::unit())
   {}
 
@@ -99,7 +99,7 @@ namespace date_time {
   template<class point_rep, class duration_rep>
   inline
   period<point_rep,duration_rep>::period(point_rep first_point, duration_rep len) :
-    begin_(first_point), 
+    begin_(first_point),
     last_(first_point + len-duration_rep::unit())
   { }
 
@@ -107,15 +107,15 @@ namespace date_time {
   //! Return the first element in the period
   template<class point_rep, class duration_rep>
   inline
-  point_rep period<point_rep,duration_rep>::begin() const 
+  point_rep period<point_rep,duration_rep>::begin() const
   {
     return begin_;
   }
 
-  //! Return one past the last element 
+  //! Return one past the last element
   template<class point_rep, class duration_rep>
   inline
-  point_rep period<point_rep,duration_rep>::end() const 
+  point_rep period<point_rep,duration_rep>::end() const
   {
     return last_ + duration_rep::unit();
   }
@@ -123,7 +123,7 @@ namespace date_time {
   //! Return the last item in the period
   template<class point_rep, class duration_rep>
   inline
-  point_rep period<point_rep,duration_rep>::last() const 
+  point_rep period<point_rep,duration_rep>::last() const
   {
     return last_;
   }
@@ -131,7 +131,7 @@ namespace date_time {
   //! True if period is ill formed (length is zero or less)
   template<class point_rep, class duration_rep>
   inline
-  bool period<point_rep,duration_rep>::is_null() const 
+  bool period<point_rep,duration_rep>::is_null() const
   {
     return end() <= begin_;
   }
@@ -152,19 +152,19 @@ namespace date_time {
   //! Equality operator
   template<class point_rep, class duration_rep>
   inline
-  bool period<point_rep,duration_rep>::operator==(const period& rhs) const 
+  bool period<point_rep,duration_rep>::operator==(const period& rhs) const
   {
-    return  ((begin_ == rhs.begin_) && 
+    return  ((begin_ == rhs.begin_) &&
              (last_ == rhs.last_));
   }
 
   //! Strict as defined by rhs.last <= lhs.last
   template<class point_rep, class duration_rep>
   inline
-  bool period<point_rep,duration_rep>::operator<(const period& rhs) const 
+  bool period<point_rep,duration_rep>::operator<(const period& rhs) const
   {
     return (last_ < rhs.begin_);
-  } 
+  }
 
 
   //! Shift the start and end by the specified amount
@@ -178,13 +178,13 @@ namespace date_time {
 
   /** Expands the size of the period by the duration on both ends.
    *
-   *So before expand 
+   *So before expand
    *@code
    *
    *         [-------]
    * ^   ^   ^   ^   ^   ^  ^
    * 1   2   3   4   5   6  7
-   * 
+   *
    *@endcode
    * After expand(2)
    *@code
@@ -192,7 +192,7 @@ namespace date_time {
    * [----------------------]
    * ^   ^   ^   ^   ^   ^  ^
    * 1   2   3   4   5   6  7
-   * 
+   *
    *@endcode
    */
   template<class point_rep, class duration_rep>
@@ -206,7 +206,7 @@ namespace date_time {
   //! True if the point is inside the period, zero length periods contain no points
   template<class point_rep, class duration_rep>
   inline
-  bool period<point_rep,duration_rep>::contains(const point_rep& point) const 
+  bool period<point_rep,duration_rep>::contains(const point_rep& point) const
   {
     return ((point >= begin_) &&
             (point <= last_));
@@ -228,13 +228,13 @@ namespace date_time {
    *@code
    *   [-p1-)
    *        [-p2-)
-   *          [-p3-) 
+   *          [-p3-)
    *@endcode
    */
   template<class point_rep, class duration_rep>
   inline
-  bool 
-  period<point_rep,duration_rep>::is_adjacent(const period<point_rep,duration_rep>& other) const 
+  bool
+  period<point_rep,duration_rep>::is_adjacent(const period<point_rep,duration_rep>& other) const
   {
     return (other.begin() == end() ||
             begin_ == other.end());
@@ -247,19 +247,19 @@ namespace date_time {
    *     [---------])
    * ^   ^    ^     ^   ^
    * 1   2    3     4   5
-   * 
+   *
    *@endcode
    */
   template<class point_rep, class duration_rep>
   inline
-  bool 
-  period<point_rep,duration_rep>::is_after(const point_rep& t) const 
-  { 
-    if (is_null()) 
+  bool
+  period<point_rep,duration_rep>::is_after(const point_rep& t) const
+  {
+    if (is_null())
     {
       return false; //null period isn't after
     }
-    
+
     return t < begin_;
   }
 
@@ -269,19 +269,19 @@ namespace date_time {
    *     [---------])
    * ^   ^    ^     ^   ^
    * 1   2    3     4   5
-   * 
+   *
    *@endcode
    */
   template<class point_rep, class duration_rep>
   inline
-  bool 
-  period<point_rep,duration_rep>::is_before(const point_rep& t) const 
-  { 
-    if (is_null()) 
+  bool
+  period<point_rep,duration_rep>::is_before(const point_rep& t) const
+  {
+    if (is_null())
     {
       return false;  //null period isn't before anything
     }
-    
+
     return last_ < t;
   }
 
@@ -291,16 +291,16 @@ namespace date_time {
    *@code
    *       [---p1---)
    *             [---p2---)
-   *                [---p3---) 
-   *  [---p4---) 
-   * [-p5-) 
-   *         [-p6-) 
+   *                [---p3---)
+   *  [---p4---)
+   * [-p5-)
+   *         [-p6-)
    *@endcode
    */
   template<class point_rep, class duration_rep>
   inline
-  bool period<point_rep,duration_rep>::intersects(const period<point_rep,duration_rep>& other) const 
-  { 
+  bool period<point_rep,duration_rep>::intersects(const period<point_rep,duration_rep>& other) const
+  {
     return ( contains(other.begin_) ||
              other.contains(begin_) ||
              ((other.begin_ < begin_) && (other.last_ >= begin_)));
@@ -310,11 +310,11 @@ namespace date_time {
   template<class point_rep, class duration_rep>
   inline
   period<point_rep,duration_rep>
-  period<point_rep,duration_rep>::intersection(const period<point_rep,duration_rep>& other) const 
+  period<point_rep,duration_rep>::intersection(const period<point_rep,duration_rep>& other) const
   {
     if (begin_ > other.begin_) {
       if (last_ <= other.last_) { //case2
-        return *this;  
+        return *this;
       }
       //case 1
       return period<point_rep,duration_rep>(begin_, other.end());
@@ -330,39 +330,39 @@ namespace date_time {
   }
 
   //! Returns the union of intersecting periods -- or null period
-  /*! 
+  /*!
    */
   template<class point_rep, class duration_rep>
   inline
   period<point_rep,duration_rep>
-  period<point_rep,duration_rep>::merge(const period<point_rep,duration_rep>& other) const 
+  period<point_rep,duration_rep>::merge(const period<point_rep,duration_rep>& other) const
   {
-    if (this->intersects(other)) {      
+    if (this->intersects(other)) {
       if (begin_ < other.begin_) {
         return period<point_rep,duration_rep>(begin_, last_ > other.last_ ? this->end() : other.end());
       }
-      
+
       return period<point_rep,duration_rep>(other.begin_, last_ > other.last_ ? this->end() : other.end());
-      
+
     }
     return period<point_rep,duration_rep>(begin_,begin_); // no intersect return null
   }
 
   //! Combine two periods with earliest start and latest end.
-  /*! Combines two periods and any gap between them such that 
+  /*! Combines two periods and any gap between them such that
    *  start = min(p1.start, p2.start)
    *  end   = max(p1.end  , p2.end)
    *@code
    *        [---p1---)
    *                       [---p2---)
    * result:
-   *        [-----------p3----------) 
+   *        [-----------p3----------)
    *@endcode
    */
   template<class point_rep, class duration_rep>
   inline
   period<point_rep,duration_rep>
-  period<point_rep,duration_rep>::span(const period<point_rep,duration_rep>& other) const 
+  period<point_rep,duration_rep>::span(const period<point_rep,duration_rep>& other) const
   {
     point_rep start((begin_ < other.begin_) ? begin() : other.begin());
     point_rep newend((last_  < other.last_)  ? other.end() : this->end());

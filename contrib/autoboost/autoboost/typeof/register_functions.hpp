@@ -21,7 +21,7 @@
 #define AUTOBOOST_TYPEOF_LIMIT_FUNCTION_ARITY 10
 #endif
 
-enum 
+enum
 {
     FUN_ID                          = AUTOBOOST_TYPEOF_UNIQUE_ID(),
     FUN_PTR_ID                      = FUN_ID +  1 * AUTOBOOST_PP_INC(AUTOBOOST_TYPEOF_LIMIT_FUNCTION_ARITY),

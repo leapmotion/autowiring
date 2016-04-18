@@ -10,7 +10,7 @@
 #define AUTOBOOST_CORE_SWAP_HPP
 
 // Note: the implementation of this utility contains various workarounds:
-// - swap_impl is put outside the boost namespace, to avoid infinite
+// - swap_impl is put outside the autoboost namespace, to avoid infinite
 // recursion (causing stack overflow) when swapping objects of a primitive
 // type.
 // - swap_impl has a using-directive, rather than a using-declaration,

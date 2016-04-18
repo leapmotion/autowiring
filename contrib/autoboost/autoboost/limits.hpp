@@ -1,5 +1,5 @@
 
-//  (C) Copyright John maddock 1999. 
+//  (C) Copyright John maddock 1999.
 //  (C) David Abrahams 2002.  Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -35,7 +35,7 @@
 namespace std
 {
   template<>
-  class numeric_limits<AUTOBOOST_LLT> 
+  class numeric_limits<AUTOBOOST_LLT>
   {
    public:
 
@@ -84,11 +84,11 @@ namespace std
       AUTOBOOST_STATIC_CONSTANT(bool, traps = false);
       AUTOBOOST_STATIC_CONSTANT(bool, tinyness_before = false);
       AUTOBOOST_STATIC_CONSTANT(float_round_style, round_style = round_toward_zero);
-      
+
   };
 
   template<>
-  class numeric_limits<AUTOBOOST_ULLT> 
+  class numeric_limits<AUTOBOOST_ULLT>
   {
    public:
 
@@ -137,10 +137,10 @@ namespace std
       AUTOBOOST_STATIC_CONSTANT(bool, traps = false);
       AUTOBOOST_STATIC_CONSTANT(bool, tinyness_before = false);
       AUTOBOOST_STATIC_CONSTANT(float_round_style, round_style = round_toward_zero);
-      
+
   };
 }
-#endif 
+#endif
 
 #endif
 

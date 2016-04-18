@@ -10,7 +10,7 @@
 
 //--------------------------------------------------------------------------------------//
 
-//  define 64-bit offset macros BEFORE including boost/config.hpp (see ticket #5355)
+//  define 64-bit offset macros BEFORE including autoboost/config.hpp (see ticket #5355)
 #if !(defined(__HP_aCC) && defined(_ILP32) && !defined(_STATVFS_ACPP_PROBLEMS_FIXED))
 #define _FILE_OFFSET_BITS 64 // at worst, these defines may have no effect,
 #endif
@@ -366,13 +366,13 @@ namespace
       )
     {
       if (error(!remove_directory(p) ? AUTOBOOST_ERRNO : 0, p, ec,
-        "boost::filesystem::remove"))
+        "autoboost::filesystem::remove"))
           return false;
     }
     else
     {
       if (error(!remove_file(p) ? AUTOBOOST_ERRNO : 0, p, ec,
-        "boost::filesystem::remove"))
+        "autoboost::filesystem::remove"))
           return false;
     }
     return true;
@@ -634,7 +634,7 @@ namespace
       return fs::file_status(fs::type_unknown);
     }
     if (ec == 0)
-      AUTOBOOST_FILESYSTEM_THROW(filesystem_error("boost::filesystem::status",
+      AUTOBOOST_FILESYSTEM_THROW(filesystem_error("autoboost::filesystem::status",
         p, error_code(errval, system_category())));
     return fs::file_status(fs::status_error);
   }
@@ -805,7 +805,7 @@ namespace detail
     {
       if (ec == 0)
         AUTOBOOST_FILESYSTEM_THROW(filesystem_error(
-          "boost::filesystem::canonical", source,
+          "autoboost::filesystem::canonical", source,
           error_code(system::errc::no_such_file_or_directory, system::generic_category())));
       ec->assign(system::errc::no_such_file_or_directory, system::generic_category());
       return result;
@@ -814,7 +814,7 @@ namespace detail
     {
       if (ec == 0)
         AUTOBOOST_FILESYSTEM_THROW(filesystem_error(
-          "boost::filesystem::canonical", source, local_ec));
+          "autoboost::filesystem::canonical", source, local_ec));
       *ec = local_ec;
       return result;
     }
@@ -894,7 +894,7 @@ namespace detail
     else
     {
       if (ec == 0)
-        AUTOBOOST_FILESYSTEM_THROW(filesystem_error("boost::filesystem::copy",
+        AUTOBOOST_FILESYSTEM_THROW(filesystem_error("autoboost::filesystem::copy",
           from, to, error_code(AUTOBOOST_ERROR_NOT_SUPPORTED, system_category())));
       ec->assign(AUTOBOOST_ERROR_NOT_SUPPORTED, system_category());
     }
@@ -907,7 +907,7 @@ namespace detail
     struct stat from_stat;
 #   endif
     error(!AUTOBOOST_COPY_DIRECTORY(from.c_str(), to.c_str()) ? AUTOBOOST_ERRNO : 0,
-      from, to, ec, "boost::filesystem::copy_directory");
+      from, to, ec, "autoboost::filesystem::copy_directory");
   }
 
   AUTOBOOST_FILESYSTEM_DECL
@@ -915,7 +915,7 @@ namespace detail
   {
     error(!AUTOBOOST_COPY_FILE(from.c_str(), to.c_str(),
       option == fail_if_exists) ? AUTOBOOST_ERRNO : 0,
-        from, to, ec, "boost::filesystem::copy_file");
+        from, to, ec, "autoboost::filesystem::copy_file");
   }
 
   AUTOBOOST_FILESYSTEM_DECL
@@ -924,7 +924,7 @@ namespace detail
   {
 # if defined(_WIN32_WINNT) && _WIN32_WINNT < 0x0600
     error(AUTOBOOST_ERROR_NOT_SUPPORTED, new_symlink, existing_symlink, ec,
-      "boost::filesystem::copy_symlink");
+      "autoboost::filesystem::copy_symlink");
 
 # else  // modern Windows or AUTOBOOST_POSIX_API
     path p(read_symlink(existing_symlink, ec));
@@ -965,7 +965,7 @@ namespace detail
         {
           if (ec == 0)
             AUTOBOOST_FILESYSTEM_THROW(filesystem_error(
-              "boost::filesystem::create_directories", parent, local_ec));
+              "autoboost::filesystem::create_directories", parent, local_ec));
           else
             *ec = local_ec;
           return false;
@@ -999,7 +999,7 @@ namespace detail
 
     //  attempt to create directory failed && it doesn't already exist
     if (ec == 0)
-      AUTOBOOST_FILESYSTEM_THROW(filesystem_error("boost::filesystem::create_directory",
+      AUTOBOOST_FILESYSTEM_THROW(filesystem_error("autoboost::filesystem::create_directory",
         p, error_code(errval, system_category())));
     else
       ec->assign(errval, system_category());
@@ -1013,19 +1013,19 @@ namespace detail
 #   if defined(AUTOBOOST_WINDOWS_API) && _WIN32_WINNT < 0x0600  // SDK earlier than Vista and Server 2008
 
     error(AUTOBOOST_ERROR_NOT_SUPPORTED, to, from, ec,
-      "boost::filesystem::create_directory_symlink");
+      "autoboost::filesystem::create_directory_symlink");
 #   else
 
 #     if defined(AUTOBOOST_WINDOWS_API) && _WIN32_WINNT >= 0x0600
         // see if actually supported by Windows runtime dll
         if (error(!create_symbolic_link_api ? AUTOBOOST_ERROR_NOT_SUPPORTED : 0, to, from, ec,
-            "boost::filesystem::create_directory_symlink"))
+            "autoboost::filesystem::create_directory_symlink"))
           return;
 #     endif
 
     error(!AUTOBOOST_CREATE_SYMBOLIC_LINK(from.c_str(), to.c_str(),
       SYMBOLIC_LINK_FLAG_DIRECTORY) ? AUTOBOOST_ERRNO : 0,
-      to, from, ec, "boost::filesystem::create_directory_symlink");
+      to, from, ec, "autoboost::filesystem::create_directory_symlink");
 #   endif
   }
 
@@ -1036,18 +1036,18 @@ namespace detail
 #   if defined(AUTOBOOST_WINDOWS_API) && _WIN32_WINNT < 0x0500  // SDK earlier than Win 2K
 
     error(AUTOBOOST_ERROR_NOT_SUPPORTED, to, from, ec,
-      "boost::filesystem::create_hard_link");
+      "autoboost::filesystem::create_hard_link");
 #   else
 
 #     if defined(AUTOBOOST_WINDOWS_API) && _WIN32_WINNT >= 0x0500
         // see if actually supported by Windows runtime dll
         if (error(!create_hard_link_api ? AUTOBOOST_ERROR_NOT_SUPPORTED : 0, to, from, ec,
-            "boost::filesystem::create_hard_link"))
+            "autoboost::filesystem::create_hard_link"))
           return;
 #     endif
 
     error(!AUTOBOOST_CREATE_HARD_LINK(from.c_str(), to.c_str()) ? AUTOBOOST_ERRNO : 0, to, from, ec,
-      "boost::filesystem::create_hard_link");
+      "autoboost::filesystem::create_hard_link");
 #   endif
   }
 
@@ -1056,18 +1056,18 @@ namespace detail
   {
 #   if defined(AUTOBOOST_WINDOWS_API) && _WIN32_WINNT < 0x0600  // SDK earlier than Vista and Server 2008
     error(AUTOBOOST_ERROR_NOT_SUPPORTED, to, from, ec,
-      "boost::filesystem::create_directory_symlink");
+      "autoboost::filesystem::create_directory_symlink");
 #   else
 
 #     if defined(AUTOBOOST_WINDOWS_API) && _WIN32_WINNT >= 0x0600
         // see if actually supported by Windows runtime dll
         if (error(!create_symbolic_link_api ? AUTOBOOST_ERROR_NOT_SUPPORTED : 0, to, from, ec,
-            "boost::filesystem::create_symlink"))
+            "autoboost::filesystem::create_symlink"))
           return;
 #     endif
 
     error(!AUTOBOOST_CREATE_SYMBOLIC_LINK(from.c_str(), to.c_str(), 0) ? AUTOBOOST_ERRNO : 0,
-      to, from, ec, "boost::filesystem::create_symlink");
+      to, from, ec, "autoboost::filesystem::create_symlink");
 #   endif
   }
 
@@ -1087,7 +1087,7 @@ namespace detail
 #         if defined(__MSL__) && (defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__))
           && errno != 0
 #         endif
-          , ec, "boost::filesystem::current_path"))
+          , ec, "autoboost::filesystem::current_path"))
         {
           break;
         }
@@ -1106,7 +1106,7 @@ namespace detail
     if ((sz = ::GetCurrentDirectoryW(0, NULL)) == 0)sz = 1;
     autoboost::scoped_array<path::value_type> buf(new path::value_type[sz]);
     error(::GetCurrentDirectoryW(sz, buf.get()) == 0 ? AUTOBOOST_ERRNO : 0, ec,
-      "boost::filesystem::current_path");
+      "autoboost::filesystem::current_path");
     return path(buf.get());
 #   endif
   }
@@ -1116,7 +1116,7 @@ namespace detail
   void current_path(const path& p, system::error_code* ec)
   {
     error(!AUTOBOOST_SET_CURRENT_DIRECTORY(p.c_str()) ? AUTOBOOST_ERRNO : 0,
-      p, ec, "boost::filesystem::current_path");
+      p, ec, "autoboost::filesystem::current_path");
   }
 
   AUTOBOOST_FILESYSTEM_DECL
@@ -1132,7 +1132,7 @@ namespace detail
     {
       // if one is invalid and the other isn't then they aren't equivalent,
       // but if both are invalid then it is an error
-      error (e1 != 0 && e2 != 0, p1, p2, ec, "boost::filesystem::equivalent");
+      error (e1 != 0 && e2 != 0, p1, p2, ec, "autoboost::filesystem::equivalent");
       return false;
     }
 
@@ -1179,7 +1179,7 @@ namespace detail
       // but if both are invalid then it is an error
       error((h1.handle == INVALID_HANDLE_VALUE
         && h2.handle == INVALID_HANDLE_VALUE) ? AUTOBOOST_ERROR_NOT_SUPPORTED : 0, p1, p2, ec,
-          "boost::filesystem::equivalent");
+          "autoboost::filesystem::equivalent");
       return false;
     }
 
@@ -1188,11 +1188,11 @@ namespace detail
     BY_HANDLE_FILE_INFORMATION info1, info2;
 
     if (error(!::GetFileInformationByHandle(h1.handle, &info1) ? AUTOBOOST_ERRNO : 0,
-      p1, p2, ec, "boost::filesystem::equivalent"))
+      p1, p2, ec, "autoboost::filesystem::equivalent"))
         return  false;
 
     if (error(!::GetFileInformationByHandle(h2.handle, &info2) ? AUTOBOOST_ERRNO : 0,
-      p1, p2, ec, "boost::filesystem::equivalent"))
+      p1, p2, ec, "autoboost::filesystem::equivalent"))
         return  false;
 
     // In theory, volume serial numbers are sufficient to distinguish between
@@ -1219,10 +1219,10 @@ namespace detail
 
     struct stat path_stat;
     if (error(::stat(p.c_str(), &path_stat)!= 0 ? AUTOBOOST_ERRNO : 0,
-        p, ec, "boost::filesystem::file_size"))
+        p, ec, "autoboost::filesystem::file_size"))
       return static_cast<autoboost::uintmax_t>(-1);
    if (error(!S_ISREG(path_stat.st_mode) ? EPERM : 0,
-        p, ec, "boost::filesystem::file_size"))
+        p, ec, "autoboost::filesystem::file_size"))
       return static_cast<autoboost::uintmax_t>(-1);
 
     return static_cast<autoboost::uintmax_t>(path_stat.st_size);
@@ -1234,11 +1234,11 @@ namespace detail
     WIN32_FILE_ATTRIBUTE_DATA fad;
 
     if (error(::GetFileAttributesExW(p.c_str(), ::GetFileExInfoStandard, &fad)== 0
-      ? AUTOBOOST_ERRNO : 0, p, ec, "boost::filesystem::file_size"))
+      ? AUTOBOOST_ERRNO : 0, p, ec, "autoboost::filesystem::file_size"))
           return static_cast<autoboost::uintmax_t>(-1);
 
     if (error((fad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)!= 0
-      ? ERROR_NOT_SUPPORTED : 0, p, ec, "boost::filesystem::file_size"))
+      ? ERROR_NOT_SUPPORTED : 0, p, ec, "autoboost::filesystem::file_size"))
       return static_cast<autoboost::uintmax_t>(-1);
 
     return (static_cast<autoboost::uintmax_t>(fad.nFileSizeHigh)
@@ -1253,7 +1253,7 @@ namespace detail
 
     struct stat path_stat;
     return error(::stat(p.c_str(), &path_stat)!= 0 ? AUTOBOOST_ERRNO : 0,
-                  p, ec, "boost::filesystem::hard_link_count")
+                  p, ec, "autoboost::filesystem::hard_link_count")
            ? 0
            : static_cast<autoboost::uintmax_t>(path_stat.st_nlink);
 
@@ -1267,9 +1267,9 @@ namespace detail
           OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0));
     return
       !error(h.handle == INVALID_HANDLE_VALUE ? AUTOBOOST_ERRNO : 0,
-              p, ec, "boost::filesystem::hard_link_count")
+              p, ec, "autoboost::filesystem::hard_link_count")
       && !error(::GetFileInformationByHandle(h.handle, &info)== 0 ? AUTOBOOST_ERRNO : 0,
-                 p, ec, "boost::filesystem::hard_link_count")
+                 p, ec, "autoboost::filesystem::hard_link_count")
            ? info.nNumberOfLinks
            : 0;
 #   endif
@@ -1292,7 +1292,7 @@ namespace detail
 
     struct stat path_stat;
     if (error(::stat(p.c_str(), &path_stat)!= 0,
-        p, ec, "boost::filesystem::is_empty"))
+        p, ec, "autoboost::filesystem::is_empty"))
       return false;
     return S_ISDIR(path_stat.st_mode)
       ? is_empty_directory(p)
@@ -1301,7 +1301,7 @@ namespace detail
 
     WIN32_FILE_ATTRIBUTE_DATA fad;
     if (error(::GetFileAttributesExW(p.c_str(), ::GetFileExInfoStandard, &fad)== 0
-      ? AUTOBOOST_ERRNO : 0, p, ec, "boost::filesystem::is_empty"))
+      ? AUTOBOOST_ERRNO : 0, p, ec, "autoboost::filesystem::is_empty"))
         return false;
 
     if (ec != 0) ec->clear();
@@ -1319,7 +1319,7 @@ namespace detail
 
     struct stat path_stat;
     if (error(::stat(p.c_str(), &path_stat)!= 0 ? AUTOBOOST_ERRNO : 0,
-      p, ec, "boost::filesystem::last_write_time"))
+      p, ec, "autoboost::filesystem::last_write_time"))
         return std::time_t(-1);
     return path_stat.st_mtime;
 
@@ -1331,13 +1331,13 @@ namespace detail
         OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0));
 
     if (error(hw.handle == INVALID_HANDLE_VALUE ? AUTOBOOST_ERRNO : 0,
-      p, ec, "boost::filesystem::last_write_time"))
+      p, ec, "autoboost::filesystem::last_write_time"))
         return std::time_t(-1);
 
     FILETIME lwt;
 
     if (error(::GetFileTime(hw.handle, 0, 0, &lwt)== 0 ? AUTOBOOST_ERRNO : 0,
-      p, ec, "boost::filesystem::last_write_time"))
+      p, ec, "autoboost::filesystem::last_write_time"))
         return std::time_t(-1);
 
     return to_time_t(lwt);
@@ -1352,13 +1352,13 @@ namespace detail
 
     struct stat path_stat;
     if (error(::stat(p.c_str(), &path_stat)!= 0,
-      p, ec, "boost::filesystem::last_write_time"))
+      p, ec, "autoboost::filesystem::last_write_time"))
         return;
     ::utimbuf buf;
     buf.actime = path_stat.st_atime; // utime()updates access time too:-(
     buf.modtime = new_time;
     error(::utime(p.c_str(), &buf)!= 0 ? AUTOBOOST_ERRNO : 0,
-      p, ec, "boost::filesystem::last_write_time");
+      p, ec, "autoboost::filesystem::last_write_time");
 
 #   else
 
@@ -1368,14 +1368,14 @@ namespace detail
         OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0));
 
     if (error(hw.handle == INVALID_HANDLE_VALUE ? AUTOBOOST_ERRNO : 0,
-      p, ec, "boost::filesystem::last_write_time"))
+      p, ec, "autoboost::filesystem::last_write_time"))
         return;
 
     FILETIME lwt;
     to_FILETIME(new_time, lwt);
 
     error(::SetFileTime(hw.handle, 0, 0, &lwt)== 0 ? AUTOBOOST_ERRNO : 0,
-      p, ec, "boost::filesystem::last_write_time");
+      p, ec, "autoboost::filesystem::last_write_time");
 #   endif
   }
 
@@ -1402,7 +1402,7 @@ namespace detail
     {
       if (ec == 0)
       AUTOBOOST_FILESYSTEM_THROW(filesystem_error(
-          "boost::filesystem::permissions", p, local_ec));
+          "autoboost::filesystem::permissions", p, local_ec));
       else
         *ec = local_ec;
       return;
@@ -1439,7 +1439,7 @@ namespace detail
     {
       if (ec == 0)
       AUTOBOOST_FILESYSTEM_THROW(filesystem_error(
-          "boost::filesystem::permissions", p,
+          "autoboost::filesystem::permissions", p,
           error_code(errno, system::generic_category())));
       else
         ec->assign(errno, system::generic_category());
@@ -1454,7 +1454,7 @@ namespace detail
 
     DWORD attr = ::GetFileAttributesW(p.c_str());
 
-    if (error(attr == 0 ? AUTOBOOST_ERRNO : 0, p, ec, "boost::filesystem::permissions"))
+    if (error(attr == 0 ? AUTOBOOST_ERRNO : 0, p, ec, "autoboost::filesystem::permissions"))
       return;
 
     if (prms & add_perms)
@@ -1467,7 +1467,7 @@ namespace detail
       attr |= FILE_ATTRIBUTE_READONLY;
 
     error(::SetFileAttributesW(p.c_str(), attr) == 0 ? AUTOBOOST_ERRNO : 0,
-      p, ec, "boost::filesystem::permissions");
+      p, ec, "autoboost::filesystem::permissions");
 # endif
   }
 
@@ -1485,7 +1485,7 @@ namespace detail
       if ((result=::readlink(p.c_str(), buf.get(), path_max))== -1)
       {
         if (ec == 0)
-          AUTOBOOST_FILESYSTEM_THROW(filesystem_error("boost::filesystem::read_symlink",
+          AUTOBOOST_FILESYSTEM_THROW(filesystem_error("autoboost::filesystem::read_symlink",
             p, error_code(errno, system_category())));
         else ec->assign(errno, system_category());
         break;
@@ -1503,7 +1503,7 @@ namespace detail
 
 #   elif _WIN32_WINNT < 0x0600  // SDK earlier than Vista and Server 2008
     error(AUTOBOOST_ERROR_NOT_SUPPORTED, p, ec,
-          "boost::filesystem::read_symlink");
+          "autoboost::filesystem::read_symlink");
 #   else  // Vista and Server 2008 SDK, or later
 
     union info_t
@@ -1517,14 +1517,14 @@ namespace detail
         FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, 0));
 
     if (error(h.handle == INVALID_HANDLE_VALUE ? AUTOBOOST_ERRNO : 0,
-      p, ec, "boost::filesystem::read_symlink"))
+      p, ec, "autoboost::filesystem::read_symlink"))
         return symlink_path;
 
     DWORD sz;
 
     if (!error(::DeviceIoControl(h.handle, FSCTL_GET_REPARSE_POINT,
           0, 0, info.buf, sizeof(info), &sz, 0) == 0 ? AUTOBOOST_ERRNO : 0, p, ec,
-          "boost::filesystem::read_symlink" ))
+          "autoboost::filesystem::read_symlink" ))
       symlink_path.assign(
         static_cast<wchar_t*>(info.rdb.SymbolicLinkReparseBuffer.PathBuffer)
         + info.rdb.SymbolicLinkReparseBuffer.PrintNameOffset/sizeof(wchar_t),
@@ -1540,10 +1540,10 @@ namespace detail
   {
     error_code tmp_ec;
     path wc_base(weakly_canonical(base, &tmp_ec));
-    if (error(tmp_ec.value(), base, ec, "boost::filesystem::relative"))
+    if (error(tmp_ec.value(), base, ec, "autoboost::filesystem::relative"))
       return path();
     path wc_p(weakly_canonical(p, &tmp_ec));
-    if (error(tmp_ec.value(), base, ec, "boost::filesystem::relative"))
+    if (error(tmp_ec.value(), base, ec, "autoboost::filesystem::relative"))
       return path();
     return wc_p.lexically_relative(wc_base);
   }
@@ -1554,7 +1554,7 @@ namespace detail
     error_code tmp_ec;
     file_type type = query_file_type(p, &tmp_ec);
     if (error(type == status_error ? tmp_ec.value() : 0, p, ec,
-        "boost::filesystem::remove"))
+        "autoboost::filesystem::remove"))
       return false;
 
     // Since POSIX remove() is specified to work with either files or directories, in a
@@ -1570,7 +1570,7 @@ namespace detail
     error_code tmp_ec;
     file_type type = query_file_type(p, &tmp_ec);
     if (error(type == status_error ? tmp_ec.value() : 0, p, ec,
-      "boost::filesystem::remove_all"))
+      "autoboost::filesystem::remove_all"))
       return 0;
 
     return (type != status_error && type != file_not_found) // exists
@@ -1582,14 +1582,14 @@ namespace detail
   void rename(const path& old_p, const path& new_p, error_code* ec)
   {
     error(!AUTOBOOST_MOVE_FILE(old_p.c_str(), new_p.c_str()) ? AUTOBOOST_ERRNO : 0, old_p, new_p,
-      ec, "boost::filesystem::rename");
+      ec, "autoboost::filesystem::rename");
   }
 
   AUTOBOOST_FILESYSTEM_DECL
   void resize_file(const path& p, uintmax_t size, system::error_code* ec)
   {
     error(!AUTOBOOST_RESIZE_FILE(p.c_str(), size) ? AUTOBOOST_ERRNO : 0, p, ec,
-      "boost::filesystem::resize_file");
+      "autoboost::filesystem::resize_file");
   }
 
   AUTOBOOST_FILESYSTEM_DECL
@@ -1599,7 +1599,7 @@ namespace detail
     struct AUTOBOOST_STATVFS vfs;
     space_info info;
     if (!error(::AUTOBOOST_STATVFS(p.c_str(), &vfs)!= 0,
-      p, ec, "boost::filesystem::space"))
+      p, ec, "autoboost::filesystem::space"))
     {
       info.capacity
         = static_cast<autoboost::uintmax_t>(vfs.f_blocks)* AUTOBOOST_STATVFS_F_FRSIZE;
@@ -1614,7 +1614,7 @@ namespace detail
     space_info info;
 
     if (!error(::GetDiskFreeSpaceExW(p.c_str(), &avail, &total, &free)== 0,
-       p, ec, "boost::filesystem::space"))
+       p, ec, "autoboost::filesystem::space"))
     {
       info.capacity
         = (static_cast<autoboost::uintmax_t>(total.HighPart)<< 32)
@@ -1652,7 +1652,7 @@ namespace detail
         return fs::file_status(fs::file_not_found, fs::no_perms);
       }
       if (ec == 0)
-        AUTOBOOST_FILESYSTEM_THROW(filesystem_error("boost::filesystem::status",
+        AUTOBOOST_FILESYSTEM_THROW(filesystem_error("autoboost::filesystem::status",
           p, error_code(errno, system_category())));
       return fs::file_status(fs::status_error);
     }
@@ -1732,7 +1732,7 @@ namespace detail
         return fs::file_status(fs::file_not_found, fs::no_perms);
       }
       if (ec == 0)
-        AUTOBOOST_FILESYSTEM_THROW(filesystem_error("boost::filesystem::status",
+        AUTOBOOST_FILESYSTEM_THROW(filesystem_error("autoboost::filesystem::status",
           p, error_code(errno, system_category())));
       return fs::file_status(fs::status_error);
     }
@@ -1803,7 +1803,7 @@ namespace detail
 
       if (p.empty() || (ec&&!is_directory(p, *ec))||(!ec&&!is_directory(p)))
       {
-        error(ENOTDIR, p, ec, "boost::filesystem::temp_directory_path");
+        error(ENOTDIR, p, ec, "autoboost::filesystem::temp_directory_path");
         return p;
       }
 
@@ -1842,7 +1842,7 @@ namespace detail
         if (buf.empty()
           || ::GetWindowsDirectoryW(&buf[0], static_cast<UINT>(buf.size())) == 0)
         {
-          error(::GetLastError(), ec, "boost::filesystem::temp_directory_path");
+          error(::GetLastError(), ec, "autoboost::filesystem::temp_directory_path");
           return path();
         }
         p = &*buf.begin();  // do not depend on buf.size(); see ticket #10388
@@ -1870,7 +1870,7 @@ namespace detail
     wchar_t* pfn;
     std::size_t len = get_full_path_name(p, buf_size, buf, &pfn);
 
-    if (error(len == 0 ? AUTOBOOST_ERRNO : 0, p, ec, "boost::filesystem::system_complete"))
+    if (error(len == 0 ? AUTOBOOST_ERRNO : 0, p, ec, "autoboost::filesystem::system_complete"))
       return path();
 
     if (len < buf_size)// len does not include null termination character
@@ -1879,7 +1879,7 @@ namespace detail
     autoboost::scoped_array<wchar_t> big_buf(new wchar_t[len]);
 
     return error(get_full_path_name(p, len , big_buf.get(), &pfn)== 0 ? AUTOBOOST_ERRNO : 0,
-      p, ec, "boost::filesystem::system_complete")
+      p, ec, "autoboost::filesystem::system_complete")
       ? path()
       : path(big_buf.get());
 #   endif
@@ -1897,7 +1897,7 @@ namespace detail
     {
       file_status head_status = status(head, tmp_ec);
       if (error(head_status.type() == fs::status_error,
-        head, ec, "boost::filesystem::weakly_canonical"))
+        head, ec, "autoboost::filesystem::weakly_canonical"))
         return path();
       if (head_status.type() != fs::file_not_found)
         break;
@@ -1918,7 +1918,7 @@ namespace detail
     if (head.empty())
       return p.lexically_normal();
     head = canonical(head, tmp_ec);
-    if (error(tmp_ec.value(), head, ec, "boost::filesystem::weakly_canonical"))
+    if (error(tmp_ec.value(), head, ec, "autoboost::filesystem::weakly_canonical"))
       return path();
     return tail.empty()
       ? head
@@ -2252,7 +2252,7 @@ namespace detail
     const path& p, system::error_code* ec)
   {
     if (error(p.empty() ? not_found_error_code.value() : 0, p, ec,
-              "boost::filesystem::directory_iterator::construct"))
+              "autoboost::filesystem::directory_iterator::construct"))
       return;
 
     path::string_type filename;
@@ -2267,7 +2267,7 @@ namespace detail
     {
       it.m_imp.reset();
       error(result.value(), p,
-        ec, "boost::filesystem::directory_iterator::construct");
+        ec, "autoboost::filesystem::directory_iterator::construct");
       return;
     }
 
@@ -2308,7 +2308,7 @@ namespace detail
         it.m_imp.reset();
         if (ec == 0)
           AUTOBOOST_FILESYSTEM_THROW(
-            filesystem_error("boost::filesystem::directory_iterator::operator++",
+            filesystem_error("autoboost::filesystem::directory_iterator::operator++",
               error_path,
               error_code(AUTOBOOST_ERRNO, system_category())));
         ec->assign(AUTOBOOST_ERRNO, system_category());

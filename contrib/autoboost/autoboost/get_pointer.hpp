@@ -9,11 +9,11 @@
 
 // In order to avoid circular dependencies with Boost.TR1
 // we make sure that our include of <memory> doesn't try to
-// pull in the TR1 headers: that's why we use this header 
+// pull in the TR1 headers: that's why we use this header
 // rather than including <memory> directly:
 #include <autoboost/config/no_tr1/memory.hpp>  // std::auto_ptr
 
-namespace autoboost { 
+namespace autoboost {
 
 // get_pointer(p) extracts a ->* capable pointer from p
 

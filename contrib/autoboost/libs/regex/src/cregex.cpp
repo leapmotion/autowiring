@@ -3,8 +3,8 @@
  * Copyright (c) 1998-2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -472,7 +472,7 @@ std::string RegEx::Merge(const char* in, const char* fmt,
    return result;
 }
 
-std::size_t RegEx::Split(std::vector<std::string>& v, 
+std::size_t RegEx::Split(std::vector<std::string>& v,
                       std::string& s,
                       match_flag_type flags,
                       unsigned max_count)
@@ -542,7 +542,7 @@ bool RegEx::Matched(int i)const
 #ifndef AUTOBOOST_REGEX_NO_FILEITER
    case re_detail::RegExData::type_pf:
       return pdata->fm[i].matched;
-#endif      
+#endif
    case re_detail::RegExData::type_copy:
       {
       std::map<int, std::string, std::less<int> >::iterator pos = pdata->strings.find(i);
@@ -561,11 +561,11 @@ std::string RegEx::What(int i)const
    switch(pdata->t)
    {
    case re_detail::RegExData::type_pc:
-      if(pdata->m[i].matched) 
+      if(pdata->m[i].matched)
          result.assign(pdata->m[i].first, pdata->m[i].second);
       break;
    case re_detail::RegExData::type_pf:
-      if(pdata->m[i].matched) 
+      if(pdata->m[i].matched)
          result.assign(to_string(pdata->m[i].first, pdata->m[i].second));
       break;
    case re_detail::RegExData::type_copy:

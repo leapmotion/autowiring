@@ -5,7 +5,7 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
-// For more information, see http://lambda.cs.utu.fi 
+// For more information, see http://lambda.cs.utu.fi
 
 #ifndef AUTOBOOST_LAMBDA_LAMBDA_HPP
 #define AUTOBOOST_LAMBDA_LAMBDA_HPP

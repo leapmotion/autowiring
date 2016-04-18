@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -43,7 +43,7 @@ struct vector21
     typedef T18 item18;
     typedef T19 item19;
     typedef T20 item20;
-    
+
 
     typedef void_ item21;
     typedef T20 back;
@@ -174,7 +174,7 @@ struct vector22
     typedef T19 item19;
     typedef T20 item20;
     typedef T21 item21;
-    
+
 
     typedef void_ item22;
     typedef T21 back;
@@ -310,7 +310,7 @@ struct vector23
     typedef T20 item20;
     typedef T21 item21;
     typedef T22 item22;
-    
+
 
     typedef void_ item23;
     typedef T22 back;
@@ -447,7 +447,7 @@ struct vector24
     typedef T21 item21;
     typedef T22 item22;
     typedef T23 item23;
-    
+
 
     typedef void_ item24;
     typedef T23 back;
@@ -589,7 +589,7 @@ struct vector25
     typedef T22 item22;
     typedef T23 item23;
     typedef T24 item24;
-    
+
 
     typedef void_ item25;
     typedef T24 back;
@@ -733,7 +733,7 @@ struct vector26
     typedef T23 item23;
     typedef T24 item24;
     typedef T25 item25;
-    
+
 
     typedef void_ item26;
     typedef T25 back;
@@ -882,7 +882,7 @@ struct vector27
     typedef T24 item24;
     typedef T25 item25;
     typedef T26 item26;
-    
+
 
     typedef void_ item27;
     typedef T26 back;
@@ -1032,7 +1032,7 @@ struct vector28
     typedef T25 item25;
     typedef T26 item26;
     typedef T27 item27;
-    
+
 
     typedef void_ item28;
     typedef T27 back;
@@ -1187,7 +1187,7 @@ struct vector29
     typedef T26 item26;
     typedef T27 item27;
     typedef T28 item28;
-    
+
 
     typedef void_ item29;
     typedef T28 back;
@@ -1343,7 +1343,7 @@ struct vector30
     typedef T27 item27;
     typedef T28 item28;
     typedef T29 item29;
-    
+
 
     typedef void_ item30;
     typedef T29 back;

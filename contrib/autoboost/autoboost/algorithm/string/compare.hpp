@@ -80,7 +80,7 @@ namespace autoboost {
 
         //! is_less functor
         /*!
-            Convenient version of standard std::less. Operation is templated, therefore it is 
+            Convenient version of standard std::less. Operation is templated, therefore it is
             not required to specify the exact types upon the construction
          */
         struct is_less
@@ -133,7 +133,7 @@ namespace autoboost {
 
         //! is_not_greater functor
         /*!
-            Convenient version of standard std::not_greater_to. Operation is templated, therefore it is 
+            Convenient version of standard std::not_greater_to. Operation is templated, therefore it is
             not required to specify the exact types upon the construction
          */
         struct is_not_greater
@@ -185,7 +185,7 @@ namespace autoboost {
 
     } // namespace algorithm
 
-    // pull names to the boost namespace
+    // pull names to the autoboost namespace
     using algorithm::is_equal;
     using algorithm::is_iequal;
     using algorithm::is_less;

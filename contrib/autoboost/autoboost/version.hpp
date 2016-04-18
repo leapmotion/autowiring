@@ -10,9 +10,9 @@
 #define AUTOBOOST_VERSION_HPP
 
 //
-//  Caution, this is the only boost header that is guarenteed
-//  to change with every boost release, including this header
-//  will cause a recompile every time a new boost version is
+//  Caution, this is the only autoboost header that is guarenteed
+//  to change with every autoboost release, including this header
+//  will cause a recompile every time a new autoboost version is
 //  released.
 //
 //  AUTOBOOST_VERSION % 100 is the patch level

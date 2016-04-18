@@ -48,13 +48,13 @@ extern "C" {
     } SYSTEM_INFO_;
 
 # if AUTOBOOST_USE_WINAPI_VERSION < AUTOBOOST_WINAPI_VERSION_WINXP
-    __declspec(dllimport) void __stdcall 
+    __declspec(dllimport) void __stdcall
         GetSystemInfo (struct system_info *);
 # else
-    __declspec(dllimport) void __stdcall 
+    __declspec(dllimport) void __stdcall
         GetNativeSystemInfo (struct system_info *);
 # endif
-}    
+}
 #endif
 }
 }

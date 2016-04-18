@@ -1,4 +1,4 @@
-//  boost/detail/bitmask.hpp  ------------------------------------------------//
+//  autoboost/detail/bitmask.hpp  ------------------------------------------------//
 
 //  Copyright Beman Dawes 2006
 
@@ -41,7 +41,7 @@
   { x = x | y ; return x ; }                                              \
                                                                           \
   inline Bitmask & operator^=(Bitmask & x , Bitmask y)                    \
-  { x = x ^ y ; return x ; }                                              
+  { x = x ^ y ; return x ; }
 
 #endif // AUTOBOOST_BITMASK_HPP
 

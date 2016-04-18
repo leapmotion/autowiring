@@ -9,7 +9,7 @@
 namespace autoboost {
 
 // This import below (as well as the whole header) is for backward compatibility
-// with boost/token_iterator.hpp. It should be removed as soon as that header is fixed.
+// with autoboost/token_iterator.hpp. It should be removed as soon as that header is fixed.
 namespace detail {
 using iterators::minimum_category;
 } // namespace detail

@@ -9,7 +9,7 @@
 
 //  detail/sp_typeinfo.hpp
 //
-//  Deprecated, please use boost/core/typeinfo.hpp
+//  Deprecated, please use autoboost/core/typeinfo.hpp
 //
 //  Copyright 2007 Peter Dimov
 //

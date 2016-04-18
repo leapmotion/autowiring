@@ -70,7 +70,7 @@ namespace detail {
    struct is_convertible_basic_impl
    {
       // Nothing converts to function or array, but void converts to void:
-      static const bool value = is_void<To>::value; 
+      static const bool value = is_void<To>::value;
    };
 
    template<typename From, typename To>
@@ -179,7 +179,7 @@ struct is_convertible_basic_impl
     static ::autoboost::type_traits::no_type AUTOBOOST_TT_DECL _m_check(any_conversion ...);
     static ::autoboost::type_traits::yes_type AUTOBOOST_TT_DECL _m_check(To, int);
     typedef typename add_lvalue_reference<From>::type lvalue_type;
-    typedef typename add_rvalue_reference<From>::type rvalue_type; 
+    typedef typename add_rvalue_reference<From>::type rvalue_type;
     static lvalue_type _m_from;
 
 #ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
@@ -230,7 +230,7 @@ struct is_convertible_basic_impl
 };
 
 #elif defined(__MWERKS__)
-// 
+//
 // CW works with the technique implemented above for EDG, except when From
 // is a function type (or a reference to such a type), in which case
 // any_conversion won't be accepted as a valid conversion. We detect this
@@ -254,7 +254,7 @@ struct is_convertible_basic_impl_aux<From,To,false /*FromIsFunctionRef*/>
     static ::autoboost::type_traits::no_type AUTOBOOST_TT_DECL _m_check(any_conversion ...);
     static ::autoboost::type_traits::yes_type AUTOBOOST_TT_DECL _m_check(To, int);
     typedef typename add_lvalue_reference<From>::type lvalue_type;
-    typedef typename add_rvalue_reference<From>::type rvalue_type; 
+    typedef typename add_rvalue_reference<From>::type rvalue_type;
     static lvalue_type _m_from;
 
 #ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
@@ -306,7 +306,7 @@ struct is_convertible_basic_impl
     static ::autoboost::type_traits::no_type AUTOBOOST_TT_DECL _m_check(...);
     static ::autoboost::type_traits::yes_type AUTOBOOST_TT_DECL _m_check(To);
     typedef typename add_lvalue_reference<From>::type lvalue_type;
-    typedef typename add_rvalue_reference<From>::type rvalue_type; 
+    typedef typename add_rvalue_reference<From>::type rvalue_type;
     static lvalue_type _m_from;
 #ifdef AUTOBOOST_MSVC
 #pragma warning(push)
@@ -415,8 +415,8 @@ template <typename From, typename To>
 struct is_convertible_impl_dispatch_base
 {
 #if !AUTOBOOST_WORKAROUND(__HP_aCC, < 60700)
-   typedef is_convertible_impl_select< 
-      ::autoboost::is_arithmetic<From>::value, 
+   typedef is_convertible_impl_select<
+      ::autoboost::is_arithmetic<From>::value,
       ::autoboost::is_arithmetic<To>::value,
 #if !defined(AUTOBOOST_NO_IS_ABSTRACT) && !defined(AUTOBOOST_TT_CXX11_IS_CONVERTIBLE)
       // We need to filter out abstract types, only if we don't have a strictly conforming C++11 version:
@@ -433,7 +433,7 @@ struct is_convertible_impl_dispatch_base
 };
 
 template <typename From, typename To>
-struct is_convertible_impl_dispatch 
+struct is_convertible_impl_dispatch
    : public is_convertible_impl_dispatch_base<From, To>::type
 {};
 

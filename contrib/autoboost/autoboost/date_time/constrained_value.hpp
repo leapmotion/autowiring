@@ -2,10 +2,10 @@
 #define AB_CONSTRAINED_VALUE_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
- * Author: Jeff Garland 
+ * Author: Jeff Garland
  * $Date$
  */
 
@@ -22,16 +22,16 @@ namespace autoboost {
 namespace CV {
   //! Represent a min or max violation type
   enum violation_enum {min_violation, max_violation};
-  
+
   //! A template to specify a constrained basic value type
   /*! This template provides a quick way to generate
    *  an integer type with a constrained range.  The type
    *  provides for the ability to specify the min, max, and
    *  and error handling policy.
-   *  
+   *
    *  <b>value policies</b>
    *  A class that provides the range limits via the min and
-   *  max functions as well as a function on_error that 
+   *  max functions as well as a function on_error that
    *  determines how errors are handled.  A common strategy
    *  would be to assert or throw and exception.  The on_error
    *  is passed both the current value and the new value that
@@ -49,7 +49,7 @@ namespace CV {
     }
     constrained_value& operator=(value_type v)
     {
-      assign(v); 
+      assign(v);
       return *this;
     }
     //! Return the max allowed value (traits method)
@@ -63,7 +63,7 @@ namespace CV {
   private:
     void assign(value_type value)
     {
-      //adding 1 below gets rid of a compiler warning which occurs when the 
+      //adding 1 below gets rid of a compiler warning which occurs when the
       //min_value is 0 and the type is unsigned....
       if (value+1 < (min)()+1) {
         value_policies::on_error(value_, value, min_violation);
@@ -78,7 +78,7 @@ namespace CV {
 };
 
   //! Template to shortcut the constrained_value policy creation process
-  template<typename rep_type, rep_type min_value, 
+  template<typename rep_type, rep_type min_value,
            rep_type max_value, class exception_type>
   class simple_exception_policy
   {

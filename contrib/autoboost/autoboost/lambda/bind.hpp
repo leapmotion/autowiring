@@ -7,7 +7,7 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
-// For more information, see http://www.boost.org 
+// For more information, see http://www.boost.org
 
 #ifndef AUTOBOOST_LAMBDA_BIND_HPP
 #define AUTOBOOST_LAMBDA_BIND_HPP
@@ -15,5 +15,5 @@
 #include "autoboost/lambda/core.hpp"
 
 #include "autoboost/lambda/detail/bind_functions.hpp"
-    
+
 #endif

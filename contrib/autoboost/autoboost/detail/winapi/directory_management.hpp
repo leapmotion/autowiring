@@ -28,16 +28,16 @@ namespace winapi
     using ::GetTempPathA;
     using ::RemoveDirectoryA;
 #else
-extern "C" { 
-    __declspec(dllimport) int __stdcall 
+extern "C" {
+    __declspec(dllimport) int __stdcall
         CreateDirectory(LPCTSTR_, LPSECURITY_ATTRIBUTES_*);
-    __declspec(dllimport) int __stdcall 
+    __declspec(dllimport) int __stdcall
         CreateDirectoryA(LPCTSTR_, interprocess_security_attributes*);
-    __declspec(dllimport) int __stdcall 
+    __declspec(dllimport) int __stdcall
         GetTempPathA(unsigned long length, char *buffer);
-    __declspec(dllimport) int __stdcall 
+    __declspec(dllimport) int __stdcall
         RemoveDirectoryA(LPCTSTR_);
-}    
+}
 #endif
 }
 }

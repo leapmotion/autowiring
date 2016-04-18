@@ -1701,7 +1701,7 @@ class vector
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const vector& x, const vector& y)
-   {  
+   {
       if(x.size() != y.size()){
          return false;
       }

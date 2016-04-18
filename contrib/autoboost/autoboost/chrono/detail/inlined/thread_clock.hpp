@@ -1,4 +1,4 @@
-//  boost thread_clock.cpp  -----------------------------------------------------------//
+//  autoboost thread_clock.cpp  -----------------------------------------------------------//
 
 //  Copyright 2010 Vicente J. Botet Escriba
 

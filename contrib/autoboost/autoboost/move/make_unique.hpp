@@ -24,7 +24,7 @@
 //!
 //! This header can be a bit heavyweight in C++03 compilers due to the use of the
 //! preprocessor library, that's why it's a a separate header from <tt>unique_ptr.hpp</tt>
- 
+
 #if !defined(AUTOBOOST_MOVE_DOXYGEN_INVOKED)
 
 namespace std {   //no namespace versioning in clang+libc++
@@ -73,7 +73,7 @@ namespace movelib {
 //!
 //! <b>Returns</b>: <tt>unique_ptr<T>(new T(std::forward<Args>(args)...))</tt>.
 template<class T, class... Args>
-inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>, 
+inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
    typename ::autoboost::move_upmu::unique_ptr_if<T>::t_is_not_array)
       make_unique(AUTOBOOST_FWD_REF(Args)... args)
 {  return unique_ptr<T>(new T(::autoboost::forward<Args>(args)...));  }
@@ -82,7 +82,7 @@ inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
 //!
 //! <b>Returns</b>: <tt>unique_ptr<T>(new T(std::nothrow)(std::forward<Args>(args)...))</tt>.
 template<class T, class... Args>
-inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>, 
+inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
    typename ::autoboost::move_upmu::unique_ptr_if<T>::t_is_not_array)
       make_unique_nothrow(AUTOBOOST_FWD_REF(Args)... args)
 {  return unique_ptr<T>(new (*autoboost::move_upmu::pnothrow)T(::autoboost::forward<Args>(args)...));  }
@@ -508,7 +508,7 @@ inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
 //!
 //! <b>Returns</b>: <tt>unique_ptr<T>(new T)</tt> (default initialization)
 template<class T>
-inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>, 
+inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
    typename ::autoboost::move_upmu::unique_ptr_if<T>::t_is_not_array)
       make_unique_definit()
 {
@@ -519,19 +519,19 @@ inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
 //!
 //! <b>Returns</b>: <tt>unique_ptr<T>(new T(std::nothrow)</tt> (default initialization)
 template<class T>
-inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>, 
+inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
    typename ::autoboost::move_upmu::unique_ptr_if<T>::t_is_not_array)
       make_unique_nothrow_definit()
 {
     return unique_ptr<T>(new (*autoboost::move_upmu::pnothrow)T);
 }
 
-//! <b>Remarks</b>: This function shall not participate in overload resolution unless T is an array of 
+//! <b>Remarks</b>: This function shall not participate in overload resolution unless T is an array of
 //!   unknown bound.
 //!
 //! <b>Returns</b>: <tt>unique_ptr<T>(new remove_extent_t<T>[n]())</tt> (value initialization)
 template<class T>
-inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>, 
+inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
    typename ::autoboost::move_upmu::unique_ptr_if<T>::t_is_array_of_unknown_bound)
       make_unique(std::size_t n)
 {
@@ -539,12 +539,12 @@ inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
     return unique_ptr<T>(new U[n]());
 }
 
-//! <b>Remarks</b>: This function shall not participate in overload resolution unless T is an array of 
+//! <b>Remarks</b>: This function shall not participate in overload resolution unless T is an array of
 //!   unknown bound.
 //!
 //! <b>Returns</b>: <tt>unique_ptr<T>(new (std::nothrow)remove_extent_t<T>[n]())</tt> (value initialization)
 template<class T>
-inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>, 
+inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
    typename ::autoboost::move_upmu::unique_ptr_if<T>::t_is_array_of_unknown_bound)
       make_unique_nothrow(std::size_t n)
 {
@@ -552,12 +552,12 @@ inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
     return unique_ptr<T>(new (*autoboost::move_upmu::pnothrow)U[n]());
 }
 
-//! <b>Remarks</b>: This function shall not participate in overload resolution unless T is an array of 
+//! <b>Remarks</b>: This function shall not participate in overload resolution unless T is an array of
 //!   unknown bound.
 //!
 //! <b>Returns</b>: <tt>unique_ptr<T>(new remove_extent_t<T>[n])</tt> (default initialization)
 template<class T>
-inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>, 
+inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
    typename ::autoboost::move_upmu::unique_ptr_if<T>::t_is_array_of_unknown_bound)
       make_unique_definit(std::size_t n)
 {
@@ -565,12 +565,12 @@ inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
     return unique_ptr<T>(new U[n]);
 }
 
-//! <b>Remarks</b>: This function shall not participate in overload resolution unless T is an array of 
+//! <b>Remarks</b>: This function shall not participate in overload resolution unless T is an array of
 //!   unknown bound.
 //!
 //! <b>Returns</b>: <tt>unique_ptr<T>(new (std::nothrow)remove_extent_t<T>[n])</tt> (default initialization)
 template<class T>
-inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>, 
+inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
    typename ::autoboost::move_upmu::unique_ptr_if<T>::t_is_array_of_unknown_bound)
       make_unique_nothrow_definit(std::size_t n)
 {
@@ -583,28 +583,28 @@ inline AUTOBOOST_MOVE_DOC1ST(unique_ptr<T>,
 //! <b>Remarks</b>: This function shall not participate in overload resolution unless T is
 //!   an array of known bound.
 template<class T, class... Args>
-inline AUTOBOOST_MOVE_DOC1ST(unspecified, 
+inline AUTOBOOST_MOVE_DOC1ST(unspecified,
    typename ::autoboost::move_upmu::unique_ptr_if<T>::t_is_array_of_known_bound)
       make_unique(AUTOBOOST_FWD_REF(Args) ...) = delete;
 
 //! <b>Remarks</b>: This function shall not participate in overload resolution unless T is
 //!   an array of known bound.
 template<class T, class... Args>
-inline AUTOBOOST_MOVE_DOC1ST(unspecified, 
+inline AUTOBOOST_MOVE_DOC1ST(unspecified,
    typename ::autoboost::move_upmu::unique_ptr_if<T>::t_is_array_of_known_bound)
       make_unique_definit(AUTOBOOST_FWD_REF(Args) ...) = delete;
 
 //! <b>Remarks</b>: This function shall not participate in overload resolution unless T is
 //!   an array of known bound.
 template<class T, class... Args>
-inline AUTOBOOST_MOVE_DOC1ST(unspecified, 
+inline AUTOBOOST_MOVE_DOC1ST(unspecified,
    typename ::autoboost::move_upmu::unique_ptr_if<T>::t_is_array_of_known_bound)
       make_unique_nothrow(AUTOBOOST_FWD_REF(Args) ...) = delete;
 
 //! <b>Remarks</b>: This function shall not participate in overload resolution unless T is
 //!   an array of known bound.
 template<class T, class... Args>
-inline AUTOBOOST_MOVE_DOC1ST(unspecified, 
+inline AUTOBOOST_MOVE_DOC1ST(unspecified,
    typename ::autoboost::move_upmu::unique_ptr_if<T>::t_is_array_of_known_bound)
       make_unique_nothrow_definit(AUTOBOOST_FWD_REF(Args) ...) = delete;
 

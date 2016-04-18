@@ -1,4 +1,4 @@
-/* boost random/detail/signed_unsigned_tools.hpp header file
+/* autoboost random/detail/signed_unsigned_tools.hpp header file
  *
  * Copyright Jens Maurer 2006
  * Distributed under the Boost Software License, Version 1.0. (See

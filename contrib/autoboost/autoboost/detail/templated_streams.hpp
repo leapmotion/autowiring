@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// boost detail/templated_streams.hpp header file
+// autoboost detail/templated_streams.hpp header file
 // See http://www.boost.org for updates, documentation, and revision history.
 //-----------------------------------------------------------------------------
 //
@@ -30,10 +30,10 @@
     template < typename E , typename T , typename A >
 
 #define AUTOBOOST_TEMPLATED_STREAM_ARGS(E,T) \
-    typename E , typename T 
+    typename E , typename T
 
 #define AUTOBOOST_TEMPLATED_STREAM_ARGS_ALLOC(E,T,A) \
-    typename E , typename T , typename A 
+    typename E , typename T , typename A
 
 #define AUTOBOOST_TEMPLATED_STREAM_COMMA        ,
 

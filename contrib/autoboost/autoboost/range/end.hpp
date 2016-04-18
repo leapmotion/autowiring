@@ -106,7 +106,7 @@ inline AUTOBOOST_DEDUCED_TYPENAME range_iterator<const T>::type end( const T& r 
 }
 
     } // namespace range_adl_barrier
-} // namespace 'boost'
+} // namespace 'autoboost'
 
 #endif // AUTOBOOST_NO_FUNCTION_TEMPLATE_ORDERING
 

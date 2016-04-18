@@ -62,5 +62,5 @@ struct has_member_size
 
     } // namespace range_detail
 }// namespace autoboost
- 
+
 #endif // include guard

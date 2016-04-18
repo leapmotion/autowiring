@@ -1,4 +1,4 @@
-//  boost/chrono/system_clocks.hpp  --------------------------------------------------------------//
+//  autoboost/chrono/system_clocks.hpp  --------------------------------------------------------------//
 
 //  Copyright 2008 Howard Hinnant
 //  Copyright 2008 Beman Dawes

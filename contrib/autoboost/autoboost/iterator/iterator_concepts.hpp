@@ -22,7 +22,7 @@
 
 #include <autoboost/static_assert.hpp>
 
-// Use boost/limits to work around missing limits headers on some compilers
+// Use autoboost/limits to work around missing limits headers on some compilers
 #include <autoboost/limits.hpp>
 #include <autoboost/config.hpp>
 
@@ -32,7 +32,7 @@
 
 namespace autoboost_concepts
 {
-  // Used a different namespace here (instead of "boost") so that the
+  // Used a different namespace here (instead of "autoboost") so that the
   // concept descriptions do not take for granted the names in
   // namespace autoboost.
 

@@ -8,7 +8,7 @@
 #endif
 
 //
-//  boost/detail/spinlock.hpp
+//  autoboost/detail/spinlock.hpp
 //
 //  Copyright (c) 2008 Peter Dimov
 //

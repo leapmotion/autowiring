@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -80,7 +80,7 @@ namespace aux {
 template< bool has_tag_, bool has_begin_ >
 struct sequence_tag_impl
 {
-    // agurt 24/nov/02: MSVC 6.5 gets confused in 'sequence_tag_impl<true>' 
+    // agurt 24/nov/02: MSVC 6.5 gets confused in 'sequence_tag_impl<true>'
     // specialization below, if we name it 'result_' here
     template< typename Sequence > struct result2_;
 };

@@ -3,8 +3,8 @@
  * Copyright (c) 1998-2004
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -56,21 +56,21 @@ namespace autoboost{
 // that dll builds contain the Virtual table for these
 // types - this ensures that exceptions can be thrown
 // from the dll and caught in an exe.
-regex_error::regex_error(const std::string& s, regex_constants::error_type err, std::ptrdiff_t pos) 
+regex_error::regex_error(const std::string& s, regex_constants::error_type err, std::ptrdiff_t pos)
    : std::runtime_error(s)
    , m_error_code(err)
-   , m_position(pos) 
+   , m_position(pos)
 {
 }
 
-regex_error::regex_error(regex_constants::error_type err) 
+regex_error::regex_error(regex_constants::error_type err)
    : std::runtime_error(::autoboost::re_detail::get_default_error_string(err))
    , m_error_code(err)
-   , m_position(0) 
+   , m_position(0)
 {
 }
 
-regex_error::~regex_error() throw() 
+regex_error::~regex_error() throw()
 {
 }
 
@@ -111,8 +111,8 @@ AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL verify_options(autoboost::regex::
 static void execute_eror()
 {
    // we only get here after a stack overflow,
-   // this has to be a separate proceedure because we 
-   // can't mix __try{}__except block with local objects  
+   // this has to be a separate proceedure because we
+   // can't mix __try{}__except block with local objects
    // that have destructors:
    reset_stack_guard_page();
    std::runtime_error err("Out of stack space, while attempting to match a regular expression.");

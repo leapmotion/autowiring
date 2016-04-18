@@ -3,8 +3,8 @@
  * Copyright (c) 1998-2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -36,7 +36,7 @@ namespace re_detail{
 #if defined(AUTOBOOST_NO_STD_ITERATOR_TRAITS)
 
 template <class T>
-struct regex_iterator_traits 
+struct regex_iterator_traits
 {
   typedef typename T::iterator_category iterator_category;
   typedef typename T::value_type        value_type;

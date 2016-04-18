@@ -3,11 +3,11 @@
 #define AB_DATE_TIME_SPECIAL_VALUES_PARSER_HPP__
 
 /* Copyright (c) 2005 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
- * $Date: 
+ * $Date:
  */
 
 
@@ -18,10 +18,10 @@
 
 namespace autoboost { namespace date_time {
 
-  //! Class for special_value parsing 
-  /*! 
+  //! Class for special_value parsing
+  /*!
    * TODO: add doc-comments for which elements can be changed
-   * Parses input stream for strings representing special_values. 
+   * Parses input stream for strings representing special_values.
    * Special values parsed are:
    *  - not_a_date_time
    *  - neg_infin
@@ -52,7 +52,7 @@ namespace autoboost { namespace date_time {
     static const char_type pos_inf_string[10];
     static const char_type min_date_time_string[18];
     static const char_type max_date_time_string[18];
-   
+
     //! Creates a special_values_parser with the default set of "sv_strings"
     special_values_parser()
     {
@@ -101,12 +101,12 @@ namespace autoboost { namespace date_time {
       m_sv_strings = parse_tree_type(phrases, static_cast<int>(not_a_date_time));
     }
 
-    /* Does not return a special_value because if the parsing fails, 
-     * the return value will always be not_a_date_time 
-     * (mr.current_match retains its default value of -1 on a failed 
+    /* Does not return a special_value because if the parsing fails,
+     * the return value will always be not_a_date_time
+     * (mr.current_match retains its default value of -1 on a failed
      * parse and that casts to not_a_date_time). */
     //! Sets match_results.current_match to the corresponding special_value or -1
-    bool match(stream_itr_type& sitr, 
+    bool match(stream_itr_type& sitr,
                         stream_itr_type& str_end,
                         match_results& mr) const
     {
@@ -114,7 +114,7 @@ namespace autoboost { namespace date_time {
       m_sv_strings.match(sitr, str_end, mr, level);
       return (mr.current_match != match_results::PARSE_ERROR);
     }
-    /*special_values match(stream_itr_type& sitr, 
+    /*special_values match(stream_itr_type& sitr,
                         stream_itr_type& str_end,
                         match_results& mr) const
     {
@@ -125,11 +125,11 @@ namespace autoboost { namespace date_time {
       }
       return static_cast<special_values>(mr.current_match);
     }*/
-                     
+
 
    private:
     parse_tree_type m_sv_strings;
-    
+
   };
 
   template<class date_type, class CharT>

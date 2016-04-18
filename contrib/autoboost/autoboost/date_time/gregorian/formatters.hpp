@@ -2,7 +2,7 @@
 #define AB_GREGORIAN_FORMATTERS_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
@@ -19,8 +19,8 @@
 #include "autoboost/date_time/iso_format.hpp"
 #include "autoboost/date_time/date_format_simple.hpp"
 
-/* NOTE: "to_*_string" code for older compilers, ones that define 
- * AUTOBOOST_DATE_TIME_INCLUDE_LIMITED_HEADERS, is located in 
+/* NOTE: "to_*_string" code for older compilers, ones that define
+ * AUTOBOOST_DATE_TIME_INCLUDE_LIMITED_HEADERS, is located in
  * formatters_limited.hpp
  */
 
@@ -29,7 +29,7 @@ namespace gregorian {
 
   // wrapper function for to_simple_(w)string(date)
   template<class charT>
-  inline 
+  inline
   std::basic_string<charT> to_simple_string_type(const date& d) {
     return date_time::date_formatter<date,date_time::simple_format<charT>,charT>::date_to_string(d);
   }
@@ -97,20 +97,20 @@ namespace gregorian {
     return to_iso_string_type<char>(d);
   }
 
-  
-  
+
+
 
   // wrapper function for to_sql_(w)string(date)
   template<class charT>
-  inline std::basic_string<charT> to_sql_string_type(const date& d) 
+  inline std::basic_string<charT> to_sql_string_type(const date& d)
   {
     date::ymd_type ymd = d.year_month_day();
     std::basic_ostringstream<charT> ss;
     ss << ymd.year << "-"
-       << std::setw(2) << std::setfill(ss.widen('0')) 
+       << std::setw(2) << std::setfill(ss.widen('0'))
        << ymd.month.as_number() //solves problem with gcc 3.1 hanging
        << "-"
-       << std::setw(2) << std::setfill(ss.widen('0')) 
+       << std::setw(2) << std::setfill(ss.widen('0'))
        << ymd.day;
     return ss.str();
   }

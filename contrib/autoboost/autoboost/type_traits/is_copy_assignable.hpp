@@ -42,7 +42,7 @@ struct is_copy_assignable_impl2 {
 //
 // error: function *function_name* cannot be referenced -- it is a deleted function
 // static autoboost::type_traits::yes_type test(T1&, decltype(T1(autoboost::declval<T1&>()))* = 0);
-//                                                        ^ 
+//                                                        ^
 //
 // MSVC 12.0 (Visual 2013) has problems when the copy constructor has been deleted. See:
 // https://connect.microsoft.com/VisualStudio/feedback/details/800328/std-is-copy-constructible-is-broken
@@ -62,13 +62,13 @@ struct is_copy_assignable_impl2 {
     static AUTOBOOST_DEDUCED_TYPENAME autoboost::add_reference<T>::type produce();
 
     template <class T1>
-    static autoboost::type_traits::no_type test(T1&, typename T1::boost_move_no_copy_constructor_or_assign* = 0);
+    static autoboost::type_traits::no_type test(T1&, typename T1::autoboost_move_no_copy_constructor_or_assign* = 0);
 
     static autoboost::type_traits::yes_type test(...);
     // If you see errors like this:
     //
     //      `'T::operator=(const T&)' is private`
-    //      `boost/type_traits/is_copy_assignable.hpp:NN:M: error: within this context`
+    //      `autoboost/type_traits/is_copy_assignable.hpp:NN:M: error: within this context`
     //
     // then you are trying to call that macro for a structure defined like that:
     //

@@ -6,7 +6,7 @@
 //  See library home page at http://www.boost.org/libs/numeric/conversion
 //
 // Contact the author at: fernando_cacciola@hotmail.com
-// 
+//
 #ifndef AUTOBOOST_NUMERIC_CONVERSION_DETAIL_META_FLC_12NOV2002_HPP
 #define AUTOBOOST_NUMERIC_CONVERSION_DETAIL_META_FLC_12NOV2002_HPP
 
@@ -26,27 +26,27 @@ namespace autoboost { namespace numeric { namespace convdetail
    struct equal_to
    {
    #if !defined(__BORLANDC__)
-   
+
        enum { x = ( AUTOBOOST_MPL_AUX_VALUE_WKND(T1)::value == AUTOBOOST_MPL_AUX_VALUE_WKND(T2)::value ) };
-           
+
        AUTOBOOST_STATIC_CONSTANT(bool, value = x);
-           
+
        typedef mpl::bool_<value> type;
-       
+
    #else
-   
+
        AUTOBOOST_STATIC_CONSTANT(bool, value = (
-             AUTOBOOST_MPL_AUX_VALUE_WKND(T1)::value 
+             AUTOBOOST_MPL_AUX_VALUE_WKND(T1)::value
                == AUTOBOOST_MPL_AUX_VALUE_WKND(T2)::value
            ));
-           
+
        typedef mpl::bool_<(
-             AUTOBOOST_MPL_AUX_VALUE_WKND(T1)::value 
+             AUTOBOOST_MPL_AUX_VALUE_WKND(T1)::value
                == AUTOBOOST_MPL_AUX_VALUE_WKND(T2)::value
            )> type;
    #endif
    };
-    
+
 // Metafunction:
   //
   //   ct_switch4<Value,Case0Val,Case1Val,Case2Val,Case0Type,Case1Type,Case2Type,DefaultType>::type

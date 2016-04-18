@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // basic_xml_iarchive.ipp:
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -52,11 +52,11 @@ basic_xml_iarchive<Archive>::load_end(const char *name){
             archive_exception(archive_exception::input_stream_error)
         );
     }
-    
+
     // don't check start tag at highest level
     if(0 == --depth)
         return;
-        
+
     if(0 == (this->get_flags() & no_xml_tag_checking)){
         // double check that the tag matches what is expected - useful for debug
         if(0 != name[this->This()->gimpl->rv.object_name.size()]

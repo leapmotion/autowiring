@@ -46,7 +46,7 @@ namespace detail {
 // This is actually the conforming implementation which works with
 // abstract classes.  However, enough compilers have trouble with
 // it that most will use the one in
-// boost/type_traits/object_traits.hpp. This implementation
+// autoboost/type_traits/object_traits.hpp. This implementation
 // actually works with VC7.0, but other interactions seem to fail
 // when we use it.
 
@@ -118,10 +118,10 @@ struct is_class_impl
 # ifdef __EDG_VERSION__
 AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(
    is_class,T, autoboost::detail::is_class_impl<typename autoboost::remove_cv<T>::type>::value)
-# else 
+# else
 AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_class,T,::autoboost::detail::is_class_impl<T>::value)
 # endif
-    
+
 } // namespace autoboost
 
 #include <autoboost/type_traits/detail/bool_trait_undef.hpp>

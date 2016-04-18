@@ -15,7 +15,7 @@
 #  include <autoboost/mpl/eval_if.hpp>
 # endif
 
-namespace autoboost { namespace parameter { 
+namespace autoboost { namespace parameter {
 
 // A metafunction that, given an argument pack, returns the type of
 // the parameter identified by the given keyword.  If no such

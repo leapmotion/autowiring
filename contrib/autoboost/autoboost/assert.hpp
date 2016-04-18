@@ -1,5 +1,5 @@
 //
-//  boost/assert.hpp - AUTOBOOST_ASSERT(expr)
+//  autoboost/assert.hpp - AUTOBOOST_ASSERT(expr)
 //                     AUTOBOOST_ASSERT_MSG(expr, msg)
 //                     AUTOBOOST_VERIFY(expr)
 //                     AUTOBOOST_VERIFY_MSG(expr, msg)
@@ -20,7 +20,7 @@
 //
 // Stop inspect complaining about use of 'assert':
 //
-// boostinspect:naassert_macro
+// autoboostinspect:naassert_macro
 //
 
 //

@@ -27,10 +27,10 @@
 // missing partial specialization  workaround.
 //////////////////////////////////////////////////////////////////////////////
 
-namespace autoboost 
+namespace autoboost
 {
-    namespace range_detail 
-    {        
+    namespace range_detail
+    {
         // 1 = std containers
         // 2 = std::pair
         // 3 = const std::pair
@@ -43,7 +43,7 @@ namespace autoboost
         // 10 = whar_t*
         // 11 = const wchar_t*
         // 12 = string
-        
+
         typedef mpl::int_<1>::type    std_container_;
         typedef mpl::int_<2>::type    std_pair_;
         typedef mpl::int_<3>::type    const_std_pair_;
@@ -56,7 +56,7 @@ namespace autoboost
         typedef mpl::int_<10>::type   wchar_t_ptr_;
         typedef mpl::int_<11>::type   const_wchar_t_ptr_;
         typedef mpl::int_<12>::type   string_;
-        
+
         template< typename C >
         struct range_helper
         {
@@ -72,9 +72,9 @@ namespace autoboost
             AUTOBOOST_STATIC_CONSTANT( bool, is_wchar_t_array_       = sizeof( autoboost::range_detail::is_wchar_t_array_impl( ptr ) ) == sizeof( yes_type ) );
             AUTOBOOST_STATIC_CONSTANT( bool, is_string_              = (autoboost::type_traits::ice_or<is_const_char_ptr_, is_const_wchar_t_ptr_>::value ));
             AUTOBOOST_STATIC_CONSTANT( bool, is_array_               = autoboost::is_array<C>::value );
-            
+
         };
-        
+
         template< typename C >
         class range
         {
@@ -108,10 +108,10 @@ namespace autoboost
         public:
             typedef AUTOBOOST_RANGE_DEDUCED_TYPENAME   autoboost::mpl::if_c< ::autoboost::is_void<char_array_t>::value,
                                                                     autoboost::range_detail::std_container_,
-                                                                    char_array_t >::type type;  
-        }; // class 'range' 
+                                                                    char_array_t >::type type;
+        }; // class 'range'
     }
 }
-        
+
 #endif
 

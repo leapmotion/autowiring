@@ -1,4 +1,4 @@
-// boost\math\tools\promotion.hpp
+// autoboost\math\tools\promotion.hpp
 
 // Copyright John Maddock 2006.
 // Copyright Paul A. Bristow 2006.

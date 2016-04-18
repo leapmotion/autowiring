@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -51,7 +51,7 @@ template<
 struct vector4_c
     : vector4<
           integral_c< T,C0 >, integral_c< T,C1 >, integral_c< T,C2 >, integral_c<T
-        , C3> 
+        , C3>
  >
 {
     typedef vector4_c type;
@@ -65,7 +65,7 @@ template<
 struct vector5_c
     : vector5<
           integral_c< T,C0 >, integral_c< T,C1 >, integral_c< T,C2 >
-        , integral_c< T,C3 >, integral_c< T,C4 > 
+        , integral_c< T,C3 >, integral_c< T,C4 >
  >
 {
     typedef vector5_c type;
@@ -79,7 +79,7 @@ template<
 struct vector6_c
     : vector6<
           integral_c< T,C0 >, integral_c< T,C1 >, integral_c< T,C2 >
-        , integral_c< T,C3 >, integral_c< T,C4 >, integral_c< T,C5 > 
+        , integral_c< T,C3 >, integral_c< T,C4 >, integral_c< T,C5 >
  >
 {
     typedef vector6_c type;
@@ -94,7 +94,7 @@ struct vector7_c
     : vector7<
           integral_c< T,C0 >, integral_c< T,C1 >, integral_c< T,C2 >
         , integral_c< T,C3 >, integral_c< T,C4 >, integral_c< T,C5 >, integral_c<T
-        , C6> 
+        , C6>
  >
 {
     typedef vector7_c type;
@@ -109,7 +109,7 @@ struct vector8_c
     : vector8<
           integral_c< T,C0 >, integral_c< T,C1 >, integral_c< T,C2 >
         , integral_c< T,C3 >, integral_c< T,C4 >, integral_c< T,C5 >, integral_c< T,C6 >
-        , integral_c< T,C7 > 
+        , integral_c< T,C7 >
  >
 {
     typedef vector8_c type;
@@ -124,7 +124,7 @@ struct vector9_c
     : vector9<
           integral_c< T,C0 >, integral_c< T,C1 >, integral_c< T,C2 >
         , integral_c< T,C3 >, integral_c< T,C4 >, integral_c< T,C5 >, integral_c< T,C6 >
-        , integral_c< T,C7 >, integral_c< T,C8 > 
+        , integral_c< T,C7 >, integral_c< T,C8 >
  >
 {
     typedef vector9_c type;
@@ -139,7 +139,7 @@ struct vector10_c
     : vector10<
           integral_c< T,C0 >, integral_c< T,C1 >, integral_c< T,C2 >
         , integral_c< T,C3 >, integral_c< T,C4 >, integral_c< T,C5 >, integral_c< T,C6 >
-        , integral_c< T,C7 >, integral_c< T,C8 >, integral_c< T,C9 > 
+        , integral_c< T,C7 >, integral_c< T,C8 >, integral_c< T,C9 >
  >
 {
     typedef vector10_c type;

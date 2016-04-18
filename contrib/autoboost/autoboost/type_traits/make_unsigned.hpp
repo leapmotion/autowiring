@@ -43,7 +43,7 @@ struct make_unsigned_imp
 
    typedef typename remove_cv<T>::type t_no_cv;
    typedef typename mpl::if_c<
-      (::autoboost::type_traits::ice_and< 
+      (::autoboost::type_traits::ice_and<
          ::autoboost::is_unsigned<T>::value,
          ::autoboost::is_integral<T>::value,
          ::autoboost::type_traits::ice_not< ::autoboost::is_same<t_no_cv, char>::value>::value,
@@ -51,7 +51,7 @@ struct make_unsigned_imp
          ::autoboost::type_traits::ice_not< ::autoboost::is_same<t_no_cv, bool>::value>::value >::value),
       T,
       typename mpl::if_c<
-         (::autoboost::type_traits::ice_and< 
+         (::autoboost::type_traits::ice_and<
             ::autoboost::is_integral<T>::value,
             ::autoboost::type_traits::ice_not< ::autoboost::is_same<t_no_cv, char>::value>::value,
             ::autoboost::type_traits::ice_not< ::autoboost::is_same<t_no_cv, wchar_t>::value>::value,
@@ -72,8 +72,8 @@ struct make_unsigned_imp
 #if defined(AUTOBOOST_HAS_LONG_LONG)
 #ifdef AUTOBOOST_HAS_INT128
                      typename mpl::if_c<
-                        sizeof(t_no_cv) == sizeof(autoboost::ulong_long_type), 
-                        autoboost::ulong_long_type, 
+                        sizeof(t_no_cv) == sizeof(autoboost::ulong_long_type),
+                        autoboost::ulong_long_type,
                         autoboost::uint128_type
                      >::type
 #else
@@ -104,8 +104,8 @@ struct make_unsigned_imp
 #if defined(AUTOBOOST_HAS_LONG_LONG)
 #ifdef AUTOBOOST_HAS_INT128
                      typename mpl::if_c<
-                        sizeof(t_no_cv) == sizeof(autoboost::ulong_long_type), 
-                        autoboost::ulong_long_type, 
+                        sizeof(t_no_cv) == sizeof(autoboost::ulong_long_type),
+                        autoboost::ulong_long_type,
                         autoboost::uint128_type
                      >::type
 #else
@@ -122,14 +122,14 @@ struct make_unsigned_imp
          >::type
       >::type
    >::type base_integer_type;
-   
+
    // Add back any const qualifier:
    typedef typename mpl::if_<
       is_const<T>,
       typename add_const<base_integer_type>::type,
       base_integer_type
    >::type const_base_integer_type;
-   
+
    // Add back any volatile qualifier:
    typedef typename mpl::if_<
       is_volatile<T>,

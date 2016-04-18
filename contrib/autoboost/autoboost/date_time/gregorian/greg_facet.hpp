@@ -2,7 +2,7 @@
 #define AB_GREGORIAN_FACET_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
@@ -24,7 +24,7 @@
 
 namespace autoboost {
 namespace gregorian {
-  
+
   //! Configuration of the output facet template
   struct greg_facet_config
   {
@@ -107,7 +107,7 @@ namespace gregorian {
   }
 
   //! operator<< for gregorian::date_period typical output: [2002-Jan-01/2002-Jan-31]
-  /*! Uses the date facet to determine output string as well as selection of long 
+  /*! Uses the date facet to determine output string as well as selection of long
    *  or short string fr dates.
    *  Default if no facet is installed is to output a 3 char english string for the
    *  day of the week.
@@ -121,7 +121,7 @@ namespace gregorian {
     os << dp.begin();
     os << '/'; //TODO: facet or manipulator for periods?
     os << dp.last();
-    os << ']'; 
+    os << ']';
     return os;
   }
 
@@ -141,8 +141,8 @@ namespace gregorian {
   std::basic_ostream<charT, traits>&
   operator<<(std::basic_ostream<charT, traits>& os, const partial_date& pd)
   {
-    os << std::setw(2) << std::setfill('0') << pd.day() << ' ' 
-       << pd.month().as_short_string() ; 
+    os << std::setw(2) << std::setfill('0') << pd.day() << ' '
+       << pd.month().as_short_string() ;
     return os;
   }
 
@@ -150,12 +150,12 @@ namespace gregorian {
   template <class charT, class traits>
   inline
   std::basic_ostream<charT, traits>&
-  operator<<(std::basic_ostream<charT, traits>& os, 
+  operator<<(std::basic_ostream<charT, traits>& os,
              const nth_kday_of_month& nkd)
   {
-    os << nkd.nth_week_as_str() << ' ' 
+    os << nkd.nth_week_as_str() << ' '
        << nkd.day_of_week() << " of "
-       << nkd.month().as_short_string() ; 
+       << nkd.month().as_short_string() ;
     return os;
   }
 
@@ -163,11 +163,11 @@ namespace gregorian {
   template <class charT, class traits>
   inline
   std::basic_ostream<charT, traits>&
-  operator<<(std::basic_ostream<charT, traits>& os, 
+  operator<<(std::basic_ostream<charT, traits>& os,
              const first_kday_of_month& fkd)
   {
-    os << "first " << fkd.day_of_week() << " of " 
-       << fkd.month().as_short_string() ; 
+    os << "first " << fkd.day_of_week() << " of "
+       << fkd.month().as_short_string() ;
     return os;
   }
 
@@ -175,11 +175,11 @@ namespace gregorian {
   template <class charT, class traits>
   inline
   std::basic_ostream<charT, traits>&
-  operator<<(std::basic_ostream<charT, traits>& os, 
+  operator<<(std::basic_ostream<charT, traits>& os,
              const last_kday_of_month& lkd)
   {
-    os << "last " << lkd.day_of_week() << " of " 
-       << lkd.month().as_short_string() ; 
+    os << "last " << lkd.day_of_week() << " of "
+       << lkd.month().as_short_string() ;
     return os;
   }
 
@@ -187,10 +187,10 @@ namespace gregorian {
   template <class charT, class traits>
   inline
   std::basic_ostream<charT, traits>&
-  operator<<(std::basic_ostream<charT, traits>& os, 
+  operator<<(std::basic_ostream<charT, traits>& os,
              const first_kday_after& fka)
   {
-    os << fka.day_of_week() << " after"; 
+    os << fka.day_of_week() << " after";
     return os;
   }
 
@@ -198,19 +198,19 @@ namespace gregorian {
   template <class charT, class traits>
   inline
   std::basic_ostream<charT, traits>&
-  operator<<(std::basic_ostream<charT, traits>& os, 
+  operator<<(std::basic_ostream<charT, traits>& os,
              const first_kday_before& fkb)
   {
-    os << fkb.day_of_week() << " before"; 
+    os << fkb.day_of_week() << " before";
     return os;
   }
 #endif // USE_DATE_TIME_PRE_1_33_FACET_IO
   /**************** Input Streaming ******************/
-  
+
 #if !defined(AUTOBOOST_NO_STD_ITERATOR_TRAITS)
   //! operator>> for gregorian::date
   template<class charT>
-  inline 
+  inline
   std::basic_istream<charT>& operator>>(std::basic_istream<charT>& is, date& d)
   {
     std::istream_iterator<std::basic_string<charT>, charT> beg(is), eos;
@@ -222,7 +222,7 @@ namespace gregorian {
   //! operator>> for gregorian::date_duration
   template<class charT>
   inline
-  std::basic_istream<charT>& operator>>(std::basic_istream<charT>& is, 
+  std::basic_istream<charT>& operator>>(std::basic_istream<charT>& is,
                                         date_duration& dd)
   {
     long v;
@@ -247,7 +247,7 @@ namespace gregorian {
   AUTOBOOST_DATE_TIME_DECL std::locale generate_locale(std::locale& loc, char type);
 
   //! Returns a pointer to a facet with a default set of names (English)
-  /* Necessary in the event an exception is thrown from op>> for 
+  /* Necessary in the event an exception is thrown from op>> for
    * weekday or month. See comments in those functions for more info */
   AUTOBOOST_DATE_TIME_DECL autoboost::date_time::all_date_names_put<greg_facet_config, char>* create_facet_def(char type);
 
@@ -255,7 +255,7 @@ namespace gregorian {
   //! generates a locale with the set of gregorian name-strings of type wchar_t*
   AUTOBOOST_DATE_TIME_DECL std::locale generate_locale(std::locale& loc, wchar_t type);
   //! Returns a pointer to a facet with a default set of names (English)
-  /* Necessary in the event an exception is thrown from op>> for 
+  /* Necessary in the event an exception is thrown from op>> for
    * weekday or month. See comments in those functions for more info */
   AUTOBOOST_DATE_TIME_DECL autoboost::date_time::all_date_names_put<greg_facet_config, wchar_t>* create_facet_def(wchar_t type);
 #endif // AUTOBOOST_NO_STD_WSTRING
@@ -263,13 +263,13 @@ namespace gregorian {
   //! operator>> for gregorian::greg_month - throws exception if invalid month given
   template<class charT>
   inline
-  std::basic_istream<charT>& operator>>(std::basic_istream<charT>& is,greg_month& m) 
+  std::basic_istream<charT>& operator>>(std::basic_istream<charT>& is,greg_month& m)
   {
     typedef autoboost::date_time::all_date_names_put<greg_facet_config, charT> facet_def;
 
     std::basic_string<charT> s;
     is >> s;
-    
+
     if(!std::has_facet<facet_def>(is.getloc())) {
       std::locale loc = is.getloc();
       charT a = '\0';
@@ -280,8 +280,8 @@ namespace gregorian {
 
     try{
       const facet_def& f = std::use_facet<facet_def>(is.getloc());
-      num = date_time::find_match(f.get_short_month_names(), 
-                                  f.get_long_month_names(), 
+      num = date_time::find_match(f.get_short_month_names(),
+                                  f.get_long_month_names(),
                                   (greg_month::max)(), s); // greg_month spans 1..12, so max returns the array size,
                                                            // which is needed by find_match
     }
@@ -291,14 +291,14 @@ namespace gregorian {
     catch(std::bad_cast&){
       charT a = '\0';
       std::auto_ptr< const facet_def > f(create_facet_def(a));
-      num = date_time::find_match(f->get_short_month_names(), 
-                                  f->get_long_month_names(), 
+      num = date_time::find_match(f->get_short_month_names(),
+                                  f->get_long_month_names(),
                                   (greg_month::max)(), s); // greg_month spans 1..12, so max returns the array size,
                                                            // which is needed by find_match
     }
-    
+
     ++num; // months numbered 1-12
-    m = greg_month(num); 
+    m = greg_month(num);
 
     return is;
   }
@@ -306,7 +306,7 @@ namespace gregorian {
   //! operator>> for gregorian::greg_weekday  - throws exception if invalid weekday given
   template<class charT>
   inline
-  std::basic_istream<charT>& operator>>(std::basic_istream<charT>& is,greg_weekday& wd) 
+  std::basic_istream<charT>& operator>>(std::basic_istream<charT>& is,greg_weekday& wd)
   {
     typedef autoboost::date_time::all_date_names_put<greg_facet_config, charT> facet_def;
 
@@ -322,8 +322,8 @@ namespace gregorian {
     short num = 0;
     try{
       const facet_def& f = std::use_facet<facet_def>(is.getloc());
-      num = date_time::find_match(f.get_short_weekday_names(), 
-                                  f.get_long_weekday_names(), 
+      num = date_time::find_match(f.get_short_weekday_names(),
+                                  f.get_long_weekday_names(),
                                   (greg_weekday::max)() + 1, s); // greg_weekday spans 0..6, so increment is needed
                                                                  // to form the array size which is needed by find_match
     }
@@ -333,20 +333,20 @@ namespace gregorian {
     catch(std::bad_cast&){
       charT a = '\0';
       std::auto_ptr< const facet_def > f(create_facet_def(a));
-      num = date_time::find_match(f->get_short_weekday_names(), 
-                                  f->get_long_weekday_names(), 
+      num = date_time::find_match(f->get_short_weekday_names(),
+                                  f->get_long_weekday_names(),
                                   (greg_weekday::max)() + 1, s); // greg_weekday spans 0..6, so increment is needed
                                                                  // to form the array size which is needed by find_match
     }
-   
+
     wd = greg_weekday(num); // weekdays numbered 0-6
     return is;
   }
 
 } } //namespace gregorian
 
-#endif  
-    
-    
+#endif
+
+
 #endif
 

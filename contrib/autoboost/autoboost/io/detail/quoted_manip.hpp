@@ -1,4 +1,4 @@
-//  boost/io/quoted_manip.hpp  ---------------------------------------------------------//
+//  autoboost/io/quoted_manip.hpp  ---------------------------------------------------------//
 
 //  Copyright Beman Dawes 2010
 
@@ -185,6 +185,6 @@ namespace autoboost
     }
 
   }  // namespace io
-}  // namespace boost
+}  // namespace autoboost
 
 #endif // AUTOBOOST_IO_QUOTED_MANIP

@@ -5,8 +5,8 @@
 // Copyright Aleksey Gurtovoy 2000-2004
 // Copyright David Abrahams 2003-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -29,50 +29,50 @@
 
 namespace autoboost { namespace mpl {
 
-namespace aux { 
+namespace aux {
 
-template< 
+template<
       typename Seq
     , typename Op
     , typename In
     >
 struct transform1_impl
-    : fold< 
+    : fold<
           Seq
         , typename In::state
         , bind2< typename lambda< typename In::operation >::type
             , _1
             , bind1< typename lambda<Op>::type, _2>
-            > 
+            >
         >
 {
 };
 
-template< 
+template<
       typename Seq
     , typename Op
     , typename In
     >
 struct reverse_transform1_impl
-    : reverse_fold< 
+    : reverse_fold<
           Seq
         , typename In::state
         , bind2< typename lambda< typename In::operation >::type
             , _1
             , bind1< typename lambda<Op>::type, _2>
-            > 
+            >
         >
 {
 };
 
-template< 
+template<
       typename Seq1
     , typename Seq2
     , typename Op
     , typename In
     >
 struct transform2_impl
-    : fold< 
+    : fold<
           pair_view<Seq1,Seq2>
         , typename In::state
         , bind2< typename lambda< typename In::operation >::type
@@ -82,19 +82,19 @@ struct transform2_impl
                 , bind1<first<>,_2>
                 , bind1<second<>,_2>
                 >
-            > 
+            >
         >
 {
 };
 
-template< 
+template<
       typename Seq1
     , typename Seq2
     , typename Op
     , typename In
     >
 struct reverse_transform2_impl
-    : reverse_fold< 
+    : reverse_fold<
           pair_view<Seq1,Seq2>
         , typename In::state
         , bind2< typename lambda< typename In::operation >::type
@@ -103,16 +103,16 @@ struct reverse_transform2_impl
                 , bind1<first<>,_2>
                 , bind1<second<>,_2>
                 >
-            > 
+            >
         >
 {
 };
 
-} // namespace aux 
+} // namespace aux
 
-AUTOBOOST_MPL_AUX_INSERTER_ALGORITHM_DEF(3, transform1)                    
+AUTOBOOST_MPL_AUX_INSERTER_ALGORITHM_DEF(3, transform1)
 AUTOBOOST_MPL_AUX_INSERTER_ALGORITHM_DEF(4, transform2)
-    
+
 #define AUX778076_TRANSFORM_DEF(name)                                   \
 template<                                                               \
       typename AUTOBOOST_MPL_AUX_NA_PARAM(Seq1)                             \

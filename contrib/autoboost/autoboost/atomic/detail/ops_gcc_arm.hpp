@@ -84,7 +84,7 @@ namespace detail {
 // However, some compiler optimizations may break a seemingly valid code relying on data
 // dependency tracking by injecting bogus branches to aid out of order execution.
 // This may happen not only in Boost.Atomic code but also in user's code, which we have no
-// control of. See this thread: http://lists.boost.org/Archives/boost/2014/06/213890.php.
+// control of. See this thread: http://lists.boost.org/Archives/autoboost/2014/06/213890.php.
 // For this reason we promote memory_order_consume to memory_order_acquire.
 
 #if defined(__thumb__) && !defined(__thumb2__)

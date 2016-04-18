@@ -72,7 +72,7 @@ namespace date_time {
       }
       return 13; // intentionally out of range - name not found
     }
- 
+
     //! Find index of a string in either of 2 arrays
     /*! find_match searches both arrays for a match to 's'. Both arrays
      * must contain 'size' elements. The index of the match is returned.

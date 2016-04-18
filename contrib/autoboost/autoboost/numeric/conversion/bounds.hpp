@@ -6,13 +6,13 @@
 //  See library home page at http://www.boost.org/libs/numeric/conversion
 //
 // Contact the author at: fernando_cacciola@hotmail.com
-// 
+//
 #ifndef AUTOBOOST_NUMERIC_CONVERSION_BOUNDS_12NOV2002_HPP
 #define AUTOBOOST_NUMERIC_CONVERSION_BOUNDS_12NOV2002_HPP
 
 #include "autoboost/numeric/conversion/detail/bounds.hpp"
 
-namespace autoboost { namespace numeric 
+namespace autoboost { namespace numeric
 {
 
 template<class N>

@@ -5,8 +5,8 @@
 // Copyright Aleksey Gurtovoy 2002-2004
 // Copyright David Abrahams 2003
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -20,7 +20,7 @@
 
 namespace autoboost { namespace mpl {
 
-// no default implementation; the definition is needed to make MSVC happy 
+// no default implementation; the definition is needed to make MSVC happy
 
 template< typename Tag > struct has_key_impl
 {

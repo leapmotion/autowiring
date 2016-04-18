@@ -372,7 +372,7 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( 
+    ::new( pv ) T(
         autoboost::detail::sp_forward<A1>( a1 )
         );
 
@@ -394,7 +394,7 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2
     void * pv = pd->address();
 
     ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ), 
+        autoboost::detail::sp_forward<A1>( a1 ),
         autoboost::detail::sp_forward<A2>( a2 )
         );
 
@@ -415,8 +415,8 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( 
-        autoboost::detail::sp_forward<A1>( a1 ), 
+    ::new( pv ) T(
+        autoboost::detail::sp_forward<A1>( a1 ),
         autoboost::detail::sp_forward<A2>( a2 )
         );
 
@@ -438,8 +438,8 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2
     void * pv = pd->address();
 
     ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
         autoboost::detail::sp_forward<A3>( a3 )
         );
 
@@ -460,9 +460,9 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( 
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
+    ::new( pv ) T(
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
         autoboost::detail::sp_forward<A3>( a3 )
         );
 
@@ -484,9 +484,9 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2
     void * pv = pd->address();
 
     ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
-        autoboost::detail::sp_forward<A3>( a3 ), 
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
+        autoboost::detail::sp_forward<A3>( a3 ),
         autoboost::detail::sp_forward<A4>( a4 )
         );
 
@@ -507,10 +507,10 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( 
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
-        autoboost::detail::sp_forward<A3>( a3 ), 
+    ::new( pv ) T(
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
+        autoboost::detail::sp_forward<A3>( a3 ),
         autoboost::detail::sp_forward<A4>( a4 )
         );
 
@@ -532,10 +532,10 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2
     void * pv = pd->address();
 
     ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
-        autoboost::detail::sp_forward<A3>( a3 ), 
-        autoboost::detail::sp_forward<A4>( a4 ), 
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
+        autoboost::detail::sp_forward<A3>( a3 ),
+        autoboost::detail::sp_forward<A4>( a4 ),
         autoboost::detail::sp_forward<A5>( a5 )
         );
 
@@ -556,11 +556,11 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( 
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
-        autoboost::detail::sp_forward<A3>( a3 ), 
-        autoboost::detail::sp_forward<A4>( a4 ), 
+    ::new( pv ) T(
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
+        autoboost::detail::sp_forward<A3>( a3 ),
+        autoboost::detail::sp_forward<A4>( a4 ),
         autoboost::detail::sp_forward<A5>( a5 )
         );
 
@@ -582,11 +582,11 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2
     void * pv = pd->address();
 
     ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
-        autoboost::detail::sp_forward<A3>( a3 ), 
-        autoboost::detail::sp_forward<A4>( a4 ), 
-        autoboost::detail::sp_forward<A5>( a5 ), 
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
+        autoboost::detail::sp_forward<A3>( a3 ),
+        autoboost::detail::sp_forward<A4>( a4 ),
+        autoboost::detail::sp_forward<A5>( a5 ),
         autoboost::detail::sp_forward<A6>( a6 )
         );
 
@@ -607,12 +607,12 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( 
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
-        autoboost::detail::sp_forward<A3>( a3 ), 
-        autoboost::detail::sp_forward<A4>( a4 ), 
-        autoboost::detail::sp_forward<A5>( a5 ), 
+    ::new( pv ) T(
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
+        autoboost::detail::sp_forward<A3>( a3 ),
+        autoboost::detail::sp_forward<A4>( a4 ),
+        autoboost::detail::sp_forward<A5>( a5 ),
         autoboost::detail::sp_forward<A6>( a6 )
         );
 
@@ -634,12 +634,12 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2
     void * pv = pd->address();
 
     ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
-        autoboost::detail::sp_forward<A3>( a3 ), 
-        autoboost::detail::sp_forward<A4>( a4 ), 
-        autoboost::detail::sp_forward<A5>( a5 ), 
-        autoboost::detail::sp_forward<A6>( a6 ), 
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
+        autoboost::detail::sp_forward<A3>( a3 ),
+        autoboost::detail::sp_forward<A4>( a4 ),
+        autoboost::detail::sp_forward<A5>( a5 ),
+        autoboost::detail::sp_forward<A6>( a6 ),
         autoboost::detail::sp_forward<A7>( a7 )
         );
 
@@ -660,13 +660,13 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( 
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
-        autoboost::detail::sp_forward<A3>( a3 ), 
-        autoboost::detail::sp_forward<A4>( a4 ), 
-        autoboost::detail::sp_forward<A5>( a5 ), 
-        autoboost::detail::sp_forward<A6>( a6 ), 
+    ::new( pv ) T(
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
+        autoboost::detail::sp_forward<A3>( a3 ),
+        autoboost::detail::sp_forward<A4>( a4 ),
+        autoboost::detail::sp_forward<A5>( a5 ),
+        autoboost::detail::sp_forward<A6>( a6 ),
         autoboost::detail::sp_forward<A7>( a7 )
         );
 
@@ -688,13 +688,13 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2
     void * pv = pd->address();
 
     ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
-        autoboost::detail::sp_forward<A3>( a3 ), 
-        autoboost::detail::sp_forward<A4>( a4 ), 
-        autoboost::detail::sp_forward<A5>( a5 ), 
-        autoboost::detail::sp_forward<A6>( a6 ), 
-        autoboost::detail::sp_forward<A7>( a7 ), 
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
+        autoboost::detail::sp_forward<A3>( a3 ),
+        autoboost::detail::sp_forward<A4>( a4 ),
+        autoboost::detail::sp_forward<A5>( a5 ),
+        autoboost::detail::sp_forward<A6>( a6 ),
+        autoboost::detail::sp_forward<A7>( a7 ),
         autoboost::detail::sp_forward<A8>( a8 )
         );
 
@@ -715,14 +715,14 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( 
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
-        autoboost::detail::sp_forward<A3>( a3 ), 
-        autoboost::detail::sp_forward<A4>( a4 ), 
-        autoboost::detail::sp_forward<A5>( a5 ), 
-        autoboost::detail::sp_forward<A6>( a6 ), 
-        autoboost::detail::sp_forward<A7>( a7 ), 
+    ::new( pv ) T(
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
+        autoboost::detail::sp_forward<A3>( a3 ),
+        autoboost::detail::sp_forward<A4>( a4 ),
+        autoboost::detail::sp_forward<A5>( a5 ),
+        autoboost::detail::sp_forward<A6>( a6 ),
+        autoboost::detail::sp_forward<A7>( a7 ),
         autoboost::detail::sp_forward<A8>( a8 )
         );
 
@@ -744,14 +744,14 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2
     void * pv = pd->address();
 
     ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
-        autoboost::detail::sp_forward<A3>( a3 ), 
-        autoboost::detail::sp_forward<A4>( a4 ), 
-        autoboost::detail::sp_forward<A5>( a5 ), 
-        autoboost::detail::sp_forward<A6>( a6 ), 
-        autoboost::detail::sp_forward<A7>( a7 ), 
-        autoboost::detail::sp_forward<A8>( a8 ), 
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
+        autoboost::detail::sp_forward<A3>( a3 ),
+        autoboost::detail::sp_forward<A4>( a4 ),
+        autoboost::detail::sp_forward<A5>( a5 ),
+        autoboost::detail::sp_forward<A6>( a6 ),
+        autoboost::detail::sp_forward<A7>( a7 ),
+        autoboost::detail::sp_forward<A8>( a8 ),
         autoboost::detail::sp_forward<A9>( a9 )
         );
 
@@ -772,15 +772,15 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( 
-        autoboost::detail::sp_forward<A1>( a1 ), 
-        autoboost::detail::sp_forward<A2>( a2 ), 
-        autoboost::detail::sp_forward<A3>( a3 ), 
-        autoboost::detail::sp_forward<A4>( a4 ), 
-        autoboost::detail::sp_forward<A5>( a5 ), 
-        autoboost::detail::sp_forward<A6>( a6 ), 
-        autoboost::detail::sp_forward<A7>( a7 ), 
-        autoboost::detail::sp_forward<A8>( a8 ), 
+    ::new( pv ) T(
+        autoboost::detail::sp_forward<A1>( a1 ),
+        autoboost::detail::sp_forward<A2>( a2 ),
+        autoboost::detail::sp_forward<A3>( a3 ),
+        autoboost::detail::sp_forward<A4>( a4 ),
+        autoboost::detail::sp_forward<A5>( a5 ),
+        autoboost::detail::sp_forward<A6>( a6 ),
+        autoboost::detail::sp_forward<A7>( a7 ),
+        autoboost::detail::sp_forward<A8>( a8 ),
         autoboost::detail::sp_forward<A9>( a9 )
         );
 

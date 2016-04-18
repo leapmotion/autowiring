@@ -38,9 +38,9 @@ namespace autoboost {
         /*!
             Use the Finder to search for a substring. Use the Formatter to format
             this substring and replace it in the input.
-            The result is a modified copy of the input. It is returned as a sequence 
+            The result is a modified copy of the input. It is returned as a sequence
             or copied to the output iterator.
-    
+
             \param Output An output iterator to which the result will be copied
             \param Input An input sequence
             \param Finder A Finder object used to search for a match to be replaced
@@ -50,7 +50,7 @@ namespace autoboost {
 
             \note The second variant of this function provides the strong exception-safety guarantee
         */
-        template< 
+        template<
             typename OutputIteratorT,
             typename RangeT,
             typename FinderT,
@@ -86,8 +86,8 @@ namespace autoboost {
         /*!
             \overload
         */
-        template< 
-            typename SequenceT, 
+        template<
+            typename SequenceT,
             typename FinderT,
             typename FormatterT>
         inline SequenceT find_format_copy(
@@ -126,7 +126,7 @@ namespace autoboost {
             typename SequenceT,
             typename FinderT,
             typename FormatterT>
-        inline void find_format( 
+        inline void find_format(
             SequenceT& Input,
             FinderT Finder,
             FormatterT Formatter)
@@ -137,7 +137,7 @@ namespace autoboost {
                     FinderT,
                     AUTOBOOST_STRING_TYPENAME range_const_iterator<SequenceT>::type>
                 ));
-            AUTOBOOST_CONCEPT_ASSERT(( 
+            AUTOBOOST_CONCEPT_ASSERT((
                 FormatterConcept<
                     FormatterT,
                     FinderT,AUTOBOOST_STRING_TYPENAME range_const_iterator<SequenceT>::type>
@@ -157,7 +157,7 @@ namespace autoboost {
             Use the Finder to search for a substring. Use the Formatter to format
             this substring and replace it in the input. Repeat this for all matching
             substrings.
-            The result is a modified copy of the input. It is returned as a sequence 
+            The result is a modified copy of the input. It is returned as a sequence
             or copied to the output iterator.
 
             \param Output An output iterator to which the result will be copied
@@ -169,7 +169,7 @@ namespace autoboost {
 
              \note The second variant of this function provides the strong exception-safety guarantee
         */
-        template< 
+        template<
             typename OutputIteratorT,
             typename RangeT,
             typename FinderT,
@@ -181,12 +181,12 @@ namespace autoboost {
             FormatterT Formatter)
         {
             // Concept check
-            AUTOBOOST_CONCEPT_ASSERT(( 
+            AUTOBOOST_CONCEPT_ASSERT((
                 FinderConcept<
                     FinderT,
                     AUTOBOOST_STRING_TYPENAME range_const_iterator<RangeT>::type>
                 ));
-            AUTOBOOST_CONCEPT_ASSERT(( 
+            AUTOBOOST_CONCEPT_ASSERT((
                 FormatterConcept<
                     FormatterT,
                     FinderT,AUTOBOOST_STRING_TYPENAME range_const_iterator<RangeT>::type>
@@ -206,8 +206,8 @@ namespace autoboost {
         /*!
             \overload
         */
-        template< 
-            typename SequenceT, 
+        template<
+            typename SequenceT,
             typename FinderT,
             typename FormatterT >
         inline SequenceT find_format_all_copy(
@@ -248,7 +248,7 @@ namespace autoboost {
             typename SequenceT,
             typename FinderT,
             typename FormatterT >
-        inline void find_format_all( 
+        inline void find_format_all(
             SequenceT& Input,
             FinderT Finder,
             FormatterT Formatter )
@@ -275,7 +275,7 @@ namespace autoboost {
 
     } // namespace algorithm
 
-    // pull the names to the boost namespace
+    // pull the names to the autoboost namespace
     using algorithm::find_format_copy;
     using algorithm::find_format;
     using algorithm::find_format_all_copy;

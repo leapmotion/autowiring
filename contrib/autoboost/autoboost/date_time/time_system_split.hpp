@@ -2,7 +2,7 @@
 #define AB_DATE_TIME_TIME_SYSTEM_SPLIT_HPP
 
 /* Copyright (c) 2002,2003,2005 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
@@ -18,7 +18,7 @@ namespace autoboost {
 namespace date_time {
 
   //! An unadjusted time system implementation.
-#if (defined(AUTOBOOST_DATE_TIME_NO_MEMBER_INIT))  
+#if (defined(AUTOBOOST_DATE_TIME_NO_MEMBER_INIT))
   template<typename config, autoboost::int32_t ticks_per_second>
 #else
   template<typename config>
@@ -34,7 +34,7 @@ namespace date_time {
     typedef typename config::resolution_traits   resolution_traits;
 
     //86400 is number of seconds in a day...
-#if (defined(AUTOBOOST_DATE_TIME_NO_MEMBER_INIT))  
+#if (defined(AUTOBOOST_DATE_TIME_NO_MEMBER_INIT))
     typedef date_time::wrapping_int<int_type, INT64_C(86400) * ticks_per_second > wrap_int_type;
 #else
    private:
@@ -54,10 +54,10 @@ namespace date_time {
         return time_rep_type(date_type(not_a_date_time),
                              time_duration_type(not_a_date_time));
       case pos_infin:
-        return time_rep_type(date_type(pos_infin), 
+        return time_rep_type(date_type(pos_infin),
                              time_duration_type(pos_infin));
       case neg_infin:
-        return time_rep_type(date_type(neg_infin), 
+        return time_rep_type(date_type(neg_infin),
                              time_duration_type(neg_infin));
       case max_date_time: {
         time_duration_type td = time_duration_type(24,0,0,0) - time_duration_type(0,0,0,1);
@@ -69,7 +69,7 @@ namespace date_time {
       default:
         return time_rep_type(date_type(not_a_date_time),
                              time_duration_type(not_a_date_time));
-        
+
       }
 
     }
@@ -183,7 +183,7 @@ namespace date_time {
         return subtract_time_duration(base,td1);
       }
 
-      wrap_int_type day_offset(base.time_of_day.ticks());      
+      wrap_int_type day_offset(base.time_of_day.ticks());
       date_duration_type day_overflow(static_cast< typename date_duration_type::duration_rep_type >(day_offset.add(td.ticks())));
 
       return time_rep_type(base.day+day_overflow,
@@ -198,7 +198,7 @@ namespace date_time {
       return td+td2;
       // return time_rep_type(base.day-dd, base.time_of_day);
     }
-    
+
   };
 
 } } //namespace date_time

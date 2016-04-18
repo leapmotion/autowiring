@@ -3,12 +3,12 @@
  * Copyright (c) 2004
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
- 
+
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         cpp_regex_traits.cpp
@@ -30,7 +30,7 @@ namespace std{
 
 namespace autoboost{ namespace re_detail{
 
-void cpp_regex_traits_char_layer<char>::init() 
+void cpp_regex_traits_char_layer<char>::init()
 {
    // we need to start by initialising our syntax map so we know which
    // character is used for which purpose:
@@ -45,7 +45,7 @@ void cpp_regex_traits_char_layer<char>::init()
    if(cat_name.size() && (m_pmessages != 0))
    {
       cat = this->m_pmessages->open(
-         cat_name, 
+         cat_name,
          this->m_locale);
       if((int)cat < 0)
       {
@@ -103,15 +103,15 @@ void cpp_regex_traits_char_layer<char>::init()
    {
       if(m_char_map[i] == 0)
       {
-         if(this->m_pctype->is(std::ctype_base::lower, i)) 
+         if(this->m_pctype->is(std::ctype_base::lower, i))
             m_char_map[i] = regex_constants::escape_type_class;
-         else if(this->m_pctype->is(std::ctype_base::upper, i)) 
+         else if(this->m_pctype->is(std::ctype_base::upper, i))
             m_char_map[i] = regex_constants::escape_type_not_class;
       }
    }while(0xFF != i++);
 }
 
 } // re_detail
-} // boost
+} // autoboost
 #endif
 

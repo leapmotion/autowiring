@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 // msvc_disambiguater.hpp : msvc workarounds. (for put_{head|last} overloads)
-//               the trick was described in boost's list  by Aleksey Gurtovoy
+//               the trick was described in autoboost's list  by Aleksey Gurtovoy
 // ----------------------------------------------------------------------------
 
 //  Copyright Samuel Krempp 2003. Use, modification, and distribution are
@@ -29,7 +29,7 @@ struct disambiguater
    template< typename U >
    static void put_head(AUTOBOOST_IO_STD basic_ostream<Ch, Tr>& os, group1<U> const& x, long)
    {
-       os << group_head(x.a1_); 
+       os << group_head(x.a1_);
    }
    static void put_head(AUTOBOOST_IO_STD basic_ostream<Ch, Tr>& os, T const& x, int)
    {
@@ -37,7 +37,7 @@ struct disambiguater
    template< typename U >
    static void put_last(AUTOBOOST_IO_STD basic_ostream<Ch, Tr>& os, group1<U> const& x, long)
    {
-       os << group_last(x.a1_); 
+       os << group_last(x.a1_);
    }
    static void put_last(AUTOBOOST_IO_STD basic_ostream<Ch, Tr>& os, T const& x, int)
    {

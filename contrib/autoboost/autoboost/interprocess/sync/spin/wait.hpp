@@ -9,7 +9,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-//Parts of this file come from boost/smart_ptr/detail/yield_k.hpp
+//Parts of this file come from autoboost/smart_ptr/detail/yield_k.hpp
 //Many thanks to Peter Dimov.
 
 #ifndef AUTOBOOST_INTERPROCESS_SYNC_WAIT_HPP_INCLUDED

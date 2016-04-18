@@ -25,7 +25,7 @@ namespace winapi
     using ::QueryPerformanceCounter;
     using ::QueryPerformanceFrequency;
 #else
-extern "C" { 
+extern "C" {
     __declspec(dllimport) BOOL_ WINAPI
         QueryPerformanceCounter(
             LARGE_INTEGER_ *lpPerformanceCount

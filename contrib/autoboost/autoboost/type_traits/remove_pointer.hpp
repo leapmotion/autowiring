@@ -33,31 +33,31 @@ namespace detail{
    //
    // Does not bind to a <T*> or <T*const> partial specialization with VC10 and earlier
    //
-   template <class T> 
+   template <class T>
    struct remove_pointer_imp
    {
       typedef T type;
    };
 
-   template <class T> 
+   template <class T>
    struct remove_pointer_imp<T*>
    {
       typedef T type;
    };
 
-   template <class T, bool b> 
+   template <class T, bool b>
    struct remove_pointer_imp3
    {
       typedef typename remove_pointer_imp<typename autoboost::remove_cv<T>::type>::type type;
    };
 
-   template <class T> 
+   template <class T>
    struct remove_pointer_imp3<T, false>
    {
       typedef T type;
    };
 
-   template <class T> 
+   template <class T>
    struct remove_pointer_imp2
    {
       typedef typename remove_pointer_imp3<T, ::autoboost::is_pointer<T>::value>::type type;

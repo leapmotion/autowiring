@@ -2,7 +2,7 @@
 #define AB_DATE_TIME_DATE_FORMATTING_LIMITED_HPP___
 
 /* Copyright (c) 2002-2004 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
@@ -32,24 +32,24 @@ namespace date_time {
     static std::ostream& format_month(const month_type& month,
                                       std::ostream& os)
     {
-      switch (format_type::month_format()) 
+      switch (format_type::month_format())
       {
-        case month_as_short_string: 
-        { 
-          os << month.as_short_string(); 
+        case month_as_short_string:
+        {
+          os << month.as_short_string();
           break;
         }
-        case month_as_long_string: 
-        { 
-          os << month.as_long_string(); 
+        case month_as_long_string:
+        {
+          os << month.as_long_string();
           break;
         }
-        case month_as_integer: 
-        { 
+        case month_as_integer:
+        {
           os << std::setw(2) << std::setfill('0') << month.as_number();
           break;
         }
-     
+
       }
       return os;
     } // format_month
@@ -63,13 +63,13 @@ namespace date_time {
   public:
     //! Convert ymd to a standard string formatting policies
     /*! This is standard code for handling date formatting with
-     *  year-month-day based date information.  This function 
+     *  year-month-day based date information.  This function
      *  uses the format_type to control whether the string will
      *  contain separator characters, and if so what the character
      *  will be.  In addtion, it can format the month as either
-     *  an integer or a string as controled by the formatting 
+     *  an integer or a string as controled by the formatting
      *  policy
-     */ 
+     */
     static std::string ymd_to_string(ymd_type ymd)
     {
       typedef typename ymd_type::month_type month_type;
@@ -83,7 +83,7 @@ namespace date_time {
       if (format_type::has_date_sep_chars()) {
         ss << format_type::day_sep_char();
       }
-      ss  << std::setw(2) << std::setfill('0') 
+      ss  << std::setw(2) << std::setfill('0')
           << ymd.day;
       return ss.str();
     }
@@ -110,7 +110,7 @@ namespace date_time {
       }
       ymd_type ymd = d.year_month_day();
       return ymd_formatter<ymd_type, format_type>::ymd_to_string(ymd);
-    }    
+    }
   };
 
 

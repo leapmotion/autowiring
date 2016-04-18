@@ -121,7 +121,7 @@ struct rebinder
   template<typename Type>
   struct result
   {
-      typedef typename Allocator::AUTOBOOST_NESTED_TEMPLATE 
+      typedef typename Allocator::AUTOBOOST_NESTED_TEMPLATE
           rebind<Type>::other other;
   };
 };
@@ -159,7 +159,7 @@ void construct(void* p,const Type& t)
  */
 
 #pragma warning(push)
-#pragma warning(disable:4100)  
+#pragma warning(disable:4100)
 #endif
 
 template<typename Type>

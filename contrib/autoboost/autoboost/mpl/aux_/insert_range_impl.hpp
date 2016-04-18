@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -28,8 +28,8 @@
 
 namespace autoboost { namespace mpl {
 
-// default implementation; conrete sequences might override it by 
-// specializing either the 'insert_range_impl' or the primary 
+// default implementation; conrete sequences might override it by
+// specializing either the 'insert_range_impl' or the primary
 // 'insert_range' template
 
 
@@ -44,9 +44,9 @@ struct insert_range_impl
     struct apply
 #if !defined(AUTOBOOST_MPL_CFG_NO_NESTED_FORWARDING)
         : reverse_copy<
-              joint_view< 
+              joint_view<
                   iterator_range<typename begin<Sequence>::type,Pos>
-                , joint_view< 
+                , joint_view<
                       Range
                     , iterator_range<Pos,typename end<Sequence>::type>
                     >
@@ -57,9 +57,9 @@ struct insert_range_impl
 #else
     {
         typedef typename reverse_copy<
-              joint_view< 
+              joint_view<
                   iterator_range<typename begin<Sequence>::type,Pos>
-                , joint_view< 
+                , joint_view<
                       Range
                     , iterator_range<Pos,typename end<Sequence>::type>
                     >

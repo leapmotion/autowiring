@@ -8,8 +8,8 @@
 
 // Copyright Aleksey Gurtovoy 2001-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -77,7 +77,7 @@ template<
     >
 struct max_arity
 {
-    AUTOBOOST_STATIC_CONSTANT(int, value = 
+    AUTOBOOST_STATIC_CONSTANT(int, value =
           AUTOBOOST_PP_SEQ_FOLD_LEFT(
               AUX778076_MAX_ARITY_OP
             , -1
@@ -97,7 +97,7 @@ arity_tag<0>::type arity_helper(...);
 template< typename F, AUTOBOOST_MPL_AUX_NTTP_DECL(int, N) >
 struct template_arity_impl
 {
-    AUTOBOOST_STATIC_CONSTANT(int, value = 
+    AUTOBOOST_STATIC_CONSTANT(int, value =
           sizeof(::autoboost::mpl::aux::arity_helper(type_wrapper<F>(),arity_tag<N>())) - 1
         );
 };
@@ -116,7 +116,7 @@ struct template_arity
             , F
             ) >::value
         ));
-        
+
     typedef mpl::int_<value> type;
 };
 

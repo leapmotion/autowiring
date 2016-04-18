@@ -1,4 +1,4 @@
-//  boost/chrono/utility/manip_base.hpp  ------------------------------------------------------------//
+//  autoboost/chrono/utility/manip_base.hpp  ------------------------------------------------------------//
 
 //  Copyright 2011 Vicente J. Botet Escriba
 

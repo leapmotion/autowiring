@@ -1,7 +1,7 @@
 //  Boost string_algo library classification.hpp header file  ---------------------------//
 
 //  Copyright Pavol Droba 2002-2003.
-// 
+//
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
@@ -71,7 +71,7 @@ namespace autoboost {
                 // set cannot operate on const value-type
                 typedef typename ::autoboost::remove_const<CharT>::type set_value_type;
 
-            public:     
+            public:
                 // Boost.ResultOf support
                 typedef bool result_type;
 
@@ -107,7 +107,7 @@ namespace autoboost {
                 is_any_ofF(const is_any_ofF& Other) : m_Size(Other.m_Size)
                 {
                     // Prepare storage
-                    m_Storage.m_dynSet=0;               
+                    m_Storage.m_dynSet=0;
                     const set_value_type* SrcStorage=0;
                     set_value_type* DestStorage=0;
 
@@ -144,7 +144,7 @@ namespace autoboost {
                     // Handle self assignment
                     if(this==&Other) return *this;
 
-                    // Prepare storage             
+                    // Prepare storage
                     const set_value_type* SrcStorage;
                     set_value_type* DestStorage;
 
@@ -191,7 +191,7 @@ namespace autoboost {
                                 // Allocate the new one
                                 set_value_type* pTemp=new set_value_type[Other.m_Size];
                                 DestStorage=pTemp;
-                        
+
                                 // Delete old storage if necessary
                                 if(m_Storage.m_dynSet!=0)
                                 {
@@ -237,9 +237,9 @@ namespace autoboost {
                 {
                     set_value_type* m_dynSet;
                     set_value_type m_fixSet[sizeof(set_value_type*)*2];
-                } 
+                }
                 m_Storage;
-        
+
                 // storage size
                 ::std::size_t m_Size;
             };

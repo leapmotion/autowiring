@@ -1,4 +1,4 @@
-/* boost random/detail/const_mod.hpp header file
+/* autoboost random/detail/const_mod.hpp header file
  *
  * Copyright Jens Maurer 2000-2001
  * Distributed under the Boost Software License, Version 1.0. (See

@@ -10,7 +10,7 @@
 #define AUTOBOOST_CHECKED_DELETE_HPP
 
 // The header file at this path is deprecated;
-// use boost/core/checked_delete.hpp instead.
+// use autoboost/core/checked_delete.hpp instead.
 
 #include <autoboost/core/checked_delete.hpp>
 

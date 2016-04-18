@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -25,9 +25,9 @@
 #   include <autoboost/mpl/aux_/lambda_support.hpp>
 #   include <autoboost/mpl/aux_/config/msvc.hpp>
 
-// agurt, 19/may/04: workaround a conflict with <iso646.h> header's 
+// agurt, 19/may/04: workaround a conflict with <iso646.h> header's
 // 'or' and 'and' macros, see http://tinyurl.com/3et69; 'defined(or)'
-// has to be checked in a separate condition, otherwise GCC complains 
+// has to be checked in a separate condition, otherwise GCC complains
 // about 'or' being an alternative token
 #if defined(_MSC_VER) && !defined(__clang__)
 #ifndef __GCCXML__

@@ -1,4 +1,4 @@
-//  boost/system/windows_error.hpp  ------------------------------------------//
+//  autoboost/system/windows_error.hpp  ------------------------------------------//
 
 //  Copyright Beman Dawes 2007
 

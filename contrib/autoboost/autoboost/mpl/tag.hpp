@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -30,7 +30,7 @@ template< typename T > struct tag_impl
 
 template< typename T, typename Default = void_ > struct tag
 #if !defined(AUTOBOOST_MPL_CFG_MSVC_ETI_BUG)
-    : if_< 
+    : if_<
           aux::has_tag<T>
         , aux::tag_impl<T>
         , Default
@@ -38,7 +38,7 @@ template< typename T, typename Default = void_ > struct tag
 {
 #else
 {
-    typedef typename eval_if< 
+    typedef typename eval_if<
           aux::has_tag<T>
         , aux::tag_impl<T>
         , Default

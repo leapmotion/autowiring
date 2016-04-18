@@ -112,7 +112,7 @@ namespace autoboost
  */
 #define AUTOBOOST_SCOPED_ENUM_UT_DECLARE_BEGIN(EnumType, UnderlyingType)    \
     struct EnumType {                                                   \
-        typedef void is_boost_scoped_enum_tag;                          \
+        typedef void is_autoboost_scoped_enum_tag;                          \
         typedef UnderlyingType underlying_type;                         \
         EnumType() AUTOBOOST_NOEXCEPT {}                                    \
         explicit EnumType(underlying_type v) AUTOBOOST_NOEXCEPT : v_(v) {}                 \

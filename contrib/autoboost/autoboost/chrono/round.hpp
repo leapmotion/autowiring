@@ -1,4 +1,4 @@
-//  boost/chrono/round.hpp  ------------------------------------------------------------//
+//  autoboost/chrono/round.hpp  ------------------------------------------------------------//
 
 //  (C) Copyright Howard Hinnant
 //  Copyright 2011 Vicente J. Botet Escriba
@@ -13,7 +13,7 @@
 
 #include <autoboost/chrono/duration.hpp>
 #include <autoboost/chrono/duration.hpp>
-//#include <autoboost/chrono/typeof/boost/chrono/chrono.hpp>
+//#include <autoboost/chrono/typeof/autoboost/chrono/chrono.hpp>
 
 namespace autoboost
 {

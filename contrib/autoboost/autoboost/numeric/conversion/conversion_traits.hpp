@@ -6,7 +6,7 @@
 //  See library home page at http://www.boost.org/libs/numeric/conversion
 //
 // Contact the author at: fernando_cacciola@hotmail.com
-// 
+//
 #ifndef AUTOBOOST_NUMERIC_CONVERSION_CONVERSION_TRAITS_FLC_12NOV2002_HPP
 #define AUTOBOOST_NUMERIC_CONVERSION_CONVERSION_TRAITS_FLC_12NOV2002_HPP
 
@@ -18,8 +18,8 @@ namespace autoboost { namespace numeric
 {
 
 template<class T, class S>
-struct conversion_traits 
-    : convdetail::get_conversion_traits<T,S>::type 
+struct conversion_traits
+    : convdetail::get_conversion_traits<T,S>::type
 {
 #if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, <= 1300)
     typedef typename convdetail::get_conversion_traits<T,S>::type base_;

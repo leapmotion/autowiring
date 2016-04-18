@@ -4,7 +4,7 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 // 2013/09 Vicente J. Botet Escriba
-//    Adapt to boost from CCIA C++11 implementation
+//    Adapt to autoboost from CCIA C++11 implementation
 //    first implementation of a simple pool thread using a vector of threads and a sync_queue.
 
 #ifndef AUTOBOOST_THREAD_EXECUTORS_BASIC_THREAD_POOL_HPP

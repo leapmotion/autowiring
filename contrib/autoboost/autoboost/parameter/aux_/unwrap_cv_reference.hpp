@@ -40,7 +40,7 @@ struct is_cv_reference_wrapper
     typedef mpl::bool_<
 #if AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x564))
         is_cv_reference_wrapper::
-#endif 
+#endif
     value> type;
 };
 
@@ -76,7 +76,7 @@ struct unwrap_cv_reference<T, mpl::true_>
   : T
 {};
 
-#else 
+#else
 // Produces the unwrapped type to hold a reference to in named<>
 // Can't use autoboost::unwrap_reference<> here because it
 // doesn't handle the case where T = reference_wrapper<U> cv

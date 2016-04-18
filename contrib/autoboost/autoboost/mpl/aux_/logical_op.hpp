@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -98,7 +98,7 @@ template< bool C_ > struct AUTOBOOST_PP_CAT(AUX778076_OP_NAME,impl)
 template<> struct AUTOBOOST_PP_CAT(AUX778076_OP_NAME,impl)<AUX778076_OP_VALUE2>
 {
     template< AUX778076_PARAMS(typename T, 1) > struct result_
-        : AUTOBOOST_PP_CAT(AUX778076_OP_NAME,impl)< 
+        : AUTOBOOST_PP_CAT(AUX778076_OP_NAME,impl)<
               AUTOBOOST_MPL_AUX_NESTED_TYPE_WKND(T1)::value
             >::template result_< AUX778076_SHIFTED_PARAMS(T,1),AUTOBOOST_PP_CAT(AUX778076_OP_VALUE2,_) >
     {
@@ -137,7 +137,7 @@ struct AUX778076_OP_NAME
         , AUX778076_SHIFTED_PARAMS(T,0)
         >
 #else
-    : aux::AUTOBOOST_PP_CAT(AUX778076_OP_NAME,impl)< 
+    : aux::AUTOBOOST_PP_CAT(AUX778076_OP_NAME,impl)<
           AUTOBOOST_MPL_AUX_NESTED_TYPE_WKND(T1)::value
         >::template result_< AUX778076_SHIFTED_PARAMS(T,0) >
 #endif

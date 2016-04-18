@@ -29,7 +29,7 @@ struct ratio_string
     static basic_string<CharT> long_name();
 };
 
-}  // boost
+}  // autoboost
 
 */
 

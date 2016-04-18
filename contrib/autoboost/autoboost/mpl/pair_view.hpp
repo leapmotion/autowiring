@@ -5,8 +5,8 @@
 // Copyright David Abrahams 2003-2004
 // Copyright Aleksey Gurtovoy 2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -58,7 +58,7 @@ template<> struct prior_pair_iter<forward_iterator_tag>
 #endif
 }
 
-template< 
+template<
       typename Iter1
     , typename Iter2
     , typename Category
@@ -69,9 +69,9 @@ struct pair_iter
     typedef Category category;
     typedef Iter1 first;
     typedef Iter2 second;
-    
+
 #if defined(AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
-    typedef pair< 
+    typedef pair<
           typename deref<Iter1>::type
         , typename deref<Iter2>::type
         > type;
@@ -79,7 +79,7 @@ struct pair_iter
     typedef typename mpl::next<Iter1>::type i1_;
     typedef typename mpl::next<Iter2>::type i2_;
     typedef pair_iter<i1_,i2_,Category> next;
-    
+
     typedef apply_wrap2< aux::prior_pair_iter<Category>,Iter1,Iter2 >::type prior;
 #endif
 };
@@ -90,7 +90,7 @@ struct pair_iter
 template< typename Iter1, typename Iter2, typename C >
 struct deref< pair_iter<Iter1,Iter2,C> >
 {
-    typedef pair< 
+    typedef pair<
           typename deref<Iter1>::type
         , typename deref<Iter2>::type
         > type;
@@ -152,9 +152,9 @@ struct pair_view
           typename iterator_category<iter1_>::type
         , typename iterator_category<iter2_>::type
         >::type category_;
-    
+
     typedef pair_iter<iter1_,iter2_,category_> begin;
-    
+
     typedef pair_iter<
           typename end<Sequence1>::type
         , typename end<Sequence2>::type

@@ -8,8 +8,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -85,7 +85,7 @@ namespace autoboost { namespace mpl {
     AUTOBOOST_PP_COMMA_IF(n) \
     AUTOBOOST_MPL_PP_PARTIAL_SPEC_PARAMS(n, param, def) \
     /**/
-    
+
 #   define AUX778076_APPLY_N_SPEC_PARAMS(n, param) \
     AUTOBOOST_MPL_PP_ENUM(AUTOBOOST_PP_INC(n), param) \
     /**/
@@ -112,7 +112,7 @@ template<
       typename F, AUX778076_APPLY_DEF_PARAMS(typename T, na)
     >
 struct apply
-    : aux::apply_chooser< 
+    : aux::apply_chooser<
           aux::apply_count_args< AUX778076_APPLY_PARAMS(T) >::value
         >::template result_< F, AUX778076_APPLY_PARAMS(T) >::type
 {
@@ -147,14 +147,14 @@ template<
     >
 struct AUTOBOOST_PP_CAT(apply,i_)
 #if !AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1300)
-    : AUTOBOOST_PP_CAT(apply_wrap,i_)< 
+    : AUTOBOOST_PP_CAT(apply_wrap,i_)<
           typename lambda<F>::type
         AUX778076_APPLY_N_COMMA_PARAMS(i_, T)
         >
 {
 #else
 {
-    typedef typename AUTOBOOST_PP_CAT(apply_wrap,i_)< 
+    typedef typename AUTOBOOST_PP_CAT(apply_wrap,i_)<
           typename lambda<F>::type
         AUX778076_APPLY_N_COMMA_PARAMS(i_, T)
         >::type type;

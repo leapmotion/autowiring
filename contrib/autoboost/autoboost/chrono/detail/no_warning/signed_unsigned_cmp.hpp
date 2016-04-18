@@ -11,7 +11,7 @@
 //
 // We simply cannot include this header on gcc without getting copious warnings of the kind:
 //
-//../../../boost/chrono/detail/no_warning/signed_unsigned_cmp.hpp:37: warning: comparison between signed and unsigned integer expressions
+//../../../autoboost/chrono/detail/no_warning/signed_unsigned_cmp.hpp:37: warning: comparison between signed and unsigned integer expressions
 //
 // And yet there is no other reasonable implementation, so we declare this a system header
 // to suppress these warnings.

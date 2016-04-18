@@ -5,8 +5,8 @@
 // Copyright Aleksey Gurtovoy 2003-2004
 // Copyright David Abrahams 2003-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -24,11 +24,11 @@ namespace autoboost { namespace mpl {
 template<>
 struct erase_impl< aux::set_tag >
 {
-    template< 
+    template<
           typename Set
         , typename Pos
         , typename unused_
-        > 
+        >
     struct apply
         : erase_key_impl<aux::set_tag>
             ::apply<Set,typename Pos::type>

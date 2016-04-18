@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// boost aligned_storage.hpp header file
+// autoboost aligned_storage.hpp header file
 // See http://www.boost.org for updates, documentation, and revision history.
 //-----------------------------------------------------------------------------
 //
@@ -70,15 +70,15 @@ template <
       std::size_t size_
     , std::size_t alignment_ = std::size_t(-1)
 >
-class aligned_storage : 
+class aligned_storage :
 #ifndef __BORLANDC__
-   private 
+   private
 #else
    public
 #endif
-   ::autoboost::detail::aligned_storage::aligned_storage_imp<size_, alignment_> 
+   ::autoboost::detail::aligned_storage::aligned_storage_imp<size_, alignment_>
 {
- 
+
 public: // constants
 
     typedef ::autoboost::detail::aligned_storage::aligned_storage_imp<size_, alignment_> type;
@@ -131,9 +131,9 @@ public: // accessors
 template <std::size_t size_, std::size_t alignment_>
 struct is_pod< ::autoboost::detail::aligned_storage::aligned_storage_imp<size_,alignment_> >
    AUTOBOOST_TT_AUX_BOOL_C_BASE(true)
-{ 
+{
     AUTOBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL(true)
-}; 
+};
 
 
 } // namespace autoboost

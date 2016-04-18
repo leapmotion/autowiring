@@ -51,11 +51,11 @@ namespace autoboost {
     namespace detail // lcast_ret_float
     {
 
-// Silence buggy MS warnings like C4244: '+=' : conversion from 'int' to 'unsigned short', possible loss of data 
-#if defined(_MSC_VER) && (_MSC_VER == 1400) 
-#  pragma warning(push) 
-#  pragma warning(disable:4244) 
-#endif 
+// Silence buggy MS warnings like C4244: '+=' : conversion from 'int' to 'unsigned short', possible loss of data
+#if defined(_MSC_VER) && (_MSC_VER == 1400)
+#  pragma warning(push)
+#  pragma warning(disable:4244)
+#endif
         template <class T>
         struct mantissa_holder_type
         {
@@ -94,7 +94,7 @@ namespace autoboost {
             CharT const plus = lcast_char_constants<CharT>::plus;
             CharT const capital_e = lcast_char_constants<CharT>::capital_e;
             CharT const lowercase_e = lcast_char_constants<CharT>::lowercase_e;
-            
+
             /* Getting the plus/minus sign */
             bool const has_minus = Traits::eq(*begin, minus);
             if (has_minus || Traits::eq(*begin, plus)) {
@@ -283,9 +283,9 @@ namespace autoboost {
 
             return !((autoboost::math::isinf)(value) || (autoboost::math::isnan)(value));
         }
-// Unsilence buggy MS warnings like C4244: '+=' : conversion from 'int' to 'unsigned short', possible loss of data 
-#if defined(_MSC_VER) && (_MSC_VER == 1400) 
-#  pragma warning(pop) 
+// Unsilence buggy MS warnings like C4244: '+=' : conversion from 'int' to 'unsigned short', possible loss of data
+#if defined(_MSC_VER) && (_MSC_VER == 1400)
+#  pragma warning(pop)
 #endif
     }
 } // namespace autoboost

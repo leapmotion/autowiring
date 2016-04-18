@@ -1,4 +1,4 @@
-//  boost cast.hpp header file  ----------------------------------------------//
+//  autoboost cast.hpp header file  ----------------------------------------------//
 
 //  (C) Copyright Kevlin Henney and Dave Abrahams 1999.
 //  Distributed under the Boost
@@ -8,9 +8,9 @@
 //  See http://www.boost.org/libs/conversion for Documentation.
 
 //  Revision History
-//  23 JUN 05  Code extracted from /boost/cast.hpp into this new header.
+//  23 JUN 05  Code extracted from /autoboost/cast.hpp into this new header.
 //             Keeps this legacy version of numeric_cast<> for old compilers
-//             wich can't compile the new version in /boost/numeric/conversion/cast.hpp
+//             wich can't compile the new version in /autoboost/numeric/conversion/cast.hpp
 //             (Fernando Cacciola)
 //  02 Apr 01  Removed AUTOBOOST_NO_LIMITS workarounds and included
 //             <autoboost/limits.hpp> instead (the workaround did not
@@ -21,7 +21,7 @@
 //             vc-stlport.
 //  20 Jan 01  Moved AUTOBOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS to config.hpp.
 //             Removed unused AUTOBOOST_EXPLICIT_TARGET macro. Moved
-//             autoboost::detail::type to boost/type.hpp. Made it compile with
+//             autoboost::detail::type to autoboost/type.hpp. Made it compile with
 //             stock gcc again (Dave Abrahams)
 //  29 Nov 00  Remove nested namespace cast, cleanup spacing before Formal
 //             Review (Beman Dawes)
@@ -58,7 +58,7 @@
 //  appear in the function's argument list.
 //
 //  TODO: Add this to config.hpp?
-//  FLC: This macro is repeated in boost/cast.hpp but only locally (is undefined at the bottom)
+//  FLC: This macro is repeated in autoboost/cast.hpp but only locally (is undefined at the bottom)
 //       so is OK to reproduce it here.
 # if defined(AUTOBOOST_MSVC) && AUTOBOOST_MSVC < 1300
 #  define AUTOBOOST_EXPLICIT_DEFAULT_TARGET , ::autoboost::type<Target>* = 0
@@ -296,7 +296,7 @@ namespace autoboost
          && (!defined(AUTOBOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS) \
              || defined(AUTOBOOST_SGI_CPP_LIMITS))
         // typedefs that act as compile time assertions
-        // (to be replaced by boost compile time assertions
+        // (to be replaced by autoboost compile time assertions
         // as and when they become available and are stable)
         typedef bool argument_must_be_numeric[arg_traits::is_specialized];
         typedef bool result_must_be_numeric[result_traits::is_specialized];

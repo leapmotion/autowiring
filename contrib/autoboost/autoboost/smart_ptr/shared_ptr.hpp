@@ -18,7 +18,7 @@
 
 // In order to avoid circular dependencies with Boost.TR1
 // we make sure that our include of <memory> doesn't try to
-// pull in the TR1 headers: that's why we use this header 
+// pull in the TR1 headers: that's why we use this header
 // rather than including <memory> directly:
 #include <autoboost/config/no_tr1/memory.hpp>  // std::auto_ptr
 
@@ -242,7 +242,7 @@ template< class T, class R > struct sp_enable_if_auto_ptr
 template< class T, class R > struct sp_enable_if_auto_ptr< std::auto_ptr< T >, R >
 {
     typedef R type;
-}; 
+};
 
 #endif
 
@@ -634,21 +634,21 @@ public:
     {
         this_type( r, p ).swap( *this );
     }
-    
+
     // never throws (but has a AUTOBOOST_ASSERT in it, so not marked with AUTOBOOST_NOEXCEPT)
     typename autoboost::detail::sp_dereference< T >::type operator* () const
     {
         AUTOBOOST_ASSERT( px != 0 );
         return *px;
     }
-    
+
     // never throws (but has a AUTOBOOST_ASSERT in it, so not marked with AUTOBOOST_NOEXCEPT)
-    typename autoboost::detail::sp_member_access< T >::type operator-> () const 
+    typename autoboost::detail::sp_member_access< T >::type operator-> () const
     {
         AUTOBOOST_ASSERT( px != 0 );
         return px;
     }
-    
+
     // never throws (but has a AUTOBOOST_ASSERT in it, so not marked with AUTOBOOST_NOEXCEPT)
     typename autoboost::detail::sp_array_access< T >::type operator[] ( std::ptrdiff_t i ) const
     {

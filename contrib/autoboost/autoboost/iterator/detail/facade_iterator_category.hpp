@@ -79,7 +79,7 @@ struct iterator_writability_disabled
 // Due to changeset 21683, this now never results in a category convertible
 // to output_iterator_tag.
 //
-// Change at: https://svn.boost.org/trac/boost/changeset/21683
+// Change at: https://svn.boost.org/trac/autoboost/changeset/21683
 template <class Traversal, class ValueParam, class Reference>
 struct iterator_facade_default_category
   : mpl::eval_if<

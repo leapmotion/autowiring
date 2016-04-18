@@ -21,7 +21,7 @@
 #include "autoboost/lambda/detail/operator_actions.hpp"
 #include "autoboost/lambda/detail/operator_return_type_traits.hpp"
 
-namespace autoboost { 
+namespace autoboost {
 namespace lambda {
 
 // -- if control construct actions ----------------------
@@ -32,7 +32,7 @@ class ifthenelsereturn_action {};
 
 // Specialization for if_then.
 template<class Args>
-class 
+class
 lambda_functor_base<ifthen_action, Args> {
 public:
   Args args;
@@ -42,33 +42,33 @@ public:
 
   template<class RET, CALL_TEMPLATE_ARGS>
   RET call(CALL_FORMAL_ARGS) const {
-    if (detail::select(autoboost::tuples::get<0>(args), CALL_ACTUAL_ARGS)) 
-      detail::select(autoboost::tuples::get<1>(args), CALL_ACTUAL_ARGS); 
+    if (detail::select(autoboost::tuples::get<0>(args), CALL_ACTUAL_ARGS))
+      detail::select(autoboost::tuples::get<1>(args), CALL_ACTUAL_ARGS);
   }
 };
 
 // If Then
 template <class Arg1, class Arg2>
-inline const 
+inline const
 lambda_functor<
   lambda_functor_base<
-    ifthen_action, 
+    ifthen_action,
     tuple<lambda_functor<Arg1>, lambda_functor<Arg2> >
-  > 
+  >
 >
 if_then(const lambda_functor<Arg1>& a1, const lambda_functor<Arg2>& a2) {
-  return 
+  return
     lambda_functor_base<
-      ifthen_action, 
-      tuple<lambda_functor<Arg1>, lambda_functor<Arg2> > 
-    > 
+      ifthen_action,
+      tuple<lambda_functor<Arg1>, lambda_functor<Arg2> >
+    >
     ( tuple<lambda_functor<Arg1>, lambda_functor<Arg2> >(a1, a2) );
 }
 
 
 // Specialization for if_then_else.
 template<class Args>
-class 
+class
 lambda_functor_base<ifthenelse_action, Args> {
 public:
   Args args;
@@ -78,9 +78,9 @@ public:
 
   template<class RET, CALL_TEMPLATE_ARGS>
   RET call(CALL_FORMAL_ARGS) const {
-    if (detail::select(autoboost::tuples::get<0>(args), CALL_ACTUAL_ARGS)) 
-      detail::select(autoboost::tuples::get<1>(args), CALL_ACTUAL_ARGS); 
-    else 
+    if (detail::select(autoboost::tuples::get<0>(args), CALL_ACTUAL_ARGS))
+      detail::select(autoboost::tuples::get<1>(args), CALL_ACTUAL_ARGS);
+    else
       detail::select(autoboost::tuples::get<2>(args), CALL_ACTUAL_ARGS);
   }
 };
@@ -90,20 +90,20 @@ public:
 // If then else
 
 template <class Arg1, class Arg2, class Arg3>
-inline const 
+inline const
 lambda_functor<
   lambda_functor_base<
-    ifthenelse_action, 
+    ifthenelse_action,
     tuple<lambda_functor<Arg1>, lambda_functor<Arg2>, lambda_functor<Arg3> >
-  > 
+  >
 >
-if_then_else(const lambda_functor<Arg1>& a1, const lambda_functor<Arg2>& a2, 
+if_then_else(const lambda_functor<Arg1>& a1, const lambda_functor<Arg2>& a2,
              const lambda_functor<Arg3>& a3) {
-  return 
+  return
     lambda_functor_base<
-      ifthenelse_action, 
+      ifthenelse_action,
       tuple<lambda_functor<Arg1>, lambda_functor<Arg2>, lambda_functor<Arg3> >
-    > 
+    >
     (tuple<lambda_functor<Arg1>, lambda_functor<Arg2>, lambda_functor<Arg3> >
        (a1, a2, a3) );
 }
@@ -111,21 +111,21 @@ if_then_else(const lambda_functor<Arg1>& a1, const lambda_functor<Arg2>& a2,
 // Our version of operator?:()
 
 template <class Arg1, class Arg2, class Arg3>
-inline const 
+inline const
   lambda_functor<
     lambda_functor_base<
-      other_action<ifthenelsereturn_action>, 
+      other_action<ifthenelsereturn_action>,
       tuple<lambda_functor<Arg1>,
           typename const_copy_argument<Arg2>::type,
           typename const_copy_argument<Arg3>::type>
-  > 
+  >
 >
-if_then_else_return(const lambda_functor<Arg1>& a1, 
-                    const Arg2 & a2, 
+if_then_else_return(const lambda_functor<Arg1>& a1,
+                    const Arg2 & a2,
                     const Arg3 & a3) {
-  return 
+  return
       lambda_functor_base<
-        other_action<ifthenelsereturn_action>, 
+        other_action<ifthenelsereturn_action>,
         tuple<lambda_functor<Arg1>,
               typename const_copy_argument<Arg2>::type,
               typename const_copy_argument<Arg3>::type>
@@ -139,7 +139,7 @@ namespace detail {
 // return type specialization for conditional expression begins -----------
 // start reading below and move upwards
 
-// PHASE 6:1 
+// PHASE 6:1
 // check if A is conbertible to B and B to A
 template<int Phase, bool AtoB, bool BtoA, bool SameType, class A, class B>
 struct return_type_2_ifthenelsereturn;
@@ -147,7 +147,7 @@ struct return_type_2_ifthenelsereturn;
 // if A can be converted to B and vice versa -> ambiguous
 template<int Phase, class A, class B>
 struct return_type_2_ifthenelsereturn<Phase, true, true, false, A, B> {
-  typedef 
+  typedef
     detail::return_type_deduction_failure<return_type_2_ifthenelsereturn> type;
   // ambiguous type in conditional expression
 };
@@ -175,28 +175,28 @@ struct return_type_2_ifthenelsereturn<Phase, false, true, false, A, B> {
 template<class A, class B>
 struct return_type_2_ifthenelsereturn<1, false, false, false, A, B> {
   // it is safe to add const, since the result will be an rvalue and thus
-  // const anyway. The const are needed eg. if the types 
+  // const anyway. The const are needed eg. if the types
   // are 'const int*' and 'void *'. The remaining type should be 'const void*'
-  typedef const typename autoboost::remove_reference<A>::type plainA; 
-  typedef const typename autoboost::remove_reference<B>::type plainB; 
+  typedef const typename autoboost::remove_reference<A>::type plainA;
+  typedef const typename autoboost::remove_reference<B>::type plainB;
   // TODO: Add support for volatile ?
 
   typedef typename
        return_type_2_ifthenelsereturn<
          2,
-         autoboost::is_convertible<plainA,plainB>::value, 
+         autoboost::is_convertible<plainA,plainB>::value,
          autoboost::is_convertible<plainB,plainA>::value,
          autoboost::is_same<plainA,plainB>::value,
-         plainA, 
+         plainA,
          plainB>::type type;
 };
 
 // PHASE 6:2
 template<class A, class B>
 struct return_type_2_ifthenelsereturn<2, false, false, false, A, B> {
-  typedef 
+  typedef
     detail::return_type_deduction_failure<return_type_2_ifthenelsereturn> type;
-  // types_do_not_match_in_conditional_expression 
+  // types_do_not_match_in_conditional_expression
 };
 
 
@@ -204,32 +204,32 @@ struct return_type_2_ifthenelsereturn<2, false, false, false, A, B> {
 // PHASE 5: now we know that types are not arithmetic.
 template<class A, class B>
 struct non_numeric_types {
-  typedef typename 
+  typedef typename
     return_type_2_ifthenelsereturn<
-      1, // phase 1 
-      is_convertible<A,B>::value, 
-      is_convertible<B,A>::value, 
+      1, // phase 1
+      is_convertible<A,B>::value,
+      is_convertible<B,A>::value,
       is_same<A,B>::value,
-      A, 
+      A,
       B>::type type;
 };
 
-// PHASE 4 : 
+// PHASE 4 :
 // the base case covers arithmetic types with differing promote codes
 // use the type deduction of arithmetic_actions
 template<int CodeA, int CodeB, class A, class B>
 struct arithmetic_or_not {
   typedef typename
-    return_type_2<arithmetic_action<plus_action>, A, B>::type type; 
+    return_type_2<arithmetic_action<plus_action>, A, B>::type type;
   // plus_action is just a random pick, has to be a concrete instance
 };
 
-// this case covers the case of artihmetic types with the same promote codes. 
-// non numeric deduction is used since e.g. integral promotion is not 
-// performed with operator ?: 
+// this case covers the case of artihmetic types with the same promote codes.
+// non numeric deduction is used since e.g. integral promotion is not
+// performed with operator ?:
 template<int CodeA, class A, class B>
 struct arithmetic_or_not<CodeA, CodeA, A, B> {
-  typedef typename non_numeric_types<A, B>::type type; 
+  typedef typename non_numeric_types<A, B>::type type;
 };
 
 // if either A or B has promote code -1 it is not an arithmetic type
@@ -256,11 +256,11 @@ struct same_or_not {
   typedef typename detail::remove_reference_and_cv<A>::type plainA;
   typedef typename detail::remove_reference_and_cv<B>::type plainB;
 
-  typedef typename 
+  typedef typename
     arithmetic_or_not<
-      detail::promote_code<plainA>::value, 
-      detail::promote_code<plainB>::value, 
-      A, 
+      detail::promote_code<plainA>::value,
+      detail::promote_code<plainB>::value,
+      A,
       B>::type type;
 };
 // Yes, clear.
@@ -270,14 +270,14 @@ template <class A> struct same_or_not<A, A> {
 
 } // detail
 
-// PHASE 2 : Perform first the potential array_to_pointer conversion 
+// PHASE 2 : Perform first the potential array_to_pointer conversion
 template<class A, class B>
-struct return_type_2<other_action<ifthenelsereturn_action>, A, B> { 
+struct return_type_2<other_action<ifthenelsereturn_action>, A, B> {
 
   typedef typename detail::array_to_pointer<A>::type A1;
   typedef typename detail::array_to_pointer<B>::type B1;
 
-  typedef typename 
+  typedef typename
     autoboost::add_const<typename detail::same_or_not<A1, B1>::type>::type type;
 };
 
@@ -289,7 +289,7 @@ struct return_type_2<other_action<ifthenelsereturn_action>, A, B> {
 
 // Specialization of lambda_functor_base for if_then_else_return.
 template<class Args>
-class 
+class
 lambda_functor_base<other_action<ifthenelsereturn_action>, Args> {
 public:
   Args args;
@@ -310,13 +310,13 @@ public:
   template<class RET, CALL_TEMPLATE_ARGS>
   RET call(CALL_FORMAL_ARGS) const {
     return (detail::select(autoboost::tuples::get<0>(args), CALL_ACTUAL_ARGS)) ?
-       detail::select(autoboost::tuples::get<1>(args), CALL_ACTUAL_ARGS) 
-    : 
+       detail::select(autoboost::tuples::get<1>(args), CALL_ACTUAL_ARGS)
+    :
        detail::select(autoboost::tuples::get<2>(args), CALL_ACTUAL_ARGS);
   }
 };
 
-  // The code below is from Joel de Guzman, some name changes etc. 
+  // The code below is from Joel de Guzman, some name changes etc.
   // has been made.
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -455,7 +455,7 @@ if_(CondT const& cond)
 
 
 } // lambda
-} // boost
+} // autoboost
 
 #endif // AUTOBOOST_LAMBDA_IF_HPP
 

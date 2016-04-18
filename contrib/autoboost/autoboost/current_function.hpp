@@ -8,7 +8,7 @@
 #endif
 
 //
-//  boost/current_function.hpp - AUTOBOOST_CURRENT_FUNCTION
+//  autoboost/current_function.hpp - AUTOBOOST_CURRENT_FUNCTION
 //
 //  Copyright (c) 2002 Peter Dimov and Multi Media Ltd.
 //

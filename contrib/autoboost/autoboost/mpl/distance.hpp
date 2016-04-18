@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -48,7 +48,7 @@ template< typename Tag > struct distance_impl
             , mpl::long_<0>
             , next<>
             >::type type;
-        
+
         AUTOBOOST_STATIC_CONSTANT(long, value =
               (iter_fold<
                   iterator_range<First,Last>

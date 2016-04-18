@@ -11,20 +11,20 @@
 // ----------------------------------------------------------------------------
 
 
-//  this file defines  wrapper classes to hide non-conforming 
+//  this file defines  wrapper classes to hide non-conforming
 // std::char_traits<>  and std::allocator<> traits
 //  and Includes : config_macros.hpp (defines config macros
 //  and compiler-specific switches)
 
 // Non-conformant Std-libs fail to supply conformant traits (std::char_traits,
 //  std::allocator) and/or  the std::string doesnt support them.
-// We don't want to have hundreds of #ifdef workarounds, so we define 
+// We don't want to have hundreds of #ifdef workarounds, so we define
 // replacement traits.
-// But both char_traits and allocator traits are visible in the interface, 
-// (inside the final string type),  thus we need to keep both 
+// But both char_traits and allocator traits are visible in the interface,
+// (inside the final string type),  thus we need to keep both
 // the replacement type (typedefed to 'compatible_type') for real use,
 // and the original stdlib type (typedef to 'type_for_string') for interface
-//  visibility. This is what Compat* classes do (as well as be transparent 
+//  visibility. This is what Compat* classes do (as well as be transparent
 // when good allocator and char traits are present)
 
 #ifndef AUTOBOOST_FORMAT_COMPAT_WORKAROUNDS_HPP
@@ -33,18 +33,18 @@
 namespace autoboost {
     namespace io {
 
-        // gcc-2.95 char traits (non-conformantly named string_char_traits) 
+        // gcc-2.95 char traits (non-conformantly named string_char_traits)
         // lack several functions so we extend them in a replacement class.
         template<class Tr>
-        class CompatTraits; 
+        class CompatTraits;
 
-        // std::allocator<Ch> in gcc-2.95 is ok, but basic_string only works 
+        // std::allocator<Ch> in gcc-2.95 is ok, but basic_string only works
         // with plain 'std::alloc' still, alt_stringbuf requires a functionnal
         // alloc template argument, so we need a replacement allocator
         template<class Alloc>
-        class CompatAlloc; 
+        class CompatAlloc;
     } // N.S. io
-}// N.S. boost
+}// N.S. autoboost
 
 
 #include <autoboost/format/detail/config_macros.hpp>
@@ -82,5 +82,5 @@ namespace autoboost {
         };
 
     } //N.S. io
-} // N.S. boost
+} // N.S. autoboost
 #endif // include guard

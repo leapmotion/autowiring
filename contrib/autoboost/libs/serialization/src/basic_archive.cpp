@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // basic_archive.cpp:
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -24,7 +24,7 @@
 //      [
 //          object_id
 //      ]
-//          
+//
 //      [   // if a new object id
 //          data...
 //      ]
@@ -41,7 +41,7 @@ namespace archive {
 // constants used in archive signature
 //This should never ever change. note that is not an std::string
 // string.
-AUTOBOOST_ARCHIVE_DECL(const char *) 
+AUTOBOOST_ARCHIVE_DECL(const char *)
 AUTOBOOST_ARCHIVE_SIGNATURE(){
     return "serialization::archive";
 }
@@ -53,7 +53,7 @@ AUTOBOOST_ARCHIVE_SIGNATURE(){
 // 2 - made address tracking optional
 // 3 - numerous changes - can't guarentee compatibility with previous versions
 // 4 - Boost 1.34
-//     added item_version to properly support versioning for collections 
+//     added item_version to properly support versioning for collections
 // 5 - Boost 1.36
 //     changed serialization of collections: adding version even for primitive
 //     types caused backwards compatibility breaking change in 1.35
@@ -70,7 +70,7 @@ AUTOBOOST_ARCHIVE_SIGNATURE(){
 // 8 - Boost 1.44
 //     separated version_type into library_version_type and class_version_type
 //     changed version_type to be stored as 8 bits.
-// 10- fixed base64 output/input. 
+// 10- fixed base64 output/input.
 
 AUTOBOOST_ARCHIVE_DECL(library_version_type)
 AUTOBOOST_ARCHIVE_VERSION(){

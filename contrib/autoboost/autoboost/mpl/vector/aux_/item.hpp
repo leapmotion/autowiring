@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -25,7 +25,7 @@ namespace autoboost { namespace mpl {
 
 #if defined(AUTOBOOST_MPL_CFG_TYPEOF_BASED_SEQUENCES)
 
-template< 
+template<
       typename T
     , typename Base
     , int at_front = 0
@@ -63,7 +63,7 @@ struct v_item<T,Base,1>
 };
 
 // "erasure" item
-template< 
+template<
       typename Base
     , int at_front
     >
@@ -80,7 +80,7 @@ struct v_mask
     using Base::item_;
 };
 
-template< 
+template<
       typename Base
     >
 struct v_mask<Base,1>

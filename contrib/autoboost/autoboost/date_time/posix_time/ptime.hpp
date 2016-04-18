@@ -2,10 +2,10 @@
 #define AB_POSIX_PTIME_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
- * Author: Jeff Garland 
+ * Author: Jeff Garland
  * $Date$
  */
 
@@ -15,7 +15,7 @@
 namespace autoboost {
 
 namespace posix_time {
- 
+
   //bring special enum values into the namespace
   using date_time::special_values;
   using date_time::not_special;
@@ -23,8 +23,8 @@ namespace posix_time {
   using date_time::pos_infin;
   using date_time::not_a_date_time;
   using date_time::max_date_time;
-  using date_time::min_date_time; 
-  
+  using date_time::min_date_time;
+
   //! Time type with no timezone or other adjustments
   /*! \ingroup time_basics
    */
@@ -53,7 +53,7 @@ namespace posix_time {
     ptime() : date_time::base_time<time_type,time_system_type>(gregorian::date(not_a_date_time), time_duration_type(not_a_date_time))
     {}
 #endif // DATE_TIME_NO_DEFAULT_CONSTRUCTOR
-      
+
   };
 
 

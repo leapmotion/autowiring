@@ -16,7 +16,7 @@
 // disabled (as indicated by macro AUTOBOOST_NO_EXCEPTIONS).
 //
 // Before picking up these macros you may consider using RAII techniques
-// to deal with exceptions - their syntax can be always the same with 
+// to deal with exceptions - their syntax can be always the same with
 // or without exception support enabled.
 //----------------------------------------------------------------------
 
@@ -41,4 +41,4 @@
 #endif
 
 
-#endif 
+#endif

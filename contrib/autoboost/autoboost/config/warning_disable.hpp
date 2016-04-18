@@ -9,7 +9,7 @@
 //  * A test case, before any other headers, or,
 //  * A library source file before any other headers.
 //
-//  IT SHOULD NOT BE INCLUDED BY ANY BOOST HEADER.
+//  IT SHOULD NOT BE INCLUDED BY ANY AUTOBOOST HEADER.
 //
 //  YOU SHOULD NOT INCLUDE IT IF YOU CAN REASONABLY FIX THE WARNING.
 //

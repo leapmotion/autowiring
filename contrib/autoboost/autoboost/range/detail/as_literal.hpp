@@ -21,7 +21,7 @@
 namespace autoboost
 {
     template< class Range >
-    inline iterator_range<AUTOBOOST_DEDUCED_TYPENAME range_iterator<Range>::type> 
+    inline iterator_range<AUTOBOOST_DEDUCED_TYPENAME range_iterator<Range>::type>
     as_literal( Range& r )
     {
         return ::autoboost::make_iterator_range( ::autoboost::range_detail::str_begin(r),

@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// boost detail/reference_content.hpp header file
+// autoboost detail/reference_content.hpp header file
 // See http://www.boost.org for updates, documentation, and revision history.
 //-----------------------------------------------------------------------------
 //

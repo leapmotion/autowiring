@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -44,7 +44,7 @@ template<> struct integral_rank<ulong_long_type>: int_<13> {};
 
 template< typename T1, typename T2 > struct largest_int
 #if !defined(AUTOBOOST_MPL_CFG_NO_NESTED_VALUE_ARITHMETIC)
-    : if_c< 
+    : if_c<
           ( integral_rank<T1>::value >= integral_rank<T2>::value )
         , T1
         , T2

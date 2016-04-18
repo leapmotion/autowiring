@@ -53,7 +53,7 @@
 // AUTOBOOST_THREAD_POSIX is tested first, so on platforms where posix and native
 // threading is available, the user may choose, by defining AUTOBOOST_THREAD_POSIX
 // in her source. If a platform is known to support pthreads and no native
-// port of boost_thread is available just specify "pthread" in the
+// port of autoboost_thread is available just specify "pthread" in the
 // dispatcher table. If there is no entry for a platform but pthreads is
 // available on the platform, pthread is choosen as default. If nothing is
 // available the preprocessor will fail with a diagnostic message.
@@ -66,7 +66,7 @@
 #  elif defined(AUTOBOOST_HAS_PTHREADS)
 #       define AUTOBOOST_THREAD_PLATFORM_PTHREAD
 #  else
-#       error "Sorry, no boost threads are available for this platform."
+#       error "Sorry, no autoboost threads are available for this platform."
 #  endif
 #endif
 

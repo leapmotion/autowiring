@@ -14,22 +14,22 @@
 #include <autoboost/config.hpp> // AUTOBOOST_MSVC
 #include <autoboost/range/iterator.hpp>
 
-namespace autoboost 
+namespace autoboost
 {
-    
+
     namespace range_detail
     {
         //
         // iterator
         //
-        
+
         template<>
         struct range_iterator_<char_array_>
-        { 
+        {
             template< typename T >
             struct pts
             {
-                 typedef AUTOBOOST_RANGE_DEDUCED_TYPENAME 
+                 typedef AUTOBOOST_RANGE_DEDUCED_TYPENAME
                     remove_extent<T>::type* type;
             };
         };
@@ -40,8 +40,8 @@ namespace autoboost
             template< typename S >
             struct pts
             {
-                typedef char* type; 
-            };         
+                typedef char* type;
+            };
         };
 
         template<>
@@ -51,7 +51,7 @@ namespace autoboost
             struct pts
             {
                 typedef const char* type;
-            };         
+            };
         };
 
         template<>
@@ -60,8 +60,8 @@ namespace autoboost
             template< typename S >
             struct pts
             {
-                typedef wchar_t* type; 
-            };         
+                typedef wchar_t* type;
+            };
         };
 
         template<>
@@ -70,8 +70,8 @@ namespace autoboost
              template< typename S >
              struct pts
              {
-                 typedef const wchar_t* type; 
-             };         
+                 typedef const wchar_t* type;
+             };
         };
 
 
@@ -81,11 +81,11 @@ namespace autoboost
 
         template<>
         struct range_const_iterator_<char_array_>
-        { 
+        {
             template< typename T >
             struct pts
             {
-                typedef const AUTOBOOST_RANGE_DEDUCED_TYPENAME 
+                typedef const AUTOBOOST_RANGE_DEDUCED_TYPENAME
                     remove_extent<T>::type* type;
             };
         };
@@ -96,8 +96,8 @@ namespace autoboost
             template< typename S >
             struct pts
             {
-                typedef const char* type; 
-            };         
+                typedef const char* type;
+            };
         };
 
         template<>
@@ -106,8 +106,8 @@ namespace autoboost
             template< typename S >
             struct pts
             {
-                typedef const char* type; 
-            };         
+                typedef const char* type;
+            };
         };
 
         template<>
@@ -116,8 +116,8 @@ namespace autoboost
             template< typename S >
             struct pts
             {
-                typedef const wchar_t* type; 
-            };         
+                typedef const wchar_t* type;
+            };
         };
 
         template<>
@@ -126,8 +126,8 @@ namespace autoboost
              template< typename S >
              struct pts
              {
-                 typedef const wchar_t* type; 
-             };         
+                 typedef const wchar_t* type;
+             };
         };
     }
 }
@@ -138,9 +138,9 @@ namespace autoboost
 #include <autoboost/range/detail/value_type.hpp>
 #include <autoboost/range/detail/common.hpp>
 
-namespace autoboost 
+namespace autoboost
 {
-    
+
     namespace range_detail
     {
         //
@@ -163,11 +163,11 @@ namespace autoboost
                 return s;
             }
         };
-        
+
         template<>
         struct range_begin<wchar_t_ptr_>
         {
-            
+
             static wchar_t* fun( wchar_t* s )
             {
                 return s;
@@ -182,12 +182,12 @@ namespace autoboost
                 return s;
             }
         };
-        
+
         template< typename C >
-        inline AUTOBOOST_RANGE_DEDUCED_TYPENAME range_iterator<C>::type 
+        inline AUTOBOOST_RANGE_DEDUCED_TYPENAME range_iterator<C>::type
         str_begin( C& c )
         {
-            return range_detail::range_begin< AUTOBOOST_RANGE_DEDUCED_TYPENAME 
+            return range_detail::range_begin< AUTOBOOST_RANGE_DEDUCED_TYPENAME
                 range_detail::range<C>::type >::fun( c );
         }
 
@@ -201,20 +201,20 @@ namespace autoboost
             template< typename T, std::size_t sz >
             static T* fun( T AUTOBOOST_RANGE_ARRAY_REF()[sz] )
             {
-                return autoboost::range_detail::array_end( boost_range_array );
+                return autoboost::range_detail::array_end( autoboost_range_array );
             }
         };
-        
+
         template<>
         struct range_end<wchar_t_array_>
         {
             template< typename T, std::size_t sz >
             static T* fun( T AUTOBOOST_RANGE_ARRAY_REF()[sz] )
             {
-                return autoboost::range_detail::array_end( boost_range_array );
+                return autoboost::range_detail::array_end( autoboost_range_array );
             }
         };
-        
+
         template<>
         struct range_end<char_ptr_>
         {
@@ -253,10 +253,10 @@ namespace autoboost
         };
 
         template< typename C >
-        inline AUTOBOOST_RANGE_DEDUCED_TYPENAME range_iterator<C>::type 
+        inline AUTOBOOST_RANGE_DEDUCED_TYPENAME range_iterator<C>::type
         str_end( C& c )
         {
-            return range_detail::range_end< AUTOBOOST_RANGE_DEDUCED_TYPENAME 
+            return range_detail::range_end< AUTOBOOST_RANGE_DEDUCED_TYPENAME
                 range_detail::range<C>::type >::fun( c );
         }
 
@@ -266,7 +266,7 @@ namespace autoboost
 
         template<>
         struct range_size_type_<char_array_>
-        { 
+        {
             template< typename A >
             struct pts
             {
@@ -281,9 +281,9 @@ namespace autoboost
             struct pts
             {
                 typedef std::size_t type;
-            };         
+            };
         };
-        
+
         template<>
         struct range_size_type_<const_char_ptr_>
         {
@@ -291,9 +291,9 @@ namespace autoboost
             struct pts
             {
                 typedef std::size_t type;
-            };         
+            };
         };
-        
+
         template<>
         struct range_size_type_<wchar_t_ptr_>
         {
@@ -301,9 +301,9 @@ namespace autoboost
             struct pts
             {
                 typedef std::size_t type;
-            };         
+            };
         };
-        
+
         template<>
         struct range_size_type_<const_wchar_t_ptr_>
         {
@@ -311,16 +311,16 @@ namespace autoboost
             struct pts
             {
                 typedef std::size_t type;
-            };         
-        };  
+            };
+        };
 
         //
         // value_type
         //
-        
+
         template<>
         struct range_value_type_<char_array_>
-        { 
+        {
             template< typename T >
             struct pts
             {
@@ -334,10 +334,10 @@ namespace autoboost
              template< typename S >
              struct pts
              {
-                 typedef char type; 
-             };         
+                 typedef char type;
+             };
         };
-        
+
         template<>
         struct range_value_type_<const_char_ptr_>
         {
@@ -345,9 +345,9 @@ namespace autoboost
              struct pts
              {
                  typedef const char type;
-             };         
+             };
         };
-        
+
         template<>
         struct range_value_type_<wchar_t_ptr_>
         {
@@ -355,9 +355,9 @@ namespace autoboost
              struct pts
              {
                  typedef wchar_t type;
-             };         
+             };
         };
-        
+
         template<>
         struct range_value_type_<const_wchar_t_ptr_>
         {
@@ -365,12 +365,12 @@ namespace autoboost
             struct pts
             {
                 typedef const wchar_t type;
-            };         
+            };
         };
 
     } // namespace 'range_detail'
 
-} // namespace 'boost'
+} // namespace 'autoboost'
 
 
 #endif

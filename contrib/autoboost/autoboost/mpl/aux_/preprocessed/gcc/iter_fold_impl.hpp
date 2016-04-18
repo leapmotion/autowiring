@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -48,7 +48,7 @@ struct iter_fold_impl< 1,First,Last,State,ForwardOp >
     typedef State state0;
     typedef typename apply2< ForwardOp,state0,iter0 >::type state1;
     typedef typename mpl::next<iter0>::type iter1;
-    
+
 
     typedef state1 state;
     typedef iter1 iterator;
@@ -68,7 +68,7 @@ struct iter_fold_impl< 2,First,Last,State,ForwardOp >
     typedef typename mpl::next<iter0>::type iter1;
     typedef typename apply2< ForwardOp,state1,iter1 >::type state2;
     typedef typename mpl::next<iter1>::type iter2;
-    
+
 
     typedef state2 state;
     typedef iter2 iterator;
@@ -90,7 +90,7 @@ struct iter_fold_impl< 3,First,Last,State,ForwardOp >
     typedef typename mpl::next<iter1>::type iter2;
     typedef typename apply2< ForwardOp,state2,iter2 >::type state3;
     typedef typename mpl::next<iter2>::type iter3;
-    
+
 
     typedef state3 state;
     typedef iter3 iterator;
@@ -114,7 +114,7 @@ struct iter_fold_impl< 4,First,Last,State,ForwardOp >
     typedef typename mpl::next<iter2>::type iter3;
     typedef typename apply2< ForwardOp,state3,iter3 >::type state4;
     typedef typename mpl::next<iter3>::type iter4;
-    
+
 
     typedef state4 state;
     typedef iter4 iterator;

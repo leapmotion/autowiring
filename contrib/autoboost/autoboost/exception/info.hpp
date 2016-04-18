@@ -177,15 +177,15 @@ autoboost
 
         template <class T>
         struct
-        derives_boost_exception
+        derives_autoboost_exception
             {
-            enum e { value = (sizeof(dispatch_boost_exception((T*)0))==sizeof(large_size)) };
+            enum e { value = (sizeof(dispatch_autoboost_exception((T*)0))==sizeof(large_size)) };
             };
         }
 
     template <class E,class Tag,class T>
     inline
-    typename enable_if<exception_detail::derives_boost_exception<E>,E const &>::type
+    typename enable_if<exception_detail::derives_autoboost_exception<E>,E const &>::type
     operator<<( E const & x, error_info<Tag,T> const & v )
         {
         return exception_detail::set_info(x,v);

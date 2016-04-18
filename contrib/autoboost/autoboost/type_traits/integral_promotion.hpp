@@ -3,8 +3,8 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef FILE_boost_type_traits_integral_promotion_hpp_INCLUDED
-#define FILE_boost_type_traits_integral_promotion_hpp_INCLUDED
+#ifndef FILE_autoboost_type_traits_integral_promotion_hpp_INCLUDED
+#define FILE_autoboost_type_traits_integral_promotion_hpp_INCLUDED
 
 #include <autoboost/config.hpp>
 
@@ -41,7 +41,7 @@ template<> struct need_promotion<unsigned short int> : public true_type {};
     template<> struct need_promotion<T>          \
         : public integral_constant<bool, (sizeof(T) < sizeof(int))> {};
 
-// Same set of integral types as in boost/type_traits/is_integral.hpp.
+// Same set of integral types as in autoboost/type_traits/is_integral.hpp.
 // Please, keep in sync.
 #if (defined(AUTOBOOST_INTEL_CXX_VERSION) && defined(_MSC_VER) && (AUTOBOOST_INTEL_CXX_VERSION <= 600)) \
     || (defined(__BORLANDC__) && (__BORLANDC__ == 0x600) && (_MSC_VER < 1300))
@@ -190,5 +190,5 @@ AUTOBOOST_TT_AUX_TYPE_TRAIT_DEF1(
 
 #include <autoboost/type_traits/detail/type_trait_undef.hpp>
 
-#endif // #ifndef FILE_boost_type_traits_integral_promotion_hpp_INCLUDED
+#endif // #ifndef FILE_autoboost_type_traits_integral_promotion_hpp_INCLUDED
 

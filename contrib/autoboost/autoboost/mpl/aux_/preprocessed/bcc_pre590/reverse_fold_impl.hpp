@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -60,7 +60,7 @@ template<> struct reverse_fold_chunk<1>
         typedef State fwd_state0;
         typedef typename apply2< ForwardOp, fwd_state0, typename deref<iter0>::type >::type fwd_state1;
         typedef typename mpl::next<iter0>::type iter1;
-        
+
 
         typedef fwd_state1 bkwd_state1;
         typedef typename apply2< BackwardOp, bkwd_state1, typename deref<iter0>::type >::type bkwd_state0;
@@ -86,12 +86,12 @@ template<> struct reverse_fold_chunk<2>
         typedef typename mpl::next<iter0>::type iter1;
         typedef typename apply2< ForwardOp, fwd_state1, typename deref<iter1>::type >::type fwd_state2;
         typedef typename mpl::next<iter1>::type iter2;
-        
+
 
         typedef fwd_state2 bkwd_state2;
         typedef typename apply2< BackwardOp, bkwd_state2, typename deref<iter1>::type >::type bkwd_state1;
         typedef typename apply2< BackwardOp, bkwd_state1, typename deref<iter0>::type >::type bkwd_state0;
-        
+
 
         typedef bkwd_state0 state;
         typedef iter2 iterator;
@@ -117,13 +117,13 @@ template<> struct reverse_fold_chunk<3>
         typedef typename mpl::next<iter1>::type iter2;
         typedef typename apply2< ForwardOp, fwd_state2, typename deref<iter2>::type >::type fwd_state3;
         typedef typename mpl::next<iter2>::type iter3;
-        
+
 
         typedef fwd_state3 bkwd_state3;
         typedef typename apply2< BackwardOp, bkwd_state3, typename deref<iter2>::type >::type bkwd_state2;
         typedef typename apply2< BackwardOp, bkwd_state2, typename deref<iter1>::type >::type bkwd_state1;
         typedef typename apply2< BackwardOp, bkwd_state1, typename deref<iter0>::type >::type bkwd_state0;
-        
+
 
         typedef bkwd_state0 state;
         typedef iter3 iterator;
@@ -151,14 +151,14 @@ template<> struct reverse_fold_chunk<4>
         typedef typename mpl::next<iter2>::type iter3;
         typedef typename apply2< ForwardOp, fwd_state3, typename deref<iter3>::type >::type fwd_state4;
         typedef typename mpl::next<iter3>::type iter4;
-        
+
 
         typedef fwd_state4 bkwd_state4;
         typedef typename apply2< BackwardOp, bkwd_state4, typename deref<iter3>::type >::type bkwd_state3;
         typedef typename apply2< BackwardOp, bkwd_state3, typename deref<iter2>::type >::type bkwd_state2;
         typedef typename apply2< BackwardOp, bkwd_state2, typename deref<iter1>::type >::type bkwd_state1;
         typedef typename apply2< BackwardOp, bkwd_state1, typename deref<iter0>::type >::type bkwd_state0;
-        
+
 
         typedef bkwd_state0 state;
         typedef iter4 iterator;
@@ -187,7 +187,7 @@ struct reverse_fold_chunk
         typedef typename mpl::next<iter2>::type iter3;
         typedef typename apply2< ForwardOp, fwd_state3, typename deref<iter3>::type >::type fwd_state4;
         typedef typename mpl::next<iter3>::type iter4;
-        
+
 
         typedef reverse_fold_impl<
               ( (N - 4) < 0 ? 0 : N - 4 )
@@ -203,7 +203,7 @@ struct reverse_fold_chunk
         typedef typename apply2< BackwardOp, bkwd_state3, typename deref<iter2>::type >::type bkwd_state2;
         typedef typename apply2< BackwardOp, bkwd_state2, typename deref<iter1>::type >::type bkwd_state1;
         typedef typename apply2< BackwardOp, bkwd_state1, typename deref<iter0>::type >::type bkwd_state0;
-        
+
 
         typedef bkwd_state0 state;
         typedef typename nested_chunk::iterator iterator;

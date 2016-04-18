@@ -35,21 +35,21 @@ namespace winapi
 #else
 #undef HeapAlloc
 extern "C" {
-    __declspec(dllimport) void * __stdcall 
+    __declspec(dllimport) void * __stdcall
         CreateFileMappingA (void *, SECURITY_ATTRIBUTES_*, unsigned long, unsigned long, unsigned long, const char *);
-    __declspec(dllimport) int __stdcall 
+    __declspec(dllimport) int __stdcall
         FlushViewOfFile (void *, std::size_t);
-    __declspec(dllimport) HANDLE_ __stdcall 
+    __declspec(dllimport) HANDLE_ __stdcall
         GetProcessHeap();
-    __declspec(dllimport) void* __stdcall 
+    __declspec(dllimport) void* __stdcall
         HeapAlloc(HANDLE_,DWORD_,SIZE_T_);
-    __declspec(dllimport) BOOL_ __stdcall 
+    __declspec(dllimport) BOOL_ __stdcall
         HeapFree(HANDLE_,DWORD_,LPVOID_);
-    __declspec(dllimport) void * __stdcall 
+    __declspec(dllimport) void * __stdcall
         MapViewOfFileEx (void *, unsigned long, unsigned long, unsigned long, std::size_t, void*);
-    __declspec(dllimport) void * __stdcall 
+    __declspec(dllimport) void * __stdcall
         OpenFileMappingA (unsigned long, int, const char *);
-    __declspec(dllimport) int __stdcall 
+    __declspec(dllimport) int __stdcall
         UnmapViewOfFile(void *);
 }
 #endif

@@ -63,7 +63,7 @@ typedef struct
 #ifdef __cplusplus
    std::size_t  re_nsub;      /* number of parenthesized subexpressions */
 #else
-   size_t re_nsub; 
+   size_t re_nsub;
 #endif
    const char*  re_endp;       /* end pointer for REG_PEND */
    void* guts;                /* none of your business :-) */

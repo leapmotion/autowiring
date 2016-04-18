@@ -35,7 +35,7 @@ namespace detail {
 
 
 template <typename T> struct is_pod_impl
-{ 
+{
     AUTOBOOST_STATIC_CONSTANT(
         bool, value =
         (::autoboost::type_traits::ice_or<

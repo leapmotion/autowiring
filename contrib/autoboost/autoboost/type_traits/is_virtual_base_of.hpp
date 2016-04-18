@@ -4,7 +4,7 @@
 //  http://www.boost.org/LICENSE_1_0.txt).
 //
 //  See http://www.boost.org/libs/type_traits for most recent version including documentation.
- 
+
 #ifndef AUTOBOOST_TT_IS_VIRTUAL_BASE_OF_HPP_INCLUDED
 #define AUTOBOOST_TT_IS_VIRTUAL_BASE_OF_HPP_INCLUDED
 
@@ -37,37 +37,37 @@ template<typename Base, typename Derived>
 struct is_virtual_base_of_impl<Base, Derived, mpl::true_>
 {
 #ifdef __BORLANDC__
-    struct boost_type_traits_internal_struct_X : public virtual Derived, public virtual Base 
+    struct autoboost_type_traits_internal_struct_X : public virtual Derived, public virtual Base
     {
-       boost_type_traits_internal_struct_X();
-       boost_type_traits_internal_struct_X(const boost_type_traits_internal_struct_X&);
-       boost_type_traits_internal_struct_X& operator=(const boost_type_traits_internal_struct_X&);
-       ~boost_type_traits_internal_struct_X()throw();
+       autoboost_type_traits_internal_struct_X();
+       autoboost_type_traits_internal_struct_X(const autoboost_type_traits_internal_struct_X&);
+       autoboost_type_traits_internal_struct_X& operator=(const autoboost_type_traits_internal_struct_X&);
+       ~autoboost_type_traits_internal_struct_X()throw();
     };
-    struct boost_type_traits_internal_struct_Y : public virtual Derived 
+    struct autoboost_type_traits_internal_struct_Y : public virtual Derived
     {
-       boost_type_traits_internal_struct_Y();
-       boost_type_traits_internal_struct_Y(const boost_type_traits_internal_struct_Y&);
-       boost_type_traits_internal_struct_Y& operator=(const boost_type_traits_internal_struct_Y&);
-       ~boost_type_traits_internal_struct_Y()throw();
+       autoboost_type_traits_internal_struct_Y();
+       autoboost_type_traits_internal_struct_Y(const autoboost_type_traits_internal_struct_Y&);
+       autoboost_type_traits_internal_struct_Y& operator=(const autoboost_type_traits_internal_struct_Y&);
+       ~autoboost_type_traits_internal_struct_Y()throw();
     };
 #else
-    struct boost_type_traits_internal_struct_X : public Derived, virtual Base 
+    struct autoboost_type_traits_internal_struct_X : public Derived, virtual Base
     {
-       boost_type_traits_internal_struct_X();
-       boost_type_traits_internal_struct_X(const boost_type_traits_internal_struct_X&);
-       boost_type_traits_internal_struct_X& operator=(const boost_type_traits_internal_struct_X&);
-       ~boost_type_traits_internal_struct_X()throw();
+       autoboost_type_traits_internal_struct_X();
+       autoboost_type_traits_internal_struct_X(const autoboost_type_traits_internal_struct_X&);
+       autoboost_type_traits_internal_struct_X& operator=(const autoboost_type_traits_internal_struct_X&);
+       ~autoboost_type_traits_internal_struct_X()throw();
     };
-    struct boost_type_traits_internal_struct_Y : public Derived 
+    struct autoboost_type_traits_internal_struct_Y : public Derived
     {
-       boost_type_traits_internal_struct_Y();
-       boost_type_traits_internal_struct_Y(const boost_type_traits_internal_struct_Y&);
-       boost_type_traits_internal_struct_Y& operator=(const boost_type_traits_internal_struct_Y&);
-       ~boost_type_traits_internal_struct_Y()throw();
+       autoboost_type_traits_internal_struct_Y();
+       autoboost_type_traits_internal_struct_Y(const autoboost_type_traits_internal_struct_Y&);
+       autoboost_type_traits_internal_struct_Y& operator=(const autoboost_type_traits_internal_struct_Y&);
+       ~autoboost_type_traits_internal_struct_Y()throw();
     };
 #endif
-    AUTOBOOST_STATIC_CONSTANT(bool, value = (sizeof(boost_type_traits_internal_struct_X)==sizeof(boost_type_traits_internal_struct_Y)));
+    AUTOBOOST_STATIC_CONSTANT(bool, value = (sizeof(autoboost_type_traits_internal_struct_X)==sizeof(autoboost_type_traits_internal_struct_Y)));
 };
 
 template<typename Base, typename Derived>
@@ -88,7 +88,7 @@ AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF2(
       is_virtual_base_of
        , Base
        , Derived
-       , (::autoboost::detail::is_virtual_base_of_impl2<Base,Derived>::value) 
+       , (::autoboost::detail::is_virtual_base_of_impl2<Base,Derived>::value)
 )
 
 AUTOBOOST_TT_AUX_BOOL_TRAIT_PARTIAL_SPEC2_2(typename Base,typename Derived,is_virtual_base_of,Base&,Derived,false)

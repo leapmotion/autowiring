@@ -14,8 +14,8 @@
 #include <cstring> // strlen
 #include <autoboost/config.hpp> // msvc 6.0 needs this to suppress warnings
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
-    using ::strlen; 
+namespace std{
+    using ::strlen;
 } // namespace std
 #endif
 
@@ -42,8 +42,8 @@ void save_iterator(std::ostream &os, InputIterator begin, InputIterator end){
         autoboost::archive::iterators::xml_escape<InputIterator>
     > translator;
     std::copy(
-        translator(AUTOBOOST_MAKE_PFTO_WRAPPER(begin)), 
-        translator(AUTOBOOST_MAKE_PFTO_WRAPPER(end)), 
+        translator(AUTOBOOST_MAKE_PFTO_WRAPPER(begin)),
+        translator(AUTOBOOST_MAKE_PFTO_WRAPPER(end)),
         autoboost::archive::iterators::ostream_iterator<char>(os)
     );
 }
@@ -75,11 +75,11 @@ xml_oarchive_impl<Archive>::save(const std::string & s){
 //  at least one library doesn't typedef value_type for strings
 //  so rather than using string directly make a pointer iterator out of it
     typedef autoboost::archive::iterators::xml_escape<
-        const char * 
+        const char *
     > xml_escape_translator;
     std::copy(
         xml_escape_translator(AUTOBOOST_MAKE_PFTO_WRAPPER(s.data())),
-        xml_escape_translator(AUTOBOOST_MAKE_PFTO_WRAPPER(s.data()+ s.size())), 
+        xml_escape_translator(AUTOBOOST_MAKE_PFTO_WRAPPER(s.data()+ s.size())),
         autoboost::archive::iterators::ostream_iterator<char>(os)
     );
 }
@@ -88,11 +88,11 @@ template<class Archive>
 AUTOBOOST_ARCHIVE_DECL(void)
 xml_oarchive_impl<Archive>::save(const char * s){
     typedef autoboost::archive::iterators::xml_escape<
-        const char * 
+        const char *
     > xml_escape_translator;
     std::copy(
         xml_escape_translator(AUTOBOOST_MAKE_PFTO_WRAPPER(s)),
-        xml_escape_translator(AUTOBOOST_MAKE_PFTO_WRAPPER(s + std::strlen(s))), 
+        xml_escape_translator(AUTOBOOST_MAKE_PFTO_WRAPPER(s + std::strlen(s))),
         autoboost::archive::iterators::ostream_iterator<char>(os)
     );
 }
@@ -100,9 +100,9 @@ xml_oarchive_impl<Archive>::save(const char * s){
 template<class Archive>
 AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
 xml_oarchive_impl<Archive>::xml_oarchive_impl(
-    std::ostream & os_, 
+    std::ostream & os_,
     unsigned int flags
-) : 
+) :
     basic_text_oprimitive<std::ostream>(
         os_,
         0 != (flags & no_codecvt)

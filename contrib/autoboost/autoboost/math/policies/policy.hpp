@@ -28,7 +28,7 @@
 #include <stddef.h>
 #include <math.h>
 
-namespace autoboost{ namespace math{ 
+namespace autoboost{ namespace math{
 
 namespace tools{
 
@@ -284,7 +284,7 @@ char test_is_valid_arg(const default_policy*);
 char test_is_default_arg(const default_policy*);
 
 template <class T>
-struct is_valid_policy_imp 
+struct is_valid_policy_imp
 {
    AUTOBOOST_STATIC_CONSTANT(bool, value = sizeof(::autoboost::math::policies::detail::test_is_valid_arg(static_cast<T*>(0))) == 1);
 };
@@ -295,13 +295,13 @@ struct is_default_policy_imp
    AUTOBOOST_STATIC_CONSTANT(bool, value = sizeof(::autoboost::math::policies::detail::test_is_default_arg(static_cast<T*>(0))) == 1);
 };
 
-template <class T> struct is_valid_policy 
-: public mpl::bool_< 
+template <class T> struct is_valid_policy
+: public mpl::bool_<
    ::autoboost::math::policies::detail::is_valid_policy_imp<T>::value>
 {};
 
-template <class T> struct is_default_policy 
-: public mpl::bool_< 
+template <class T> struct is_default_policy
+: public mpl::bool_<
    ::autoboost::math::policies::detail::is_default_policy_imp<T>::value>
 {
    template <class U>
@@ -364,8 +364,8 @@ typedef default_args<AUTOBOOST_MATH_PROMOTE_FLOAT_POLICY, AUTOBOOST_MATH_PROMOTE
 // Now define the policy type with enough arguments to handle all
 // the policies:
 //
-template <class A1 = default_policy, 
-          class A2 = default_policy, 
+template <class A1 = default_policy,
+          class A2 = default_policy,
           class A3 = default_policy,
           class A4 = default_policy,
           class A5 = default_policy,
@@ -492,9 +492,9 @@ public:
    typedef max_root_iterations<> max_root_iterations_type;
 };
 
-template <class Policy, 
-          class A1 = default_policy, 
-          class A2 = default_policy, 
+template <class Policy,
+          class A1 = default_policy,
+          class A2 = default_policy,
           class A3 = default_policy,
           class A4 = default_policy,
           class A5 = default_policy,
@@ -589,9 +589,9 @@ public:
 // Full specialisation to speed up compilation of the common case:
 //
 template <>
-struct normalise<policy<>, 
-          promote_float<false>, 
-          promote_double<false>, 
+struct normalise<policy<>,
+          promote_float<false>,
+          promote_double<false>,
           discrete_quantile<>,
           assert_undefined<>,
           default_policy,
@@ -627,72 +627,72 @@ inline policy<> make_policy()
 
 template <class A1>
 inline typename normalise<policy<>, A1>::type make_policy(const A1&)
-{ 
+{
    typedef typename normalise<policy<>, A1>::type result_type;
-   return result_type(); 
+   return result_type();
 }
 
 template <class A1, class A2>
 inline typename normalise<policy<>, A1, A2>::type make_policy(const A1&, const A2&)
-{ 
+{
    typedef typename normalise<policy<>, A1, A2>::type result_type;
-   return result_type(); 
+   return result_type();
 }
 
 template <class A1, class A2, class A3>
 inline typename normalise<policy<>, A1, A2, A3>::type make_policy(const A1&, const A2&, const A3&)
-{ 
+{
    typedef typename normalise<policy<>, A1, A2, A3>::type result_type;
-   return result_type(); 
+   return result_type();
 }
 
 template <class A1, class A2, class A3, class A4>
 inline typename normalise<policy<>, A1, A2, A3, A4>::type make_policy(const A1&, const A2&, const A3&, const A4&)
-{ 
+{
    typedef typename normalise<policy<>, A1, A2, A3, A4>::type result_type;
-   return result_type(); 
+   return result_type();
 }
 
 template <class A1, class A2, class A3, class A4, class A5>
 inline typename normalise<policy<>, A1, A2, A3, A4, A5>::type make_policy(const A1&, const A2&, const A3&, const A4&, const A5&)
-{ 
+{
    typedef typename normalise<policy<>, A1, A2, A3, A4, A5>::type result_type;
-   return result_type(); 
+   return result_type();
 }
 
 template <class A1, class A2, class A3, class A4, class A5, class A6>
 inline typename normalise<policy<>, A1, A2, A3, A4, A5, A6>::type make_policy(const A1&, const A2&, const A3&, const A4&, const A5&, const A6&)
-{ 
+{
    typedef typename normalise<policy<>, A1, A2, A3, A4, A5, A6>::type result_type;
-   return result_type(); 
+   return result_type();
 }
 
 template <class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 inline typename normalise<policy<>, A1, A2, A3, A4, A5, A6, A7>::type make_policy(const A1&, const A2&, const A3&, const A4&, const A5&, const A6&, const A7&)
-{ 
+{
    typedef typename normalise<policy<>, A1, A2, A3, A4, A5, A6, A7>::type result_type;
-   return result_type(); 
+   return result_type();
 }
 
 template <class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 inline typename normalise<policy<>, A1, A2, A3, A4, A5, A6, A7, A8>::type make_policy(const A1&, const A2&, const A3&, const A4&, const A5&, const A6&, const A7&, const A8&)
-{ 
+{
    typedef typename normalise<policy<>, A1, A2, A3, A4, A5, A6, A7, A8>::type result_type;
-   return result_type(); 
+   return result_type();
 }
 
 template <class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 inline typename normalise<policy<>, A1, A2, A3, A4, A5, A6, A7, A8, A9>::type make_policy(const A1&, const A2&, const A3&, const A4&, const A5&, const A6&, const A7&, const A8&, const A9&)
-{ 
+{
    typedef typename normalise<policy<>, A1, A2, A3, A4, A5, A6, A7, A8, A9>::type result_type;
-   return result_type(); 
+   return result_type();
 }
 
 template <class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10>
 inline typename normalise<policy<>, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10>::type make_policy(const A1&, const A2&, const A3&, const A4&, const A5&, const A6&, const A7&, const A8&, const A9&, const A10&)
-{ 
+{
    typedef typename normalise<policy<>, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10>::type result_type;
-   return result_type(); 
+   return result_type();
 }
 
 template <class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11>
@@ -783,7 +783,7 @@ struct precision
       // Possibly unknown precision:
       precision_type,
       typename mpl::if_c<
-         ((::std::numeric_limits<Real>::digits <= precision_type::value) 
+         ((::std::numeric_limits<Real>::digits <= precision_type::value)
          || (Policy::precision_type::value <= 0)),
          // Default case, full precision for RealType:
          digits2< ::std::numeric_limits<Real>::digits>,
@@ -935,8 +935,8 @@ inline T get_epsilon(AUTOBOOST_MATH_EXPLICIT_TEMPLATE_TYPE(T))
 
 namespace detail{
 
-template <class A1, 
-          class A2, 
+template <class A1,
+          class A2,
           class A3,
           class A4,
           class A5,

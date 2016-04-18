@@ -20,10 +20,10 @@
 
 #include <autoboost/config.hpp>
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
-    using ::strlen; 
+namespace std{
+    using ::strlen;
     #if ! defined(AUTOBOOST_NO_INTRINSIC_WCHAR_T)
-        using ::mbtowc; 
+        using ::mbtowc;
         using ::wcslen;
     #endif
 } // namespace std

@@ -1,4 +1,4 @@
-//  (C) Copyright John Maddock 2000. 
+//  (C) Copyright John Maddock 2000.
 //  Use, modification and distribution are subject to the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt).
@@ -33,14 +33,14 @@ struct is_polymorphic_imp1
 {
 # if AUTOBOOST_WORKAROUND(__MWERKS__, <= 0x2407) // CWPro7 should return false always.
     typedef char d1, (&d2)[2];
-# else 
+# else
    typedef typename remove_cv<T>::type ncvT;
    struct d1 : public ncvT
    {
       d1();
 #  if !defined(__GNUC__) // this raises warnings with some classes, and buys nothing with GCC
       ~d1()throw();
-#  endif 
+#  endif
       char padding[256];
    private:
       // keep some picky compilers happy:
@@ -55,7 +55,7 @@ struct is_polymorphic_imp1
       // for some reason this messes up VC++ when T has virtual bases,
       // probably likewise for compilers that use the same ABI:
       struct unique{};
-      virtual void unique_name_to_boost5487629(unique*);
+      virtual void unique_name_to_autoboost5487629(unique*);
 #  endif
       char padding[256];
    private:
@@ -63,7 +63,7 @@ struct is_polymorphic_imp1
       d2(const d2&);
       d2& operator=(const d2&);
    };
-# endif 
+# endif
    AUTOBOOST_STATIC_CONSTANT(bool, value = (sizeof(d2) == sizeof(d1)));
 };
 

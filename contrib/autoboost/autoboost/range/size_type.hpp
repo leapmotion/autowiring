@@ -86,7 +86,7 @@ namespace autoboost
     struct range_size<const T >
         : detail::range_size<T>
     {
-#if AUTOBOOST_RANGE_ENABLE_CONCEPT_ASSERT == 1        
+#if AUTOBOOST_RANGE_ENABLE_CONCEPT_ASSERT == 1
         AUTOBOOST_RANGE_CONCEPT_ASSERT((autoboost::SinglePassRangeConcept<T>));
 #endif
     };

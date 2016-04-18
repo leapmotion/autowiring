@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2001-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -53,10 +53,10 @@ template< typename T >
 struct is_placeholder
 {
     static aux::type_wrapper<T>* get();
-    AUTOBOOST_STATIC_CONSTANT(bool, value = 
+    AUTOBOOST_STATIC_CONSTANT(bool, value =
           sizeof(aux::is_placeholder_helper(get())) == sizeof(aux::yes_tag)
         );
-    
+
     typedef bool_<value> type;
 };
 

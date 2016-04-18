@@ -15,7 +15,7 @@ namespace autoboost {
 namespace date_time {
 
   //! Converts a string from one value_type to another
-  /*! Converts a wstring to a string (or a string to wstring). If both template parameters 
+  /*! Converts a wstring to a string (or a string to wstring). If both template parameters
    * are of same type, a copy of the input string is returned. */
   template<class InputT, class OutputT>
   inline
@@ -26,7 +26,7 @@ namespace date_time {
     result.insert(result.begin(), inp_str.begin(), inp_str.end());
     return result;
   }
-  
+
 }} // namespace autoboost::date_time
 
 #endif // _STRING_CONVERT_HPP___

@@ -2,7 +2,7 @@
 // Copyright (C) 2005 Arkadiy Vertleyb
 // Copyright (C) 2005 Peder Holt
 //
-// Use modification and distribution are subject to the boost Software License,
+// Use modification and distribution are subject to the autoboost Software License,
 // Version 1.0. (See http://www.boost.org/LICENSE_1_0.txt).
 
 // Preprocessed code, do not edit manually !

@@ -3,8 +3,8 @@
  * Copyright (c) 2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -13,7 +13,7 @@
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         perl_matcher_common.cpp
   *   VERSION      see <autoboost/version.hpp>
-  *   DESCRIPTION: Definitions of perl_matcher member functions that are 
+  *   DESCRIPTION: Definitions of perl_matcher member functions that are
   *                common to both the recursive and non-recursive versions.
   */
 
@@ -44,10 +44,10 @@ namespace re_detail{
 
 template <class BidiIterator, class Allocator, class traits>
 void perl_matcher<BidiIterator, Allocator, traits>::construct_init(const basic_regex<char_type, traits>& e, match_flag_type f)
-{ 
+{
    typedef typename regex_iterator_traits<BidiIterator>::iterator_category category;
    typedef typename basic_regex<char_type, traits>::flag_type expression_flag_type;
-   
+
    if(e.empty())
    {
       // precondition failure: e is not a valid regex.
@@ -82,7 +82,7 @@ void perl_matcher<BidiIterator, Allocator, traits>::construct_init(const basic_r
    m_backup_state = 0;
 #endif
    // find the value to use for matching word boundaries:
-   m_word_mask = re.get_data().m_word_mask; 
+   m_word_mask = re.get_data().m_word_mask;
    // find bitmask to use for matching '.':
    match_any_mask = static_cast<unsigned char>((f & match_not_dot_newline) ? re_detail::test_not_newline : re_detail::test_newline);
 }
@@ -236,7 +236,7 @@ inline bool perl_matcher<BidiIterator, Allocator, traits>::find()
 template <class BidiIterator, class Allocator, class traits>
 bool perl_matcher<BidiIterator, Allocator, traits>::find_imp()
 {
-   static matcher_proc_type const s_find_vtable[7] = 
+   static matcher_proc_type const s_find_vtable[7] =
    {
       &perl_matcher<BidiIterator, Allocator, traits>::find_restart_any,
       &perl_matcher<BidiIterator, Allocator, traits>::find_restart_word,
@@ -277,7 +277,7 @@ bool perl_matcher<BidiIterator, Allocator, traits>::find_imp()
       {
          if(position == last)
             return false;
-         else 
+         else
             ++position;
       }
       // reset $` start:
@@ -293,8 +293,8 @@ bool perl_matcher<BidiIterator, Allocator, traits>::find_imp()
 
    verify_options(re.flags(), m_match_flags);
    // find out what kind of expression we have:
-   unsigned type = (m_match_flags & match_continuous) ? 
-      static_cast<unsigned int>(regbase::restart_continue) 
+   unsigned type = (m_match_flags & match_continuous) ?
+      static_cast<unsigned int>(regbase::restart_continue)
          : static_cast<unsigned int>(re.get_restart_type());
 
    // call the appropriate search routine:
@@ -440,7 +440,7 @@ bool perl_matcher<BidiIterator, Allocator, traits>::match_end_line()
 template <class BidiIterator, class Allocator, class traits>
 bool perl_matcher<BidiIterator, Allocator, traits>::match_wild()
 {
-   if(position == last) 
+   if(position == last)
       return false;
    if(is_separator(*position) && ((match_any_mask & static_cast<const re_dot*>(pstate)->mask) == 0))
       return false;
@@ -494,7 +494,7 @@ bool perl_matcher<BidiIterator, Allocator, traits>::match_within_word()
    bool prev = traits_inst.isctype(*position, m_word_mask);
    {
       bool b;
-      if((position == backstop) && ((m_match_flags & match_prev_avail) == 0)) 
+      if((position == backstop) && ((m_match_flags & match_prev_avail) == 0))
          return false;
       else
       {
@@ -911,21 +911,21 @@ bool perl_matcher<BidiIterator, Allocator, traits>::find_restart_lit()
    if(position == last)
       return false; // can't possibly match if we're at the end already
 
-   unsigned type = (m_match_flags & match_continuous) ? 
-      static_cast<unsigned int>(regbase::restart_continue) 
+   unsigned type = (m_match_flags & match_continuous) ?
+      static_cast<unsigned int>(regbase::restart_continue)
          : static_cast<unsigned int>(re.get_restart_type());
 
    const kmp_info<char_type>* info = access::get_kmp(re);
    int len = info->len;
    const char_type* x = info->pstr;
-   int j = 0; 
-   while (position != last) 
+   int j = 0;
+   while (position != last)
    {
-      while((j > -1) && (x[j] != traits_inst.translate(*position, icase))) 
+      while((j > -1) && (x[j] != traits_inst.translate(*position, icase)))
          j = info->kmp_next[j];
       ++position;
       ++j;
-      if(j >= len) 
+      if(j >= len)
       {
          if(type == regbase::restart_fixed_lit)
          {

@@ -4,7 +4,7 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-#include "boost/coroutine/detail/coroutine_context.hpp"
+#include "autoboost/coroutine/detail/coroutine_context.hpp"
 
 #ifdef AUTOBOOST_HAS_ABI_HEADERS
 #  include AUTOBOOST_ABI_PREFIX

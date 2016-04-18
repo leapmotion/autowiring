@@ -77,7 +77,7 @@ namespace autoboost
             return range_detail::range_begin< AUTOBOOST_RANGE_DEDUCED_TYPENAME range_detail::range<C>::type >::fun( c );
         }
     }
-} // namespace 'boost'
+} // namespace 'autoboost'
 
 
 #endif

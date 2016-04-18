@@ -3,8 +3,8 @@
  * Copyright (c) 1998-2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -36,7 +36,7 @@ namespace re_detail{
 /*** mask_type *******************************************************
 Whenever we have a choice of two alternatives, we use an array of bytes
 to indicate which of the two alternatives it is possible to take for any
-given input character.  If mask_take is set, then we can take the next 
+given input character.  If mask_take is set, then we can take the next
 state, and if mask_skip is set then we can take the alternative.
 ***********************************************************************/
 enum mask_type
@@ -179,7 +179,7 @@ struct re_dot : public re_syntax_base
 };
 
 /*** struct re_literal ************************************************
-A string of literals, following this structure will be an 
+A string of literals, following this structure will be an
 array of characters: charT[length]
 ***********************************************************************/
 struct re_literal : public re_syntax_base
@@ -276,9 +276,9 @@ template<class charT, class traits>
 struct regex_data;
 
 template <class iterator, class charT, class traits_type, class char_classT>
-iterator AUTOBOOST_REGEX_CALL re_is_set_member(iterator next, 
-                          iterator last, 
-                          const re_set_long<char_classT>* set_, 
+iterator AUTOBOOST_REGEX_CALL re_is_set_member(iterator next,
+                          iterator last,
+                          const re_set_long<char_classT>* set_,
                           const regex_data<charT, traits_type>& e, bool icase);
 
 } // namespace re_detail

@@ -28,7 +28,7 @@
 #error "autoboost::format uses a local macro that is already defined."
 #endif
 
-// specific workarounds. each header can define BOOS_IO_STD if it 
+// specific workarounds. each header can define BOOS_IO_STD if it
 // needs. (e.g. because of IO_NEEDS_USING_DECLARATION)
 #include <autoboost/format/detail/workarounds_gcc-2_95.hpp>
 #include <autoboost/format/detail/workarounds_stlport.hpp>
@@ -71,7 +71,7 @@ namespace autoboost {
     }
 #endif // locale
 }
-  // -end N.S. boost
+  // -end N.S. autoboost
 #endif // needs_using_declaration
 
 #if ! defined(AUTOBOOST_NO_STD_LOCALE)
@@ -79,12 +79,12 @@ namespace autoboost {
 #endif
 
 
-// ***  hide std::locale if it doesnt exist. 
+// ***  hide std::locale if it doesnt exist.
 // this typedef is either std::locale or int, avoids placing ifdefs everywhere
 namespace autoboost { namespace io { namespace detail {
 #if ! defined(AUTOBOOST_NO_STD_LOCALE)
     typedef AUTOBOOST_IO_STD locale locale_t;
-#else 
+#else
     typedef int          locale_t;
 #endif
 } } }

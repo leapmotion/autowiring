@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -43,6 +43,6 @@ template< typename T > struct nested_type_wknd
 
 #   define AUTOBOOST_MPL_AUX_NESTED_TYPE_WKND(T) T::type
 
-#endif 
+#endif
 
 #endif // AUTOBOOST_MPL_AUX_NESTED_TYPE_WKND_HPP_INCLUDED

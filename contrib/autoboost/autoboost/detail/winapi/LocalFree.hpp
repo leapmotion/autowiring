@@ -24,7 +24,7 @@ namespace winapi {
     using ::LocalFree;
 #else
     extern "C" typedef HANDLE_ HLOCAL_;
-    extern "C" __declspec(dllimport) HLOCAL_ WINAPI 
+    extern "C" __declspec(dllimport) HLOCAL_ WINAPI
         LocalFree(HLOCAL_ hMem);
 #endif
 }

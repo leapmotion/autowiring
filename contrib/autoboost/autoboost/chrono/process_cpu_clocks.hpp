@@ -1,4 +1,4 @@
-//  boost/chrono/process_cpu_clocks.hpp  -----------------------------------------------------------//
+//  autoboost/chrono/process_cpu_clocks.hpp  -----------------------------------------------------------//
 
 //  Copyright 2009-2011 Vicente J. Botet Escriba
 //  Copyright (c) Microsoft Corporation 2014

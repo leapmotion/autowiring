@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // text_iarchive.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -32,7 +32,7 @@
 #  pragma warning(disable : 4511 4512)
 #endif
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 
 namespace detail {
@@ -40,7 +40,7 @@ namespace detail {
 } // namespace detail
 
 template<class Archive>
-class text_iarchive_impl : 
+class text_iarchive_impl :
     public basic_text_iprimitive<std::istream>,
     public basic_text_iarchive<Archive>
 {
@@ -72,16 +72,16 @@ protected:
         load(v);
         t = autoboost::serialization::item_version_type(v);
     }
-    AUTOBOOST_ARCHIVE_DECL(void) 
+    AUTOBOOST_ARCHIVE_DECL(void)
     load(char * t);
     #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
-    AUTOBOOST_ARCHIVE_DECL(void) 
+    AUTOBOOST_ARCHIVE_DECL(void)
     load(wchar_t * t);
     #endif
-    AUTOBOOST_ARCHIVE_DECL(void) 
+    AUTOBOOST_ARCHIVE_DECL(void)
     load(std::string &s);
     #ifndef AUTOBOOST_NO_STD_WSTRING
-    AUTOBOOST_ARCHIVE_DECL(void) 
+    AUTOBOOST_ARCHIVE_DECL(void)
     load(std::wstring &ws);
     #endif
     // note: the following should not needed - but one compiler (vc 7.1)
@@ -95,10 +95,10 @@ protected:
     load_override(class_name_type & t, int);
     AUTOBOOST_ARCHIVE_DECL(void)
     init();
-    AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
+    AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
     text_iarchive_impl(std::istream & is, unsigned int flags);
     // don't import inline definitions! leave this as a reminder.
-    //AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
+    //AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
     ~text_iarchive_impl(){};
 };
 
@@ -116,10 +116,10 @@ protected:
 #  pragma warning(disable : 4511 4512)
 #endif
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 
-class text_iarchive : 
+class text_iarchive :
     public text_iarchive_impl<text_iarchive>{
 public:
     text_iarchive(std::istream & is_, unsigned int flags = 0) :

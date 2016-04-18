@@ -8,7 +8,7 @@
 # include <autoboost/detail/workaround.hpp>
 # include <autoboost/concept/detail/backward_compatibility.hpp>
 
-namespace autoboost { namespace concepts { 
+namespace autoboost { namespace concepts {
 
 template <class Model>
 struct usage_requirements

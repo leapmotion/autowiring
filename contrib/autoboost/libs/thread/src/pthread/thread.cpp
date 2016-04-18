@@ -257,7 +257,7 @@ namespace autoboost
         {
             thread_info->self.reset();
             return false;
-//            autoboost::throw_exception(thread_resource_error(res, "boost thread: failed in pthread_create"));
+//            autoboost::throw_exception(thread_resource_error(res, "autoboost thread: failed in pthread_create"));
         }
         return true;
     }
@@ -271,7 +271,7 @@ namespace autoboost
         {
             thread_info->self.reset();
             return false;
-//            autoboost::throw_exception(thread_resource_error(res, "boost thread: failed in pthread_create"));
+//            autoboost::throw_exception(thread_resource_error(res, "autoboost thread: failed in pthread_create"));
         }
         int detached_state;
         res = pthread_attr_getdetachstate(h, &detached_state);
@@ -279,7 +279,7 @@ namespace autoboost
         {
             thread_info->self.reset();
             return false;
-//            autoboost::throw_exception(thread_resource_error(res, "boost thread: failed in pthread_attr_getdetachstate"));
+//            autoboost::throw_exception(thread_resource_error(res, "autoboost thread: failed in pthread_attr_getdetachstate"));
         }
         if (PTHREAD_CREATE_DETACHED==detached_state)
         {

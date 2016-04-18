@@ -4,7 +4,7 @@
  *
  * Distributed under the Boost Software License,
  * Version 1.0. (See accompanying file LICENSE_1_0.txt
- * or copy at http://boost.org/LICENSE_1_0.txt)
+ * or copy at http://autoboost.org/LICENSE_1_0.txt)
  */
 #ifndef AUTOBOOST_SMART_PTR_ALLOCATE_SHARED_ARRAY_HPP
 #define AUTOBOOST_SMART_PTR_ALLOCATE_SHARED_ARRAY_HPP
@@ -101,7 +101,7 @@ namespace autoboost {
 
     template<class T, class A>
     inline typename autoboost::detail::sp_if_size_array<T>::type
-    allocate_shared(const A& allocator, 
+    allocate_shared(const A& allocator,
         const typename autoboost::detail::array_inner<T>::type& value) {
         typedef typename autoboost::detail::array_inner<T>::type T1;
         typedef typename autoboost::detail::array_base<T1>::type T2;

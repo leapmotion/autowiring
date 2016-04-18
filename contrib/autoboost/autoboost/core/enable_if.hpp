@@ -23,7 +23,7 @@
 
 namespace autoboost
 {
- 
+
   template <bool B, class T = void>
   struct enable_if_c {
     typedef T type;
@@ -32,7 +32,7 @@ namespace autoboost
   template <class T>
   struct enable_if_c<false, T> {};
 
-  template <class Cond, class T = void> 
+  template <class Cond, class T = void>
   struct enable_if : public enable_if_c<Cond::value, T> {};
 
   template <bool B, class T>
@@ -43,7 +43,7 @@ namespace autoboost
   template <class T>
   struct lazy_enable_if_c<false, T> {};
 
-  template <class Cond, class T> 
+  template <class Cond, class T>
   struct lazy_enable_if : public lazy_enable_if_c<Cond::value, T> {};
 
 
@@ -55,7 +55,7 @@ namespace autoboost
   template <class T>
   struct disable_if_c<true, T> {};
 
-  template <class Cond, class T = void> 
+  template <class Cond, class T = void>
   struct disable_if : public disable_if_c<Cond::value, T> {};
 
   template <bool B, class T>
@@ -66,7 +66,7 @@ namespace autoboost
   template <class T>
   struct lazy_disable_if_c<true, T> {};
 
-  template <class Cond, class T> 
+  template <class Cond, class T>
   struct lazy_disable_if : public lazy_disable_if_c<Cond::value, T> {};
 
 } // namespace autoboost
@@ -84,31 +84,31 @@ namespace autoboost {
   struct enable_if_c : enable_if_does_not_work_on_this_compiler<T>
   { };
 
-  template <bool B, class T = detail::enable_if_default_T> 
+  template <bool B, class T = detail::enable_if_default_T>
   struct disable_if_c : enable_if_does_not_work_on_this_compiler<T>
   { };
 
-  template <bool B, class T = detail::enable_if_default_T> 
+  template <bool B, class T = detail::enable_if_default_T>
   struct lazy_enable_if_c : enable_if_does_not_work_on_this_compiler<T>
   { };
 
-  template <bool B, class T = detail::enable_if_default_T> 
+  template <bool B, class T = detail::enable_if_default_T>
   struct lazy_disable_if_c : enable_if_does_not_work_on_this_compiler<T>
   { };
 
-  template <class Cond, class T = detail::enable_if_default_T> 
+  template <class Cond, class T = detail::enable_if_default_T>
   struct enable_if : enable_if_does_not_work_on_this_compiler<T>
   { };
 
-  template <class Cond, class T = detail::enable_if_default_T> 
+  template <class Cond, class T = detail::enable_if_default_T>
   struct disable_if : enable_if_does_not_work_on_this_compiler<T>
   { };
 
-  template <class Cond, class T = detail::enable_if_default_T> 
+  template <class Cond, class T = detail::enable_if_default_T>
   struct lazy_enable_if : enable_if_does_not_work_on_this_compiler<T>
   { };
 
-  template <class Cond, class T = detail::enable_if_default_T> 
+  template <class Cond, class T = detail::enable_if_default_T>
   struct lazy_disable_if : enable_if_does_not_work_on_this_compiler<T>
   { };
 

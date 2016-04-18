@@ -14,7 +14,7 @@
 //    08 Nov 2001 Fixes to accommodate MSVC (Fernando Cacciola)
 //    04 Nov 2001 Fixes to accommodate gcc2.92 (Fernando Cacciola)
 //    30 Oct 2001 Some fixes suggested by Daryle Walker (Fernando Cacciola)
-//    25 Oct 2001 Initial boostification (Fernando Cacciola)
+//    25 Oct 2001 Initial autoboostification (Fernando Cacciola)
 //    23 Jan 2004 Inital add to cvs (post review)s
 //    22 Jun 2011 Added support for specializing cast policies via numeric_cast_traits (Brandon Kohn).
 //
@@ -35,7 +35,7 @@
 
 namespace autoboost
 {
-    template <typename Target, typename Source> 
+    template <typename Target, typename Source>
     inline Target numeric_cast( Source arg )
     {
         typedef numeric::conversion_traits<Target, Source>   conv_traits;
@@ -43,16 +43,16 @@ namespace autoboost
         typedef autoboost::numeric::converter
             <
                 Target,
-                Source, 
+                Source,
                 conv_traits,
-                typename cast_traits::overflow_policy, 
-                typename cast_traits::rounding_policy, 
+                typename cast_traits::overflow_policy,
+                typename cast_traits::rounding_policy,
                 autoboost::numeric::raw_converter< conv_traits >,
                 typename cast_traits::range_checking_policy
             > converter;
         return converter::convert(arg);
     }
-    
+
     using numeric::bad_numeric_cast;
 } // namespace autoboost
 

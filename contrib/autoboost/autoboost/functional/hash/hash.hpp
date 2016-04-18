@@ -5,7 +5,7 @@
 
 //  Based on Peter Dimov's proposal
 //  http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2005/n1756.pdf
-//  issue 6.18. 
+//  issue 6.18.
 //
 //  This also contains public domain code from MurmurHash. From the
 //  MurmurHash header:
@@ -402,11 +402,11 @@ namespace autoboost
     //
     // autoboost::hash
     //
-    
+
     // Define the specializations required by the standard. The general purpose
     // autoboost::hash is defined later in extensions.hpp if
     // AUTOBOOST_HASH_NO_EXTENSIONS is not defined.
-    
+
     // AUTOBOOST_HASH_SPECIALIZE - define a specialization for a type which is
     // passed by copy.
     //

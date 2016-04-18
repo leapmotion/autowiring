@@ -7,8 +7,8 @@
 //  http://www.boost.org/LICENSE_1_0.txt)
 //
 namespace autoboost { namespace numeric {
-    
-    
+
+
     template <>
     struct numeric_cast_traits
         <
@@ -19,8 +19,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -31,8 +31,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -43,8 +43,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -55,8 +55,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -67,8 +67,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -79,8 +79,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -91,8 +91,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -103,8 +103,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -115,8 +115,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -127,8 +127,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -139,8 +139,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -151,8 +151,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -163,8 +163,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -175,8 +175,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -187,8 +187,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -199,8 +199,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -211,8 +211,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -223,8 +223,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -235,8 +235,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -247,8 +247,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -259,8 +259,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -271,8 +271,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -283,8 +283,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -295,8 +295,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -307,8 +307,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -319,8 +319,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -331,8 +331,8 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::long_long_type> rounding_policy;
-    }; 
-    
+    };
+
     template <>
     struct numeric_cast_traits
         <
@@ -343,5 +343,5 @@ namespace autoboost { namespace numeric {
         typedef def_overflow_handler overflow_policy;
         typedef UseInternalRangeChecker range_checking_policy;
         typedef Trunc<autoboost::ulong_long_type> rounding_policy;
-    }; 
+    };
 }}

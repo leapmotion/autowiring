@@ -340,7 +340,7 @@ struct allocator_traits
 
          template<class T, class ...Args>
          static void priv_construct_dispatch2(container_detail::false_type, Alloc &, T *p, AUTOBOOST_FWD_REF(Args) ...args)
-         {  ::new((void*)p, boost_container_new_t()) T(::autoboost::forward<Args>(args)...); }
+         {  ::new((void*)p, autoboost_container_new_t()) T(::autoboost::forward<Args>(args)...); }
       #else // #if !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
          public:
          #define AUTOBOOST_PP_LOCAL_MACRO(n)                                                              \
@@ -387,7 +387,7 @@ struct allocator_traits
          template<class T  AUTOBOOST_PP_ENUM_TRAILING_PARAMS(n, class P) >                                      \
          static void priv_construct_dispatch2(container_detail::false_type, Alloc &, T *p                   \
                         AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _) )                       \
-         {  ::new((void*)p, boost_container_new_t()) T(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _)); }\
+         {  ::new((void*)p, autoboost_container_new_t()) T(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _)); }\
          //
          #define AUTOBOOST_PP_LOCAL_LIMITS (0, AUTOBOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
          #include AUTOBOOST_PP_LOCAL_ITERATE()

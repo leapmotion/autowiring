@@ -38,7 +38,7 @@ void fail(int err, autoboost::system::error_code* ec)
   if (ec == 0)
     AUTOBOOST_FILESYSTEM_THROW( autoboost::system::system_error(err,
       autoboost::system::system_category(),
-      "boost::filesystem::unique_path"));
+      "autoboost::filesystem::unique_path"));
 
   ec->assign(err, autoboost::system::system_category());
   return;

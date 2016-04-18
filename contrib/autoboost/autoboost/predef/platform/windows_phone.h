@@ -28,7 +28,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 #   undef AUTOBOOST_PLAT_WINDOWS_PHONE
 #   define AUTOBOOST_PLAT_WINDOWS_PHONE AUTOBOOST_VERSION_NUMBER_AVAILABLE
 #endif
- 
+
 #if AUTOBOOST_PLAT_WINDOWS_PHONE
 #   define AUTOBOOST_PLAT_WINDOWS_PHONE_AVALIABLE
 #   include <autoboost/predef/detail/platform_detected.h>

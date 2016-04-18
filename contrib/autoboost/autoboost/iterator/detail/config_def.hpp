@@ -9,7 +9,7 @@
 
 //
 // This is a temporary workaround until the bulk of this is
-// available in boost config.
+// available in autoboost config.
 // 23/02/03 thw
 //
 
@@ -18,9 +18,9 @@
 
 #ifdef AUTOBOOST_ITERATOR_CONFIG_DEF
 # error you have nested config_def #inclusion.
-#else 
+#else
 # define AUTOBOOST_ITERATOR_CONFIG_DEF
-#endif 
+#endif
 
 // We enable this always now.  Otherwise, the simple case in
 // libs/iterator/test/constant_iterator_arrow.cpp fails to compile
@@ -50,7 +50,7 @@
     || (AUTOBOOST_WORKAROUND(AUTOBOOST_INTEL_CXX_VERSION, <= 700) && defined(_MSC_VER)) \
     || AUTOBOOST_WORKAROUND(__DECCXX_VER, AUTOBOOST_TESTED_AT(60590042))                \
     || AUTOBOOST_WORKAROUND(__SUNPRO_CC, AUTOBOOST_TESTED_AT(0x590))
-    
+
 # define AUTOBOOST_NO_LVALUE_RETURN_DETECTION
 
 # if 0 // test code
@@ -79,7 +79,7 @@
 
   int z2[(lvalue_deref_helper<v*>::value == 1) ? 1 : -1];
   int z[(lvalue_deref_helper<value_iterator>::value) == 1 ? -1 : 1 ];
-# endif 
+# endif
 
 #endif
 
@@ -112,7 +112,7 @@
 
 #if !defined(AUTOBOOST_MSVC) && (defined(AUTOBOOST_NO_SFINAE) || defined(AUTOBOOST_NO_IS_CONVERTIBLE) || defined(AUTOBOOST_NO_IS_CONVERTIBLE_TEMPLATE))
 # define AUTOBOOST_NO_STRICT_ITERATOR_INTEROPERABILITY
-#endif 
+#endif
 
 # if AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x564))
 
@@ -123,6 +123,6 @@
 // instantiation stack backtrace.  They may be due in part to the fact
 // that it drops cv-qualification willy-nilly in templates.
 #  define AUTOBOOST_NO_ONE_WAY_ITERATOR_INTEROP
-# endif 
+# endif
 
 // no include guard; multiple inclusion intended

@@ -17,7 +17,7 @@
 //      Converted into "fast" functions that avoid using += when
 //      the supplied iterator isn't an input_iterator; based on
 //      some work done at Archelon and a version that was checked into
-//      the boost CVS for a short period of time.
+//      the autoboost CVS for a short period of time.
 // 20 Feb 2002   John Maddock
 //      Removed using namespace std declarations and added
 //      workaround for AUTOBOOST_NO_STDC_NAMESPACE (the library

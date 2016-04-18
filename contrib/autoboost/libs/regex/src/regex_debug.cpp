@@ -3,8 +3,8 @@
  * Copyright (c) 1998-2004
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -35,7 +35,7 @@
 #define print_compiler_macros regex_lib_print_compiler_macros
 #define print_stdlib_macros regex_lib_print_stdlib_macros
 #define print_platform_macros regex_lib_print_platform_macros
-#define print_boost_macros regex_lib_print_boost_macros
+#define print_autoboost_macros regex_lib_print_autoboost_macros
 #define print_separator regex_lib_print_separator
 #define OLD_MAIN regex_lib_main
 #define NEW_MAIN regex_lib_main2

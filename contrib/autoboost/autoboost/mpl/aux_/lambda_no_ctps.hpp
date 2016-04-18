@@ -8,8 +8,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -108,7 +108,7 @@ struct lambda
 
     typedef typename l_::type type;
     typedef typename l_::is_le is_le;
-    
+
     AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT(3, lambda, (T, Tag, Protect))
 };
 
@@ -178,7 +178,7 @@ template<> struct lambda_impl< int_<i_> >
             , if_< Protect, mpl::protect<bind_>, bind_ >
             , identity<F>
             >::type type_;
-    
+
         typedef typename type_::type type;
     };
 };

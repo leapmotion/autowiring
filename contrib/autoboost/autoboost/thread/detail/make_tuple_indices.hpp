@@ -6,7 +6,7 @@
 // 2013/04 Vicente J. Botet Escriba
 //   Provide implementation up to 10 parameters when AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES is defined.
 // 2012/11 Vicente J. Botet Escriba
-//   Adapt to boost libc++ implementation
+//   Adapt to autoboost libc++ implementation
 
 //===----------------------------------------------------------------------===//
 //

@@ -319,7 +319,7 @@ public:
     typedef T const * argument_type;
 
 private:
-    
+
     typedef R (T::*F);
     F f_;
 
@@ -334,7 +334,7 @@ private:
     }
 
 public:
-    
+
     explicit dm(F f): f_(f) {}
 
     R & operator()(T * p) const

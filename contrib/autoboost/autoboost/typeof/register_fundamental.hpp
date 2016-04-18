@@ -29,7 +29,7 @@ AUTOBOOST_TYPEOF_REGISTER_TYPE(long double)
 
 #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
 // If the following line fails to compile and you're using the Intel
-// compiler, see http://lists.boost.org/MailArchives/boost-users/msg06567.php,
+// compiler, see http://lists.boost.org/MailArchives/autoboost-users/msg06567.php,
 // and define AUTOBOOST_NO_INTRINSIC_WCHAR_T on the command line.
 AUTOBOOST_TYPEOF_REGISTER_TYPE(wchar_t)
 #endif

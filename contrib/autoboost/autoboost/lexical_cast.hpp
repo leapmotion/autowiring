@@ -31,7 +31,7 @@
 #include <autoboost/lexical_cast/bad_lexical_cast.hpp>
 #include <autoboost/lexical_cast/try_lexical_convert.hpp>
 
-namespace autoboost 
+namespace autoboost
 {
     template <typename Target, typename Source>
     inline Target lexical_cast(const Source &arg)

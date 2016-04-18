@@ -934,7 +934,7 @@ namespace filesystem
 #ifdef AUTOBOOST_FILESYSTEM_DEBUG
     std::cout << "***** path::codecvt() called" << std::endl;
 #endif
-    AUTOBOOST_ASSERT_MSG(&path_locale(), "boost::filesystem::path locale initialization error");
+    AUTOBOOST_ASSERT_MSG(&path_locale(), "autoboost::filesystem::path locale initialization error");
 
     return std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t> >(path_locale());
   }

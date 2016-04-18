@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // remove_whitespace.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -27,7 +27,7 @@
 // here is the default standard implementation of the functor used
 // by the filter iterator to remove spaces.  Unfortunately usage
 // of this implementation in combination with spirit trips a bug
-// VC 6.5.  The only way I can find to work around it is to 
+// VC 6.5.  The only way I can find to work around it is to
 // implement a special non-standard version for this platform
 
 #ifndef AUTOBOOST_NO_CWCTYPE
@@ -76,7 +76,7 @@ struct remove_whitespace_predicate<wchar_t>
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // convert base64 file data (including whitespace and padding) to binary
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 namespace iterators {
 
@@ -124,15 +124,15 @@ public:
         m_full = false;
         ++(this->base_reference());
     }
-    filter_iterator(Base start) : 
-        super_t(start), 
+    filter_iterator(Base start) :
+        super_t(start),
         m_full(false)
     {}
     filter_iterator(){}
 };
 
 template<class Base>
-class remove_whitespace : 
+class remove_whitespace :
     public filter_iterator<
         remove_whitespace_predicate<
             typename autoboost::iterator_value<Base>::type
@@ -157,7 +157,7 @@ public:
         super_t(Base(AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast< T >(start))))
     {}
     // intel 7.1 doesn't like default copy constructor
-    remove_whitespace(const remove_whitespace & rhs) : 
+    remove_whitespace(const remove_whitespace & rhs) :
         super_t(rhs.base_reference())
     {}
 };

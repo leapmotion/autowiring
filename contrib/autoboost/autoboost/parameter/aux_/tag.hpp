@@ -7,12 +7,12 @@
 # include <autoboost/parameter/aux_/unwrap_cv_reference.hpp>
 # include <autoboost/parameter/aux_/tagged_argument.hpp>
 
-namespace autoboost { namespace parameter { namespace aux { 
+namespace autoboost { namespace parameter { namespace aux {
 
 template <class Keyword, class ActualArg
 #if AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x564))
         , class = typename is_cv_reference_wrapper<ActualArg>::type
-#endif 
+#endif
           >
 struct tag
 {
@@ -31,7 +31,7 @@ struct tag<Keyword,ActualArg,mpl::false_>
       , ActualArg
     > type;
 };
-#endif 
+#endif
 
 }}} // namespace autoboost::parameter::aux_
 

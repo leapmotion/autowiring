@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // basic_oarchive.hpp:
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -75,11 +75,11 @@ public:
         const basic_oserializer & bos
     );
     void save_object(
-        const void *x, 
+        const void *x,
         const basic_oserializer & bos
     );
     void save_pointer(
-        const void * t, 
+        const void * t,
         const basic_pointer_oserializer * bpos_ptr
     );
     void save_null_pointer(){

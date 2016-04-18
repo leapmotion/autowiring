@@ -113,7 +113,7 @@
 //  http://gcc.gnu.org/onlinedocs/libstdc++/manual/status.html#manual.intro.status.standard.200x
 //
 //  However, using the GCC version number fails when the compiler is clang since this
-//  only ever claims to emulate GCC-4.2, see https://svn.boost.org/trac/boost/ticket/7473
+//  only ever claims to emulate GCC-4.2, see https://svn.boost.org/trac/autoboost/ticket/7473
 //  for a long discussion on this issue.  What we can do though is use clang's __has_include
 //  to detect the presence of a C++11 header that was introduced with a specific GCC release.
 //  We still have to be careful though as many such headers were buggy and/or incomplete when

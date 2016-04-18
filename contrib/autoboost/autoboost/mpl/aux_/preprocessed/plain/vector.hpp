@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -22,7 +22,7 @@ template<
 struct vector;
 
 template<
-     
+
     >
 struct vector<
           na, na, na, na, na, na, na, na, na, na, na, na, na, na, na, na, na

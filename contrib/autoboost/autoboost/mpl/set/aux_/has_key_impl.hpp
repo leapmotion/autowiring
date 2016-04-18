@@ -5,8 +5,8 @@
 // Copyright Aleksey Gurtovoy 2003-2004
 // Copyright David Abrahams 2003-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -34,7 +34,7 @@ struct has_key_impl< aux::set_tag >
 #if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, AUTOBOOST_TESTED_AT(1400)) \
     || AUTOBOOST_WORKAROUND(__EDG_VERSION__, <= 245)
     {
-        AUTOBOOST_STATIC_CONSTANT(bool, value = 
+        AUTOBOOST_STATIC_CONSTANT(bool, value =
               ( sizeof( AUTOBOOST_MPL_AUX_OVERLOAD_CALL_IS_MASKED(
                     Set
                   , AUTOBOOST_MPL_AUX_STATIC_CAST(aux::type_wrapper<T>*, 0)
@@ -44,7 +44,7 @@ struct has_key_impl< aux::set_tag >
         typedef bool_<value> type;
 
 #else // ISO98 C++
-        : bool_< 
+        : bool_<
               ( sizeof( AUTOBOOST_MPL_AUX_OVERLOAD_CALL_IS_MASKED(
                     Set
                   , AUTOBOOST_MPL_AUX_STATIC_CAST(aux::type_wrapper<T>*, 0)

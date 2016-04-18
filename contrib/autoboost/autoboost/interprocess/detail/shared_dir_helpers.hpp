@@ -111,7 +111,7 @@ inline void get_shared_dir_root(std::string &dir_path)
       throw interprocess_exception(err);
    }
    //Remove final null.
-   dir_path += "/boost_interprocess";
+   dir_path += "/autoboost_interprocess";
 }
 
 inline void get_shared_dir(std::string &shared_dir)

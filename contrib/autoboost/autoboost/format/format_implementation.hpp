@@ -47,13 +47,13 @@ namespace autoboost {
         : style_(0), cur_arg_(0), num_args_(0), dumped_(false),
           exceptions_(io::all_error_bits), loc_(loc)
     {
-        parse(s);  
+        parse(s);
     }
 #endif // ! AUTOBOOST_NO_STD_LOCALE
     template< class Ch, class Tr, class Alloc>
-    io::detail::locale_t basic_format<Ch, Tr, Alloc>:: 
+    io::detail::locale_t basic_format<Ch, Tr, Alloc>::
     getloc() const {
-        return loc_ ? loc_.get() : io::detail::locale_t(); 
+        return loc_ ? loc_.get() : io::detail::locale_t();
     }
 
     template< class Ch, class Tr, class Alloc>
@@ -61,7 +61,7 @@ namespace autoboost {
         : style_(0), cur_arg_(0), num_args_(0), dumped_(false),
           exceptions_(io::all_error_bits)
     {
-        parse(s);  
+        parse(s);
     }
 
     template< class Ch, class Tr, class Alloc> // just don't copy the buf_ member
@@ -73,7 +73,7 @@ namespace autoboost {
     }
 
     template< class Ch, class Tr, class Alloc>  // just don't copy the buf_ member
-    basic_format<Ch, Tr, Alloc>& basic_format<Ch, Tr, Alloc>:: 
+    basic_format<Ch, Tr, Alloc>& basic_format<Ch, Tr, Alloc>::
     operator= (const basic_format& x) {
         if(this == &x)
             return *this;
@@ -81,11 +81,11 @@ namespace autoboost {
         return *this;
     }
     template< class Ch, class Tr, class Alloc>
-    void  basic_format<Ch, Tr, Alloc>:: 
+    void  basic_format<Ch, Tr, Alloc>::
     swap (basic_format & x) {
         std::swap(exceptions_, x.exceptions_);
-        std::swap(style_, x.style_); 
-        std::swap(cur_arg_, x.cur_arg_); 
+        std::swap(style_, x.style_);
+        std::swap(cur_arg_, x.cur_arg_);
         std::swap(num_args_, x.num_args_);
         std::swap(dumped_, x.dumped_);
 
@@ -96,18 +96,18 @@ namespace autoboost {
 
     template< class Ch, class Tr, class Alloc>
     unsigned char basic_format<Ch,Tr, Alloc>:: exceptions() const {
-        return exceptions_; 
+        return exceptions_;
     }
 
     template< class Ch, class Tr, class Alloc>
-    unsigned char basic_format<Ch,Tr, Alloc>:: exceptions(unsigned char newexcept) { 
-        unsigned char swp = exceptions_; 
-        exceptions_ = newexcept; 
-        return swp; 
+    unsigned char basic_format<Ch,Tr, Alloc>:: exceptions(unsigned char newexcept) {
+        unsigned char swp = exceptions_;
+        exceptions_ = newexcept;
+        return swp;
     }
 
     template<class Ch, class Tr, class Alloc>
-    void basic_format<Ch, Tr, Alloc>:: 
+    void basic_format<Ch, Tr, Alloc>::
     make_or_reuse_data (std::size_t nbitems) {
 #if !defined(AUTOBOOST_NO_STD_LOCALE)
         Ch fill = ( AUTOBOOST_USE_FACET(std::ctype<Ch>, getloc()) ). widen(' ');
@@ -127,7 +127,7 @@ namespace autoboost {
     }
 
     template< class Ch, class Tr, class Alloc>
-    basic_format<Ch,Tr, Alloc>& basic_format<Ch,Tr, Alloc>:: 
+    basic_format<Ch,Tr, Alloc>& basic_format<Ch,Tr, Alloc>::
     clear () {
         // empty the string buffers (except bound arguments)
         // and make the format object ready for formatting a new set of arguments
@@ -149,7 +149,7 @@ namespace autoboost {
     }
 
     template< class Ch, class Tr, class Alloc>
-    basic_format<Ch,Tr, Alloc>& basic_format<Ch,Tr, Alloc>:: 
+    basic_format<Ch,Tr, Alloc>& basic_format<Ch,Tr, Alloc>::
     clear_binds () {
         // remove all binds, then clear()
         bound_.resize(0);
@@ -158,12 +158,12 @@ namespace autoboost {
     }
 
     template< class Ch, class Tr, class Alloc>
-    basic_format<Ch,Tr, Alloc>& basic_format<Ch,Tr, Alloc>:: 
+    basic_format<Ch,Tr, Alloc>& basic_format<Ch,Tr, Alloc>::
     clear_bind (int argN) {
         // remove the bind of ONE argument then clear()
         if(argN<1 || argN > num_args_ || bound_.size()==0 || !bound_[argN-1] ) {
             if( exceptions() & io::out_of_range_bit)
-                autoboost::throw_exception(io::out_of_range(argN, 1, num_args_+1 ) ); 
+                autoboost::throw_exception(io::out_of_range(argN, 1, num_args_+1 ) );
             else return *this;
         }
         bound_[argN-1]=false;
@@ -213,15 +213,15 @@ namespace autoboost {
     }
 
     template< class Ch, class Tr, class Alloc>
-    typename basic_format<Ch, Tr, Alloc>::string_type 
-    basic_format<Ch,Tr, Alloc>:: 
+    typename basic_format<Ch, Tr, Alloc>::string_type
+    basic_format<Ch,Tr, Alloc>::
     str () const {
         if(items_.size()==0)
             return prefix_;
         if( cur_arg_ < num_args_)
             if( exceptions() & io::too_few_args_bit )
                 // not enough variables supplied
-                autoboost::throw_exception(io::too_few_args(cur_arg_, num_args_)); 
+                autoboost::throw_exception(io::too_few_args(cur_arg_, num_args_));
 
         unsigned long i;
         string_type res;
@@ -230,7 +230,7 @@ namespace autoboost {
         for(i=0; i < items_.size(); ++i) {
             const format_item_t& item = items_[i];
             res += item.res_;
-            if( item.argN_ == format_item_t::argN_tabulation) { 
+            if( item.argN_ == format_item_t::argN_tabulation) {
                 AUTOBOOST_ASSERT( item.pad_scheme_ & format_item_t::tabulation);
                 if( static_cast<size_type>(item.fmtstate_.width_) > res.size() )
                     res.append( static_cast<size_type>(item.fmtstate_.width_) - res.size(),
@@ -242,7 +242,7 @@ namespace autoboost {
         return res;
     }
     template< class Ch, class Tr, class Alloc>
-    typename std::basic_string<Ch, Tr, Alloc>::size_type  basic_format<Ch,Tr, Alloc>:: 
+    typename std::basic_string<Ch, Tr, Alloc>::size_type  basic_format<Ch,Tr, Alloc>::
     size () const {
 #ifdef AUTOBOOST_MSVC
        // If std::min<unsigned> or std::max<unsigned> are already instantiated
@@ -271,35 +271,35 @@ namespace autoboost {
 namespace io {
 namespace detail {
 
-    template<class Ch, class Tr, class Alloc, class T> 
-    basic_format<Ch, Tr, Alloc>&  
+    template<class Ch, class Tr, class Alloc, class T>
+    basic_format<Ch, Tr, Alloc>&
     bind_arg_body (basic_format<Ch, Tr, Alloc>& self, int argN, const T& val) {
         // bind one argument to a fixed value
         // this is persistent over clear() calls, thus also over str() and <<
-        if(self.dumped_) 
+        if(self.dumped_)
             self.clear(); // needed because we will modify cur_arg_
         if(argN<1 || argN > self.num_args_) {
             if( self.exceptions() & io::out_of_range_bit )
                 autoboost::throw_exception(io::out_of_range(argN, 1, self.num_args_+1 ) );
             else return self;
         }
-        if(self.bound_.size()==0) 
+        if(self.bound_.size()==0)
             self.bound_.assign(self.num_args_,false);
-        else 
+        else
             AUTOBOOST_ASSERT( self.num_args_ == static_cast<signed int>(self.bound_.size()) );
         int o_cur_arg = self.cur_arg_;
         self.cur_arg_ = argN-1; // arrays begin at 0
 
         self.bound_[self.cur_arg_]=false; // if already set, we unset and re-sets..
         self.operator%(val); // put val at the right place, because cur_arg is set
-    
+
 
         // Now re-position cur_arg before leaving :
-        self.cur_arg_ = o_cur_arg; 
+        self.cur_arg_ = o_cur_arg;
         self.bound_[argN-1]=true;
         if(self.cur_arg_ == argN-1 ) {
             // hum, now this arg is bound, so move to next free arg
-            while(self.cur_arg_ < self.num_args_ && self.bound_[self.cur_arg_])   
+            while(self.cur_arg_ < self.num_args_ && self.bound_[self.cur_arg_])
                 ++self.cur_arg_;
         }
         // In any case, we either have all args, or are on an unbound arg :
@@ -312,7 +312,7 @@ namespace detail {
         // applies a manipulator to the format_item describing a given directive.
         // this is a permanent change, clear or reset won't cancel that.
         if(itemN<1 || itemN > static_cast<signed int>(self.items_.size() )) {
-            if( self.exceptions() & io::out_of_range_bit ) 
+            if( self.exceptions() & io::out_of_range_bit )
                 autoboost::throw_exception(io::out_of_range(itemN, 1, static_cast<int>(self.items_.size()) ));
             else return self;
         }

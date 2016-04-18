@@ -255,7 +255,7 @@ namespace container_detail {
 #if !defined(AUTOBOOST_NO_SFINAE_EXPR)
 
    //! Code inspired by Mathias Gaunard's is_convertible.cpp found in the Boost mailing list
-   //! http://boost.2283326.n4.nabble.com/type-traits-is-constructible-when-decltype-is-supported-td3575452.html
+   //! http://autoboost.2283326.n4.nabble.com/type-traits-is-constructible-when-decltype-is-supported-td3575452.html
    //! Thanks Mathias!
 
    //With variadic templates, we need a single class to implement the trait

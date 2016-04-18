@@ -9,8 +9,8 @@
 // Copyright Aleksey Gurtovoy 2001-2004
 // Copyright Peter Dimov 2001-2003
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -55,7 +55,7 @@ AUTOBOOST_MPL_AUX_ADL_BARRIER_NAMESPACE_OPEN
 typedef arg<-1> _;
 AUTOBOOST_MPL_AUX_ADL_BARRIER_NAMESPACE_CLOSE
 
-namespace autoboost { namespace mpl { 
+namespace autoboost { namespace mpl {
 
 AUTOBOOST_MPL_AUX_ARG_ADL_BARRIER_DECL(_)
 
@@ -66,7 +66,7 @@ using AUTOBOOST_MPL_AUX_ADL_BARRIER_NAMESPACE::_;
 }}
 #endif
 
-/// agurt, 17/mar/02: one more placeholder for the last 'apply#' 
+/// agurt, 17/mar/02: one more placeholder for the last 'apply#'
 /// specialization
 #define AUTOBOOST_PP_ITERATION_PARAMS_1 \
     (3,(1, AUTOBOOST_MPL_LIMIT_METAFUNCTION_ARITY + 1, <autoboost/mpl/placeholders.hpp>))
@@ -86,7 +86,7 @@ typedef arg<i_> AUTOBOOST_PP_CAT(_,i_);
 
 AUTOBOOST_MPL_AUX_ADL_BARRIER_NAMESPACE_CLOSE
 
-namespace autoboost { namespace mpl { 
+namespace autoboost { namespace mpl {
 
 AUTOBOOST_MPL_AUX_ARG_ADL_BARRIER_DECL(AUTOBOOST_PP_CAT(_,i_))
 

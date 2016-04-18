@@ -38,7 +38,7 @@ static inline autoboost::arg<8> _8() { return autoboost::arg<8>(); }
 static inline autoboost::arg<9> _9() { return autoboost::arg<9>(); }
 
 #elif defined(AUTOBOOST_MSVC) || (defined(__DECCXX_VER) && __DECCXX_VER <= 60590031) || defined(__MWERKS__) || \
-    defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ < 2)  
+    defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ < 2)
 
 static autoboost::arg<1> _1;
 static autoboost::arg<2> _2;

@@ -27,16 +27,16 @@
 namespace autoboost {
 
     template<class Ch, class Tr, class Alloc>
-    class basic_format 
+    class basic_format
     {
-        typedef typename io::CompatTraits<Tr>::compatible_type compat_traits;  
+        typedef typename io::CompatTraits<Tr>::compatible_type compat_traits;
     public:
         typedef Ch  CharT;   // borland fails in operator% if we use Ch and Tr directly
         typedef std::basic_string<Ch, Tr, Alloc>              string_type;
         typedef typename string_type::size_type               size_type;
         typedef io::detail::format_item<Ch, Tr, Alloc>        format_item_t;
         typedef io::basic_altstringbuf<Ch, Tr, Alloc>         internal_streambuf_t;
-        
+
 
         explicit basic_format(const Ch* str=NULL);
         explicit basic_format(const string_type& s);
@@ -56,15 +56,15 @@ namespace autoboost {
 
         // ** formatted result ** //
         size_type   size() const;    // sum of the current string pieces sizes
-        string_type str()  const;    // final string 
+        string_type str()  const;    // final string
 
         // ** arguments passing ** //
-        template<class T>  
+        template<class T>
         basic_format&   operator%(const T& x)
             { return io::detail::feed<CharT, Tr, Alloc, const T&>(*this,x); }
 
 #ifndef AUTOBOOST_NO_OVERLOAD_FOR_NON_CONST
-        template<class T>  basic_format&   operator%(T& x) 
+        template<class T>  basic_format&   operator%(T& x)
             { return io::detail::feed<CharT, Tr, Alloc, T&>(*this,x); }
 #endif
 
@@ -95,11 +95,11 @@ namespace autoboost {
 
         // ** object modifying **//
         template<class T>
-        basic_format&  bind_arg(int argN, const T& val) 
+        basic_format&  bind_arg(int argN, const T& val)
             { return io::detail::bind_arg_body(*this, argN, val); }
         basic_format&  clear_bind(int argN);
-        template<class T> 
-        basic_format&  modify_item(int itemN, T manipulator) 
+        template<class T>
+        basic_format&  modify_item(int itemN, T manipulator)
             { return io::detail::modify_item_body<Ch,Tr, Alloc, T> (*this, itemN, manipulator);}
 
         // Choosing which errors will throw exceptions :
@@ -114,29 +114,29 @@ namespace autoboost {
 
 #ifndef  AUTOBOOST_NO_TEMPLATE_STD_STREAM
         template<class Ch2, class Tr2, class Alloc2>
-        friend std::basic_ostream<Ch2, Tr2> & 
+        friend std::basic_ostream<Ch2, Tr2> &
         operator<<( std::basic_ostream<Ch2, Tr2> & ,
                     const basic_format<Ch2, Tr2, Alloc2>& );
 #else
         template<class Ch2, class Tr2, class Alloc2>
-        friend std::ostream & 
+        friend std::ostream &
         operator<<( std::ostream & ,
                     const basic_format<Ch2, Tr2, Alloc2>& );
 #endif
 
-        template<class Ch2, class Tr2, class Alloc2, class T>  
-        friend basic_format<Ch2, Tr2, Alloc2>&  
+        template<class Ch2, class Tr2, class Alloc2, class T>
+        friend basic_format<Ch2, Tr2, Alloc2>&
         io::detail::feed_impl (basic_format<Ch2, Tr2, Alloc2>&, T);
 
-        template<class Ch2, class Tr2, class Alloc2, class T>  friend   
-        void io::detail::distribute (basic_format<Ch2, Tr2, Alloc2>&, T);
-        
         template<class Ch2, class Tr2, class Alloc2, class T>  friend
-        basic_format<Ch2, Tr2, Alloc2>& 
+        void io::detail::distribute (basic_format<Ch2, Tr2, Alloc2>&, T);
+
+        template<class Ch2, class Tr2, class Alloc2, class T>  friend
+        basic_format<Ch2, Tr2, Alloc2>&
         io::detail::modify_item_body (basic_format<Ch2, Tr2, Alloc2>&, int, T);
-        
+
         template<class Ch2, class Tr2, class Alloc2, class T> friend
-        basic_format<Ch2, Tr2, Alloc2>&  
+        basic_format<Ch2, Tr2, Alloc2>&
         io::detail::bind_arg_body (basic_format<Ch2, Tr2, Alloc2>&, int, const T&);
 
     private:
@@ -144,7 +144,7 @@ namespace autoboost {
         typedef io::detail::stream_format_state<Ch, Tr>  stream_format_state;
         // flag bits, used for style_
         enum style_values  { ordered = 1, // set only if all directives are  positional
-                             special_needs = 4 };     
+                             special_needs = 4 };
 
         void make_or_reuse_data(std::size_t nbitems);// used for (re-)initialisation
 

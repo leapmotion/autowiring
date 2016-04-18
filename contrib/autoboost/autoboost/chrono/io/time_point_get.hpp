@@ -325,6 +325,6 @@ namespace autoboost
 
   } // chrono
 }
-// boost
+// autoboost
 
 #endif  // header

@@ -10,7 +10,7 @@
 #define AUTOBOOST_REF_HPP
 
 // The header file at this path is deprecated;
-// use boost/core/ref.hpp instead.
+// use autoboost/core/ref.hpp instead.
 
 #include <autoboost/core/ref.hpp>
 

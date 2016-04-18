@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2008
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -22,11 +22,11 @@ template<
 struct apply_wrap_impl0<
           0
         , F
-       
+
         >
 {
     typedef typename F::template apply<
-         
+
 /// since the defaults are "lost", we have to pass *something* even for nullary
 /// metafunction classes
         na
@@ -39,11 +39,11 @@ template<
 struct apply_wrap_impl0<
           1
         , F
-       
+
         >
 {
     typedef typename F::template apply<
-         
+
         na
         > type;
 };
@@ -54,11 +54,11 @@ template<
 struct apply_wrap_impl0<
           2
         , F
-       
+
         >
 {
     typedef typename F::template apply<
-         
+
         na, na
 
         > type;
@@ -70,11 +70,11 @@ template<
 struct apply_wrap_impl0<
           3
         , F
-       
+
         >
 {
     typedef typename F::template apply<
-         
+
         na, na, na
 
         > type;
@@ -86,11 +86,11 @@ template<
 struct apply_wrap_impl0<
           4
         , F
-       
+
         >
 {
     typedef typename F::template apply<
-         
+
         na, na, na, na
 
         > type;
@@ -102,11 +102,11 @@ template<
 struct apply_wrap_impl0<
           5
         , F
-       
+
         >
 {
     typedef typename F::template apply<
-         
+
         na, na, na, na, na
 
         > type;
@@ -119,7 +119,7 @@ struct apply_wrap0
     : apply_wrap_impl0<
           ::autoboost::mpl::aux::arity< F,0 >::value
         , F
-       
+
         >::type
 {
 };

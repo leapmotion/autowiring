@@ -2,7 +2,7 @@
 #define AUTOBOOST_DATE_TIME_TZ_DATABASE_HPP__
 
 /* Copyright (c) 2003-2004 CrystalClear Software, Inc.
- * Subject to the Boost Software License, Version 1.0. 
+ * Subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
  * $Date$
@@ -17,8 +17,8 @@
 namespace autoboost {
 namespace local_time {
 
-  using date_time::data_not_accessible; 
-  using date_time::bad_field_count; 
+  using date_time::data_not_accessible;
+  using date_time::bad_field_count;
 
   //! Object populated with autoboost::shared_ptr<time_zone_base> objects
   /*! Object populated with autoboost::shared_ptr<time_zone_base> objects

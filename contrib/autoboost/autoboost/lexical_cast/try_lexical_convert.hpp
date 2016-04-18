@@ -66,17 +66,17 @@ namespace autoboost {
                         autoboost::detail::is_character<Source>::value
                     >::value,
                     autoboost::is_arithmetic<Source>::value,
-                    autoboost::is_arithmetic<Target>::value       
+                    autoboost::is_arithmetic<Target>::value
                 >::value
             ));
         };
 
         /*
-         * is_xchar_to_xchar<Target, Source>::value is true, 
+         * is_xchar_to_xchar<Target, Source>::value is true,
          * Target and Souce are char types of the same size 1 (char, signed char, unsigned char).
          */
         template<typename Target, typename Source>
-        struct is_xchar_to_xchar 
+        struct is_xchar_to_xchar
         {
             AUTOBOOST_STATIC_CONSTANT(bool, value = (
                 autoboost::type_traits::ice_and<

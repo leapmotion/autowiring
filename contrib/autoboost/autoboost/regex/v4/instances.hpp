@@ -133,18 +133,18 @@ template AUTOBOOST_REGEX_DECL
 std::locale cpp_regex_traits_base<AUTOBOOST_REGEX_CHAR_T>::imbue(const std::locale& l);
 
 template AUTOBOOST_REGEX_DECL
-cpp_regex_traits_implementation<AUTOBOOST_REGEX_CHAR_T>::string_type 
+cpp_regex_traits_implementation<AUTOBOOST_REGEX_CHAR_T>::string_type
    cpp_regex_traits_implementation<AUTOBOOST_REGEX_CHAR_T>::transform_primary(const AUTOBOOST_REGEX_CHAR_T* p1, const AUTOBOOST_REGEX_CHAR_T* p2) const;
 template AUTOBOOST_REGEX_DECL
-cpp_regex_traits_implementation<AUTOBOOST_REGEX_CHAR_T>::string_type 
+cpp_regex_traits_implementation<AUTOBOOST_REGEX_CHAR_T>::string_type
    cpp_regex_traits_implementation<AUTOBOOST_REGEX_CHAR_T>::transform(const AUTOBOOST_REGEX_CHAR_T* p1, const AUTOBOOST_REGEX_CHAR_T* p2) const;
 template AUTOBOOST_REGEX_DECL
-cpp_regex_traits_implementation<AUTOBOOST_REGEX_CHAR_T>::string_type 
+cpp_regex_traits_implementation<AUTOBOOST_REGEX_CHAR_T>::string_type
    cpp_regex_traits_implementation<AUTOBOOST_REGEX_CHAR_T>::lookup_collatename(const AUTOBOOST_REGEX_CHAR_T* p1, const AUTOBOOST_REGEX_CHAR_T* p2) const;
 template AUTOBOOST_REGEX_DECL
 void cpp_regex_traits_implementation<AUTOBOOST_REGEX_CHAR_T>::init();
 template AUTOBOOST_REGEX_DECL
-cpp_regex_traits_implementation<AUTOBOOST_REGEX_CHAR_T>::char_class_type 
+cpp_regex_traits_implementation<AUTOBOOST_REGEX_CHAR_T>::char_class_type
    cpp_regex_traits_implementation<AUTOBOOST_REGEX_CHAR_T>::lookup_classname_imp(const AUTOBOOST_REGEX_CHAR_T* p1, const AUTOBOOST_REGEX_CHAR_T* p2) const;
 #ifdef AUTOBOOST_REGEX_BUGGY_CTYPE_FACET
 template AUTOBOOST_REGEX_DECL
@@ -165,15 +165,15 @@ static_mutex& cpp_regex_traits<AUTOBOOST_REGEX_CHAR_T>::get_mutex_inst();
 #endif
 #endif
 
-template AUTOBOOST_REGEX_DECL basic_regex<AUTOBOOST_REGEX_CHAR_T AUTOBOOST_REGEX_TRAITS_T >& 
+template AUTOBOOST_REGEX_DECL basic_regex<AUTOBOOST_REGEX_CHAR_T AUTOBOOST_REGEX_TRAITS_T >&
    basic_regex<AUTOBOOST_REGEX_CHAR_T AUTOBOOST_REGEX_TRAITS_T >::do_assign(
-      const AUTOBOOST_REGEX_CHAR_T* p1, 
-      const AUTOBOOST_REGEX_CHAR_T* p2, 
+      const AUTOBOOST_REGEX_CHAR_T* p1,
+      const AUTOBOOST_REGEX_CHAR_T* p2,
       flag_type f);
-template AUTOBOOST_REGEX_DECL basic_regex<AUTOBOOST_REGEX_CHAR_T AUTOBOOST_REGEX_TRAITS_T >::locale_type AUTOBOOST_REGEX_CALL 
+template AUTOBOOST_REGEX_DECL basic_regex<AUTOBOOST_REGEX_CHAR_T AUTOBOOST_REGEX_TRAITS_T >::locale_type AUTOBOOST_REGEX_CALL
    basic_regex<AUTOBOOST_REGEX_CHAR_T AUTOBOOST_REGEX_TRAITS_T >::imbue(locale_type l);
 
-template AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL 
+template AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL
    match_results<const AUTOBOOST_REGEX_CHAR_T*>::maybe_assign(
       const match_results<const AUTOBOOST_REGEX_CHAR_T*>& m);
 
@@ -189,7 +189,7 @@ template AUTOBOOST_REGEX_DECL bool perl_matcher<AUTOBOOST_REGEX_CHAR_T const *, 
    && !defined(__SGI_STL_PORT)\
    && !defined(_STLPORT_VERSION)
 // std:basic_string<>::const_iterator instances as well:
-template AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL 
+template AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL
    match_results<std::basic_string<AUTOBOOST_REGEX_CHAR_T>::const_iterator>::maybe_assign(
       const match_results<std::basic_string<AUTOBOOST_REGEX_CHAR_T>::const_iterator>& m);
 

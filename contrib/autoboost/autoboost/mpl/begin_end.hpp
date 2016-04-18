@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -23,7 +23,7 @@
 namespace autoboost { namespace mpl {
 
 // agurt, 13/sep/02: switched from inheritance to typedef; MSVC is more
-// happy this way (less ETI-related errors), and it doesn't affect 
+// happy this way (less ETI-related errors), and it doesn't affect
 // anything else
 template<
       typename AUTOBOOST_MPL_AUX_NA_PARAM(Sequence)

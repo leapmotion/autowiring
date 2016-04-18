@@ -8,8 +8,8 @@
 
 // Copyright Aleksey Gurtovoy 2001-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -127,7 +127,7 @@ struct lambda< arg<N>,Tag AUX778076_ARITY_PARAM(int_<-1>) >
 {
     typedef true_ is_le;
     typedef mpl::arg<N> result_; // qualified for the sake of MIPSpro 7.41
-    typedef mpl::protect<result_> type; 
+    typedef mpl::protect<result_> type;
 };
 
 
@@ -181,7 +181,7 @@ struct lambda<
     typedef typename l1::is_le is_le;
     typedef bind1< quote1<aux::template_arity>, typename l1::result_ > arity_;
     typedef lambda< typename if_<is_le,arity_,Arity>::type,Tag2 > l3;
-    
+
     typedef aux::le_result3<is_le, Tag2, mpl::lambda, l1, l2, l3> le_result_;
     typedef typename le_result_::result_ result_;
     typedef typename le_result_::type type;
@@ -200,7 +200,7 @@ struct lambda<
 {
     typedef lambda< F,Tag2 > l1;
     typedef lambda< Tag1,Tag2 > l2;
-    
+
     typedef typename l1::is_le is_le;
     typedef aux::le_result2<is_le, Tag2, mpl::lambda, l1, l2> le_result_;
     typedef typename le_result_::result_ result_;
@@ -257,7 +257,7 @@ struct AUTOBOOST_PP_CAT(le_result,i_)
     typedef F<
           AUTOBOOST_MPL_PP_REPEAT(i_, AUX778076_TYPE, L)
         > result_;
-    
+
     typedef result_ type;
 };
 
@@ -302,7 +302,7 @@ template<
     , AUX778076_LAMBDA_PARAMS(i_, typename T)
     , typename Tag
     >
-struct lambda< 
+struct lambda<
           F<AUX778076_LAMBDA_PARAMS(i_, T)>
         , Tag
         AUX778076_ARITY_PARAM(int_<i_>)
@@ -318,7 +318,7 @@ struct lambda<
     typedef aux::AUTOBOOST_PP_CAT(le_result,i_)<
           is_le, Tag, F, AUX778076_LAMBDA_PARAMS(i_, l)
         > le_result_;
-    
+
     typedef typename le_result_::result_ result_;
     typedef typename le_result_::type type;
 };
@@ -345,7 +345,7 @@ struct lambda<
           F
         AUX778076_BIND_N_PARAMS(i_, T)
         > result_;
-        
+
     typedef result_ type;
 };
 

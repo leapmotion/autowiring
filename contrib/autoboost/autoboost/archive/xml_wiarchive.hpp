@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // xml_wiarchive.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -37,7 +37,7 @@
 #  pragma warning(disable : 4511 4512)
 #endif
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 
 namespace detail {
@@ -49,7 +49,7 @@ class basic_xml_grammar;
 typedef basic_xml_grammar<wchar_t> xml_wgrammar;
 
 template<class Archive>
-class xml_wiarchive_impl : 
+class xml_wiarchive_impl :
     public basic_text_iprimitive<std::wistream>,
     public basic_xml_iarchive<Archive>
 {
@@ -77,17 +77,17 @@ protected:
         return is;
     }
     template<class T>
-    void 
+    void
     load(T & t){
         basic_text_iprimitive<std::wistream>::load(t);
     }
-    void 
+    void
     load(version_type & t){
         unsigned int v;
         load(v);
         t = version_type(v);
     }
-    void 
+    void
     load(autoboost::serialization::item_version_type & t){
         unsigned int v;
         load(v);
@@ -111,11 +111,11 @@ protected:
     }
     AUTOBOOST_WARCHIVE_DECL(void)
     load_override(class_name_type & t, int);
-    AUTOBOOST_WARCHIVE_DECL(void) 
+    AUTOBOOST_WARCHIVE_DECL(void)
     init();
-    AUTOBOOST_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
+    AUTOBOOST_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
     xml_wiarchive_impl(std::wistream & is, unsigned int flags) ;
-    AUTOBOOST_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
+    AUTOBOOST_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
     ~xml_wiarchive_impl();
 };
 
@@ -123,7 +123,7 @@ protected:
 } // namespace autoboost
 
 #ifdef AUTOBOOST_MSVC
-#  pragma warning(pop) 
+#  pragma warning(pop)
 #endif
 
 #include <autoboost/archive/detail/abi_suffix.hpp> // pops abi_suffix.hpp pragmas
@@ -133,10 +133,10 @@ protected:
 #  pragma warning(disable : 4511 4512)
 #endif
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 
-class xml_wiarchive : 
+class xml_wiarchive :
     public xml_wiarchive_impl<xml_wiarchive>{
 public:
     xml_wiarchive(std::wistream & is, unsigned int flags = 0) :

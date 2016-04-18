@@ -54,7 +54,7 @@ inline std::int_least32_t atomic_conditional_increment( std::atomic_int_least32_
         {
             return r;
         }
-    }    
+    }
 }
 
 class sp_counted_base

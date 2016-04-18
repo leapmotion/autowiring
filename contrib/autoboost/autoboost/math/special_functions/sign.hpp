@@ -17,14 +17,14 @@
 #include <autoboost/math/special_functions/math_fwd.hpp>
 #include <autoboost/math/special_functions/detail/fp_traits.hpp>
 
-namespace autoboost{ namespace math{ 
+namespace autoboost{ namespace math{
 
 namespace detail {
 
   // signbit
 
 #ifdef AUTOBOOST_MATH_USE_STD_FPCLASSIFY
-    template<class T> 
+    template<class T>
     inline int signbit_impl(T x, native_tag const&)
     {
         return (std::signbit)(x);
@@ -40,7 +40,7 @@ namespace detail {
         return x < 0;
     }
 
-    template<class T> 
+    template<class T>
     inline int signbit_impl(T x, generic_tag<false> const&)
     {
         return x < 0;
@@ -48,7 +48,7 @@ namespace detail {
 
 #if defined(__GNUC__) && (LDBL_MANT_DIG == 106)
     //
-    // Special handling for GCC's "double double" type, 
+    // Special handling for GCC's "double double" type,
     // in this case the sign is the same as the sign we
     // get by casting to double, no overflow/underflow
     // can occur since the exponents are the same magnitude
@@ -74,7 +74,7 @@ namespace detail {
         return a & traits::sign ? 1 : 0;
     }
 
-    template<class T> 
+    template<class T>
     inline int signbit_impl(T x, ieee_copy_leading_bits_tag const&)
     {
         typedef AUTOBOOST_DEDUCED_TYPENAME fp_traits<T>::type traits;
@@ -86,7 +86,7 @@ namespace detail {
     }
 
     // Changesign
-    
+
     // Generic versions first, note that these do not handle
     // signed zero or NaN.
 
@@ -103,7 +103,7 @@ namespace detail {
     }
 #if defined(__GNUC__) && (LDBL_MANT_DIG == 106)
     //
-    // Special handling for GCC's "double double" type, 
+    // Special handling for GCC's "double double" type,
     // in this case we need to change the sign of both
     // components of the "double double":
     //
@@ -151,7 +151,7 @@ namespace detail {
 }   // namespace detail
 
 template<class T> int (signbit)(T x)
-{ 
+{
    typedef typename detail::fp_traits<T>::type traits;
    typedef typename traits::method method;
    // typedef typename autoboost::is_floating_point<T>::type fp_tag;
@@ -166,7 +166,7 @@ inline int sign AUTOBOOST_NO_MACRO_EXPAND(const T& z)
 }
 
 template <class T> typename tools::promote_args_permissive<T>::type (changesign)(const T& x)
-{ //!< \brief return unchanged binary pattern of x, except for change of sign bit. 
+{ //!< \brief return unchanged binary pattern of x, except for change of sign bit.
    typedef typename detail::fp_traits<T>::sign_change_type traits;
    typedef typename traits::method method;
    // typedef typename autoboost::is_floating_point<T>::type fp_tag;
@@ -176,12 +176,12 @@ template <class T> typename tools::promote_args_permissive<T>::type (changesign)
 }
 
 template <class T, class U>
-inline typename tools::promote_args_permissive<T, U>::type 
+inline typename tools::promote_args_permissive<T, U>::type
    copysign AUTOBOOST_NO_MACRO_EXPAND(const T& x, const U& y)
 {
    AUTOBOOST_MATH_STD_USING
    typedef typename tools::promote_args_permissive<T, U>::type result_type;
-   return (autoboost::math::signbit)(static_cast<result_type>(x)) != (autoboost::math::signbit)(static_cast<result_type>(y)) 
+   return (autoboost::math::signbit)(static_cast<result_type>(x)) != (autoboost::math::signbit)(static_cast<result_type>(y))
       ? (autoboost::math::changesign)(static_cast<result_type>(x)) : static_cast<result_type>(x);
 }
 

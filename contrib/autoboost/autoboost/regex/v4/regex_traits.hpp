@@ -3,12 +3,12 @@
  * Copyright (c) 2003
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
- 
+
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         regex_traits.hpp
@@ -84,10 +84,10 @@ struct regex_traits : public implementationT
 //
 namespace re_detail{
 #if !AUTOBOOST_WORKAROUND(__HP_aCC, < 60000)
-AUTOBOOST_MPL_HAS_XXX_TRAIT_DEF(boost_extensions_tag)
+AUTOBOOST_MPL_HAS_XXX_TRAIT_DEF(autoboost_extensions_tag)
 #else
 template<class T>
-struct has_boost_extensions_tag
+struct has_autoboost_extensions_tag
 {
    AUTOBOOST_STATIC_CONSTANT(bool, value = false);
 };
@@ -160,10 +160,10 @@ struct compute_wrapper_base<c_regex_traits<wchar_t>, false>
 } // namespace re_detail
 
 template <class BaseT>
-struct regex_traits_wrapper 
+struct regex_traits_wrapper
    : public ::autoboost::re_detail::compute_wrapper_base<
-               BaseT, 
-               ::autoboost::re_detail::has_boost_extensions_tag<BaseT>::value
+               BaseT,
+               ::autoboost::re_detail::has_autoboost_extensions_tag<BaseT>::value
             >::type
 {
    regex_traits_wrapper(){}

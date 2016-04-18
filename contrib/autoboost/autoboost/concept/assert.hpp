@@ -31,7 +31,7 @@
 #  include <autoboost/concept/detail/msvc.hpp>
 # elif AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x564))
 #  include <autoboost/concept/detail/borland.hpp>
-# else 
+# else
 #  include <autoboost/concept/detail/general.hpp>
 # endif
 

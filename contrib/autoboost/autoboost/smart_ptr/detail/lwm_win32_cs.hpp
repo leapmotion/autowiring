@@ -8,7 +8,7 @@
 #endif
 
 //
-//  boost/detail/lwm_win32_cs.hpp
+//  autoboost/detail/lwm_win32_cs.hpp
 //
 //  Copyright (c) 2002, 2003 Peter Dimov
 //  Copyright (c) Microsoft Corporation 2014

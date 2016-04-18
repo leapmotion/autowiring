@@ -28,12 +28,12 @@ namespace detail {
 #if defined(AUTOBOOST_NO_STD_LOCALE)
     // streams will be used for narrow / widen. but these methods are not const
     template<class T>
-    T& const_or_not(const T& x) { 
+    T& const_or_not(const T& x) {
         return const_cast<T&> (x);
     }
 #else
     template<class T>
-    const T& const_or_not(const T& x) { 
+    const T& const_or_not(const T& x) {
         return x;
     }
 #endif
@@ -50,11 +50,11 @@ namespace detail {
 # else
         (void) fac;     // remove "unused parameter" warning
         using namespace std;
-        return isdigit(c); 
-#endif 
+        return isdigit(c);
+#endif
     }
- 
-    template<class Iter, class Facet> 
+
+    template<class Iter, class Facet>
     Iter wrap_scan_notdigit(const Facet & fac, Iter beg, Iter end) {
         using namespace std;
         for( ; beg!=end && wrap_isdigit(fac, *beg); ++beg) ;
@@ -67,8 +67,8 @@ namespace detail {
     // Effects : read sequence and convert digits into integral n, of type Res
     // Returns : n
     template<class Res, class Iter, class Facet>
-    Iter str2int (const Iter & start, const Iter & last, Res & res, 
-                 const Facet& fac) 
+    Iter str2int (const Iter & start, const Iter & last, Res & res,
+                 const Facet& fac)
     {
         using namespace std;
         Iter it;
@@ -87,7 +87,7 @@ namespace detail {
     // Effects : advance *pos_p by skipping printf's asterisk fields.
     // Returns : nothing
     template<class Iter, class Facet>
-    Iter skip_asterisk(Iter start, Iter last, const Facet& fac) 
+    Iter skip_asterisk(Iter start, Iter last, const Facet& fac)
     {
         using namespace std;
         ++ start;
@@ -101,13 +101,13 @@ namespace detail {
     // auxiliary func called by parse_printf_directive
     // for centralising error handling
     // it either throws if user sets the corresponding flag, or does nothing.
-    inline void maybe_throw_exception(unsigned char exceptions, 
+    inline void maybe_throw_exception(unsigned char exceptions,
                                       std::size_t pos, std::size_t size)
     {
         if(exceptions & io::bad_format_string_bit)
             autoboost::throw_exception(io::bad_format_string(pos, size) );
     }
-    
+
 
     // Input: the position of a printf-directive in the format-string
     //    a basic_ios& merely to use its widen/narrow member function
@@ -120,7 +120,7 @@ namespace detail {
     //     this directive
     //  *fpar is set with the parameters read in the directive
     template<class Ch, class Tr, class Alloc, class Iter, class Facet>
-    bool parse_printf_directive(Iter & start, const Iter& last, 
+    bool parse_printf_directive(Iter & start, const Iter& last,
                                 detail::format_item<Ch, Tr, Alloc> * fpar,
                                 const Facet& fac,
                                 std::size_t offset, unsigned char exceptions)
@@ -136,8 +136,8 @@ namespace detail {
         if(start>= last) { // empty directive : this is a trailing %
                 maybe_throw_exception(exceptions, start-start0 + offset, fstring_size);
                 return false;
-        }          
-          
+        }
+
         if(*start== const_or_not(fac).widen( '|')) {
             in_brackets=true;
             if( ++start >= last ) {
@@ -147,7 +147,7 @@ namespace detail {
         }
 
         // the flag '0' would be picked as a digit for argument order, but here it's a flag :
-        if(*start== const_or_not(fac).widen( '0')) 
+        if(*start== const_or_not(fac).widen( '0'))
             goto parse_flags;
 
         // handle argument order (%2$d)  or possibly width specification: %2d
@@ -158,13 +158,13 @@ namespace detail {
                 maybe_throw_exception(exceptions, start-start0+offset, fstring_size);
                 return false;
             }
-            
+
             // %N% case : this is already the end of the directive
             if( *start ==  const_or_not(fac).widen( '%') ) {
                 fpar->argN_ = n-1;
                 ++start;
-                if( in_brackets) 
-                    maybe_throw_exception(exceptions, start-start0+offset, fstring_size); 
+                if( in_brackets)
+                    maybe_throw_exception(exceptions, start-start0+offset, fstring_size);
                 // but don't return.  maybe "%" was used in lieu of '$', so we go on.
                 else
                     return true;
@@ -173,7 +173,7 @@ namespace detail {
             if ( *start== const_or_not(fac).widen( '$') ) {
                 fpar->argN_ = n-1;
                 ++start;
-            } 
+            }
             else {
                 // non-positionnal directive
                 fpar->fmtstate_.width_ = n;
@@ -181,8 +181,8 @@ namespace detail {
                 goto parse_precision;
             }
         }
-    
-      parse_flags: 
+
+      parse_flags:
         // handle flags
         while ( start != last) { // as long as char is one of + - = _ # 0 l h   or ' '
             // misc switches
@@ -222,18 +222,18 @@ namespace detail {
 
         if( start>=last) {
             maybe_throw_exception(exceptions, start-start0+offset, fstring_size);
-            return true; 
+            return true;
         }
       parse_width:
         // handle width spec
         // first skip 'asterisk fields' :  *, or *N$
         if(*start == const_or_not(fac).widen( '*') )
-            start = skip_asterisk(start, last, fac); 
+            start = skip_asterisk(start, last, fac);
         if(start!=last && wrap_isdigit(fac, *start))
             start = str2int(start, last, fpar->fmtstate_.width_, fac);
 
       parse_precision:
-        if( start>= last) { 
+        if( start>= last) {
             maybe_throw_exception(exceptions, start-start0+offset, fstring_size);
             return true;
         }
@@ -241,7 +241,7 @@ namespace detail {
         if (*start== const_or_not(fac).widen( '.')) {
             ++start;
             if(start != last && *start == const_or_not(fac).widen( '*') )
-                start = skip_asterisk(start, last, fac); 
+                start = skip_asterisk(start, last, fac);
             if(start != last && wrap_isdigit(fac, *start)) {
                 start = str2int(start, last, fpar->fmtstate_.precision_, fac);
                 precision_set = true;
@@ -249,10 +249,10 @@ namespace detail {
             else
                 fpar->fmtstate_.precision_ =0;
         }
-    
+
         // handle  formatting-type flags :
-        while( start != last && ( *start== const_or_not(fac).widen( 'l') 
-                                  || *start== const_or_not(fac).widen( 'L') 
+        while( start != last && ( *start== const_or_not(fac).widen( 'l')
+                                  || *start== const_or_not(fac).widen( 'L')
                                   || *start== const_or_not(fac).widen( 'h')) )
             ++start;
         if( start>=last) {
@@ -287,7 +287,7 @@ namespace detail {
             fpar->fmtstate_.flags_ &= ~std::ios_base::basefield;
             fpar->fmtstate_.flags_ |=  std::ios_base::dec;
             break;
-      
+
         case 'f':
             fpar->fmtstate_.flags_ &= ~std::ios_base::floatfield;
             fpar->fmtstate_.flags_ |=  std::ios_base::fixed;
@@ -305,12 +305,12 @@ namespace detail {
             else
                 fpar->fmtstate_.fill_ = *start;
             fpar->pad_scheme_ |= format_item_t::tabulation;
-            fpar->argN_ = format_item_t::argN_tabulation; 
+            fpar->argN_ = format_item_t::argN_tabulation;
             break;
-        case 't': 
+        case 't':
             fpar->fmtstate_.fill_ = const_or_not(fac).widen( ' ');
             fpar->pad_scheme_ |= format_item_t::tabulation;
-            fpar->argN_ = format_item_t::argN_tabulation; 
+            fpar->argN_ = format_item_t::argN_tabulation;
             break;
 
         case 'G':
@@ -321,23 +321,23 @@ namespace detail {
             fpar->fmtstate_.flags_ |=  std::ios_base::dec;
 
             // CLEAR all floatield flags, so stream will CHOOSE
-            fpar->fmtstate_.flags_ &= ~std::ios_base::floatfield; 
+            fpar->fmtstate_.flags_ &= ~std::ios_base::floatfield;
             break;
 
         case 'C':
-        case 'c': 
+        case 'c':
             fpar->truncate_ = 1;
             break;
         case 'S':
-        case 's': 
+        case 's':
             if(precision_set) // handle truncation manually, with own parameter.
                 fpar->truncate_ = fpar->fmtstate_.precision_;
             fpar->fmtstate_.precision_ = 6; // default stream precision.
             break;
-        case 'n' :  
+        case 'n' :
             fpar->argN_ = format_item_t::argN_ignored;
             break;
-        default: 
+        default:
             maybe_throw_exception(exceptions, start-start0+offset, fstring_size);
         }
         ++start;
@@ -354,10 +354,10 @@ namespace detail {
     // -end parse_printf_directive()
 
     template<class String, class Facet>
-    int upper_bound_from_fstring(const String& buf, 
+    int upper_bound_from_fstring(const String& buf,
                                  const typename String::value_type arg_mark,
-                                 const Facet& fac, 
-                                 unsigned char exceptions) 
+                                 const Facet& fac,
+                                 unsigned char exceptions)
     {
         // quick-parsing of the format-string to count arguments mark (arg_mark, '%')
         // returns : upper bound on the number of format items in the format strings
@@ -374,7 +374,7 @@ namespace detail {
                 }
             }
             if(buf[i1+1] == buf[i1] ) {// escaped "%%"
-                i1+=2; continue; 
+                i1+=2; continue;
             }
 
             ++i1;
@@ -387,8 +387,8 @@ namespace detail {
         return num_items;
     }
     template<class String> inline
-    void append_string(String& dst, const String& src, 
-                       const typename String::size_type beg, 
+    void append_string(String& dst, const String& src,
+                       const typename String::size_type beg,
                        const typename String::size_type end) {
         dst.append(src.begin()+beg, src.begin()+end);
     }
@@ -402,19 +402,19 @@ namespace detail {
 //  format :: parse(..)
 
     template<class Ch, class Tr, class Alloc>
-    basic_format<Ch, Tr, Alloc>& basic_format<Ch, Tr, Alloc>:: 
+    basic_format<Ch, Tr, Alloc>& basic_format<Ch, Tr, Alloc>::
     parse (const string_type& buf) {
-        // parse the format-string 
+        // parse the format-string
         using namespace std;
 #if !defined(AUTOBOOST_NO_STD_LOCALE)
         const std::ctype<Ch> & fac = AUTOBOOST_USE_FACET( std::ctype<Ch>, getloc());
 #else
-        io::basic_oaltstringstream<Ch, Tr, Alloc> fac; 
+        io::basic_oaltstringstream<Ch, Tr, Alloc> fac;
         //has widen and narrow even on compilers without locale
 #endif
 
         const Ch arg_mark = io::detail::const_or_not(fac).widen( '%');
-        bool ordered_args=true; 
+        bool ordered_args=true;
         int max_argN=-1;
 
         // A: find upper_bound on num_items and allocates arrays
@@ -429,10 +429,10 @@ namespace detail {
         int cur_item=0;
         while( (i1=buf.find(arg_mark,i1)) != string_type::npos ) {
             string_type & piece = (cur_item==0) ? prefix_ : items_[cur_item-1].appendix_;
-            if( buf[i1+1] == buf[i1] ) { // escaped mark, '%%' 
+            if( buf[i1+1] == buf[i1] ) { // escaped mark, '%%'
                 io::detail::append_string(piece, buf, i0, i1+1);
                 i1+=2; i0=i1;
-                continue; 
+                continue;
             }
             AUTOBOOST_ASSERT(  static_cast<unsigned int>(cur_item) < items_.size() || cur_item==0);
 
@@ -446,7 +446,7 @@ namespace detail {
                 it, buf.end(), &items_[cur_item], fac, i1, exceptions());
             i1 = it - buf.begin();
             if( ! parse_ok ) // the directive will be printed verbatim
-                continue; 
+                continue;
             i0=i1;
             items_[cur_item].compute_states(); // process complex options, like zeropad, into params
 
@@ -461,13 +461,13 @@ namespace detail {
             ++cur_item;
         } // loop on %'s
         AUTOBOOST_ASSERT(cur_item == num_items);
-    
+
         // store the final piece of string
         {
             string_type & piece = (cur_item==0) ? prefix_ : items_[cur_item-1].appendix_;
             io::detail::append_string(piece, buf, i0, buf.size());
         }
-    
+
         if( !ordered_args) {
             if(max_argN >= 0 ) {  // dont mix positional with non-positionnal directives
                 if(exceptions() & io::bad_format_string_bit)
@@ -483,7 +483,7 @@ namespace detail {
                 }
             max_argN = non_ordered_items-1;
         }
-    
+
         // C: set some member data :
         items_.resize(num_items, format_item_t(io::detail::const_or_not(fac).widen( ' ')) );
 
