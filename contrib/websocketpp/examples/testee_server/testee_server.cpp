@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2015, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,6 +27,7 @@
 
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
+#include <websocketpp/extensions/permessage_deflate/enabled.hpp>
 #include <iostream>
 
 struct testee_config : public websocketpp::config::asio {
@@ -64,6 +65,12 @@ struct testee_config : public websocketpp::config::asio {
         websocketpp::log::elevel::none;
     static const websocketpp::log::level alog_level =
         websocketpp::log::alevel::none;
+
+    /// permessage_compress extension
+    struct permessage_deflate_config {};
+
+    typedef websocketpp::extensions::permessage_deflate::enabled
+        <permessage_deflate_config> permessage_deflate_type;
 };
 
 typedef websocketpp::server<testee_config> server;
@@ -80,8 +87,8 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-void on_socket_init(websocketpp::connection_hdl hdl, boost::asio::ip::tcp::socket & s) {
-    boost::asio::ip::tcp::no_delay option(true);
+void on_socket_init(websocketpp::connection_hdl, autoboost::asio::ip::tcp::socket & s) {
+    autoboost::asio::ip::tcp::no_delay option(true);
     s.set_option(option);
 }
 
@@ -124,7 +131,7 @@ int main(int argc, char * argv[]) {
             typedef websocketpp::lib::shared_ptr<websocketpp::lib::thread> thread_ptr;
             std::vector<thread_ptr> ts;
             for (size_t i = 0; i < num_threads; i++) {
-                ts.push_back(thread_ptr(new websocketpp::lib::thread(&server::run, &testee_server)));
+                ts.push_back(websocketpp::lib::make_shared<websocketpp::lib::thread>(&server::run, &testee_server));
             }
 
             for (size_t i = 0; i < num_threads; i++) {
@@ -132,11 +139,7 @@ int main(int argc, char * argv[]) {
             }
         }
 
-    } catch (const std::exception & e) {
+    } catch (websocketpp::exception const & e) {
         std::cout << "exception: " << e.what() << std::endl;
-    } catch (websocketpp::lib::error_code e) {
-        std::cout << "error code: " << e.message() << std::endl;
-    } catch (...) {
-        std::cout << "other exception" << std::endl;
     }
 }

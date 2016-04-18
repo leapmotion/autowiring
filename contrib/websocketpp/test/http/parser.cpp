@@ -28,6 +28,7 @@
 #define BOOST_TEST_MODULE http_parser
 #include <autoboost/test/unit_test.hpp>
 
+#include <iostream>
 #include <string>
 
 #include <websocketpp/http/request.hpp>
@@ -54,24 +55,24 @@ BOOST_AUTO_TEST_CASE( is_token_char ) {
 
     // numbers
     for (int i = 0x30; i < 0x3a; i++) {
-    	BOOST_CHECK( websocketpp::http::is_token_char((unsigned char)(i)) );
+        BOOST_CHECK( websocketpp::http::is_token_char((unsigned char)(i)) );
     }
 
     // upper
     for (int i = 0x41; i < 0x5b; i++) {
-    	BOOST_CHECK( websocketpp::http::is_token_char((unsigned char)(i)) );
+        BOOST_CHECK( websocketpp::http::is_token_char((unsigned char)(i)) );
     }
 
     // lower
     for (int i = 0x61; i < 0x7b; i++) {
-    	BOOST_CHECK( websocketpp::http::is_token_char((unsigned char)(i)) );
+        BOOST_CHECK( websocketpp::http::is_token_char((unsigned char)(i)) );
     }
 
     // invalid characters
 
     // lower unprintable
     for (int i = 0; i < 33; i++) {
-    	BOOST_CHECK( !websocketpp::http::is_token_char((unsigned char)(i)) );
+        BOOST_CHECK( !websocketpp::http::is_token_char((unsigned char)(i)) );
     }
 
     // misc
@@ -95,7 +96,7 @@ BOOST_AUTO_TEST_CASE( is_token_char ) {
 
     // upper unprintable and out of ascii range
     for (int i = 127; i < 256; i++) {
-    	BOOST_CHECK( !websocketpp::http::is_token_char((unsigned char)(i)) );
+        BOOST_CHECK( !websocketpp::http::is_token_char((unsigned char)(i)) );
     }
 
     // is not
@@ -114,7 +115,7 @@ BOOST_AUTO_TEST_CASE( extract_token ) {
     BOOST_CHECK( ret.second == d1.begin()+3 );
 
     ret = websocketpp::http::parser::extract_token(d2.begin(),d2.end());
-    BOOST_CHECK( ret.first == "" );
+    BOOST_CHECK( ret.first.empty() );
     BOOST_CHECK( ret.second == d2.begin()+0 );
 
     ret = websocketpp::http::parser::extract_token(d2.begin()+1,d2.end());
@@ -126,7 +127,7 @@ BOOST_AUTO_TEST_CASE( extract_quoted_string ) {
     std::string d1 = "\"foo\"";
     std::string d2 = "\"foo\\\"bar\\\"baz\"";
     std::string d3 = "\"foo\"     ";
-    std::string d4 = "";
+    std::string d4;
     std::string d5 = "foo";
 
     std::pair<std::string,std::string::const_iterator> ret;
@@ -146,11 +147,11 @@ BOOST_AUTO_TEST_CASE( extract_quoted_string ) {
     BOOST_CHECK( ret.second == d3.begin()+5 );
 
     ret = extract_quoted_string(d4.begin(),d4.end());
-    BOOST_CHECK( ret.first == "" );
+    BOOST_CHECK( ret.first.empty() );
     BOOST_CHECK( ret.second == d4.begin() );
 
     ret = extract_quoted_string(d5.begin(),d5.end());
-    BOOST_CHECK( ret.first == "" );
+    BOOST_CHECK( ret.first.empty() );
     BOOST_CHECK( ret.second == d5.begin() );
 }
 
@@ -184,7 +185,7 @@ BOOST_AUTO_TEST_CASE( extract_all_lws ) {
 }
 
 BOOST_AUTO_TEST_CASE( extract_attributes_blank ) {
-    std::string s = "";
+    std::string s;
 
     websocketpp::http::attribute_list a;
     std::string::const_iterator it;
@@ -208,7 +209,7 @@ BOOST_AUTO_TEST_CASE( extract_attributes_simple ) {
 }
 
 BOOST_AUTO_TEST_CASE( extract_parameters ) {
-    std::string s1 = "";
+    std::string s1;
     std::string s2 = "foo";
     std::string s3 = " foo \r\nAbc";
     std::string s4 = "  \r\n   foo  ";
@@ -364,6 +365,7 @@ BOOST_AUTO_TEST_CASE( strip_lws ) {
     std::string test6 = "  \r\n  foo     ";
     std::string test7 = "  \t  foo     ";
     std::string test8 = "  \t       ";
+    std::string test9 = " \n\r";
 
     BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test1), "foo" );
     BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test2), "foo" );
@@ -373,6 +375,7 @@ BOOST_AUTO_TEST_CASE( strip_lws ) {
     BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test6), "foo" );
     BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test7), "foo" );
     BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test8), "" );
+    BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test9), "" );
 }
 
 BOOST_AUTO_TEST_CASE( case_insensitive_headers ) {
@@ -407,14 +410,14 @@ BOOST_AUTO_TEST_CASE( case_insensitive_headers_overwrite ) {
 BOOST_AUTO_TEST_CASE( blank_consume ) {
     websocketpp::http::parser::request r;
 
-    std::string raw = "";
+    std::string raw;
 
     bool exception = false;
 
     try {
-    	r.consume(raw.c_str(),raw.size());
+        r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -429,9 +432,9 @@ BOOST_AUTO_TEST_CASE( blank_request ) {
     bool exception = false;
 
     try {
-    	r.consume(raw.c_str(),raw.size());
+        r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == true );
@@ -446,9 +449,9 @@ BOOST_AUTO_TEST_CASE( bad_request_no_host ) {
     bool exception = false;
 
     try {
-    	r.consume(raw.c_str(),raw.size());
+        r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == true );
@@ -464,10 +467,10 @@ BOOST_AUTO_TEST_CASE( basic_request ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK( exception == false );
@@ -479,6 +482,62 @@ BOOST_AUTO_TEST_CASE( basic_request ) {
     BOOST_CHECK( r.get_header("Host") == "www.example.com" );
 }
 
+BOOST_AUTO_TEST_CASE( basic_request_with_body ) {
+    websocketpp::http::parser::request r;
+
+    std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\nContent-Length: 5\r\n\r\nabcdef";
+
+    bool exception = false;
+    size_t pos = 0;
+
+    try {
+        pos = r.consume(raw.c_str(),raw.size());
+    } catch (std::exception &e) {
+        exception = true;
+        std::cout << e.what() << std::endl;
+    }
+
+    BOOST_CHECK( exception == false );
+    BOOST_CHECK_EQUAL( pos, 65 );
+    BOOST_CHECK( r.ready() == true );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_method(), "GET" );
+    BOOST_CHECK_EQUAL( r.get_uri(), "/" );
+    BOOST_CHECK_EQUAL( r.get_header("Host"), "www.example.com" );
+    BOOST_CHECK_EQUAL( r.get_header("Content-Length"), "5" );
+    BOOST_CHECK_EQUAL( r.get_body(), "abcde" );
+}
+
+BOOST_AUTO_TEST_CASE( basic_request_with_body_split ) {
+    websocketpp::http::parser::request r;
+
+    std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\nContent-Length: 6\r\n\r\nabc";
+    std::string raw2 = "def";
+
+    bool exception = false;
+    size_t pos = 0;
+
+    try {
+        pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw2.c_str(),raw2.size());
+    } catch (std::exception &e) {
+        exception = true;
+        std::cout << e.what() << std::endl;
+    }
+
+    BOOST_CHECK( exception == false );
+    BOOST_CHECK_EQUAL( pos, 66 );
+    BOOST_CHECK( r.ready() == true );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_method(), "GET" );
+    BOOST_CHECK_EQUAL( r.get_uri(), "/" );
+    BOOST_CHECK_EQUAL( r.get_header("Host"), "www.example.com" );
+    BOOST_CHECK_EQUAL( r.get_header("Content-Length"), "6" );
+    BOOST_CHECK_EQUAL( r.get_body(), "abcdef" );
+}
+
+
+
 BOOST_AUTO_TEST_CASE( trailing_body_characters ) {
     websocketpp::http::parser::request r;
 
@@ -488,9 +547,33 @@ BOOST_AUTO_TEST_CASE( trailing_body_characters ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
+    }
+
+    BOOST_CHECK( exception == false );
+    BOOST_CHECK( pos == 41 );
+    BOOST_CHECK( r.ready() == true );
+    BOOST_CHECK( r.get_version() == "HTTP/1.1" );
+    BOOST_CHECK( r.get_method() == "GET" );
+    BOOST_CHECK( r.get_uri() == "/" );
+    BOOST_CHECK( r.get_header("Host") == "www.example.com" );
+}
+
+BOOST_AUTO_TEST_CASE( trailing_body_characters_beyond_max_lenth ) {
+    websocketpp::http::parser::request r;
+
+    std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
+    raw.append(websocketpp::http::max_header_size,'*');
+
+    bool exception = false;
+    size_t pos = 0;
+
+    try {
+        pos = r.consume(raw.c_str(),raw.size());
+    } catch (...) {
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -512,11 +595,11 @@ BOOST_AUTO_TEST_CASE( basic_split1 ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
-    	pos += r.consume(raw2.c_str(),raw2.size());
+        pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw2.c_str(),raw2.size());
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK( exception == false );
@@ -538,11 +621,11 @@ BOOST_AUTO_TEST_CASE( basic_split2 ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
-    	pos += r.consume(raw2.c_str(),raw2.size());
+        pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw2.c_str(),raw2.size());
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK( exception == false );
@@ -557,17 +640,18 @@ BOOST_AUTO_TEST_CASE( basic_split2 ) {
 BOOST_AUTO_TEST_CASE( max_header_len ) {
     websocketpp::http::parser::request r;
 
-    std::string raw(websocketpp::http::max_header_size+1,'*');
+    std::string raw(websocketpp::http::max_header_size-1,'*');
+    raw += "\r\n";
 
     bool exception = false;
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw.c_str(),raw.size());
     } catch (const websocketpp::http::exception& e) {
-    	if (e.m_error_code == websocketpp::http::status_code::request_header_fields_too_large) {
-    		exception = true;
-    	}
+        if (e.m_error_code == websocketpp::http::status_code::request_header_fields_too_large) {
+            exception = true;
+        }
     }
 
     BOOST_CHECK( exception == true );
@@ -583,14 +667,35 @@ BOOST_AUTO_TEST_CASE( max_header_len_split ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
-    	pos += r.consume(raw2.c_str(),raw2.size());
+        pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw2.c_str(),raw2.size());
     } catch (const websocketpp::http::exception& e) {
-    	if (e.m_error_code == websocketpp::http::status_code::request_header_fields_too_large) {
-    		exception = true;
-    	}
+        if (e.m_error_code == websocketpp::http::status_code::request_header_fields_too_large) {
+            exception = true;
+        }
     }
 
+    BOOST_CHECK( exception == true );
+}
+
+BOOST_AUTO_TEST_CASE( max_body_len ) {
+    websocketpp::http::parser::request r;
+
+    r.set_max_body_size(5);
+
+    std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\nContent-Length: 6\r\n\r\nabcdef";
+
+    bool exception = false;
+    size_t pos = 0;
+
+    try {
+        pos += r.consume(raw.c_str(),raw.size());
+    } catch (websocketpp::http::exception const & e) {
+        exception = true;
+        BOOST_CHECK_EQUAL(e.m_error_code,websocketpp::http::status_code::request_entity_too_large);
+    }
+
+    BOOST_CHECK_EQUAL(r.get_max_body_size(),5);
     BOOST_CHECK( exception == true );
 }
 
@@ -603,9 +708,9 @@ BOOST_AUTO_TEST_CASE( firefox_full_request ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -636,9 +741,9 @@ BOOST_AUTO_TEST_CASE( bad_method ) {
     bool exception = false;
 
     try {
-    	r.consume(raw.c_str(),raw.size());
+        r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == true );
@@ -652,9 +757,9 @@ BOOST_AUTO_TEST_CASE( bad_header_name ) {
     bool exception = false;
 
     try {
-    	r.consume(raw.c_str(),raw.size());
+        r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == true );
@@ -669,9 +774,9 @@ BOOST_AUTO_TEST_CASE( old_http_version ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -692,9 +797,9 @@ BOOST_AUTO_TEST_CASE( new_http_version1 ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -715,9 +820,9 @@ BOOST_AUTO_TEST_CASE( new_http_version2 ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -740,9 +845,9 @@ BOOST_AUTO_TEST_CASE( new_http_version3 ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == true );
@@ -757,9 +862,9 @@ BOOST_AUTO_TEST_CASE( header_whitespace1 ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -780,9 +885,9 @@ BOOST_AUTO_TEST_CASE( header_whitespace2 ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -803,9 +908,9 @@ BOOST_AUTO_TEST_CASE( header_aggregation ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -826,10 +931,66 @@ BOOST_AUTO_TEST_CASE( wikipedia_example_response ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw.c_str(),raw.size());
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
+    }
+
+    BOOST_CHECK( exception == false );
+    BOOST_CHECK_EQUAL( pos, 159 );
+    BOOST_CHECK( r.headers_ready() == true );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_status_code(), websocketpp::http::status_code::switching_protocols );
+    BOOST_CHECK_EQUAL( r.get_status_msg(), "Switching Protocols" );
+    BOOST_CHECK_EQUAL( r.get_header("Upgrade"), "websocket" );
+    BOOST_CHECK_EQUAL( r.get_header("Connection"), "Upgrade" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Accept"), "HSmrc0sMlYUkAGmm5OPpG2HaGWk=" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Protocol"), "chat" );
+}
+
+BOOST_AUTO_TEST_CASE( wikipedia_example_response_trailing ) {
+    websocketpp::http::parser::response r;
+
+    std::string raw = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=\r\nSec-WebSocket-Protocol: chat\r\n\r\n";
+    raw += "a";
+
+    bool exception = false;
+    size_t pos = 0;
+
+    try {
+        pos += r.consume(raw.c_str(),raw.size());
+    } catch (std::exception &e) {
+        exception = true;
+        std::cout << e.what() << std::endl;
+    }
+
+    BOOST_CHECK( exception == false );
+    BOOST_CHECK_EQUAL( pos, 159 );
+    BOOST_CHECK( r.headers_ready() == true );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_status_code(), websocketpp::http::status_code::switching_protocols );
+    BOOST_CHECK_EQUAL( r.get_status_msg(), "Switching Protocols" );
+    BOOST_CHECK_EQUAL( r.get_header("Upgrade"), "websocket" );
+    BOOST_CHECK_EQUAL( r.get_header("Connection"), "Upgrade" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Accept"), "HSmrc0sMlYUkAGmm5OPpG2HaGWk=" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Protocol"), "chat" );
+}
+
+BOOST_AUTO_TEST_CASE( wikipedia_example_response_trailing_large ) {
+    websocketpp::http::parser::response r;
+
+    std::string raw = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=\r\nSec-WebSocket-Protocol: chat\r\n\r\n";
+    raw.append(websocketpp::http::max_header_size,'*');
+
+    bool exception = false;
+    size_t pos = 0;
+
+    try {
+        pos += r.consume(raw.c_str(),raw.size());
+    } catch (std::exception &e) {
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK( exception == false );
@@ -853,10 +1014,10 @@ BOOST_AUTO_TEST_CASE( response_with_non_standard_lws ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw.c_str(),raw.size());
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK( exception == false );
@@ -880,10 +1041,10 @@ BOOST_AUTO_TEST_CASE( plain_http_response ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw.c_str(),raw.size());
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK( exception == false );
@@ -915,10 +1076,10 @@ BOOST_AUTO_TEST_CASE( parse_istream ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(s);
+        pos += r.consume(s);
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK_EQUAL( exception, false );

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE( deflate_init ) {
               << websocketpp::utility::to_hex(test_out,test_out_size) << std::endl;
 
     std::string input = "Hello";
-    std::string output = "";
+    std::string output;
     ec = de.compress(input,output);
 
     BOOST_CHECK( ec == processor::extensions::error::uninitialized );
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE( deflate_init ) {
               << websocketpp::utility::to_hex(input) << std::endl
               << websocketpp::utility::to_hex(output) << std::endl;
 
-    output = "";
+    output.clear();
 
     ec = de.compress(input,output);
     std::cout << ec.message() << std::endl
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE( deflate_init ) {
               << websocketpp::utility::to_hex(output) << std::endl;
 
     input = output;
-    output = "";
+    output.clear();
     ec = de.decompress(input,output);
     std::cout << ec.message() << std::endl
               << websocketpp::utility::to_hex(input) << std::endl

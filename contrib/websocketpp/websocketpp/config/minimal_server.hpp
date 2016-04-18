@@ -112,10 +112,8 @@ struct minimal_server {
         endpoint_msg_manager_type;
 
     /// Logging policies
-    typedef websocketpp::log::stub<concurrency_type,
-        websocketpp::log::elevel> elog_type;
-    typedef websocketpp::log::stub<concurrency_type,
-        websocketpp::log::alevel> alog_type;
+    typedef websocketpp::log::stub elog_type;
+    typedef websocketpp::log::stub alog_type;
 
     /// RNG policies
     typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
@@ -247,7 +245,7 @@ struct minimal_server {
     /// Default maximum message size
     /**
      * Default value for the processor's maximum message size. Maximum message size
-     * determines the point at which the library will fail a connection with the 
+     * determines the point at which the library will fail a connection with the
      * message_too_big protocol error.
      *
      * The default is 32MB
@@ -255,6 +253,18 @@ struct minimal_server {
      * @since 0.4.0-alpha1
      */
     static const size_t max_message_size = 32000000;
+
+    /// Default maximum http body size
+    /**
+     * Default value for the http parser's maximum body size. Maximum body size
+     * determines the point at which the library will abort reading an HTTP
+     * connection with the 413/request entity too large error.
+     *
+     * The default is 32MB
+     *
+     * @since 0.5.0
+     */
+    static const size_t max_http_body_size = 32000000;
 
     /// Global flag for enabling/disabling extensions
     static const bool enable_extensions = true;

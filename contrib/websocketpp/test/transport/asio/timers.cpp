@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -51,19 +51,19 @@
 
 // Accept a connection, read data, and discard until EOF
 void run_dummy_server(int port) {
-    using boost::asio::ip::tcp;
+    using autoboost::asio::ip::tcp;
 
     try {
-        boost::asio::io_service io_service;
+        autoboost::asio::io_service io_service;
         tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v6(), port));
         tcp::socket socket(io_service);
 
         acceptor.accept(socket);
         for (;;) {
             char data[512];
-            boost::system::error_code ec;
-            socket.read_some(boost::asio::buffer(data), ec);
-            if (ec == boost::asio::error::eof) {
+            autoboost::system::error_code ec;
+            socket.read_some(autoboost::asio::buffer(data), ec);
+            if (ec == autoboost::asio::error::eof) {
                 break;
             } else if (ec) {
                 // other error
@@ -72,16 +72,16 @@ void run_dummy_server(int port) {
         }
     } catch (std::exception & e) {
         std::cout << e.what() << std::endl;
-    } catch (boost::system::error_code & ec) {
+    } catch (autoboost::system::error_code & ec) {
         std::cout << ec.message() << std::endl;
     }
 }
 
 // Wait for the specified time period then fail the test
 void run_test_timer(long value) {
-    boost::asio::io_service ios;
-    boost::asio::deadline_timer t(ios,boost::posix_time::milliseconds(value));
-    boost::system::error_code ec;
+    autoboost::asio::io_service ios;
+    autoboost::asio::deadline_timer t(ios,autoboost::posix_time::milliseconds(value));
+    autoboost::system::error_code ec;
     t.wait(ec);
     BOOST_FAIL( "Test timed out" );
 }
@@ -107,8 +107,8 @@ struct config {
 
 // Mock context that does no validation
 typedef websocketpp::lib::shared_ptr<autoboost::asio::ssl::context> context_ptr;
-context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
-    return context_ptr(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
+context_ptr on_tls_init(websocketpp::connection_hdl) {
+    return context_ptr(new autoboost::asio::ssl::context(autoboost::asio::ssl::context::sslv23));
 }
 
 // Mock connection
