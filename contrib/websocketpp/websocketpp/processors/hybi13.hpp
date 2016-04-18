@@ -88,11 +88,11 @@ public:
     err_str_pair negotiate_extensions(request_type const & request) {
         return negotiate_extensions_helper(request);
     }
-    
+
     err_str_pair negotiate_extensions(response_type const & response) {
         return negotiate_extensions_helper(response);
     }
-    
+
     /// Extension negotiation helper function
     /**
      * This exists mostly because the code for requests and responses is
@@ -132,12 +132,12 @@ public:
                 if (it->first == "permessage-deflate") {
                     // if we have already successfully negotiated this extension
                     // then skip any other requests to negotiate the same one
-                    // with different parameters 
+                    // with different parameters
                     if (m_permessage_deflate.is_enabled()) {
                         continue;
                     }
-                    
-                    
+
+
                     neg_ret = m_permessage_deflate.negotiate(it->second);
 
                     if (neg_ret.first) {
@@ -184,7 +184,7 @@ public:
      * generic struct if other user input parameters to the processed handshake
      * are found.
      */
-    lib::error_code process_handshake(request_type const & request, 
+    lib::error_code process_handshake(request_type const & request,
         std::string const & subprotocol, response_type & response) const
     {
         std::string server_key = request.get_header("Sec-WebSocket-Key");
@@ -236,12 +236,10 @@ public:
         }
 
         // Generate handshake key
-        frame::uint32_converter conv;
         unsigned char raw_key[16];
 
         for (int i = 0; i < 4; i++) {
-            conv.i = m_rng();
-            std::copy(conv.c,conv.c+4,&raw_key[i*4]);
+            ((uint32_t*)raw_key)[i] = m_rng();
         }
 
         req.replace_header("Sec-WebSocket-Key",base64_encode(raw_key, 16));
@@ -418,12 +416,12 @@ public:
                             ec = make_error_code(error::message_too_big);
                             break;
                         }
-                        
+
                         m_data_msg = msg_metadata(
                             m_msg_manager->get_message(op,m_bytes_needed),
                             frame::get_masking_key(m_basic_header,m_extended_header)
                         );
-                        
+
                         if (m_permessage_deflate.is_enabled()) {
                             m_data_msg.msg_ptr->set_compressed(frame::get_rsv1(m_basic_header));
                         }
@@ -431,12 +429,12 @@ public:
                         // Fetch the underlying payload buffer from the data message we
                         // are writing into.
                         std::string & out = m_data_msg.msg_ptr->get_raw_payload();
-                        
+
                         if (out.size() + m_bytes_needed > base::m_max_message_size) {
                             ec = make_error_code(error::message_too_big);
                             break;
                         }
-                        
+
                         // Each frame starts a new masking key. All other state
                         // remains between frames.
                         m_data_msg.prepared_key = prepare_masking_key(
@@ -445,7 +443,7 @@ public:
                                 m_extended_header
                             )
                         );
-                        
+
                         out.reserve(out.size() + m_bytes_needed);
                     }
                     m_current_msg = &m_data_msg;
@@ -754,7 +752,7 @@ protected:
     size_t copy_extended_header_bytes(uint8_t const * buf, size_t len) {
         size_t bytes_to_read = (std::min)(m_bytes_needed,len);
 
-        std::copy(buf,buf+bytes_to_read,m_extended_header.bytes+m_cursor);
+        std::memcpy(m_extended_header.bytes + m_cursor, buf, bytes_to_read);
         m_cursor += bytes_to_read;
         m_bytes_needed -= bytes_to_read;
 
@@ -987,7 +985,7 @@ protected:
             out->set_header(frame::prepare_header(h,e));
             std::copy(payload.begin(),payload.end(),o.begin());
         }
-    
+
         out->set_opcode(op);
         out->set_prepared(true);
 
