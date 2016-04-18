@@ -14,6 +14,82 @@
 
 //  Intel compiler setup:
 
+#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER >= 1500) && (defined(_MSC_VER) || defined(__GNUC__))
+
+#ifdef _MSC_VER
+
+#include <autoboost/config/compiler/visualc.hpp>
+
+#undef AUTOBOOST_MSVC
+#undef AUTOBOOST_MSVC_FULL_VER
+
+#if (__INTEL_COMPILER >= 1500) && (_MSC_VER >= 1900)
+//
+// These appear to be supported, even though VC++ may not support them:
+//
+#define AUTOBOOST_HAS_EXPM1
+#define AUTOBOOST_HAS_LOG1P
+#undef AUTOBOOST_NO_CXX14_BINARY_LITERALS
+// This one may be a little risky to enable??
+#undef AUTOBOOST_NO_SFINAE_EXPR
+
+#endif
+
+#else
+
+#include <autoboost/config/compiler/gcc.hpp>
+
+#undef AUTOBOOST_GCC_VERSION
+#undef AUTOBOOST_GCC_CXX11
+
+#endif
+
+#undef AUTOBOOST_COMPILER
+
+#if defined(__INTEL_COMPILER)
+#if __INTEL_COMPILER == 9999
+#  define AUTOBOOST_INTEL_CXX_VERSION 1200 // Intel bug in 12.1.
+#else
+#  define AUTOBOOST_INTEL_CXX_VERSION __INTEL_COMPILER
+#endif
+#elif defined(__ICL)
+#  define AUTOBOOST_INTEL_CXX_VERSION __ICL
+#elif defined(__ICC)
+#  define AUTOBOOST_INTEL_CXX_VERSION __ICC
+#elif defined(__ECC)
+#  define AUTOBOOST_INTEL_CXX_VERSION __ECC
+#endif
+
+// Flags determined by comparing output of 'icpc -dM -E' with and without '-std=c++0x'
+#if (!(defined(_WIN32) || defined(_WIN64)) && defined(__STDC_HOSTED__) && (__STDC_HOSTED__ && (AUTOBOOST_INTEL_CXX_VERSION <= 1200))) || defined(__GXX_EXPERIMENTAL_CPP0X__) || defined(__GXX_EXPERIMENTAL_CXX0X__)
+#  define AUTOBOOST_INTEL_STDCXX0X
+#endif
+#if defined(_MSC_VER) && (_MSC_VER >= 1600)
+#  define AUTOBOOST_INTEL_STDCXX0X
+#endif
+
+#ifdef __GNUC__
+#  define AUTOBOOST_INTEL_GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#endif
+
+#if !defined(AUTOBOOST_COMPILER)
+#  if defined(AUTOBOOST_INTEL_STDCXX0X)
+#    define AUTOBOOST_COMPILER "Intel C++ C++0x mode version " AUTOBOOST_STRINGIZE(AUTOBOOST_INTEL_CXX_VERSION)
+#  else
+#    define AUTOBOOST_COMPILER "Intel C++ version " AUTOBOOST_STRINGIZE(AUTOBOOST_INTEL_CXX_VERSION)
+#  endif
+#endif
+
+#define AUTOBOOST_INTEL AUTOBOOST_INTEL_CXX_VERSION
+
+#if defined(_WIN32) || defined(_WIN64)
+#  define AUTOBOOST_INTEL_WIN AUTOBOOST_INTEL
+#else
+#  define AUTOBOOST_INTEL_LINUX AUTOBOOST_INTEL
+#endif
+
+#else
+
 #include "autoboost/config/compiler/common_edg.hpp"
 
 #if defined(__INTEL_COMPILER)
@@ -66,7 +142,7 @@
 // indicated by a config macro. As configured by Intel, the EDG front-end
 // requires certain compiler options be set to achieve that strong conformance.
 // Particularly /Qoption,c,--arg_dep_lookup (reported by Kirk Klobe & Thomas Witt)
-// and /Zc:wchar_t,forScope. See boost-root/tools/build/intel-win32-tools.jam for
+// and /Zc:wchar_t,forScope. See autoboost-root/tools/build/intel-win32-tools.jam for
 // details as they apply to particular versions of the compiler. When the
 // compiler does not predefine a macro indicating if an option has been set,
 // this config file simply assumes the option has been set.
@@ -89,7 +165,7 @@
 #  define AUTOBOOST_NO_POINTER_TO_MEMBER_TEMPLATE_PARAMETERS
 #endif
 
-// See http://aspn.activestate.com/ASPN/Mail/Message/boost/1614864
+// See http://aspn.activestate.com/ASPN/Mail/Message/autoboost/1614864
 #if AUTOBOOST_INTEL_CXX_VERSION < 600
 #  define AUTOBOOST_NO_INTRINSIC_WCHAR_T
 #else
@@ -228,7 +304,7 @@ template<> struct assert_intrinsic_wchar_t<unsigned short> {};
 #endif
 //
 // C++0x features
-// For each feature we need to check both the Intel compiler version, 
+// For each feature we need to check both the Intel compiler version,
 // and the version of MSVC or GCC that we are emulating.
 // See http://software.intel.com/en-us/articles/c0x-features-supported-by-intel-c-compiler/
 // for a list of which features were implemented in which Intel releases.
@@ -363,7 +439,7 @@ template<> struct assert_intrinsic_wchar_t<unsigned short> {};
 
 // AUTOBOOST_NO_CXX11_NOEXCEPT
 #if (AUTOBOOST_INTEL_CXX_VERSION >= 1500) && (!defined(AUTOBOOST_INTEL_GCC_VERSION) || (AUTOBOOST_INTEL_GCC_VERSION >= 40600)) && (!defined(_MSC_VER) || (_MSC_VER >= 9999))
-// Available in earlier Intel release, but generates errors when used with 
+// Available in earlier Intel release, but generates errors when used with
 // conditional exception specifications, for example in multiprecision:
 #  undef AUTOBOOST_NO_CXX11_NOEXCEPT
 #endif
@@ -442,9 +518,10 @@ template<> struct assert_intrinsic_wchar_t<unsigned short> {};
 #  define AUTOBOOST_HAS_INT128
 #endif
 
+#endif
 //
 // last known and checked version:
-#if (AUTOBOOST_INTEL_CXX_VERSION > 1310)
+#if (AUTOBOOST_INTEL_CXX_VERSION > 1500)
 #  if defined(AUTOBOOST_ASSERT_CONFIG)
 #     error "Unknown compiler version - please run the configure tests and report the results"
 #  elif defined(_MSC_VER)

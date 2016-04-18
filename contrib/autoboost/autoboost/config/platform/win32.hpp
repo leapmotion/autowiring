@@ -1,9 +1,9 @@
-//  (C) Copyright John Maddock 2001 - 2003. 
-//  (C) Copyright Bill Kempf 2001. 
-//  (C) Copyright Aleksey Gurtovoy 2003. 
+//  (C) Copyright John Maddock 2001 - 2003.
+//  (C) Copyright Bill Kempf 2001.
+//  (C) Copyright Aleksey Gurtovoy 2003.
 //  (C) Copyright Rene Rivera 2005.
-//  Use, modification and distribution are subject to the 
-//  Boost Software License, Version 1.0. (See accompanying file 
+//  Use, modification and distribution are subject to the
+//  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org for most recent version.
@@ -23,7 +23,7 @@
 
 //  Default defines for AUTOBOOST_SYMBOL_EXPORT and AUTOBOOST_SYMBOL_IMPORT
 //  If a compiler doesn't support __declspec(dllexport)/__declspec(dllimport),
-//  its boost/config/compiler/ file must define AUTOBOOST_SYMBOL_EXPORT and
+//  its autoboost/config/compiler/ file must define AUTOBOOST_SYMBOL_EXPORT and
 //  AUTOBOOST_SYMBOL_IMPORT
 #ifndef AUTOBOOST_SYMBOL_EXPORT
 #  define AUTOBOOST_HAS_DECLSPEC
@@ -50,7 +50,7 @@
 //
 // Win32 will normally be using native Win32 threads,
 // but there is a pthread library avaliable as an option,
-// we used to disable this when AUTOBOOST_DISABLE_WIN32 was 
+// we used to disable this when AUTOBOOST_DISABLE_WIN32 was
 // defined but no longer - this should allow some
 // files to be compiled in strict mode - while maintaining
 // a consistent setting of AUTOBOOST_HAS_THREADS across
@@ -72,6 +72,14 @@
 #  define AUTOBOOST_HAS_GETSYSTEMTIMEASFILETIME
 #  define AUTOBOOST_HAS_THREADEX
 #  define AUTOBOOST_HAS_GETSYSTEMTIMEASFILETIME
+#endif
+
+//
+// Windows Runtime
+//
+#if defined(WINAPI_FAMILY) && \
+  (WINAPI_FAMILY == WINAPI_FAMILY_APP || WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
+#  define AUTOBOOST_NO_ANSI_APIS
 #endif
 
 #ifndef AUTOBOOST_DISABLE_WIN32

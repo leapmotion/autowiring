@@ -1,8 +1,8 @@
-//  (C) Copyright John Maddock 2001 - 2003. 
-//  (C) Copyright Darin Adler 2001 - 2002. 
-//  (C) Copyright Bill Kempf 2002. 
-//  Use, modification and distribution are subject to the 
-//  Boost Software License, Version 1.0. (See accompanying file 
+//  (C) Copyright John Maddock 2001 - 2003.
+//  (C) Copyright Darin Adler 2001 - 2002.
+//  (C) Copyright Bill Kempf 2002.
+//  Use, modification and distribution are subject to the
+//  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org for most recent version.
@@ -32,7 +32,7 @@
 
 //
 // BSD runtime has pthreads, sigaction, sched_yield and gettimeofday,
-// of these only pthreads are advertised in <unistd.h>, so set the 
+// of these only pthreads are advertised in <unistd.h>, so set the
 // other options explicitly:
 //
 #  define AUTOBOOST_HAS_SCHED_YIELD
@@ -47,9 +47,9 @@
 #    define AUTOBOOST_NO_STDC_NAMESPACE
 #  endif
 
-#  if (__GNUC__ == 4)
+#  if (__GNUC__ >= 4)
 
-// Both gcc and intel require these.  
+// Both gcc and intel require these.
 #    define AUTOBOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE
 #    define AUTOBOOST_HAS_NANOSLEEP
 

@@ -1,16 +1,16 @@
-//  (C) Copyright John Maddock 2001 - 2003. 
-//  (C) Copyright Jens Maurer 2001. 
-//  (C) Copyright David Abrahams 2003. 
-//  (C) Copyright Boris Gubenko 2007. 
-//  Use, modification and distribution are subject to the 
-//  Boost Software License, Version 1.0. (See accompanying file 
+//  (C) Copyright John Maddock 2001 - 2003.
+//  (C) Copyright Jens Maurer 2001.
+//  (C) Copyright David Abrahams 2003.
+//  (C) Copyright Boris Gubenko 2007.
+//  Use, modification and distribution are subject to the
+//  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org for most recent version.
 
 //  Rogue Wave std lib:
 
-#define AUTOBOOST_RW_STDLIB 1 
+#define AUTOBOOST_RW_STDLIB 1
 
 #if !defined(__STD_RWCOMPILER_H__) && !defined(_RWSTD_VER)
 #  include <autoboost/config/no_tr1/utility.hpp>
@@ -187,3 +187,12 @@
 #  define AUTOBOOST_NO_CXX11_STD_ALIGN
 #  define AUTOBOOST_NO_CXX11_ADDRESSOF
 
+#if defined(__has_include)
+#if !__has_include(<shared_mutex>)
+#  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#elif __cplusplus < 201402
+#  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#endif
+#else
+#  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#endif

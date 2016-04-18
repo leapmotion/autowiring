@@ -1,7 +1,7 @@
 //  abi_sufffix header  -------------------------------------------------------//
 
 // (c) Copyright John Maddock 2003
-   
+
 // Use, modification and distribution are subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt).
@@ -10,7 +10,7 @@
 // <autoboost/config/abi_prefix.hpp>.
 
 #ifndef AUTOBOOST_CONFIG_ABI_PREFIX_HPP
-# error Header boost/config/abi_suffix.hpp must only be used after boost/config/abi_prefix.hpp
+# error Header autoboost/config/abi_suffix.hpp must only be used after autoboost/config/abi_prefix.hpp
 #else
 # undef AUTOBOOST_CONFIG_ABI_PREFIX_HPP
 #endif

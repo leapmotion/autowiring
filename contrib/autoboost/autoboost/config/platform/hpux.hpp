@@ -1,10 +1,10 @@
-//  (C) Copyright John Maddock 2001 - 2003. 
-//  (C) Copyright Jens Maurer 2001 - 2003. 
-//  (C) Copyright David Abrahams 2002. 
-//  (C) Copyright Toon Knapen 2003. 
+//  (C) Copyright John Maddock 2001 - 2003.
+//  (C) Copyright Jens Maurer 2001 - 2003.
+//  (C) Copyright David Abrahams 2002.
+//  (C) Copyright Toon Knapen 2003.
 //  (C) Copyright Boris Gubenko 2006 - 2007.
-//  Use, modification and distribution are subject to the 
-//  Boost Software License, Version 1.0. (See accompanying file 
+//  Use, modification and distribution are subject to the
+//  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org for most recent version.
@@ -73,12 +73,12 @@
 #ifndef AUTOBOOST_HAS_SIGACTION
 #  define AUTOBOOST_HAS_SIGACTION
 #endif
-#ifndef AUTOBOOST_HAS_NRVO 
+#ifndef AUTOBOOST_HAS_NRVO
 #  ifndef __parisc
 #    define AUTOBOOST_HAS_NRVO
 #  endif
 #endif
-#ifndef AUTOBOOST_HAS_LOG1P 
+#ifndef AUTOBOOST_HAS_LOG1P
 #  define AUTOBOOST_HAS_LOG1P
 #endif
 #ifndef AUTOBOOST_HAS_EXPM1

@@ -66,7 +66,7 @@
 //
 // C++0x features
 //
-//   See boost\config\suffix.hpp for AUTOBOOST_NO_LONG_LONG
+//   See autoboost\config\suffix.hpp for AUTOBOOST_NO_LONG_LONG
 //
 #define AUTOBOOST_NO_CXX11_CHAR16_T
 #define AUTOBOOST_NO_CXX11_CHAR32_T

@@ -85,7 +85,7 @@
 //
 // C++0x features
 //
-//   See boost\config\suffix.hpp for AUTOBOOST_NO_LONG_LONG
+//   See autoboost\config\suffix.hpp for AUTOBOOST_NO_LONG_LONG
 //
 #if __MWERKS__ > 0x3206 && __option(rvalue_refs)
 #  define AUTOBOOST_HAS_RVALUE_REFS

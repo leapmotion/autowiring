@@ -6,7 +6,7 @@
 
 //  See http://www.boost.org for most recent version.
 
-// Clang compiler setup.
+//  compiler setup for IBM XL C/C++ for Linux (Little Endian) based on clang.
 
 #define AUTOBOOST_HAS_PRAGMA_ONCE
 
@@ -21,10 +21,6 @@
 
 #ifndef __has_extension
 #define __has_extension __has_feature
-#endif
-
-#ifndef __has_attribute
-#define __has_attribute(x) 0
 #endif
 
 #if !__has_feature(cxx_exceptions) && !defined(AUTOBOOST_NO_EXCEPTIONS)
@@ -55,21 +51,6 @@
 
 // Clang supports "long long" in all compilation modes.
 #define AUTOBOOST_HAS_LONG_LONG
-
-//
-// We disable this if the compiler is really nvcc as it
-// doesn't actually support __int128 as of CUDA_VERSION=5000
-// even though it defines __SIZEOF_INT128__.
-// See https://svn.boost.org/trac/boost/ticket/10418
-// Only re-enable this for nvcc if you're absolutely sure
-// of the circumstances under which it's supported.
-// Similarly __SIZEOF_INT128__ is defined when targetting msvc
-// compatibility even though the required support functions are absent.
-//
-#if defined(__SIZEOF_INT128__) && !defined(__CUDACC__) && !defined(_MSC_VER)
-#  define AUTOBOOST_HAS_INT128
-#endif
-
 
 //
 // Dynamic shared object (DSO) and dynamic-link library (DLL) support
@@ -241,7 +222,7 @@
 // Therefore we don't care such case.
 //
 // Note that we can't check Clang version directly as the numbering system changes depending who's
-// creating the Clang release (see https://github.com/boostorg/config/pull/39#issuecomment-59927873)
+// creating the Clang release (see https://github.com/autoboostorg/config/pull/39#issuecomment-59927873)
 // so instead verify that we have a feature that was introduced at the same time as working C++14
 // constexpr (generic lambda's in this case):
 //
@@ -261,14 +242,12 @@
 // All versions with __cplusplus above this value seem to support this:
 #  define AUTOBOOST_NO_CXX14_DIGIT_SEPARATORS
 #endif
-//
-// __builtin_unreachable:
-#if defined(__has_builtin) && __has_builtin(__builtin_unreachable)
-#define AUTOBOOST_UNREACHABLE_RETURN(x) __builtin_unreachable();
-#endif
 
-// Clang has supported the 'unused' attribute since the first release.
-#define AUTOBOOST_ATTRIBUTE_UNUSED __attribute__((__unused__))
+
+// Unused attribute:
+#if defined(__GNUC__) && (__GNUC__ >= 4)
+#  define AUTOBOOST_ATTRIBUTE_UNUSED __attribute__((unused))
+#endif
 
 #ifndef AUTOBOOST_COMPILER
 #  define AUTOBOOST_COMPILER "Clang version " __clang_version__

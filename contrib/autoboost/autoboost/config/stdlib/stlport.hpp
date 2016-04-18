@@ -1,8 +1,8 @@
-//  (C) Copyright John Maddock 2001 - 2002. 
-//  (C) Copyright Darin Adler 2001. 
-//  (C) Copyright Jens Maurer 2001. 
-//  Use, modification and distribution are subject to the 
-//  Boost Software License, Version 1.0. (See accompanying file 
+//  (C) Copyright John Maddock 2001 - 2002.
+//  (C) Copyright Darin Adler 2001.
+//  (C) Copyright Jens Maurer 2001.
+//  Use, modification and distribution are subject to the
+//  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org for most recent version.
@@ -125,7 +125,7 @@
 //
 // Harold Howe says:
 // Borland switched to STLport in BCB6. Defining AUTOBOOST_NO_STDC_NAMESPACE with
-// BCB6 does cause problems. If we detect C++ Builder, then don't define 
+// BCB6 does cause problems. If we detect C++ Builder, then don't define
 // AUTOBOOST_NO_STDC_NAMESPACE
 //
 #if !defined(__BORLANDC__) && !defined(__DMC__)
@@ -134,7 +134,7 @@
 // the global namespace, then we duplicate STLport's using declarations
 // (by defining AUTOBOOST_NO_STDC_NAMESPACE), we do this because STLport doesn't
 // necessarily import all the names we need into namespace std::
-// 
+//
 #  if (defined(__STL_IMPORT_VENDOR_CSTD) \
          || defined(__STL_USE_OWN_NAMESPACE) \
          || defined(_STLP_IMPORT_VENDOR_CSTD) \
@@ -170,7 +170,7 @@ namespace std{ using _STLP_VENDOR_CSTD::strcmp; using _STLP_VENDOR_CSTD::strcpy;
 
 //
 // If STLport thinks there are no wide functions, <cwchar> etc. is not working; but
-// only if AUTOBOOST_NO_STDC_NAMESPACE is not defined (if it is then we do the import 
+// only if AUTOBOOST_NO_STDC_NAMESPACE is not defined (if it is then we do the import
 // into std:: ourselves).
 //
 #if defined(_STLP_NO_NATIVE_WIDE_FUNCTIONS) && !defined(AUTOBOOST_NO_STDC_NAMESPACE)
@@ -235,12 +235,14 @@ namespace autoboost { using std::min; using std::max; }
 #  define AUTOBOOST_NO_CXX11_STD_ALIGN
 #  define AUTOBOOST_NO_CXX11_ADDRESSOF
 
+#if defined(__has_include)
+#if !__has_include(<shared_mutex>)
+#  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#elif __cplusplus < 201402
+#  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#endif
+#else
+#  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#endif
+
 #define AUTOBOOST_STDLIB "STLPort standard library version " AUTOBOOST_STRINGIZE(__SGI_STL_PORT)
-
-
-
-
-
-
-
-

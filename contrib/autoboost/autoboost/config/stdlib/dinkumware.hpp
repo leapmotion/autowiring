@@ -56,7 +56,7 @@
 #  ifndef _CPPLIB_VER
       // Updated Dinkum library defines this, and provides
       // its own min and max definitions, as does MTA version.
-#     ifndef __MTA__ 
+#     ifndef __MTA__
 #        define AUTOBOOST_NO_STD_MIN_MAX
 #     endif
 #     define AUTOBOOST_NO_MS_INT64_NUMERIC_LIMITS
@@ -64,7 +64,7 @@
 #endif
 
 //
-// std extension namespace is stdext for vc7.1 and later, 
+// std extension namespace is stdext for vc7.1 and later,
 // the same applies to other compilers that sit on top
 // of vc7.1 (Intel and Comeau):
 //
@@ -87,18 +87,18 @@
 #endif
 
 // Fix for VC++ 8.0 on up ( I do not have a previous version to test )
-// or clang-cl. If exceptions are off you must manually include the 
-// <exception> header before including the <typeinfo> header. Admittedly 
-// trying to use Boost libraries or the standard C++ libraries without 
-// exception support is not suggested but currently clang-cl ( v 3.4 ) 
+// or clang-cl. If exceptions are off you must manually include the
+// <exception> header before including the <typeinfo> header. Admittedly
+// trying to use Boost libraries or the standard C++ libraries without
+// exception support is not suggested but currently clang-cl ( v 3.4 )
 // does not support exceptions and must be compiled with exceptions off.
 #if !_HAS_EXCEPTIONS && ((defined(AUTOBOOST_MSVC) && AUTOBOOST_MSVC >= 1400) || (defined(__clang__) && defined(_MSC_VER)))
 #include <exception>
 #endif
 #include <typeinfo>
-#if ( (!_HAS_EXCEPTIONS && !defined(__ghs__)) || (!_HAS_NAMESPACE && defined(__ghs__)) ) && !defined(__TI_COMPILER_VERSION__)
+#if ( (!_HAS_EXCEPTIONS && !defined(__ghs__)) || (!_HAS_NAMESPACE && defined(__ghs__)) ) && !defined(__TI_COMPILER_VERSION__) && !defined(__VISUALDSPVERSION__)
 #  define AUTOBOOST_NO_STD_TYPEINFO
-#endif  
+#endif
 
 //  C++0x headers implemented in 520 (as shipped by Microsoft)
 //
@@ -147,6 +147,16 @@
 #  define AUTOBOOST_NO_CXX11_STD_ALIGN
 #endif
 
+#if defined(__has_include)
+#if !__has_include(<shared_mutex>)
+#  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#elif __cplusplus < 201402
+#  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#endif
+#elif !defined(_CPPLIB_VER) || (_CPPLIB_VER < 650)
+#  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#endif
+
 #if defined(AUTOBOOST_INTEL) && (AUTOBOOST_INTEL <= 1400)
 // Intel's compiler can't handle this header yet:
 #  define AUTOBOOST_NO_CXX11_HDR_ATOMIC
@@ -155,7 +165,25 @@
 
 //  520..610 have std::addressof, but it doesn't support functions
 //
+#if !defined(_CPPLIB_VER) || _CPPLIB_VER < 650
 #  define AUTOBOOST_NO_CXX11_ADDRESSOF
+#endif
+
+// Bug specific to VC14,
+// See https://connect.microsoft.com/VisualStudio/feedback/details/1348277/link-error-when-using-std-codecvt-utf8-utf16-char16-t
+// and discussion here: http://blogs.msdn.com/b/vcblog/archive/2014/11/12/visual-studio-2015-preview-now-available.aspx?PageIndex=2
+#if defined(_CPPLIB_VER) && (_CPPLIB_VER == 650)
+#  define AUTOBOOST_NO_CXX11_HDR_CODECVT
+#endif
+
+#if defined(_CPPLIB_VER) && (_CPPLIB_VER >= 650)
+// If _HAS_AUTO_PTR_ETC is defined to 0, std::auto_ptr is not available.
+// See https://www.visualstudio.com/en-us/news/vs2015-vs.aspx#C++
+// and http://blogs.msdn.com/b/vcblog/archive/2015/06/19/c-11-14-17-features-in-vs-2015-rtm.aspx
+#  if defined(_HAS_AUTO_PTR_ETC) && (_HAS_AUTO_PTR_ETC == 0)
+#    define AUTOBOOST_NO_AUTO_PTR
+#  endif
+#endif
 
 #ifdef _CPPLIB_VER
 #  define AUTOBOOST_DINKUMWARE_STDLIB _CPPLIB_VER

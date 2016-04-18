@@ -1,12 +1,12 @@
-//  boost/config/user.hpp  ---------------------------------------------------//
+//  autoboost/config/user.hpp  ---------------------------------------------------//
 
-//  (C) Copyright John Maddock 2001. 
-//  Use, modification and distribution are subject to the 
-//  Boost Software License, Version 1.0. (See accompanying file 
+//  (C) Copyright John Maddock 2001.
+//  Use, modification and distribution are subject to the
+//  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //  Do not check in modified versions of this file,
-//  This file may be customized by the end user, but not by boost.
+//  This file may be customized by the end user, but not by autoboost.
 
 //
 //  Use this file to define a site and compiler specific
@@ -65,60 +65,60 @@
 // even when available:
 // #define AUTOBOOST_DISABLE_WIN32
 
-// AUTOBOOST_DISABLE_ABI_HEADERS: Stops boost headers from including any 
-// prefix/suffix headers that normally control things like struct 
-// packing and alignment. 
+// AUTOBOOST_DISABLE_ABI_HEADERS: Stops autoboost headers from including any
+// prefix/suffix headers that normally control things like struct
+// packing and alignment.
 // #define AUTOBOOST_DISABLE_ABI_HEADERS
 
 // AUTOBOOST_ABI_PREFIX: A prefix header to include in place of whatever
-// boost.config would normally select, any replacement should set up 
-// struct packing and alignment options as required. 
+// autoboost.config would normally select, any replacement should set up
+// struct packing and alignment options as required.
 // #define AUTOBOOST_ABI_PREFIX my-header-name
 
-// AUTOBOOST_ABI_SUFFIX: A suffix header to include in place of whatever 
-// boost.config would normally select, any replacement should undo 
-// the effects of the prefix header. 
+// AUTOBOOST_ABI_SUFFIX: A suffix header to include in place of whatever
+// autoboost.config would normally select, any replacement should undo
+// the effects of the prefix header.
 // #define AUTOBOOST_ABI_SUFFIX my-header-name
 
-// AUTOBOOST_ALL_DYN_LINK: Forces all libraries that have separate source, 
-// to be linked as dll's rather than static libraries on Microsoft Windows 
-// (this macro is used to turn on __declspec(dllimport) modifiers, so that 
-// the compiler knows which symbols to look for in a dll rather than in a 
-// static library).  Note that there may be some libraries that can only 
-// be linked in one way (statically or dynamically), in these cases this 
+// AUTOBOOST_ALL_DYN_LINK: Forces all libraries that have separate source,
+// to be linked as dll's rather than static libraries on Microsoft Windows
+// (this macro is used to turn on __declspec(dllimport) modifiers, so that
+// the compiler knows which symbols to look for in a dll rather than in a
+// static library).  Note that there may be some libraries that can only
+// be linked in one way (statically or dynamically), in these cases this
 // macro has no effect.
 // #define AUTOBOOST_ALL_DYN_LINK
- 
-// AUTOBOOST_WHATEVER_DYN_LINK: Forces library "whatever" to be linked as a dll 
-// rather than a static library on Microsoft Windows: replace the WHATEVER 
-// part of the macro name with the name of the library that you want to 
-// dynamically link to, for example use AUTOBOOST_DATE_TIME_DYN_LINK or 
-// AUTOBOOST_REGEX_DYN_LINK etc (this macro is used to turn on __declspec(dllimport) 
-// modifiers, so that the compiler knows which symbols to look for in a dll 
-// rather than in a static library).  
-// Note that there may be some libraries that can only 
-// be linked in one way (statically or dynamically), 
+
+// AUTOBOOST_WHATEVER_DYN_LINK: Forces library "whatever" to be linked as a dll
+// rather than a static library on Microsoft Windows: replace the WHATEVER
+// part of the macro name with the name of the library that you want to
+// dynamically link to, for example use AUTOBOOST_DATE_TIME_DYN_LINK or
+// AUTOBOOST_REGEX_DYN_LINK etc (this macro is used to turn on __declspec(dllimport)
+// modifiers, so that the compiler knows which symbols to look for in a dll
+// rather than in a static library).
+// Note that there may be some libraries that can only
+// be linked in one way (statically or dynamically),
 // in these cases this macro is unsupported.
 // #define AUTOBOOST_WHATEVER_DYN_LINK
- 
-// AUTOBOOST_ALL_NO_LIB: Tells the config system not to automatically select 
-// which libraries to link against.  
-// Normally if a compiler supports #pragma lib, then the correct library 
-// build variant will be automatically selected and linked against, 
-// simply by the act of including one of that library's headers.  
+
+// AUTOBOOST_ALL_NO_LIB: Tells the config system not to automatically select
+// which libraries to link against.
+// Normally if a compiler supports #pragma lib, then the correct library
+// build variant will be automatically selected and linked against,
+// simply by the act of including one of that library's headers.
 // This macro turns that feature off.
 // #define AUTOBOOST_ALL_NO_LIB
- 
-// AUTOBOOST_WHATEVER_NO_LIB: Tells the config system not to automatically 
-// select which library to link against for library "whatever", 
-// replace WHATEVER in the macro name with the name of the library; 
-// for example AUTOBOOST_DATE_TIME_NO_LIB or AUTOBOOST_REGEX_NO_LIB.  
-// Normally if a compiler supports #pragma lib, then the correct library 
-// build variant will be automatically selected and linked against, simply 
-// by the act of including one of that library's headers.  This macro turns 
+
+// AUTOBOOST_WHATEVER_NO_LIB: Tells the config system not to automatically
+// select which library to link against for library "whatever",
+// replace WHATEVER in the macro name with the name of the library;
+// for example AUTOBOOST_DATE_TIME_NO_LIB or AUTOBOOST_REGEX_NO_LIB.
+// Normally if a compiler supports #pragma lib, then the correct library
+// build variant will be automatically selected and linked against, simply
+// by the act of including one of that library's headers.  This macro turns
 // that feature off.
 // #define AUTOBOOST_WHATEVER_NO_LIB
- 
+
 // AUTOBOOST_LIB_BUILDID: Set to the same value as the value passed to Boost.Build's
 // --buildid command line option.  For example if you built using:
 //

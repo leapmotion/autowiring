@@ -88,7 +88,7 @@
 //
 // C++0x features
 //
-//   See boost\config\suffix.hpp for AUTOBOOST_NO_LONG_LONG
+//   See autoboost\config\suffix.hpp for AUTOBOOST_NO_LONG_LONG
 //
 #if !defined(__EDG__)
 

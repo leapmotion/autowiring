@@ -68,7 +68,7 @@
 //
 // C++0x features
 //
-//   See boost\config\suffix.hpp for AUTOBOOST_NO_LONG_LONG
+//   See autoboost\config\suffix.hpp for AUTOBOOST_NO_LONG_LONG
 //
 #if ! __IBMCPP_AUTO_TYPEDEDUCTION
 #  define AUTOBOOST_NO_CXX11_AUTO_DECLARATIONS

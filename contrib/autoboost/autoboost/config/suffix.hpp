@@ -1,5 +1,5 @@
 //  Boost config.hpp configuration header file  ------------------------------//
-//  boostinspect:ndprecated_macros -- tell the inspect tool to ignore this file
+//  autoboostinspect:ndprecated_macros -- tell the inspect tool to ignore this file
 
 //  Copyright (c) 2001-2003 John Maddock
 //  Copyright (c) 2001 Darin Adler
@@ -340,9 +340,9 @@
 #endif
 
 //  AUTOBOOST_NO_STDC_NAMESPACE workaround  --------------------------------------//
-//  Because std::size_t usage is so common, even in boost headers which do not
+//  Because std::size_t usage is so common, even in autoboost headers which do not
 //  otherwise use the C library, the <cstddef> workaround is included here so
-//  that ugly workaround code need not appear in many other boost headers.
+//  that ugly workaround code need not appear in many other autoboost headers.
 //  NOTE WELL: This is a workaround for non-conforming compilers; <cstddef>
 //  must still be #included in the usual places so that <cstddef> inclusion
 //  works as expected with standard conforming compilers.  The resulting
@@ -444,10 +444,12 @@ namespace std {
 // is defined, in which case it evaluates to return x; Use when you have a return
 // statement that can never be reached.
 
-#ifdef AUTOBOOST_NO_UNREACHABLE_RETURN_DETECTION
-#  define AUTOBOOST_UNREACHABLE_RETURN(x) return x;
-#else
-#  define AUTOBOOST_UNREACHABLE_RETURN(x)
+#ifndef AUTOBOOST_UNREACHABLE_RETURN
+#  ifdef AUTOBOOST_NO_UNREACHABLE_RETURN_DETECTION
+#     define AUTOBOOST_UNREACHABLE_RETURN(x) return x;
+#  else
+#     define AUTOBOOST_UNREACHABLE_RETURN(x)
+#  endif
 #endif
 
 // AUTOBOOST_DEDUCED_TYPENAME workaround ------------------------------------------//
@@ -498,6 +500,16 @@ namespace autoboost{
 #  else
    typedef __int128 int128_type;
    typedef unsigned __int128 uint128_type;
+#  endif
+}
+#endif
+// same again for __float128:
+#if defined(AUTOBOOST_HAS_FLOAT128) && defined(__cplusplus)
+namespace autoboost {
+#  ifdef __GNUC__
+   __extension__ typedef __float128 float128_type;
+#  else
+   typedef __float128 float128_type;
 #  endif
 }
 #endif
@@ -592,7 +604,7 @@ namespace std{ using ::type_info; }
 #  elif defined(__GNUC__) && __GNUC__ > 3
      // Clang also defines __GNUC__ (as 4)
 #    if defined(__CUDACC__)
-       // nvcc doesn't always parse __noinline__, 
+       // nvcc doesn't always parse __noinline__,
        // see: https://svn.boost.org/trac/boost/ticket/9392
 #      define AUTOBOOST_NOINLINE __attribute__ ((noinline))
 #    else

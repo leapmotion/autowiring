@@ -6,13 +6,13 @@
 
 //  See http://www.boost.org for most recent version.
 
-//  Since WRS does not yet properly support boost under vxWorks
+//  Since WRS does not yet properly support autoboost under vxWorks
 //  and this file was badly outdated, but I was keen on using it,
-//  I patched boost myself to make things work. This has been tested
+//  I patched autoboost myself to make things work. This has been tested
 //  and adapted by me for vxWorks 6.9 *only*, as I'm lacking access
 //  to earlier 6.X versions! The only thing I know for sure is that
 //  very old versions of vxWorks (namely everything below 6.x) are
-//  absolutely unable to use boost. This is mainly due to the completely
+//  absolutely unable to use autoboost. This is mainly due to the completely
 //  outdated libraries and ancient compiler (GCC 2.96 or worse). Do
 //  not even think of getting this to work, a miserable failure will
 //  be guaranteed!
@@ -22,7 +22,7 @@
 //  the C-library, STL, and so on. A DKM uses a library similar to those
 //  of vxWorks 5.X - with all its limitations and incompatibilities
 //  with respect to ANSI C++ and STL. So probably there might be problems
-//  with the usage of boost from DKMs. WRS or any voluteers are free to
+//  with the usage of autoboost from DKMs. WRS or any voluteers are free to
 //  prove the opposite!
 
 // ====================================================================
@@ -41,19 +41,19 @@
 // which could easily pose a serious problem for a real time process,
 // i.e. deadlocks! To overcome this two possibilities do exist:
 //
-// a) Patch every piece of boost that uses semaphores to instanciate
+// a) Patch every piece of autoboost that uses semaphores to instanciate
 //    the proper type of semaphores. This is non-intrusive with respect
 //    to the OS and could relatively easy been done by giving all
 //    semaphores attributes deviating from the default (for in-depth
 //    information see the POSIX functions pthread_mutexattr_init()
 //    and pthread_mutexattr_setprotocol()). However this breaks all
-//    too easily, as with every new version some boost library could
+//    too easily, as with every new version some autoboost library could
 //    all in a sudden start using semaphores, resurrecting the very
 //    same, hard to locate problem over and over again!
 //
 // b) We could change the default properties for POSIX-semaphores
 //    that VxWorks uses for RTP's and this is being suggested here,
-//    as it will more or less seamlessly integrate with boost. I got
+//    as it will more or less seamlessly integrate with autoboost. I got
 //    the following information from WRS how to do this, compare
 //    Wind River TSR# 1209768:
 //
@@ -82,7 +82,7 @@
 //
 //   Here again, replace PTHREAD_PRIO_NONE by PTHREAD_PRIO_INHERIT.
 // - Finally, rebuild your VSB. This will create a new VxWorks kernel
-//   with the changed properties. That's it! Now, using boost should
+//   with the changed properties. That's it! Now, using autoboost should
 //   no longer cause any problems with task deadlocks!
 //
 // And here's another useful piece of information concerning VxWorks'
@@ -111,14 +111,14 @@
 #include <version.h>
 #if !defined(_WRS_VXWORKS_MAJOR) || (_WRS_VXWORKS_MAJOR < 6)
 #  error "The vxWorks version you're using is so badly outdated,\
-          it doesn't work at all with boost, sorry, no chance!"
+          it doesn't work at all with autoboost, sorry, no chance!"
 #endif
 
 // Handle versions above 5.X but below 6.9
 #if (_WRS_VXWORKS_MAJOR == 6) && (_WRS_VXWORKS_MINOR < 9)
-// TODO: Starting from what version does vxWorks work with boost?
+// TODO: Starting from what version does vxWorks work with autoboost?
 // We can't reasonably insert a #warning "" as a user hint here,
-// as this will show up with every file including some boost header,
+// as this will show up with every file including some autoboost header,
 // badly bugging the user... So for the time being we just leave it.
 #endif
 
@@ -158,8 +158,8 @@
 #define AUTOBOOST_HAS_CLOCK_GETTIME
 #define AUTOBOOST_HAS_MACRO_USE_FACET
 
-// Generally unavailable functionality, delivered by boost's test function:
-//#define AUTOBOOST_NO_DEDUCED_TYPENAME // Commented this out, boost's test gives an errorneous result!
+// Generally unavailable functionality, delivered by autoboost's test function:
+//#define AUTOBOOST_NO_DEDUCED_TYPENAME // Commented this out, autoboost's test gives an errorneous result!
 #define AUTOBOOST_NO_CXX11_EXTERN_TEMPLATE
 #define AUTOBOOST_NO_CXX11_VARIADIC_MACROS
 

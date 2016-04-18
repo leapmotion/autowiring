@@ -5,7 +5,7 @@
 //
 // The aim of this header is just to include <complex> but to do
 // so in a way that does not result in recursive inclusion of
-// the Boost TR1 components if boost/tr1/tr1/complex is in the
+// the Boost TR1 components if autoboost/tr1/tr1/complex is in the
 // include search path.  We have to do this to avoid circular
 // dependencies:
 //

@@ -1,9 +1,9 @@
 //  Boost compiler configuration selection header file
 
-//  (C) Copyright John Maddock 2001 - 2002. 
-//  (C) Copyright Jens Maurer 2001. 
-//  Use, modification and distribution are subject to the 
-//  Boost Software License, Version 1.0. (See accompanying file 
+//  (C) Copyright John Maddock 2001 - 2002.
+//  (C) Copyright Jens Maurer 2001.
+//  Use, modification and distribution are subject to the
+//  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org for most recent version.
@@ -41,6 +41,10 @@
 // win32:
 #  define AUTOBOOST_PLATFORM_CONFIG "autoboost/config/platform/win32.hpp"
 
+#elif defined(__HAIKU__)
+// Haiku
+#  define AUTOBOOST_PLATFORM_CONFIG "autoboost/config/platform/haiku.hpp"
+
 #elif defined(__BEOS__)
 // BeOS
 #  define AUTOBOOST_PLATFORM_CONFIG "autoboost/config/platform/beos.hpp"
@@ -65,17 +69,21 @@
 // vxWorks:
 #  define AUTOBOOST_PLATFORM_CONFIG "autoboost/config/platform/vxworks.hpp"
 
-#elif defined(__SYMBIAN32__) 
-// Symbian: 
-#  define AUTOBOOST_PLATFORM_CONFIG "autoboost/config/platform/symbian.hpp" 
+#elif defined(__SYMBIAN32__)
+// Symbian:
+#  define AUTOBOOST_PLATFORM_CONFIG "autoboost/config/platform/symbian.hpp"
 
 #elif defined(_CRAYC)
 // Cray:
-#  define AUTOBOOST_PLATFORM_CONFIG "autoboost/config/platform/cray.hpp" 
+#  define AUTOBOOST_PLATFORM_CONFIG "autoboost/config/platform/cray.hpp"
 
-#elif defined(__VMS) 
+#elif defined(__VMS)
 // VMS:
-#  define AUTOBOOST_PLATFORM_CONFIG "autoboost/config/platform/vms.hpp" 
+#  define AUTOBOOST_PLATFORM_CONFIG "autoboost/config/platform/vms.hpp"
+
+#elif defined(__CloudABI__)
+// Nuxi CloudABI:
+#  define AUTOBOOST_PLATFORM_CONFIG "autoboost/config/platform/cloudabi.hpp"
 #else
 
 #  if defined(unix) \
@@ -118,9 +126,9 @@
 #  include "autoboost/config/platform/amigaos.hpp"
 #  include "autoboost/config/platform/qnxnto.hpp"
 #  include "autoboost/config/platform/vxworks.hpp"
-#  include "autoboost/config/platform/symbian.hpp" 
-#  include "autoboost/config/platform/cray.hpp" 
-#  include "autoboost/config/platform/vms.hpp" 
+#  include "autoboost/config/platform/symbian.hpp"
+#  include "autoboost/config/platform/cray.hpp"
+#  include "autoboost/config/platform/vms.hpp"
 #  include <autoboost/config/posix_features.hpp>
 
 
