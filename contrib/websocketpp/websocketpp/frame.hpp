@@ -250,9 +250,7 @@ struct extended_header {
         int offset = copy_payload(payload_size);
 
         // Copy Masking Key
-        uint32_converter temp32;
-        temp32.i = masking_key;
-        std::copy(temp32.c,temp32.c+4,bytes+offset);
+        *(uint32_t*)bytes[offset] = masking_key;
     }
 
     uint8_t bytes[MAX_EXTENDED_HEADER_LENGTH];
