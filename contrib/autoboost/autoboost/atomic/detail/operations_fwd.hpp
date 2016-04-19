@@ -14,6 +14,7 @@
 #ifndef AUTOBOOST_ATOMIC_DETAIL_OPERATIONS_FWD_HPP_INCLUDED_
 #define AUTOBOOST_ATOMIC_DETAIL_OPERATIONS_FWD_HPP_INCLUDED_
 
+#include <cstddef>
 #include <autoboost/atomic/detail/config.hpp>
 
 #ifdef AUTOBOOST_HAS_PRAGMA_ONCE
@@ -24,7 +25,7 @@ namespace autoboost {
 namespace atomics {
 namespace detail {
 
-template< unsigned int Size, bool Signed >
+template< std::size_t Size, bool Signed >
 struct operations;
 
 } // namespace detail

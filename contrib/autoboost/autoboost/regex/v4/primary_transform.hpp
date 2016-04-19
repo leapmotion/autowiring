@@ -32,7 +32,7 @@
 #endif
 
 namespace autoboost{
-   namespace re_detail{
+   namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 
 enum{
@@ -122,7 +122,7 @@ unsigned find_sort_syntax(const traits* pt, charT* delim)
 }
 
 
-   } // namespace re_detail
+   } // namespace AUTOBOOST_REGEX_DETAIL_NS
 } // namespace autoboost
 
 #ifdef AUTOBOOST_MSVC

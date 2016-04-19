@@ -7,7 +7,7 @@
 //  See http://www.boost.org/libs/type_traits for most recent version including documentation.
 
 #include <autoboost/config.hpp>
-#include <autoboost/type_traits/ice.hpp>
+#include <autoboost/type_traits/detail/yes_no_type.hpp>
 #include <autoboost/type_traits/integral_constant.hpp>
 #include <autoboost/type_traits/is_const.hpp>
 #include <autoboost/type_traits/is_fundamental.hpp>
@@ -18,15 +18,15 @@
 #include <autoboost/type_traits/remove_pointer.hpp>
 #include <autoboost/type_traits/remove_reference.hpp>
 
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
-
 // avoid warnings
 #if defined(__GNUC__)
 #   pragma GCC system_header
 #elif defined(AUTOBOOST_MSVC)
 #   pragma warning ( push )
-#   pragma warning ( disable : 4244 4913 )
+#   pragma warning ( disable : 4244 4913)
+#   if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC_FULL_VER, >= 140050000)
+#       pragma warning ( disable : 6334)
+#   endif
 #endif
 
 namespace autoboost {
@@ -163,13 +163,7 @@ struct trait_impl1 < Lhs, Ret, true > {
 template < typename Lhs, typename Ret >
 struct trait_impl1 < Lhs, Ret, false > {
    AUTOBOOST_STATIC_CONSTANT(bool,
-      value = (
-         ::autoboost::type_traits::ice_and<
-            operator_exists < Lhs >::value,
-            operator_returns_Ret < Lhs, Ret, operator_returns_void < Lhs >::value >::value
-         >::value
-      )
-   );
+      value = (operator_exists < Lhs >::value && operator_returns_Ret < Lhs, Ret, operator_returns_void < Lhs >::value >::value));
 };
 
 // specialization needs to be declared for the special void case
@@ -191,12 +185,11 @@ struct trait_impl {
 } // namespace detail
 
 // this is the accessible definition of the trait to end user
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF2(AUTOBOOST_TT_TRAIT_NAME, Lhs, Ret=::autoboost::detail::AUTOBOOST_JOIN(AUTOBOOST_TT_TRAIT_NAME,_impl)::dont_care, (::autoboost::detail::AUTOBOOST_JOIN(AUTOBOOST_TT_TRAIT_NAME,_impl)::trait_impl< Lhs, Ret >::value))
+template <class Lhs, class Ret=::autoboost::detail::AUTOBOOST_JOIN(AUTOBOOST_TT_TRAIT_NAME,_impl)::dont_care>
+struct AUTOBOOST_TT_TRAIT_NAME : public integral_constant<bool, (::autoboost::detail::AUTOBOOST_JOIN(AUTOBOOST_TT_TRAIT_NAME, _impl)::trait_impl< Lhs, Ret >::value)>{};
 
 } // namespace autoboost
 
 #if defined(AUTOBOOST_MSVC)
 #   pragma warning ( pop )
 #endif
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>

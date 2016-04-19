@@ -17,7 +17,7 @@
 namespace autoboost {
 namespace archive {
 
-AUTOBOOST_WARCHIVE_DECL(std::codecvt_base::result)
+AUTOBOOST_WARCHIVE_DECL std::codecvt_base::result
 codecvt_null<wchar_t>::do_out(
     std::mbstate_t & /*state*/,
     const wchar_t * first1,
@@ -45,7 +45,7 @@ codecvt_null<wchar_t>::do_out(
     return std::codecvt_base::ok;
 }
 
-AUTOBOOST_WARCHIVE_DECL(std::codecvt_base::result)
+AUTOBOOST_WARCHIVE_DECL std::codecvt_base::result
 codecvt_null<wchar_t>::do_in(
     std::mbstate_t & /*state*/,
     const char * first1,

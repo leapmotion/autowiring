@@ -29,7 +29,6 @@ namespace std{
 
 #include <autoboost/cstdint.hpp>
 
-#include <autoboost/serialization/pfto.hpp>
 #include <autoboost/archive/detail/iserializer.hpp>
 #include <autoboost/archive/detail/interface_iarchive.hpp>
 #include <autoboost/serialization/nvp.hpp>
@@ -44,13 +43,13 @@ namespace serialization {
 } // namespace serialization
 namespace archive {
 namespace detail {
-    class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_iarchive;
-    class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_iarchive;
+    class basic_iarchive;
+    class basic_iserializer;
 }
 
 class polymorphic_iarchive;
 
-class polymorphic_iarchive_impl :
+class AUTOBOOST_SYMBOL_VISIBLE polymorphic_iarchive_impl :
     public detail::interface_iarchive<polymorphic_iarchive>
 {
 #ifdef AUTOBOOST_NO_MEMBER_TEMPLATE_FRIENDS
@@ -98,22 +97,19 @@ public:
     virtual void load_start(const char * name) = 0;
     virtual void load_end(const char * name) = 0;
     virtual void register_basic_serializer(const detail::basic_iserializer & bis) = 0;
+    virtual detail::helper_collection & get_helper_collection() = 0;
 
     // msvc and borland won't automatically pass these to the base class so
     // make it explicit here
     template<class T>
-    void load_override(T & t, AUTOBOOST_PFTO int)
+    void load_override(T & t)
     {
         archive::load(* this->This(), t);
     }
     // special treatment for name-value pairs.
     template<class T>
     void load_override(
-        #ifndef AUTOBOOST_NO_FUNCTION_TEMPLATE_ORDERING
-        const
-        #endif
-        autoboost::serialization::nvp< T > & t,
-        int
+        const autoboost::serialization::nvp< T > & t
     ){
         load_start(t.name());
         archive::load(* this->This(), t.value());
@@ -156,7 +152,7 @@ public:
 namespace autoboost {
 namespace archive {
 
-class polymorphic_iarchive :
+class AUTOBOOST_SYMBOL_VISIBLE polymorphic_iarchive :
     public polymorphic_iarchive_impl
 {
 public:

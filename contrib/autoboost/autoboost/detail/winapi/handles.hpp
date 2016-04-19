@@ -1,6 +1,7 @@
-//  memory.hpp  --------------------------------------------------------------//
+//  handles.hpp  --------------------------------------------------------------//
 
 //  Copyright 2010 Vicente J. Botet Escriba
+//  Copyright 2015 Andrey Semashev
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
@@ -15,30 +16,44 @@
 #pragma once
 #endif
 
-namespace autoboost
-{
-namespace detail
-{
-namespace winapi
-{
-#if defined( AUTOBOOST_USE_WINDOWS_H )
-    using ::CloseHandle;
-    using ::DuplicateHandle;
-
-    const DWORD_ duplicate_close_source = DUPLICATE_CLOSE_SOURCE;
-    const DWORD_ duplicate_same_access = DUPLICATE_SAME_ACCESS;
-    const HANDLE_ invalid_handle_value = INVALID_HANDLE_VALUE;
-#else
+#if !defined( AUTOBOOST_USE_WINDOWS_H )
 extern "C" {
-    __declspec(dllimport) int __stdcall
-        CloseHandle(void*);
-    __declspec(dllimport) int __stdcall
-        DuplicateHandle(void*,void*,void*,void**,unsigned long,int,unsigned long);
+AUTOBOOST_SYMBOL_IMPORT autoboost::detail::winapi::BOOL_ WINAPI
+CloseHandle(autoboost::detail::winapi::HANDLE_ handle);
+
+AUTOBOOST_SYMBOL_IMPORT autoboost::detail::winapi::BOOL_ WINAPI
+DuplicateHandle(
+    autoboost::detail::winapi::HANDLE_ hSourceProcessHandle,
+    autoboost::detail::winapi::HANDLE_ hSourceHandle,
+    autoboost::detail::winapi::HANDLE_ hTargetProcessHandle,
+    autoboost::detail::winapi::HANDLE_* lpTargetHandle,
+    autoboost::detail::winapi::DWORD_ dwDesiredAccess,
+    autoboost::detail::winapi::BOOL_ bInheritHandle,
+    autoboost::detail::winapi::DWORD_ dwOptions);
 }
-    const DWORD_ duplicate_close_source = 1;
-    const DWORD_ duplicate_same_access = 2;
-    const HANDLE_ invalid_handle_value = (HANDLE_)(-1);
 #endif
+
+namespace autoboost {
+namespace detail {
+namespace winapi {
+
+using ::CloseHandle;
+using ::DuplicateHandle;
+
+#if defined( AUTOBOOST_USE_WINDOWS_H )
+const DWORD_ DUPLICATE_CLOSE_SOURCE_ = DUPLICATE_CLOSE_SOURCE;
+const DWORD_ DUPLICATE_SAME_ACCESS_ = DUPLICATE_SAME_ACCESS;
+const HANDLE_ INVALID_HANDLE_VALUE_ = INVALID_HANDLE_VALUE;
+#else
+const DWORD_ DUPLICATE_CLOSE_SOURCE_ = 1;
+const DWORD_ DUPLICATE_SAME_ACCESS_ = 2;
+const HANDLE_ INVALID_HANDLE_VALUE_ = (HANDLE_)(-1);
+#endif
+
+const DWORD_ duplicate_close_source = DUPLICATE_CLOSE_SOURCE_;
+const DWORD_ duplicate_same_access = DUPLICATE_SAME_ACCESS_;
+const HANDLE_ invalid_handle_value = INVALID_HANDLE_VALUE_;
+
 }
 }
 }

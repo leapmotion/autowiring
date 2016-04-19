@@ -72,14 +72,14 @@ public:
     friend struct return_values;
 
 private:
-    typedef AUTOBOOST_DEDUCED_TYPENAME std::basic_istream<CharType> IStream;
-    typedef AUTOBOOST_DEDUCED_TYPENAME std::basic_string<CharType> StringType;
-    typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::spirit::classic::chset<CharType> chset_t;
-    typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::spirit::classic::chlit<CharType> chlit_t;
-    typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::spirit::classic::scanner<
-        AUTOBOOST_DEDUCED_TYPENAME  std::basic_string<CharType>::iterator
+    typedef typename std::basic_istream<CharType> IStream;
+    typedef typename std::basic_string<CharType> StringType;
+    typedef typename autoboost::spirit::classic::chset<CharType> chset_t;
+    typedef typename autoboost::spirit::classic::chlit<CharType> chlit_t;
+    typedef typename autoboost::spirit::classic::scanner<
+        typename  std::basic_string<CharType>::iterator
     > scanner_t;
-    typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::spirit::classic::rule<scanner_t> rule_t;
+    typedef typename autoboost::spirit::classic::rule<scanner_t> rule_t;
     // Start grammar definition
     rule_t
         Reference,

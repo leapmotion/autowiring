@@ -8,7 +8,7 @@
 #  */
 #
 # /* Revised by Paul Mensonides (2002-2011) */
-# /* Revised by Edward Diener (2011) */
+# /* Revised by Edward Diener (2011,2015) */
 #
 # /* See http://www.boost.org for most recent version. */
 #
@@ -38,6 +38,15 @@
 #    endif
 #    define AUTOBOOST_PP_TUPLE_EAT_I(size) AUTOBOOST_PP_TUPLE_EAT_ ## size
 # endif
+#
+# if ~AUTOBOOST_PP_CONFIG_FLAGS() & AUTOBOOST_PP_CONFIG_MWCC()
+#     define AUTOBOOST_PP_TUPLE_EAT_N(size) AUTOBOOST_PP_TUPLE_EAT_N_I(size)
+# else
+#     define AUTOBOOST_PP_TUPLE_EAT_N(size) AUTOBOOST_PP_TUPLE_EAT_N_OO((size))
+#     define AUTOBOOST_PP_TUPLE_EAT_N_OO(par) AUTOBOOST_PP_TUPLE_EAT_N_I ## par
+# endif
+# define AUTOBOOST_PP_TUPLE_EAT_N_I(size) AUTOBOOST_PP_TUPLE_EAT_ ## size
+#
 # define AUTOBOOST_PP_TUPLE_EAT_1(e0)
 # define AUTOBOOST_PP_TUPLE_EAT_2(e0, e1)
 # define AUTOBOOST_PP_TUPLE_EAT_3(e0, e1, e2)

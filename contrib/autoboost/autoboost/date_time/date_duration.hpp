@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_DATE_DURATION__
-#define AB_DATE_TIME_DATE_DURATION__
+#ifndef DATE_TIME_DATE_DURATION__
+#define DATE_TIME_DATE_DURATION__
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

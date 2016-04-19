@@ -18,8 +18,6 @@
 
 #include <autoboost/assert.hpp>
 
-#include <autoboost/serialization/pfto.hpp>
-
 #include <autoboost/iterator/iterator_adaptor.hpp>
 #include <autoboost/iterator/filter_iterator.hpp>
 #include <autoboost/iterator/iterator_traits.hpp>
@@ -153,8 +151,8 @@ public:
 //    remove_whitespace(){} // why is this needed?
     // make composible buy using templated constructor
     template<class T>
-    remove_whitespace(AUTOBOOST_PFTO_WRAPPER(T) start) :
-        super_t(Base(AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast< T >(start))))
+    remove_whitespace(T start) :
+        super_t(Base(static_cast< T >(start)))
     {}
     // intel 7.1 doesn't like default copy constructor
     remove_whitespace(const remove_whitespace & rhs) :

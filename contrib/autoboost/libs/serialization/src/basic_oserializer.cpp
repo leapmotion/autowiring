@@ -17,7 +17,7 @@ namespace autoboost {
 namespace archive {
 namespace detail {
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 basic_oserializer::basic_oserializer(
         const autoboost::serialization::extended_type_info & eti
 ) :
@@ -25,7 +25,7 @@ basic_oserializer::basic_oserializer(
     m_bpos(NULL)
 {}
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 basic_oserializer::~basic_oserializer(){}
 
 } // namespace detail

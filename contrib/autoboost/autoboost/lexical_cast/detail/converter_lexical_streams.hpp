@@ -34,7 +34,6 @@
 #include <cstdio>
 #include <autoboost/limits.hpp>
 #include <autoboost/mpl/if.hpp>
-#include <autoboost/type_traits/ice.hpp>
 #include <autoboost/type_traits/is_pointer.hpp>
 #include <autoboost/static_assert.hpp>
 #include <autoboost/detail/workaround.hpp>
@@ -62,7 +61,6 @@
 #include <autoboost/lexical_cast/detail/lcast_char_constants.hpp>
 #include <autoboost/lexical_cast/detail/lcast_unsigned_converters.hpp>
 #include <autoboost/lexical_cast/detail/inf_nan.hpp>
-#include <autoboost/lexical_cast/detail/lcast_float_converters.hpp>
 
 #include <istream>
 
@@ -739,12 +737,10 @@ namespace autoboost {
                 return true;
             }
 
-            bool operator>>(float& output) { return lcast_ret_float<Traits>(output,start,finish); }
-
         private:
             // Not optimised converter
             template <class T>
-            bool float_types_converter_internal(T& output, int /*tag*/) {
+            bool float_types_converter_internal(T& output) {
                 if (parse_inf_nan(start, finish, output)) return true;
                 bool const return_value = shr_using_base_class(output);
 
@@ -770,36 +766,10 @@ namespace autoboost {
                 return return_value;
             }
 
-            // Optimised converter
-            bool float_types_converter_internal(double& output, char /*tag*/) {
-                return lcast_ret_float<Traits>(output, start, finish);
-            }
         public:
-
-            bool operator>>(double& output) {
-                /*
-                 * Some compilers implement long double as double. In that case these types have
-                 * same size, same precision, same max and min values... And it means,
-                 * that current implementation of lcast_ret_float cannot be used for type
-                 * double, because it will give a big precision loss.
-                 * */
-                autoboost::mpl::if_c<
-#if (defined(AUTOBOOST_HAS_LONG_LONG) || defined(AUTOBOOST_HAS_MS_INT64)) && !defined(AUTOBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
-                    autoboost::type_traits::ice_eq< sizeof(double), sizeof(long double) >::value,
-#else
-                     1,
-#endif
-                    int,
-                    char
-                >::type tag = 0;
-
-                return float_types_converter_internal(output, tag);
-            }
-
-            bool operator>>(long double& output) {
-                int tag = 0;
-                return float_types_converter_internal(output, tag);
-            }
+            bool operator>>(float& output) { return float_types_converter_internal(output); }
+            bool operator>>(double& output) { return float_types_converter_internal(output); }
+            bool operator>>(long double& output) { return float_types_converter_internal(output); }
 
             // Generic istream-based algorithm.
             // lcast_streambuf_for_target<InputStreamable>::value is true.

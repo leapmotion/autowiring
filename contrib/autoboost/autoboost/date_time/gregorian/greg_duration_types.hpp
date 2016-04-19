@@ -1,5 +1,5 @@
-#ifndef AB_GREG_DURATION_TYPES_HPP___
-#define AB_GREG_DURATION_TYPES_HPP___
+#ifndef GREG_DURATION_TYPES_HPP___
+#define GREG_DURATION_TYPES_HPP___
 
 /* Copyright (c) 2004 CrystalClear Software, Inc.
  * Subject to Boost Software License, Version 1.0. (See accompanying

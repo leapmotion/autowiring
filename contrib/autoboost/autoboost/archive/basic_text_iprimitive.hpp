@@ -64,7 +64,7 @@ namespace archive {
 #endif
 
 template<class IStream>
-class basic_text_iprimitive {
+class AUTOBOOST_SYMBOL_VISIBLE basic_text_iprimitive {
 protected:
     IStream &is;
     io::ios_flags_saver flags_saver;
@@ -116,12 +116,12 @@ protected:
         t = i;
     }
     #endif
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     basic_text_iprimitive(IStream  &is, bool no_codecvt);
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     ~basic_text_iprimitive();
 public:
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     load_binary(void *address, std::size_t count);
 };
 

@@ -52,7 +52,7 @@ namespace detail {
 } // namespace detail
 
 template<class Archive>
-class text_woarchive_impl :
+class AUTOBOOST_SYMBOL_VISIBLE text_woarchive_impl :
     public basic_text_oprimitive<std::wostream>,
     public basic_text_oarchive<Archive>
 {
@@ -83,16 +83,16 @@ protected:
     void save(const autoboost::serialization::item_version_type & t){
         save(static_cast<const unsigned int>(t));
     }
-    AUTOBOOST_WARCHIVE_DECL(void)
+    AUTOBOOST_WARCHIVE_DECL void
     save(const char * t);
     #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
-    AUTOBOOST_WARCHIVE_DECL(void)
+    AUTOBOOST_WARCHIVE_DECL void
     save(const wchar_t * t);
     #endif
-    AUTOBOOST_WARCHIVE_DECL(void)
+    AUTOBOOST_WARCHIVE_DECL void
     save(const std::string &s);
     #ifndef AUTOBOOST_NO_STD_WSTRING
-    AUTOBOOST_WARCHIVE_DECL(void)
+    AUTOBOOST_WARCHIVE_DECL void
     save(const std::wstring &ws);
     #endif
     text_woarchive_impl(std::wostream & os, unsigned int flags) :
@@ -129,7 +129,7 @@ public:
 // do not derive from this class.  If you want to extend this functionality
 // via inhertance, derived from text_oarchive_impl instead.  This will
 // preserve correct static polymorphism.
-class text_woarchive :
+class AUTOBOOST_SYMBOL_VISIBLE text_woarchive :
     public text_woarchive_impl<text_woarchive>
 {
 public:

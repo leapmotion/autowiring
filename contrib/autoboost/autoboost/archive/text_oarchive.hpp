@@ -47,7 +47,7 @@ namespace detail {
 } // namespace detail
 
 template<class Archive>
-class text_oarchive_impl :
+class AUTOBOOST_SYMBOL_VISIBLE text_oarchive_impl :
      /* protected ? */ public basic_text_oprimitive<std::ostream>,
      public basic_text_oarchive<Archive>
 {
@@ -78,32 +78,32 @@ protected:
     void save(const autoboost::serialization::item_version_type & t){
         save(static_cast<const unsigned int>(t));
     }
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     save(const char * t);
     #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     save(const wchar_t * t);
     #endif
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     save(const std::string &s);
     #ifndef AUTOBOOST_NO_STD_WSTRING
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     save(const std::wstring &ws);
     #endif
-    AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_DECL
     text_oarchive_impl(std::ostream & os, unsigned int flags);
     // don't import inline definitions! leave this as a reminder.
-    //AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    //AUTOBOOST_ARCHIVE_DECL
     ~text_oarchive_impl(){};
 public:
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     save_binary(const void *address, std::size_t count);
 };
 
 // do not derive from this class.  If you want to extend this functionality
 // via inhertance, derived from text_oarchive_impl instead.  This will
 // preserve correct static polymorphism.
-class text_oarchive :
+class AUTOBOOST_SYMBOL_VISIBLE text_oarchive :
     public text_oarchive_impl<text_oarchive>
 {
 public:

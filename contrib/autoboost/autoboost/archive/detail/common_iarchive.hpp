@@ -62,7 +62,7 @@ private:
 protected:
     // default processing - invoke serialization library
     template<class T>
-    void load_override(T & t, AUTOBOOST_PFTO int){
+    void load_override(T & t){
         archive::load(* this->This(), t);
     }
     // default implementations of functions which emit start/end tags for

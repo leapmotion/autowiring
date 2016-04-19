@@ -11,7 +11,7 @@
 #ifndef AUTOBOOST_TT_IS_MEMBER_FUNCTION_POINTER_HPP_INCLUDED
 #define AUTOBOOST_TT_IS_MEMBER_FUNCTION_POINTER_HPP_INCLUDED
 
-#include <autoboost/type_traits/config.hpp>
+#include <autoboost/type_traits/detail/config.hpp>
 #include <autoboost/detail/workaround.hpp>
 
 #if !AUTOBOOST_WORKAROUND(__BORLANDC__, < 0x600) && !defined(AUTOBOOST_TT_TEST_MS_FUNC_SIGS)
@@ -22,29 +22,22 @@
    //
 #   include <autoboost/type_traits/detail/is_mem_fun_pointer_impl.hpp>
 #   include <autoboost/type_traits/remove_cv.hpp>
+#   include <autoboost/type_traits/integral_constant.hpp>
 #else
 #   include <autoboost/type_traits/is_reference.hpp>
 #   include <autoboost/type_traits/is_array.hpp>
 #   include <autoboost/type_traits/detail/yes_no_type.hpp>
-#   include <autoboost/type_traits/detail/false_result.hpp>
-#   include <autoboost/type_traits/detail/ice_or.hpp>
 #   include <autoboost/type_traits/detail/is_mem_fun_pointer_tester.hpp>
 #endif
-
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
 
 namespace autoboost {
 
 #if defined( __CODEGEARC__ )
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_member_function_pointer,T,__is_member_function_pointer( T ))
+template <class T> struct is_member_function_pointer : public integral_constant<bool, __is_member_function_pointer( T )> {};
 #elif !AUTOBOOST_WORKAROUND(__BORLANDC__, < 0x600) && !defined(AUTOBOOST_TT_TEST_MS_FUNC_SIGS)
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(
-      is_member_function_pointer
-    , T
-    , ::autoboost::type_traits::is_mem_fun_pointer_impl<typename remove_cv<T>::type>::value
-    )
+template <class T> struct is_member_function_pointer
+   : public ::autoboost::integral_constant<bool, ::autoboost::type_traits::is_mem_fun_pointer_impl<typename remove_cv<T>::type>::value>{};
 
 #else
 
@@ -54,8 +47,8 @@ namespace detail {
 
 template <bool>
 struct is_mem_fun_pointer_select
-    : public ::autoboost::type_traits::false_result
 {
+   template <class T> struct result_ : public false_type{};
 };
 
 template <>
@@ -83,13 +76,7 @@ struct is_mem_fun_pointer_select<false>
 template <typename T>
 struct is_member_function_pointer_impl
     : public is_mem_fun_pointer_select<
-          ::autoboost::type_traits::ice_or<
-              ::autoboost::is_reference<T>::value
-            , ::autoboost::is_array<T>::value
-            >::value
-        >::template result_<T>
-{
-};
+      ::autoboost::is_reference<T>::value || ::autoboost::is_array<T>::value>::template result_<T>{};
 
 template <typename T>
 struct is_member_function_pointer_impl<T&> : public false_type{};
@@ -113,21 +100,21 @@ struct is_member_function_pointer_impl<T&>
 
 #endif
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_member_function_pointer,void,false)
+template<> struct is_member_function_pointer_impl<void> : public false_type{};
 #ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_member_function_pointer,void const,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_member_function_pointer,void volatile,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_member_function_pointer,void const volatile,false)
+template<> struct is_member_function_pointer_impl<void const> : public false_type{};
+template<> struct is_member_function_pointer_impl<void const volatile> : public false_type{};
+template<> struct is_member_function_pointer_impl<void volatile> : public false_type{};
 #endif
 
 } // namespace detail
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_member_function_pointer,T,::autoboost::detail::is_member_function_pointer_impl<T>::value)
+template <class T>
+struct is_member_function_pointer
+   : public integral_constant<bool, ::autoboost::detail::is_member_function_pointer_impl<T>::value>{};
 
 #endif
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_IS_MEMBER_FUNCTION_POINTER_HPP_INCLUDED

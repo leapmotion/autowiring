@@ -10,12 +10,11 @@
 #ifndef AUTOBOOST_TT_IS_CLASS_HPP_INCLUDED
 #define AUTOBOOST_TT_IS_CLASS_HPP_INCLUDED
 
-#include <autoboost/type_traits/config.hpp>
+#include <autoboost/type_traits/detail/config.hpp>
 #include <autoboost/type_traits/intrinsics.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
 #ifndef AUTOBOOST_IS_CLASS
 #   include <autoboost/type_traits/is_union.hpp>
-#   include <autoboost/type_traits/detail/ice_and.hpp>
-#   include <autoboost/type_traits/detail/ice_not.hpp>
 
 #ifdef AUTOBOOST_TT_HAS_CONFORMING_IS_CLASS_IMPLEMENTATION
 #   include <autoboost/type_traits/detail/yes_no_type.hpp>
@@ -28,13 +27,6 @@
 #endif
 
 #endif // AUTOBOOST_IS_CLASS
-
-#ifdef __EDG_VERSION__
-#   include <autoboost/type_traits/remove_cv.hpp>
-#endif
-
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
 
 namespace autoboost {
 
@@ -63,10 +55,8 @@ struct is_class_impl
 {
 
     AUTOBOOST_STATIC_CONSTANT(bool, value =
-        (::autoboost::type_traits::ice_and<
-            sizeof(is_class_tester<T>(0)) == sizeof(::autoboost::type_traits::yes_type),
-            ::autoboost::type_traits::ice_not< ::autoboost::is_union<T>::value >::value
-        >::value)
+            sizeof(is_class_tester<T>(0)) == sizeof(::autoboost::type_traits::yes_type)
+            && ! ::autoboost::is_union<T>::value
         );
 };
 
@@ -79,10 +69,8 @@ struct is_class_impl
     template <class U> static ::autoboost::type_traits::no_type is_class_tester(...);
 
     AUTOBOOST_STATIC_CONSTANT(bool, value =
-        (::autoboost::type_traits::ice_and<
-            sizeof(is_class_tester<T>(0)) == sizeof(::autoboost::type_traits::yes_type),
-            ::autoboost::type_traits::ice_not< ::autoboost::is_union<T>::value >::value
-        >::value)
+            sizeof(is_class_tester<T>(0)) == sizeof(::autoboost::type_traits::yes_type)
+            && ! ::autoboost::is_union<T>::value
         );
 };
 
@@ -94,14 +82,13 @@ template <typename T>
 struct is_class_impl
 {
     AUTOBOOST_STATIC_CONSTANT(bool, value =
-    (::autoboost::type_traits::ice_and<
-        ::autoboost::type_traits::ice_not< ::autoboost::is_union<T>::value >::value,
-        ::autoboost::type_traits::ice_not< ::autoboost::is_scalar<T>::value >::value,
-        ::autoboost::type_traits::ice_not< ::autoboost::is_array<T>::value >::value,
-        ::autoboost::type_traits::ice_not< ::autoboost::is_reference<T>::value>::value,
-        ::autoboost::type_traits::ice_not< ::autoboost::is_void<T>::value >::value,
-        ::autoboost::type_traits::ice_not< ::autoboost::is_function<T>::value >::value
-        >::value));
+        ! ::autoboost::is_union<T>::value >::value
+        && ! ::autoboost::is_scalar<T>::value
+        && ! ::autoboost::is_array<T>::value
+        && ! ::autoboost::is_reference<T>::value
+        && ! ::autoboost::is_void<T>::value
+        && ! ::autoboost::is_function<T>::value
+        );
 };
 
 # endif // AUTOBOOST_TT_HAS_CONFORMING_IS_CLASS_IMPLEMENTATION
@@ -115,15 +102,13 @@ struct is_class_impl
 
 } // namespace detail
 
+template <class T> struct is_class : public integral_constant<bool, ::autoboost::detail::is_class_impl<T>::value> {};
 # ifdef __EDG_VERSION__
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(
-   is_class,T, autoboost::detail::is_class_impl<typename autoboost::remove_cv<T>::type>::value)
-# else
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_class,T,::autoboost::detail::is_class_impl<T>::value)
+template <class T> struct is_class<const T> : public is_class<T>{};
+template <class T> struct is_class<const volatile T> : public is_class<T>{};
+template <class T> struct is_class<volatile T> : public is_class<T>{};
 # endif
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_IS_CLASS_HPP_INCLUDED

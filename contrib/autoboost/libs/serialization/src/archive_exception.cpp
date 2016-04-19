@@ -13,8 +13,8 @@
 #endif
 
 #include <exception>
-//#include <autoboost/assert.hpp>
 #include <string>
+#include <cstring>
 
 #define AUTOBOOST_ARCHIVE_SOURCE
 #include <autoboost/archive/archive_exception.hpp>
@@ -22,6 +22,7 @@
 namespace autoboost {
 namespace archive {
 
+AUTOBOOST_ARCHIVE_DECL
 unsigned int
 archive_exception::append(unsigned int l, const char * a){
     while(l < (sizeof(m_buffer) - 1)){
@@ -34,12 +35,12 @@ archive_exception::append(unsigned int l, const char * a){
     return l;
 }
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 archive_exception::archive_exception(
     exception_code c,
     const char * e1,
     const char * e2
-) :
+) AUTOBOOST_NOEXCEPT :
     code(c)
 {
     unsigned int length = 0;
@@ -110,17 +111,26 @@ archive_exception::archive_exception(
         break;
     }
 }
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
-archive_exception::~archive_exception() throw() {}
 
-AUTOBOOST_ARCHIVE_DECL(const char *)
-archive_exception::what( ) const throw()
+AUTOBOOST_ARCHIVE_DECL
+archive_exception::archive_exception(archive_exception const & oth) AUTOBOOST_NOEXCEPT :
+	std::exception(oth),
+	code(oth.code)
 {
+	std::memcpy(m_buffer,oth.m_buffer,sizeof m_buffer);
+}
+
+AUTOBOOST_ARCHIVE_DECL
+archive_exception::~archive_exception() AUTOBOOST_NOEXCEPT_OR_NOTHROW {}
+
+AUTOBOOST_ARCHIVE_DECL const char *
+archive_exception::what() const AUTOBOOST_NOEXCEPT_OR_NOTHROW {
     return m_buffer;
 }
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
-archive_exception::archive_exception() :
-        code(no_exception)
+
+AUTOBOOST_ARCHIVE_DECL
+archive_exception::archive_exception() AUTOBOOST_NOEXCEPT :
+    code(no_exception)
 {}
 
 } // archive

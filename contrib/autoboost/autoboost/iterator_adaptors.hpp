@@ -4,8 +4,8 @@
 
 //  See www.boost.org/libs/iterator for documentation.
 
-#ifndef AB_ITERATOR_ADAPTORS_DWA2004725_HPP
-# define AB_ITERATOR_ADAPTORS_DWA2004725_HPP
+#ifndef ITERATOR_ADAPTORS_DWA2004725_HPP
+# define ITERATOR_ADAPTORS_DWA2004725_HPP
 
 #define AUTOBOOST_ITERATOR_ADAPTORS_VERSION 0x0200
 #include <autoboost/iterator/iterator_adaptor.hpp>

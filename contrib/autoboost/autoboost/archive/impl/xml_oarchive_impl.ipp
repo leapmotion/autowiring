@@ -42,15 +42,15 @@ void save_iterator(std::ostream &os, InputIterator begin, InputIterator end){
         autoboost::archive::iterators::xml_escape<InputIterator>
     > translator;
     std::copy(
-        translator(AUTOBOOST_MAKE_PFTO_WRAPPER(begin)),
-        translator(AUTOBOOST_MAKE_PFTO_WRAPPER(end)),
+        translator(begin),
+        translator(end),
         autoboost::archive::iterators::ostream_iterator<char>(os)
     );
 }
 
 #ifndef AUTOBOOST_NO_STD_WSTRING
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 xml_oarchive_impl<Archive>::save(const std::wstring & ws){
 //  at least one library doesn't typedef value_type for strings
 //  so rather than using string directly make a pointer iterator out of it
@@ -61,7 +61,7 @@ xml_oarchive_impl<Archive>::save(const std::wstring & ws){
 
 #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 xml_oarchive_impl<Archive>::save(const wchar_t * ws){
     save_iterator(os, ws, ws + std::wcslen(ws));
 }
@@ -70,7 +70,7 @@ xml_oarchive_impl<Archive>::save(const wchar_t * ws){
 #endif // AUTOBOOST_NO_CWCHAR
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 xml_oarchive_impl<Archive>::save(const std::string & s){
 //  at least one library doesn't typedef value_type for strings
 //  so rather than using string directly make a pointer iterator out of it
@@ -78,27 +78,27 @@ xml_oarchive_impl<Archive>::save(const std::string & s){
         const char *
     > xml_escape_translator;
     std::copy(
-        xml_escape_translator(AUTOBOOST_MAKE_PFTO_WRAPPER(s.data())),
-        xml_escape_translator(AUTOBOOST_MAKE_PFTO_WRAPPER(s.data()+ s.size())),
+        xml_escape_translator(s.data()),
+        xml_escape_translator(s.data()+ s.size()),
         autoboost::archive::iterators::ostream_iterator<char>(os)
     );
 }
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 xml_oarchive_impl<Archive>::save(const char * s){
     typedef autoboost::archive::iterators::xml_escape<
         const char *
     > xml_escape_translator;
     std::copy(
-        xml_escape_translator(AUTOBOOST_MAKE_PFTO_WRAPPER(s)),
-        xml_escape_translator(AUTOBOOST_MAKE_PFTO_WRAPPER(s + std::strlen(s))),
+        xml_escape_translator(s),
+        xml_escape_translator(s + std::strlen(s)),
         autoboost::archive::iterators::ostream_iterator<char>(os)
     );
 }
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 xml_oarchive_impl<Archive>::xml_oarchive_impl(
     std::ostream & os_,
     unsigned int flags

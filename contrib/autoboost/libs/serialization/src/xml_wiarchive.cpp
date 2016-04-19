@@ -21,13 +21,6 @@
 
 #define AUTOBOOST_WARCHIVE_SOURCE
 
-// the following works around an issue between spirit 1.61 and borland.
-// it turns out the the certain spirit stuff must be defined before
-// certain parts of mpl.  including this here makes sure that happens
-#if AUTOBOOST_WORKAROUND(__BORLANDC__, <= 0x560 )
-#include <autoboost/archive/impl/basic_xml_grammar.hpp>
-#endif
-
 #include <autoboost/archive/xml_wiarchive.hpp>
 #include <autoboost/archive/detail/archive_serializer_map.hpp>
 

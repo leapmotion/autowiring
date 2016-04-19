@@ -20,11 +20,11 @@
 
 #if !defined(AUTOBOOST_MPL_CFG_NO_ADL_BARRIER_NAMESPACE)
 
-#   define AUTOBOOST_MPL_AUX_ADL_BARRIER_NAMESPACE ampl_
-#   define AUTOBOOST_MPL_AUX_ADL_BARRIER_NAMESPACE_OPEN namespace ampl_ {
+#   define AUTOBOOST_MPL_AUX_ADL_BARRIER_NAMESPACE mpl_
+#   define AUTOBOOST_MPL_AUX_ADL_BARRIER_NAMESPACE_OPEN namespace mpl_ {
 #   define AUTOBOOST_MPL_AUX_ADL_BARRIER_NAMESPACE_CLOSE }
 #   define AUTOBOOST_MPL_AUX_ADL_BARRIER_DECL(type) \
-    namespace autoboost { namespace ampl { \
+    namespace autoboost { namespace mpl { \
     using ::AUTOBOOST_MPL_AUX_ADL_BARRIER_NAMESPACE::type; \
     } } \
 /**/

@@ -9,41 +9,40 @@
 #ifndef AUTOBOOST_TT_HAS_TRIVIAL_DESTRUCTOR_HPP_INCLUDED
 #define AUTOBOOST_TT_HAS_TRIVIAL_DESTRUCTOR_HPP_INCLUDED
 
-#include <autoboost/type_traits/config.hpp>
 #include <autoboost/type_traits/intrinsics.hpp>
-#include <autoboost/type_traits/is_pod.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
 
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#ifdef AUTOBOOST_HAS_TRIVIAL_DESTRUCTOR
+
+#if defined(AUTOBOOST_INTEL) || defined(AUTOBOOST_MSVC)
+#include <autoboost/type_traits/is_pod.hpp>
+#endif
+#ifdef AUTOBOOST_HAS_SGI_TYPE_TRAITS
+#include <autoboost/type_traits/is_same.hpp>
+#endif
+
+#if defined(__GNUC__) || defined(__clang) || defined(__SUNPRO_CC)
+#include <autoboost/type_traits/is_destructible.hpp>
+#endif
 
 namespace autoboost {
 
-namespace detail {
-
-template <typename T>
-struct has_trivial_dtor_impl
-{
-#ifdef AUTOBOOST_HAS_TRIVIAL_DESTRUCTOR
-   AUTOBOOST_STATIC_CONSTANT(bool, value = AUTOBOOST_HAS_TRIVIAL_DESTRUCTOR(T));
+template <typename T> struct has_trivial_destructor : public integral_constant<bool, AUTOBOOST_HAS_TRIVIAL_DESTRUCTOR(T)>{};
 #else
-   AUTOBOOST_STATIC_CONSTANT(bool, value = ::autoboost::is_pod<T>::value);
+#include <autoboost/type_traits/is_pod.hpp>
+
+namespace autoboost{
+
+template <typename T> struct has_trivial_destructor : public integral_constant<bool, ::autoboost::is_pod<T>::value>{};
 #endif
-};
 
-} // namespace detail
-
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(has_trivial_destructor,T,::autoboost::detail::has_trivial_dtor_impl<T>::value)
-
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_destructor,void,false)
+template <> struct has_trivial_destructor<void> : public false_type{};
 #ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_destructor,void const,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_destructor,void const volatile,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_destructor,void volatile,false)
+template <> struct has_trivial_destructor<void const> : public false_type{};
+template <> struct has_trivial_destructor<void const volatile> : public false_type{};
+template <> struct has_trivial_destructor<void volatile> : public false_type{};
 #endif
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_HAS_TRIVIAL_DESTRUCTOR_HPP_INCLUDED

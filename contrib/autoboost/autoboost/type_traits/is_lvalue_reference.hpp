@@ -21,36 +21,30 @@
 #ifndef AUTOBOOST_TT_IS_LVALUE_REFERENCE_HPP_INCLUDED
 #define AUTOBOOST_TT_IS_LVALUE_REFERENCE_HPP_INCLUDED
 
-#include <autoboost/type_traits/config.hpp>
-
-
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
 
 namespace autoboost {
 
 #if defined( __CODEGEARC__ )
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_lvalue_reference,T,__is_reference(T))
+   template <class T> struct is_lvalue_reference : public integral_constant<bool, __is_reference(T)>{};
 #else
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_lvalue_reference,T,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_PARTIAL_SPEC1_1(typename T,is_lvalue_reference,T&,true)
+   template <class T> struct is_lvalue_reference : public false_type{};
+   template <class T> struct is_lvalue_reference<T&> : public true_type{};
 
 #if  defined(AUTOBOOST_ILLEGAL_CV_REFERENCES)
 // these are illegal specialisations; cv-qualifies applied to
 // references have no effect according to [8.3.2p1],
 // C++ Builder requires them though as it treats cv-qualified
 // references as distinct types...
-AUTOBOOST_TT_AUX_BOOL_TRAIT_PARTIAL_SPEC1_1(typename T,is_lvalue_reference,T& const,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_PARTIAL_SPEC1_1(typename T,is_lvalue_reference,T& volatile,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_PARTIAL_SPEC1_1(typename T,is_lvalue_reference,T& const volatile,true)
+   template <class T> struct is_lvalue_reference<T&const> : public true_type{};
+   template <class T> struct is_lvalue_reference<T&volatile> : public true_type{};
+   template <class T> struct is_lvalue_reference<T&const volatile> : public true_type{};
 #endif
 
 #endif
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_IS_REFERENCE_HPP_INCLUDED
 

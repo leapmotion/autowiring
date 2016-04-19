@@ -1,48 +1,57 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2015. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-
 #ifndef AUTOBOOST_CONTAINER_DEQUE_HPP
 #define AUTOBOOST_CONTAINER_DEQUE_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
 #include <autoboost/container/detail/config_begin.hpp>
 #include <autoboost/container/detail/workaround.hpp>
-
-#include <autoboost/container/detail/utilities.hpp>
-#include <autoboost/container/detail/iterators.hpp>
-#include <autoboost/container/detail/algorithms.hpp>
-#include <autoboost/container/detail/mpl.hpp>
+// container
 #include <autoboost/container/allocator_traits.hpp>
 #include <autoboost/container/container_fwd.hpp>
+#include <autoboost/container/new_allocator.hpp> //new_allocator
 #include <autoboost/container/throw_exception.hpp>
-#include <cstddef>
-#include <iterator>
-#include <autoboost/assert.hpp>
-#include <memory>
-#include <algorithm>
-#include <autoboost/core/no_exceptions_support.hpp>
-#include <autoboost/type_traits/has_trivial_destructor.hpp>
-#include <autoboost/type_traits/has_trivial_copy.hpp>
-#include <autoboost/type_traits/has_trivial_assign.hpp>
-#include <autoboost/type_traits/has_nothrow_copy.hpp>
-#include <autoboost/type_traits/has_nothrow_assign.hpp>
-#include <autoboost/move/utility_core.hpp>
-#include <autoboost/move/iterator.hpp>
-#include <autoboost/move/algorithm.hpp>
-#include <autoboost/move/detail/move_helpers.hpp>
-#include <autoboost/move/traits.hpp>
+// container/detail
 #include <autoboost/container/detail/advanced_insert_int.hpp>
+#include <autoboost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
+#include <autoboost/container/detail/alloc_helpers.hpp>
+#include <autoboost/container/detail/copy_move_algo.hpp>
+#include <autoboost/container/detail/iterator.hpp>
+#include <autoboost/container/detail/iterator_to_raw_pointer.hpp>
+#include <autoboost/container/detail/iterators.hpp>
+#include <autoboost/container/detail/min_max.hpp>
+#include <autoboost/container/detail/mpl.hpp>
+#include <autoboost/container/detail/to_raw_pointer.hpp>
+#include <autoboost/container/detail/type_traits.hpp>
+// move
+#include <autoboost/move/adl_move_swap.hpp>
+#include <autoboost/move/iterator.hpp>
+#include <autoboost/move/traits.hpp>
+#include <autoboost/move/utility_core.hpp>
+// move/detail
+#if defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#include <autoboost/move/detail/fwd_macros.hpp>
+#endif
+#include <autoboost/move/detail/move_helpers.hpp>
+// other
+#include <autoboost/assert.hpp>
 #include <autoboost/core/no_exceptions_support.hpp>
+// std
+#include <cstddef>
 
 #if !defined(AUTOBOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
@@ -59,13 +68,8 @@ template <class T>
 struct deque_value_traits
 {
    typedef T value_type;
-   static const bool trivial_dctr = autoboost::has_trivial_destructor<value_type>::value;
+   static const bool trivial_dctr = container_detail::is_trivially_destructible<value_type>::value;
    static const bool trivial_dctr_after_move = ::autoboost::has_trivial_destructor_after_move<value_type>::value;
-   static const bool trivial_copy = has_trivial_copy<value_type>::value;
-   static const bool nothrow_copy = has_nothrow_copy<value_type>::value;
-   static const bool trivial_assign = has_trivial_assign<value_type>::value;
-   //static const bool nothrow_assign = has_nothrow_assign<value_type>::value;
-   static const bool nothrow_assign = false;
 };
 
 // Note: this function is simply a kludge to work around several compilers'
@@ -102,7 +106,7 @@ namespace container_detail {
 //  [map, map + map_size) is a valid, non-empty range.
 //  [start.node, finish.node] is a valid range contained within
 //    [map, map + map_size).
-//  Allocator pointer in the range [map, map + map_size) points to an allocated node
+//  A pointer in the range [map, map + map_size) points to an allocated node
 //    if and only if the pointer is in the range [start.node, finish.node].
 template<class Pointer, bool IsConst>
 class deque_iterator
@@ -142,34 +146,34 @@ class deque_iterator
    Pointer get_last()         const  {  return m_last;  }
    index_pointer get_node()   const  {  return m_node;  }
 
-   deque_iterator(val_alloc_ptr x, index_pointer y) AUTOBOOST_CONTAINER_NOEXCEPT
+   deque_iterator(val_alloc_ptr x, index_pointer y) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       : m_cur(x), m_first(*y), m_last(*y + s_buffer_size()), m_node(y)
    {}
 
-   deque_iterator() AUTOBOOST_CONTAINER_NOEXCEPT
+   deque_iterator() AUTOBOOST_NOEXCEPT_OR_NOTHROW
       : m_cur(), m_first(), m_last(), m_node()  //Value initialization to achieve "null iterators" (N3644)
    {}
 
-   deque_iterator(deque_iterator<Pointer, false> const& x) AUTOBOOST_CONTAINER_NOEXCEPT
+   deque_iterator(deque_iterator<Pointer, false> const& x) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       : m_cur(x.get_cur()), m_first(x.get_first()), m_last(x.get_last()), m_node(x.get_node())
    {}
 
-   deque_iterator(Pointer cur, Pointer first, Pointer last, index_pointer node) AUTOBOOST_CONTAINER_NOEXCEPT
+   deque_iterator(Pointer cur, Pointer first, Pointer last, index_pointer node) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       : m_cur(cur), m_first(first), m_last(last), m_node(node)
    {}
 
-   deque_iterator<Pointer, false> unconst() const AUTOBOOST_CONTAINER_NOEXCEPT
+   deque_iterator<Pointer, false> unconst() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       return deque_iterator<Pointer, false>(this->get_cur(), this->get_first(), this->get_last(), this->get_node());
    }
 
-   reference operator*() const AUTOBOOST_CONTAINER_NOEXCEPT
+   reference operator*() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return *this->m_cur; }
 
-   pointer operator->() const AUTOBOOST_CONTAINER_NOEXCEPT
+   pointer operator->() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return this->m_cur; }
 
-   difference_type operator-(const deque_iterator& x) const AUTOBOOST_CONTAINER_NOEXCEPT
+   difference_type operator-(const deque_iterator& x) const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       if(!this->m_cur && !x.m_cur){
          return 0;
@@ -178,7 +182,7 @@ class deque_iterator
          (this->m_cur - this->m_first) + (x.m_last - x.m_cur);
    }
 
-   deque_iterator& operator++() AUTOBOOST_CONTAINER_NOEXCEPT
+   deque_iterator& operator++() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       ++this->m_cur;
       if (this->m_cur == this->m_last) {
@@ -188,14 +192,14 @@ class deque_iterator
       return *this;
    }
 
-   deque_iterator operator++(int) AUTOBOOST_CONTAINER_NOEXCEPT
+   deque_iterator operator++(int) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       deque_iterator tmp(*this);
       ++*this;
       return tmp;
    }
 
-   deque_iterator& operator--() AUTOBOOST_CONTAINER_NOEXCEPT
+   deque_iterator& operator--() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       if (this->m_cur == this->m_first) {
          this->priv_set_node(this->m_node - 1);
@@ -205,14 +209,14 @@ class deque_iterator
       return *this;
    }
 
-   deque_iterator operator--(int) AUTOBOOST_CONTAINER_NOEXCEPT
+   deque_iterator operator--(int) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       deque_iterator tmp(*this);
       --*this;
       return tmp;
    }
 
-   deque_iterator& operator+=(difference_type n) AUTOBOOST_CONTAINER_NOEXCEPT
+   deque_iterator& operator+=(difference_type n) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       difference_type offset = n + (this->m_cur - this->m_first);
       if (offset >= 0 && offset < difference_type(this->s_buffer_size()))
@@ -228,44 +232,44 @@ class deque_iterator
       return *this;
    }
 
-   deque_iterator operator+(difference_type n) const AUTOBOOST_CONTAINER_NOEXCEPT
+   deque_iterator operator+(difference_type n) const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       {  deque_iterator tmp(*this); return tmp += n;  }
 
-   deque_iterator& operator-=(difference_type n) AUTOBOOST_CONTAINER_NOEXCEPT
+   deque_iterator& operator-=(difference_type n) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return *this += -n; }
 
-   deque_iterator operator-(difference_type n) const AUTOBOOST_CONTAINER_NOEXCEPT
+   deque_iterator operator-(difference_type n) const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       {  deque_iterator tmp(*this); return tmp -= n;  }
 
-   reference operator[](difference_type n) const AUTOBOOST_CONTAINER_NOEXCEPT
+   reference operator[](difference_type n) const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return *(*this + n); }
 
-   friend bool operator==(const deque_iterator& l, const deque_iterator& r) AUTOBOOST_CONTAINER_NOEXCEPT
+   friend bool operator==(const deque_iterator& l, const deque_iterator& r) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return l.m_cur == r.m_cur; }
 
-   friend bool operator!=(const deque_iterator& l, const deque_iterator& r) AUTOBOOST_CONTAINER_NOEXCEPT
+   friend bool operator!=(const deque_iterator& l, const deque_iterator& r) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return l.m_cur != r.m_cur; }
 
-   friend bool operator<(const deque_iterator& l, const deque_iterator& r) AUTOBOOST_CONTAINER_NOEXCEPT
+   friend bool operator<(const deque_iterator& l, const deque_iterator& r) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       {  return (l.m_node == r.m_node) ? (l.m_cur < r.m_cur) : (l.m_node < r.m_node);  }
 
-   friend bool operator>(const deque_iterator& l, const deque_iterator& r) AUTOBOOST_CONTAINER_NOEXCEPT
+   friend bool operator>(const deque_iterator& l, const deque_iterator& r) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return r < l; }
 
-   friend bool operator<=(const deque_iterator& l, const deque_iterator& r) AUTOBOOST_CONTAINER_NOEXCEPT
+   friend bool operator<=(const deque_iterator& l, const deque_iterator& r) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return !(r < l); }
 
-   friend bool operator>=(const deque_iterator& l, const deque_iterator& r) AUTOBOOST_CONTAINER_NOEXCEPT
+   friend bool operator>=(const deque_iterator& l, const deque_iterator& r) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return !(l < r); }
 
-   void priv_set_node(index_pointer new_node) AUTOBOOST_CONTAINER_NOEXCEPT
+   void priv_set_node(index_pointer new_node) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       this->m_node = new_node;
       this->m_first = *new_node;
       this->m_last = this->m_first + this->s_buffer_size();
    }
 
-   friend deque_iterator operator+(difference_type n, deque_iterator x) AUTOBOOST_CONTAINER_NOEXCEPT
+   friend deque_iterator operator+(difference_type n, deque_iterator x) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       {  return x += n;  }
 };
 
@@ -304,19 +308,19 @@ class deque_base
    typedef deque_value_traits<val_alloc_val>             traits_t;
    typedef ptr_alloc_t                                   map_allocator_type;
 
-   static size_type s_buffer_size() AUTOBOOST_CONTAINER_NOEXCEPT
+   static size_type s_buffer_size() AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return deque_buf_size<val_alloc_val>::value; }
 
    val_alloc_ptr priv_allocate_node()
       {  return this->alloc().allocate(s_buffer_size());  }
 
-   void priv_deallocate_node(val_alloc_ptr p) AUTOBOOST_CONTAINER_NOEXCEPT
+   void priv_deallocate_node(val_alloc_ptr p) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       {  this->alloc().deallocate(p, s_buffer_size());  }
 
    ptr_alloc_ptr priv_allocate_map(size_type n)
       { return this->ptr_alloc().allocate(n); }
 
-   void priv_deallocate_map(ptr_alloc_ptr p, size_type n) AUTOBOOST_CONTAINER_NOEXCEPT
+   void priv_deallocate_map(ptr_alloc_ptr p, size_type n) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { this->ptr_alloc().deallocate(p, n); }
 
    typedef container_detail::deque_iterator<val_alloc_ptr, false> iterator;
@@ -352,12 +356,12 @@ class deque_base
 
    protected:
 
-   void swap_members(deque_base &x) AUTOBOOST_CONTAINER_NOEXCEPT
+   void swap_members(deque_base &x) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
-      std::swap(this->members_.m_start, x.members_.m_start);
-      std::swap(this->members_.m_finish, x.members_.m_finish);
-      std::swap(this->members_.m_map, x.members_.m_map);
-      std::swap(this->members_.m_map_size, x.members_.m_map_size);
+      ::autoboost::adl_move_swap(this->members_.m_start, x.members_.m_start);
+      ::autoboost::adl_move_swap(this->members_.m_finish, x.members_.m_finish);
+      ::autoboost::adl_move_swap(this->members_.m_map, x.members_.m_map);
+      ::autoboost::adl_move_swap(this->members_.m_map_size, x.members_.m_map_size);
    }
 
    void priv_initialize_map(size_type num_elements)
@@ -392,9 +396,9 @@ class deque_base
 
    void priv_create_nodes(ptr_alloc_ptr nstart, ptr_alloc_ptr nfinish)
    {
-      ptr_alloc_ptr cur;
+      ptr_alloc_ptr cur = nstart;
       AUTOBOOST_TRY {
-         for (cur = nstart; cur < nfinish; ++cur)
+         for (; cur < nfinish; ++cur)
             *cur = this->priv_allocate_node();
       }
       AUTOBOOST_CATCH(...){
@@ -404,13 +408,13 @@ class deque_base
       AUTOBOOST_CATCH_END
    }
 
-   void priv_destroy_nodes(ptr_alloc_ptr nstart, ptr_alloc_ptr nfinish) AUTOBOOST_CONTAINER_NOEXCEPT
+   void priv_destroy_nodes(ptr_alloc_ptr nstart, ptr_alloc_ptr nfinish) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       for (ptr_alloc_ptr n = nstart; n < nfinish; ++n)
          this->priv_deallocate_node(*n);
    }
 
-   void priv_clear_map() AUTOBOOST_CONTAINER_NOEXCEPT
+   void priv_clear_map() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       if (this->members_.m_map) {
          this->priv_destroy_nodes(this->members_.m_start.m_node, this->members_.m_finish.m_node + 1);
@@ -455,16 +459,16 @@ class deque_base
       iterator        m_finish;
    } members_;
 
-   ptr_alloc_t &ptr_alloc() AUTOBOOST_CONTAINER_NOEXCEPT
+   ptr_alloc_t &ptr_alloc() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return members_;  }
 
-   const ptr_alloc_t &ptr_alloc() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const ptr_alloc_t &ptr_alloc() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return members_;  }
 
-   allocator_type &alloc() AUTOBOOST_CONTAINER_NOEXCEPT
+   allocator_type &alloc() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return members_;  }
 
-   const allocator_type &alloc() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const allocator_type &alloc() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return members_;  }
 };
 #endif   //#ifndef AUTOBOOST_CONTAINER_DOXYGEN_INVOKED
@@ -475,7 +479,7 @@ class deque_base
 //!
 //! \tparam T The type of object that is stored in the deque
 //! \tparam Allocator The allocator used for all internal memory management
-template <class T, class Allocator = std::allocator<T> >
+template <class T, class Allocator = new_allocator<T> >
 #else
 template <class T, class Allocator>
 #endif
@@ -505,8 +509,8 @@ class deque : protected deque_base<Allocator>
    typedef AUTOBOOST_CONTAINER_IMPDEF(allocator_type)                                      stored_allocator_type;
    typedef AUTOBOOST_CONTAINER_IMPDEF(typename Base::iterator)                             iterator;
    typedef AUTOBOOST_CONTAINER_IMPDEF(typename Base::const_iterator)                       const_iterator;
-   typedef AUTOBOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<iterator>)        reverse_iterator;
-   typedef AUTOBOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<const_iterator>)  const_reverse_iterator;
+   typedef AUTOBOOST_CONTAINER_IMPDEF(autoboost::container::reverse_iterator<iterator>)        reverse_iterator;
+   typedef AUTOBOOST_CONTAINER_IMPDEF(autoboost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
    #ifndef AUTOBOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -540,11 +544,11 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing
    //!
    //! <b>Complexity</b>: Constant.
-   explicit deque(const allocator_type& a) AUTOBOOST_CONTAINER_NOEXCEPT
+   explicit deque(const allocator_type& a) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       : Base(a)
    {}
 
-   //! <b>Effects</b>: Constructs a deque that will use a copy of allocator a
+   //! <b>Effects</b>: Constructs a deque
    //!   and inserts n value initialized values.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor
@@ -553,6 +557,38 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: Linear to n.
    explicit deque(size_type n)
       : Base(n, allocator_type())
+   {
+      container_detail::insert_value_initialized_n_proxy<Allocator, iterator> proxy;
+      proxy.uninitialized_copy_n_and_update(this->alloc(), this->begin(), n);
+      //deque_base will deallocate in case of exception...
+   }
+
+   //! <b>Effects</b>: Constructs a deque
+   //!   and inserts n default initialized values.
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's default initialization or copy constructor throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   deque(size_type n, default_init_t)
+      : Base(n, allocator_type())
+   {
+      container_detail::insert_default_initialized_n_proxy<Allocator, iterator> proxy;
+      proxy.uninitialized_copy_n_and_update(this->alloc(), this->begin(), n);
+      //deque_base will deallocate in case of exception...
+   }
+
+   //! <b>Effects</b>: Constructs a deque that will use a copy of allocator a
+   //!   and inserts n value initialized values.
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's value initialization throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   explicit deque(size_type n, const allocator_type &a)
+      : Base(n, a)
    {
       container_detail::insert_value_initialized_n_proxy<Allocator, iterator> proxy;
       proxy.uninitialized_copy_n_and_update(this->alloc(), this->begin(), n);
@@ -568,8 +604,8 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: Linear to n.
    //!
    //! <b>Note</b>: Non-standard extension
-   deque(size_type n, default_init_t)
-      : Base(n, allocator_type())
+   deque(size_type n, default_init_t, const allocator_type &a)
+      : Base(n, a)
    {
       container_detail::insert_default_initialized_n_proxy<Allocator, iterator> proxy;
       proxy.uninitialized_copy_n_and_update(this->alloc(), this->begin(), n);
@@ -605,8 +641,7 @@ class deque : protected deque_base<Allocator>
       )
       : Base(a)
    {
-      typedef typename std::iterator_traits<InIt>::iterator_category ItCat;
-      this->priv_range_initialize(first, last, ItCat());
+      this->priv_range_initialize(first, last);
    }
 
 #if !defined(AUTOBOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -620,7 +655,7 @@ class deque : protected deque_base<Allocator>
    deque(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())
       : Base(a)
    {
-      this->priv_range_initialize(il.begin(), il.end(), std::input_iterator_tag());
+      this->priv_range_initialize(il.begin(), il.end());
    }
 #endif
 
@@ -639,13 +674,13 @@ class deque : protected deque_base<Allocator>
       }
    }
 
-   //! <b>Effects</b>: Move constructor. Moves mx's resources to *this.
+   //! <b>Effects</b>: Move constructor. Moves x's resources to *this.
    //!
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
    deque(AUTOBOOST_RV_REF(deque) x)
-      :  Base(autoboost::move(static_cast<Base&>(x)))
+      :  Base(AUTOBOOST_MOVE_BASE(Base, x))
    {  this->swap_members(x);   }
 
    //! <b>Effects</b>: Copy constructs a vector using the specified allocator.
@@ -667,23 +702,24 @@ class deque : protected deque_base<Allocator>
    }
 
    //! <b>Effects</b>: Move constructor using the specified allocator.
-   //!                 Moves mx's resources to *this if a == allocator_type().
+   //!                 Moves x's resources to *this if a == allocator_type().
    //!                 Otherwise copies values from x to *this.
    //!
    //! <b>Throws</b>: If allocation or T's copy constructor throws.
    //!
-   //! <b>Complexity</b>: Constant if a == mx.get_allocator(), linear otherwise.
-   deque(AUTOBOOST_RV_REF(deque) mx, const allocator_type &a)
+   //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
+   deque(AUTOBOOST_RV_REF(deque) x, const allocator_type &a)
       :  Base(a)
    {
-      if(mx.alloc() == a){
-         this->swap_members(mx);
+      if(x.alloc() == a){
+         this->swap_members(x);
       }
       else{
-         if(mx.size()){
-            this->priv_initialize_map(mx.size());
+         if(x.size()){
+            this->priv_initialize_map(x.size());
             autoboost::container::uninitialized_copy_alloc
-               (this->alloc(), mx.begin(), mx.end(), this->members_.m_start);
+               ( this->alloc(), autoboost::make_move_iterator(x.begin())
+               , autoboost::make_move_iterator(x.end()), this->members_.m_start);
          }
       }
    }
@@ -694,7 +730,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the number of elements.
-   ~deque() AUTOBOOST_CONTAINER_NOEXCEPT
+   ~deque() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       this->priv_destroy_range(this->members_.m_start, this->members_.m_finish);
    }
@@ -734,7 +770,8 @@ class deque : protected deque_base<Allocator>
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    deque& operator= (AUTOBOOST_RV_REF(deque) x)
-      AUTOBOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
+      AUTOBOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
+                                  || allocator_traits_type::is_always_equal::value)
    {
       AUTOBOOST_ASSERT(this != &x);
       allocator_type &this_alloc = this->alloc();
@@ -798,9 +835,10 @@ class deque : protected deque_base<Allocator>
    template <class InIt>
    void assign(InIt first, InIt last
       #if !defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<InIt, size_type>::value
-            && container_detail::is_input_iterator<InIt>::value
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_convertible<InIt, size_type>
+         , container_detail::is_not_input_iterator<InIt>
          >::type * = 0
       #endif
       )
@@ -820,16 +858,17 @@ class deque : protected deque_base<Allocator>
    #if !defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
    template <class FwdIt>
    void assign(FwdIt first, FwdIt last
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<FwdIt, size_type>::value
-            && !container_detail::is_input_iterator<FwdIt>::value
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_convertible<FwdIt, size_type>
+         , container_detail::is_input_iterator<FwdIt>
          >::type * = 0
       )
    {
-      const size_type len = std::distance(first, last);
+      const size_type len = autoboost::container::iterator_distance(first, last);
       if (len > size()) {
          FwdIt mid = first;
-         std::advance(mid, this->size());
+         autoboost::container::iterator_advance(mid, this->size());
          autoboost::container::copy(first, mid, begin());
          this->insert(this->cend(), mid, last);
       }
@@ -855,7 +894,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: If allocator's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   allocator_type get_allocator() const AUTOBOOST_CONTAINER_NOEXCEPT
+   allocator_type get_allocator() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    { return Base::alloc(); }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
@@ -865,7 +904,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   const stored_allocator_type &get_stored_allocator() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const stored_allocator_type &get_stored_allocator() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return Base::alloc(); }
 
    //////////////////////////////////////////////
@@ -881,7 +920,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   stored_allocator_type &get_stored_allocator() AUTOBOOST_CONTAINER_NOEXCEPT
+   stored_allocator_type &get_stored_allocator() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return Base::alloc(); }
 
    //! <b>Effects</b>: Returns an iterator to the first element contained in the deque.
@@ -889,7 +928,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator begin() AUTOBOOST_CONTAINER_NOEXCEPT
+   iterator begin() AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_start; }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the deque.
@@ -897,7 +936,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator begin() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_iterator begin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_start; }
 
    //! <b>Effects</b>: Returns an iterator to the end of the deque.
@@ -905,7 +944,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator end() AUTOBOOST_CONTAINER_NOEXCEPT
+   iterator end() AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_finish; }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the deque.
@@ -913,7 +952,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator end() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_iterator end() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_finish; }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the beginning
@@ -922,7 +961,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rbegin() AUTOBOOST_CONTAINER_NOEXCEPT
+   reverse_iterator rbegin() AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return reverse_iterator(this->members_.m_finish); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -931,7 +970,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rbegin() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator rbegin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return const_reverse_iterator(this->members_.m_finish); }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the end
@@ -940,7 +979,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rend() AUTOBOOST_CONTAINER_NOEXCEPT
+   reverse_iterator rend() AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return reverse_iterator(this->members_.m_start); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -949,7 +988,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rend() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator rend() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return const_reverse_iterator(this->members_.m_start); }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the deque.
@@ -957,7 +996,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cbegin() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_iterator cbegin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_start; }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the deque.
@@ -965,7 +1004,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cend() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_iterator cend() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_finish; }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -974,7 +1013,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crbegin() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator crbegin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return const_reverse_iterator(this->members_.m_finish); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -983,7 +1022,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crend() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator crend() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return const_reverse_iterator(this->members_.m_start); }
 
    //////////////////////////////////////////////
@@ -997,7 +1036,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   bool empty() const AUTOBOOST_CONTAINER_NOEXCEPT
+   bool empty() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    { return this->members_.m_finish == this->members_.m_start; }
 
    //! <b>Effects</b>: Returns the number of the elements contained in the deque.
@@ -1005,7 +1044,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type size() const AUTOBOOST_CONTAINER_NOEXCEPT
+   size_type size() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_finish - this->members_.m_start; }
 
    //! <b>Effects</b>: Returns the largest possible size of the deque.
@@ -1013,7 +1052,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type max_size() const AUTOBOOST_CONTAINER_NOEXCEPT
+   size_type max_size() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
       { return allocator_traits_type::max_size(this->alloc()); }
 
    //! <b>Effects</b>: Inserts or erases elements at the end such that
@@ -1100,8 +1139,11 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reference front() AUTOBOOST_CONTAINER_NOEXCEPT
-      { return *this->members_.m_start; }
+   reference front() AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(!this->empty());
+      return *this->members_.m_start;
+   }
 
    //! <b>Requires</b>: !empty()
    //!
@@ -1111,8 +1153,11 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reference front() const AUTOBOOST_CONTAINER_NOEXCEPT
-      { return *this->members_.m_start; }
+   const_reference front() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(!this->empty());
+      return *this->members_.m_start;
+   }
 
    //! <b>Requires</b>: !empty()
    //!
@@ -1122,8 +1167,11 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reference back() AUTOBOOST_CONTAINER_NOEXCEPT
-      {  return *(end()-1); }
+   reference back() AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(!this->empty());
+      return *(end()-1);
+   }
 
    //! <b>Requires</b>: !empty()
    //!
@@ -1133,8 +1181,11 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reference back() const AUTOBOOST_CONTAINER_NOEXCEPT
-      {  return *(cend()-1);  }
+   const_reference back() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(!this->empty());
+      return *(cend()-1);
+   }
 
    //! <b>Requires</b>: size() > n.
    //!
@@ -1144,8 +1195,11 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reference operator[](size_type n) AUTOBOOST_CONTAINER_NOEXCEPT
-      { return this->members_.m_start[difference_type(n)]; }
+   reference operator[](size_type n) AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(this->size() > n);
+      return this->members_.m_start[difference_type(n)];
+   }
 
    //! <b>Requires</b>: size() > n.
    //!
@@ -1155,8 +1209,78 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reference operator[](size_type n) const AUTOBOOST_CONTAINER_NOEXCEPT
-      { return this->members_.m_start[difference_type(n)]; }
+   const_reference operator[](size_type n) const AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(this->size() > n);
+      return this->members_.m_start[difference_type(n)];
+   }
+
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns an iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   iterator nth(size_type n) AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(this->size() >= n);
+      return iterator(this->begin()+n);
+   }
+
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns a const_iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   const_iterator nth(size_type n) const AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(this->size() >= n);
+      return const_iterator(this->cbegin()+n);
+   }
+
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns an iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   size_type index_of(iterator p) AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      //Range checked priv_index_of
+      return this->priv_index_of(p);
+   }
+
+   //! <b>Requires</b>: begin() <= p <= end().
+   //!
+   //! <b>Effects</b>: Returns the index of the element pointed by p
+   //!   and size() if p == end().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   size_type index_of(const_iterator p) const AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      //Range checked priv_index_of
+      return this->priv_index_of(p);
+   }
 
    //! <b>Requires</b>: size() > n.
    //!
@@ -1167,7 +1291,10 @@ class deque : protected deque_base<Allocator>
    //!
    //! <b>Complexity</b>: Constant.
    reference at(size_type n)
-      { this->priv_range_check(n); return (*this)[n]; }
+   {
+      this->priv_throw_if_out_of_range(n);
+      return (*this)[n];
+   }
 
    //! <b>Requires</b>: size() > n.
    //!
@@ -1178,7 +1305,10 @@ class deque : protected deque_base<Allocator>
    //!
    //! <b>Complexity</b>: Constant.
    const_reference at(size_type n) const
-      { this->priv_range_check(n); return (*this)[n]; }
+   {
+      this->priv_throw_if_out_of_range(n);
+      return (*this)[n];
+   }
 
    //////////////////////////////////////////////
    //
@@ -1186,7 +1316,7 @@ class deque : protected deque_base<Allocator>
    //
    //////////////////////////////////////////////
 
-   #if defined(AUTOBOOST_CONTAINER_PERFECT_FORWARDING) || defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... in the beginning of the deque.
@@ -1195,7 +1325,7 @@ class deque : protected deque_base<Allocator>
    //!
    //! <b>Complexity</b>: Amortized constant time
    template <class... Args>
-   void emplace_front(Args&&... args)
+   void emplace_front(AUTOBOOST_FWD_REF(Args)... args)
    {
       if(this->priv_push_front_simple_available()){
          allocator_traits_type::construct
@@ -1205,7 +1335,7 @@ class deque : protected deque_base<Allocator>
          this->priv_push_front_simple_commit();
       }
       else{
-         typedef container_detail::insert_non_movable_emplace_proxy<Allocator, iterator, Args...> type;
+         typedef container_detail::insert_nonmovable_emplace_proxy<Allocator, iterator, Args...> type;
          this->priv_insert_front_aux_impl(1, type(autoboost::forward<Args>(args)...));
       }
    }
@@ -1217,7 +1347,7 @@ class deque : protected deque_base<Allocator>
    //!
    //! <b>Complexity</b>: Amortized constant time
    template <class... Args>
-   void emplace_back(Args&&... args)
+   void emplace_back(AUTOBOOST_FWD_REF(Args)... args)
    {
       if(this->priv_push_back_simple_available()){
          allocator_traits_type::construct
@@ -1227,7 +1357,7 @@ class deque : protected deque_base<Allocator>
          this->priv_push_back_simple_commit();
       }
       else{
-         typedef container_detail::insert_non_movable_emplace_proxy<Allocator, iterator, Args...> type;
+         typedef container_detail::insert_nonmovable_emplace_proxy<Allocator, iterator, Args...> type;
          this->priv_insert_back_aux_impl(1, type(autoboost::forward<Args>(args)...));
       }
    }
@@ -1242,8 +1372,9 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
    template <class... Args>
-   iterator emplace(const_iterator p, Args&&... args)
+   iterator emplace(const_iterator p, AUTOBOOST_FWD_REF(Args)... args)
    {
+      AUTOBOOST_ASSERT(this->priv_in_range_or_end(p));
       if(p == this->cbegin()){
          this->emplace_front(autoboost::forward<Args>(args)...);
          return this->begin();
@@ -1258,70 +1389,62 @@ class deque : protected deque_base<Allocator>
       }
    }
 
-   #else //#ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
+   #else //!defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   //advanced_insert_int.hpp includes all necessary preprocessor machinery...
-   #define AUTOBOOST_PP_LOCAL_MACRO(n)                                                           \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >  )  \
-   void emplace_front(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))                    \
-   {                                                                                         \
-      if(priv_push_front_simple_available()){                                                \
-         allocator_traits_type::construct                                                    \
-            ( this->alloc()                                                                  \
-            , this->priv_push_front_simple_pos()                                             \
-              AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _));               \
-         priv_push_front_simple_commit();                                                    \
-      }                                                                                      \
-      else{                                                                                  \
-         typedef container_detail::AUTOBOOST_PP_CAT(insert_non_movable_emplace_proxy_arg, n)     \
-               <Allocator, iterator AUTOBOOST_PP_ENUM_TRAILING_PARAMS(n, P)> type;               \
-         priv_insert_front_aux_impl                                                          \
-            (1, type(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _)));                \
-      }                                                                                      \
-   }                                                                                         \
-                                                                                             \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >)    \
-   void emplace_back(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))                     \
-   {                                                                                         \
-      if(priv_push_back_simple_available()){                                                 \
-         allocator_traits_type::construct                                                    \
-            ( this->alloc()                                                                  \
-            , this->priv_push_back_simple_pos()                                              \
-              AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _));               \
-         priv_push_back_simple_commit();                                                     \
-      }                                                                                      \
-      else{                                                                                  \
-         typedef container_detail::AUTOBOOST_PP_CAT(insert_non_movable_emplace_proxy_arg, n)     \
-               <Allocator, iterator AUTOBOOST_PP_ENUM_TRAILING_PARAMS(n, P)> type;               \
-         priv_insert_back_aux_impl                                                           \
-            (1, type(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _)));                \
-      }                                                                                      \
-   }                                                                                         \
-                                                                                             \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >)    \
-   iterator emplace(const_iterator p                                                         \
-                    AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))             \
-   {                                                                                         \
-      if(p == this->cbegin()){                                                               \
-         this->emplace_front(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _));         \
-         return this->begin();                                                               \
-      }                                                                                      \
-      else if(p == cend()){                                                                  \
-         this->emplace_back(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _));          \
-         return (this->end()-1);                                                             \
-      }                                                                                      \
-      else{                                                                                  \
-         typedef container_detail::AUTOBOOST_PP_CAT(insert_emplace_proxy_arg, n)                 \
-               <Allocator, iterator AUTOBOOST_PP_ENUM_TRAILING_PARAMS(n, P)> type;               \
-         return this->priv_insert_aux_impl                                                   \
-            (p, 1, type(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _)));             \
-      }                                                                                      \
-   }                                                                                         \
-   //!
-   #define AUTOBOOST_PP_LOCAL_LIMITS (0, AUTOBOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include AUTOBOOST_PP_LOCAL_ITERATE()
+   #define AUTOBOOST_CONTAINER_DEQUE_EMPLACE_CODE(N) \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N\
+   void emplace_front(AUTOBOOST_MOVE_UREF##N)\
+   {\
+      if(priv_push_front_simple_available()){\
+         allocator_traits_type::construct\
+            ( this->alloc(), this->priv_push_front_simple_pos() AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_FWD##N);\
+         priv_push_front_simple_commit();\
+      }\
+      else{\
+         typedef container_detail::insert_nonmovable_emplace_proxy##N\
+               <Allocator, iterator AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_TARG##N> type;\
+         priv_insert_front_aux_impl(1, type(AUTOBOOST_MOVE_FWD##N));\
+      }\
+   }\
+   \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N\
+   void emplace_back(AUTOBOOST_MOVE_UREF##N)\
+   {\
+      if(priv_push_back_simple_available()){\
+         allocator_traits_type::construct\
+            ( this->alloc(), this->priv_push_back_simple_pos() AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_FWD##N);\
+         priv_push_back_simple_commit();\
+      }\
+      else{\
+         typedef container_detail::insert_nonmovable_emplace_proxy##N\
+               <Allocator, iterator AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_TARG##N> type;\
+         priv_insert_back_aux_impl(1, type(AUTOBOOST_MOVE_FWD##N));\
+      }\
+   }\
+   \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N\
+   iterator emplace(const_iterator p AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_UREF##N)\
+   {\
+      AUTOBOOST_ASSERT(this->priv_in_range_or_end(p));\
+      if(p == this->cbegin()){\
+         this->emplace_front(AUTOBOOST_MOVE_FWD##N);\
+         return this->begin();\
+      }\
+      else if(p == cend()){\
+         this->emplace_back(AUTOBOOST_MOVE_FWD##N);\
+         return (--this->end());\
+      }\
+      else{\
+         typedef container_detail::insert_emplace_proxy_arg##N\
+               <Allocator, iterator AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_TARG##N> type;\
+         return this->priv_insert_aux_impl(p, 1, type(AUTOBOOST_MOVE_FWD##N));\
+      }\
+   }
+   //
+   AUTOBOOST_MOVE_ITERATE_0TO9(AUTOBOOST_CONTAINER_DEQUE_EMPLACE_CODE)
+   #undef AUTOBOOST_CONTAINER_DEQUE_EMPLACE_CODE
 
-   #endif   //#ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
+   #endif   // !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #if defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Effects</b>: Inserts a copy of x at the front of the deque.
@@ -1333,7 +1456,7 @@ class deque : protected deque_base<Allocator>
    void push_front(const T &x);
 
    //! <b>Effects</b>: Constructs a new element in the front of the deque
-   //!   and moves the resources of mx to this new element.
+   //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
    //!
@@ -1353,7 +1476,7 @@ class deque : protected deque_base<Allocator>
    void push_back(const T &x);
 
    //! <b>Effects</b>: Constructs a new element in the end of the deque
-   //!   and moves the resources of mx to this new element.
+   //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
    //!
@@ -1379,7 +1502,7 @@ class deque : protected deque_base<Allocator>
 
    //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Insert a new element before p with mx's resources.
+   //! <b>Effects</b>: Insert a new element before p with x's resources.
    //!
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
@@ -1403,6 +1526,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: Linear to n.
    iterator insert(const_iterator pos, size_type n, const value_type& x)
    {
+      //Range check of p is done by insert()
       typedef constant_iterator<value_type, difference_type> c_it;
       return this->insert(pos, c_it(x, n), c_it());
    }
@@ -1416,17 +1540,19 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InIt throws or T's copy constructor throws.
    //!
-   //! <b>Complexity</b>: Linear to std::distance [first, last).
+   //! <b>Complexity</b>: Linear to distance [first, last).
    template <class InIt>
    iterator insert(const_iterator pos, InIt first, InIt last
       #if !defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<InIt, size_type>::value
-            && container_detail::is_input_iterator<InIt>::value
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_convertible<InIt, size_type>
+         , container_detail::is_not_input_iterator<InIt>
          >::type * = 0
       #endif
       )
    {
+      AUTOBOOST_ASSERT(this->priv_in_range_or_end(pos));
       size_type n = 0;
       iterator it(pos.unconst());
       for(;first != last; ++first, ++n){
@@ -1447,24 +1573,29 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced std::initializer_list throws or T's copy constructor throws.
    //!
-   //! <b>Complexity</b>: Linear to std::distance [il.begin(), il.end()).
+   //! <b>Complexity</b>: Linear to distance [il.begin(), il.end()).
    iterator insert(const_iterator pos, std::initializer_list<value_type> il)
-   {   return insert(pos, il.begin(), il.end());   }
+   {
+      //Range check os pos is done in insert()
+      return insert(pos, il.begin(), il.end());
+   }
 #endif
 
    #if !defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
    template <class FwdIt>
    iterator insert(const_iterator p, FwdIt first, FwdIt last
       #if !defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<FwdIt, size_type>::value
-            && !container_detail::is_input_iterator<FwdIt>::value
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_convertible<FwdIt, size_type>
+         , container_detail::is_input_iterator<FwdIt>
          >::type * = 0
       #endif
       )
    {
+      AUTOBOOST_ASSERT(this->priv_in_range_or_end(p));
       container_detail::insert_range_proxy<Allocator, FwdIt, iterator> proxy(first);
-      return priv_insert_aux_impl(p, (size_type)std::distance(first, last), proxy);
+      return priv_insert_aux_impl(p, autoboost::container::iterator_distance(first, last), proxy);
    }
    #endif
 
@@ -1473,8 +1604,9 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant time.
-   void pop_front() AUTOBOOST_CONTAINER_NOEXCEPT
+   void pop_front() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
+      AUTOBOOST_ASSERT(!this->empty());
       if (this->members_.m_start.m_cur != this->members_.m_start.m_last - 1) {
          allocator_traits_type::destroy
             ( this->alloc()
@@ -1491,8 +1623,9 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant time.
-   void pop_back() AUTOBOOST_CONTAINER_NOEXCEPT
+   void pop_back() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
+      AUTOBOOST_ASSERT(!this->empty());
       if (this->members_.m_finish.m_cur != this->members_.m_finish.m_first) {
          --this->members_.m_finish.m_cur;
          allocator_traits_type::destroy
@@ -1512,17 +1645,18 @@ class deque : protected deque_base<Allocator>
    //!   last element (if pos is near the end) or the first element
    //!   if(pos is near the beginning).
    //!   Constant if pos is the first or the last element.
-   iterator erase(const_iterator pos) AUTOBOOST_CONTAINER_NOEXCEPT
+   iterator erase(const_iterator pos) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
+      AUTOBOOST_ASSERT(this->priv_in_range(pos));
       iterator next = pos.unconst();
       ++next;
       size_type index = pos - this->members_.m_start;
       if (index < (this->size()/2)) {
-         autoboost::move_backward(this->begin(), pos.unconst(), next);
+         autoboost::container::move_backward(this->begin(), pos.unconst(), next);
          pop_front();
       }
       else {
-         autoboost::move(next, this->end(), pos.unconst());
+         autoboost::container::move(next, this->end(), pos.unconst());
          pop_back();
       }
       return this->members_.m_start + index;
@@ -1536,8 +1670,10 @@ class deque : protected deque_base<Allocator>
    //!   last plus the elements between pos and the
    //!   last element (if pos is near the end) or the first element
    //!   if(pos is near the beginning).
-   iterator erase(const_iterator first, const_iterator last) AUTOBOOST_CONTAINER_NOEXCEPT
+   iterator erase(const_iterator first, const_iterator last) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
+      AUTOBOOST_ASSERT(first == last ||
+         (first < last && this->priv_in_range(first) && this->priv_in_range_or_end(last)));
       if (first == this->members_.m_start && last == this->members_.m_finish) {
          this->clear();
          return this->members_.m_finish;
@@ -1546,7 +1682,7 @@ class deque : protected deque_base<Allocator>
          const size_type n = static_cast<size_type>(last - first);
          const size_type elems_before = static_cast<size_type>(first - this->members_.m_start);
          if (elems_before < (this->size() - n) - elems_before) {
-            autoboost::move_backward(begin(), first.unconst(), last.unconst());
+            autoboost::container::move_backward(begin(), first.unconst(), last.unconst());
             iterator new_start = this->members_.m_start + n;
             if(!Base::traits_t::trivial_dctr_after_move)
                this->priv_destroy_range(this->members_.m_start, new_start);
@@ -1554,7 +1690,7 @@ class deque : protected deque_base<Allocator>
             this->members_.m_start = new_start;
          }
          else {
-            autoboost::move(last.unconst(), end(), first.unconst());
+            autoboost::container::move(last.unconst(), end(), first.unconst());
             iterator new_finish = this->members_.m_finish - n;
             if(!Base::traits_t::trivial_dctr_after_move)
                this->priv_destroy_range(new_finish, this->members_.m_finish);
@@ -1571,6 +1707,8 @@ class deque : protected deque_base<Allocator>
    //!
    //! <b>Complexity</b>: Constant.
    void swap(deque &x)
+      AUTOBOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_swap::value
+                               || allocator_traits_type::is_always_equal::value)
    {
       this->swap_members(x);
       container_detail::bool_<allocator_traits_type::propagate_on_container_swap::value> flag;
@@ -1583,7 +1721,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the deque.
-   void clear() AUTOBOOST_CONTAINER_NOEXCEPT
+   void clear() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       for (index_pointer node = this->members_.m_start.m_node + 1;
             node < this->members_.m_finish.m_node;
@@ -1607,7 +1745,7 @@ class deque : protected deque_base<Allocator>
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const deque& x, const deque& y)
-   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
+   {  return x.size() == y.size() && ::autoboost::container::algo_equal(x.begin(), x.end(), y.begin());  }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
@@ -1619,7 +1757,7 @@ class deque : protected deque_base<Allocator>
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<(const deque& x, const deque& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+   {  return ::autoboost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!
@@ -1648,6 +1786,13 @@ class deque : protected deque_base<Allocator>
    #ifndef AUTOBOOST_CONTAINER_DOXYGEN_INVOKED
    private:
 
+   size_type priv_index_of(const_iterator p) const
+   {
+      AUTOBOOST_ASSERT(this->cbegin() <= p);
+      AUTOBOOST_ASSERT(p <= this->cend());
+      return static_cast<size_type>(p - this->cbegin());
+   }
+
    void priv_erase_last_n(size_type n)
    {
       if(n == this->size()) {
@@ -1662,12 +1807,26 @@ class deque : protected deque_base<Allocator>
       }
    }
 
-   void priv_range_check(size_type n) const
-      {  if (n >= this->size())  throw_out_of_range("deque::at out of range");   }
+   void priv_throw_if_out_of_range(size_type n) const
+   {
+      if (n >= this->size())
+         throw_out_of_range("deque::at out of range");
+   }
+
+   bool priv_in_range(const_iterator pos) const
+   {
+      return (this->begin() <= pos) && (pos < this->end());
+   }
+
+   bool priv_in_range_or_end(const_iterator pos) const
+   {
+      return (this->begin() <= pos) && (pos <= this->end());
+   }
 
    template <class U>
    iterator priv_insert(const_iterator p, AUTOBOOST_FWD_REF(U) x)
    {
+      AUTOBOOST_ASSERT(this->priv_in_range_or_end(p));
       if (p == cbegin()){
          this->push_front(::autoboost::forward<U>(x));
          return begin();
@@ -1743,21 +1902,19 @@ class deque : protected deque_base<Allocator>
 
    void priv_destroy_range(iterator p, iterator p2)
    {
-      for(;p != p2; ++p){
-         allocator_traits_type::destroy
-            ( this->alloc()
-            , container_detail::to_raw_pointer(container_detail::iterator_to_pointer(p))
-            );
+      if(!Base::traits_t::trivial_dctr){
+         for(;p != p2; ++p){
+            allocator_traits_type::destroy(this->alloc(), container_detail::iterator_to_raw_pointer(p));
+         }
       }
    }
 
    void priv_destroy_range(pointer p, pointer p2)
    {
-      for(;p != p2; ++p){
-         allocator_traits_type::destroy
-            ( this->alloc()
-            , container_detail::to_raw_pointer(container_detail::iterator_to_pointer(p))
-            );
+      if(!Base::traits_t::trivial_dctr){
+         for(;p != p2; ++p){
+            allocator_traits_type::destroy(this->alloc(), container_detail::iterator_to_raw_pointer(p));
+         }
       }
    }
 
@@ -1787,7 +1944,7 @@ class deque : protected deque_base<Allocator>
                ::autoboost::container::uninitialized_move_alloc
                   (this->alloc(), this->members_.m_start, start_n, new_start);
                this->members_.m_start = new_start;
-               autoboost::move(start_n, pos, old_start);
+               autoboost::container::move(start_n, pos, old_start);
                proxy.copy_n_and_update(this->alloc(), pos - n, n);
             }
             else {
@@ -1817,7 +1974,7 @@ class deque : protected deque_base<Allocator>
                ::autoboost::container::uninitialized_move_alloc
                   (this->alloc(), finish_n, old_finish, old_finish);
                this->members_.m_finish = new_finish;
-               autoboost::move_backward(pos, finish_n, old_finish);
+               autoboost::container::move_backward(pos, finish_n, old_finish);
                proxy.copy_n_and_update(this->alloc(), pos, n);
             }
             else {
@@ -1877,9 +2034,9 @@ class deque : protected deque_base<Allocator>
    // but none of the deque's elements have yet been constructed.
    void priv_fill_initialize(const value_type& value)
    {
-      index_pointer cur;
+      index_pointer cur = this->members_.m_start.m_node;
       AUTOBOOST_TRY {
-         for (cur = this->members_.m_start.m_node; cur < this->members_.m_finish.m_node; ++cur){
+         for ( ; cur < this->members_.m_finish.m_node; ++cur){
             autoboost::container::uninitialized_fill_alloc
                (this->alloc(), *cur, *cur + this->s_buffer_size(), value);
          }
@@ -1894,7 +2051,7 @@ class deque : protected deque_base<Allocator>
    }
 
    template <class InIt>
-   void priv_range_initialize(InIt first, InIt last, std::input_iterator_tag)
+   void priv_range_initialize(InIt first, InIt last, typename iterator_enable_if_tag<InIt, std::input_iterator_tag>::type* =0)
    {
       this->priv_initialize_map(0);
       AUTOBOOST_TRY {
@@ -1909,19 +2066,17 @@ class deque : protected deque_base<Allocator>
    }
 
    template <class FwdIt>
-   void priv_range_initialize(FwdIt first, FwdIt last, std::forward_iterator_tag)
+   void priv_range_initialize(FwdIt first, FwdIt last, typename iterator_disable_if_tag<FwdIt, std::input_iterator_tag>::type* =0)
    {
       size_type n = 0;
-      n = std::distance(first, last);
+      n = autoboost::container::iterator_distance(first, last);
       this->priv_initialize_map(n);
 
-      index_pointer cur_node;
+      index_pointer cur_node = this->members_.m_start.m_node;
       AUTOBOOST_TRY {
-         for (cur_node = this->members_.m_start.m_node;
-               cur_node < this->members_.m_finish.m_node;
-               ++cur_node) {
+         for (; cur_node < this->members_.m_finish.m_node; ++cur_node) {
             FwdIt mid = first;
-            std::advance(mid, this->s_buffer_size());
+            autoboost::container::iterator_advance(mid, this->s_buffer_size());
             ::autoboost::container::uninitialized_copy_alloc(this->alloc(), first, mid, *cur_node);
             first = mid;
          }
@@ -1935,7 +2090,7 @@ class deque : protected deque_base<Allocator>
    }
 
    // Called only if this->members_.m_finish.m_cur == this->members_.m_finish.m_first.
-   void priv_pop_back_aux() AUTOBOOST_CONTAINER_NOEXCEPT
+   void priv_pop_back_aux() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       this->priv_deallocate_node(this->members_.m_finish.m_first);
       this->members_.m_finish.priv_set_node(this->members_.m_finish.m_node - 1);
@@ -1950,7 +2105,7 @@ class deque : protected deque_base<Allocator>
    // if the deque has at least one element (a precondition for this member
    // function), and if this->members_.m_start.m_cur == this->members_.m_start.m_last, then the deque
    // must have at least two nodes.
-   void priv_pop_front_aux() AUTOBOOST_CONTAINER_NOEXCEPT
+   void priv_pop_front_aux() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       allocator_traits_type::destroy
          ( this->alloc()
@@ -1997,9 +2152,9 @@ class deque : protected deque_base<Allocator>
          if (new_nodes + 1 > s){
             this->priv_reallocate_map(new_nodes, false);
          }
-         size_type i;
+         size_type i = 1;
          AUTOBOOST_TRY {
-            for (i = 1; i <= new_nodes; ++i)
+            for (; i <= new_nodes; ++i)
                *(this->members_.m_finish.m_node + i) = this->priv_allocate_node();
          }
          AUTOBOOST_CATCH(...) {
@@ -2022,9 +2177,9 @@ class deque : protected deque_base<Allocator>
          new_nstart = this->members_.m_map + (this->members_.m_map_size - new_num_nodes) / 2
                            + (add_at_front ? nodes_to_add : 0);
          if (new_nstart < this->members_.m_start.m_node)
-            autoboost::move(this->members_.m_start.m_node, this->members_.m_finish.m_node + 1, new_nstart);
+            autoboost::container::move(this->members_.m_start.m_node, this->members_.m_finish.m_node + 1, new_nstart);
          else
-            autoboost::move_backward
+            autoboost::container::move_backward
                (this->members_.m_start.m_node, this->members_.m_finish.m_node + 1, new_nstart + old_num_nodes);
       }
       else {
@@ -2034,7 +2189,7 @@ class deque : protected deque_base<Allocator>
          index_pointer new_map = this->priv_allocate_map(new_map_size);
          new_nstart = new_map + (new_map_size - new_num_nodes) / 2
                               + (add_at_front ? nodes_to_add : 0);
-         autoboost::move(this->members_.m_start.m_node, this->members_.m_finish.m_node + 1, new_nstart);
+         autoboost::container::move(this->members_.m_start.m_node, this->members_.m_finish.m_node + 1, new_nstart);
          this->priv_deallocate_map(this->members_.m_map, this->members_.m_map_size);
 
          this->members_.m_map = new_map;
@@ -2057,8 +2212,11 @@ namespace autoboost {
 //!specialization for optimizations
 template <class T, class Allocator>
 struct has_trivial_destructor_after_move<autoboost::container::deque<T, Allocator> >
-   : public ::autoboost::has_trivial_destructor_after_move<Allocator>
-{};
+{
+   typedef typename ::autoboost::container::allocator_traits<Allocator>::pointer pointer;
+   static const bool value = ::autoboost::has_trivial_destructor_after_move<Allocator>::value &&
+                             ::autoboost::has_trivial_destructor_after_move<pointer>::value;
+};
 
 }
 

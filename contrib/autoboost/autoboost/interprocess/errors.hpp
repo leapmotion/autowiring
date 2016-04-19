@@ -24,7 +24,11 @@
 #ifndef AUTOBOOST_INTERPROCESS_ERRORS_HPP
 #define AUTOBOOST_INTERPROCESS_ERRORS_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 

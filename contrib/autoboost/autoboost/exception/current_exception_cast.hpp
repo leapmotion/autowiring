@@ -3,8 +3,8 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef AB_UUID_7E83C166200811DE885E826156D89593
-#define AB_UUID_7E83C166200811DE885E826156D89593
+#ifndef UUID_7E83C166200811DE885E826156D89593
+#define UUID_7E83C166200811DE885E826156D89593
 #if (__GNUC__*100+__GNUC_MINOR__>301) && !defined(AUTOBOOST_EXCEPTION_ENABLE_WARNINGS)
 #pragma GCC system_header
 #endif

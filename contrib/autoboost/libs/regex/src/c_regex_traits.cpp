@@ -77,7 +77,7 @@ c_regex_traits<char>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::tra
 c_regex_traits<char>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::transform_primary(const char* p1, const char* p2)
 {
    static char s_delim;
-   static const int s_collate_type = ::autoboost::re_detail::find_sort_syntax(static_cast<c_regex_traits<char>*>(0), &s_delim);
+   static const int s_collate_type = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::find_sort_syntax(static_cast<c_regex_traits<char>*>(0), &s_delim);
    std::string result;
    //
    // What we do here depends upon the format of the sort key returned by
@@ -85,8 +85,8 @@ c_regex_traits<char>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::tra
    //
    switch(s_collate_type)
    {
-   case ::autoboost::re_detail::sort_C:
-   case ::autoboost::re_detail::sort_unknown:
+   case ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::sort_C:
+   case ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::sort_unknown:
       // the best we can do is translate to lower case, then get a regular sort key:
       {
          result.assign(p1, p2);
@@ -95,14 +95,14 @@ c_regex_traits<char>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::tra
          result = transform(&*result.begin(), &*result.begin() + result.size());
          break;
       }
-   case ::autoboost::re_detail::sort_fixed:
+   case ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::sort_fixed:
       {
          // get a regular sort key, and then truncate it:
          result = transform(p1, p2);
          result.erase(s_delim);
          break;
       }
-   case ::autoboost::re_detail::sort_delim:
+   case ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::sort_delim:
          // get a regular sort key, and then truncate everything after the delim:
          result = transform(p1, p2);
          if(result.size() && (result[0] == s_delim))
@@ -149,13 +149,13 @@ c_regex_traits<char>::char_class_type AUTOBOOST_REGEX_CALL c_regex_traits<char>:
       char_class_xdigit,
    };
 
-   int idx = ::autoboost::re_detail::get_default_class_id(p1, p2);
+   int idx = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::get_default_class_id(p1, p2);
    if(idx < 0)
    {
       std::string s(p1, p2);
       for(std::string::size_type i = 0; i < s.size(); ++i)
          s[i] = static_cast<char>((std::tolower)(static_cast<unsigned char>(s[i])));
-      idx = ::autoboost::re_detail::get_default_class_id(&*s.begin(), &*s.begin() + s.size());
+      idx = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::get_default_class_id(&*s.begin(), &*s.begin() + s.size());
    }
    AUTOBOOST_ASSERT(std::size_t(idx+1) < sizeof(masks) / sizeof(masks[0]));
    return masks[idx+1];
@@ -173,16 +173,16 @@ bool AUTOBOOST_REGEX_CALL c_regex_traits<char>::isctype(char c, char_class_type 
       || ((mask & char_class_digit) && (std::isdigit)(static_cast<unsigned char>(c)))
       || ((mask & char_class_punct) && (std::ispunct)(static_cast<unsigned char>(c)))
       || ((mask & char_class_xdigit) && (std::isxdigit)(static_cast<unsigned char>(c)))
-      || ((mask & char_class_blank) && (std::isspace)(static_cast<unsigned char>(c)) && !::autoboost::re_detail::is_separator(c))
+      || ((mask & char_class_blank) && (std::isspace)(static_cast<unsigned char>(c)) && !::autoboost::AUTOBOOST_REGEX_DETAIL_NS::is_separator(c))
       || ((mask & char_class_word) && (c == '_'))
-      || ((mask & char_class_vertical) && (::autoboost::re_detail::is_separator(c) || (c == '\v')))
-      || ((mask & char_class_horizontal) && (std::isspace)(static_cast<unsigned char>(c)) && !::autoboost::re_detail::is_separator(c) && (c != '\v'));
+      || ((mask & char_class_vertical) && (::autoboost::AUTOBOOST_REGEX_DETAIL_NS::is_separator(c) || (c == '\v')))
+      || ((mask & char_class_horizontal) && (std::isspace)(static_cast<unsigned char>(c)) && !::autoboost::AUTOBOOST_REGEX_DETAIL_NS::is_separator(c) && (c != '\v'));
 }
 
 c_regex_traits<char>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::lookup_collatename(const char* p1, const char* p2)
 {
    std::string s(p1, p2);
-   s = ::autoboost::re_detail::lookup_default_collate_name(s);
+   s = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::lookup_default_collate_name(s);
    if(s.empty() && (p2-p1 == 1))
       s.append(1, *p1);
    return s;

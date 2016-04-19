@@ -10,11 +10,6 @@
 
 #include <autoboost/type_traits/is_base_of.hpp>
 #include <autoboost/type_traits/is_same.hpp>
-#include <autoboost/mpl/and.hpp>
-#include <autoboost/mpl/not.hpp>
-
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
 
 namespace autoboost {
 namespace detail {
@@ -34,8 +29,19 @@ struct is_virtual_base_of_impl
 };
 
 template<typename Base, typename Derived>
-struct is_virtual_base_of_impl<Base, Derived, mpl::true_>
+struct is_virtual_base_of_impl<Base, Derived, true_type>
 {
+   union max_align
+   {
+      unsigned u;
+      unsigned long ul;
+      void* v;
+      double d;
+      long double ld;
+#ifndef AUTOBOOST_NO_LONG_LONG
+      long long ll;
+#endif
+   };
 #ifdef __BORLANDC__
     struct autoboost_type_traits_internal_struct_X : public virtual Derived, public virtual Base
     {
@@ -43,6 +49,7 @@ struct is_virtual_base_of_impl<Base, Derived, mpl::true_>
        autoboost_type_traits_internal_struct_X(const autoboost_type_traits_internal_struct_X&);
        autoboost_type_traits_internal_struct_X& operator=(const autoboost_type_traits_internal_struct_X&);
        ~autoboost_type_traits_internal_struct_X()throw();
+       max_align data[4];
     };
     struct autoboost_type_traits_internal_struct_Y : public virtual Derived
     {
@@ -50,6 +57,7 @@ struct is_virtual_base_of_impl<Base, Derived, mpl::true_>
        autoboost_type_traits_internal_struct_Y(const autoboost_type_traits_internal_struct_Y&);
        autoboost_type_traits_internal_struct_Y& operator=(const autoboost_type_traits_internal_struct_Y&);
        ~autoboost_type_traits_internal_struct_Y()throw();
+       max_align data[4];
     };
 #else
     struct autoboost_type_traits_internal_struct_X : public Derived, virtual Base
@@ -58,6 +66,7 @@ struct is_virtual_base_of_impl<Base, Derived, mpl::true_>
        autoboost_type_traits_internal_struct_X(const autoboost_type_traits_internal_struct_X&);
        autoboost_type_traits_internal_struct_X& operator=(const autoboost_type_traits_internal_struct_X&);
        ~autoboost_type_traits_internal_struct_X()throw();
+       max_align data[16];
     };
     struct autoboost_type_traits_internal_struct_Y : public Derived
     {
@@ -65,6 +74,7 @@ struct is_virtual_base_of_impl<Base, Derived, mpl::true_>
        autoboost_type_traits_internal_struct_Y(const autoboost_type_traits_internal_struct_Y&);
        autoboost_type_traits_internal_struct_Y& operator=(const autoboost_type_traits_internal_struct_Y&);
        ~autoboost_type_traits_internal_struct_Y()throw();
+       max_align data[16];
     };
 #endif
     AUTOBOOST_STATIC_CONSTANT(bool, value = (sizeof(autoboost_type_traits_internal_struct_X)==sizeof(autoboost_type_traits_internal_struct_Y)));
@@ -73,7 +83,7 @@ struct is_virtual_base_of_impl<Base, Derived, mpl::true_>
 template<typename Base, typename Derived>
 struct is_virtual_base_of_impl2
 {
-   typedef typename mpl::and_<is_base_of<Base, Derived>, mpl::not_<is_same<Base, Derived> > >::type tag_type;
+   typedef autoboost::integral_constant<bool, (autoboost::is_base_of<Base, Derived>::value && ! autoboost::is_same<Base, Derived>::value)> tag_type;
    typedef is_virtual_base_of_impl<Base, Derived, tag_type> imp;
    AUTOBOOST_STATIC_CONSTANT(bool, value = imp::value);
 };
@@ -84,19 +94,12 @@ struct is_virtual_base_of_impl2
 
 } // namespace detail
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF2(
-      is_virtual_base_of
-       , Base
-       , Derived
-       , (::autoboost::detail::is_virtual_base_of_impl2<Base,Derived>::value)
-)
+template <class Base, class Derived> struct is_virtual_base_of : public integral_constant<bool, (::autoboost::detail::is_virtual_base_of_impl2<Base, Derived>::value)>{};
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_PARTIAL_SPEC2_2(typename Base,typename Derived,is_virtual_base_of,Base&,Derived,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_PARTIAL_SPEC2_2(typename Base,typename Derived,is_virtual_base_of,Base,Derived&,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_PARTIAL_SPEC2_2(typename Base,typename Derived,is_virtual_base_of,Base&,Derived&,false)
+template <class Base, class Derived> struct is_virtual_base_of<Base&, Derived> : public false_type{};
+template <class Base, class Derived> struct is_virtual_base_of<Base, Derived&> : public false_type{};
+template <class Base, class Derived> struct is_virtual_base_of<Base&, Derived&> : public false_type{};
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif

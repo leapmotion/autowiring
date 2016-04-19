@@ -11,19 +11,24 @@
 
 //! \file
 
-#ifndef AUTOBOOST_MOVE_MOVE_TRAITS_HPP
-#define AUTOBOOST_MOVE_MOVE_TRAITS_HPP
+#ifndef AUTOBOOST_MOVE_TRAITS_HPP
+#define AUTOBOOST_MOVE_TRAITS_HPP
+
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
 
 #include <autoboost/move/detail/config_begin.hpp>
-#include <autoboost/type_traits/has_trivial_destructor.hpp>
-#include <autoboost/type_traits/is_nothrow_move_constructible.hpp>
-#include <autoboost/type_traits/is_nothrow_move_assignable.hpp>
-#include <autoboost/type_traits/is_copy_constructible.hpp>
-#include <autoboost/move/detail/meta_utils.hpp>
 
 #ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
 #include <autoboost/move/core.hpp>
 #endif
+#include <autoboost/move/detail/meta_utils.hpp>
+#include <autoboost/move/detail/type_traits.hpp>
 
 namespace autoboost {
 
@@ -38,7 +43,7 @@ namespace autoboost {
 //! when inserted in containers.
 template <class T>
 struct has_trivial_destructor_after_move
-   : ::autoboost::has_trivial_destructor<T>
+   : ::autoboost::move_detail::is_trivially_destructible<T>
 {};
 
 //! By default this traits returns
@@ -48,8 +53,8 @@ struct has_trivial_destructor_after_move
 template <class T>
 struct has_nothrow_move
 {
-   static const bool value = autoboost::is_nothrow_move_constructible<T>::value &&
-                             autoboost::is_nothrow_move_assignable<T>::value;
+   static const bool value = autoboost::move_detail::is_nothrow_move_constructible<T>::value &&
+                             autoboost::move_detail::is_nothrow_move_assignable<T>::value;
 };
 
 namespace move_detail {
@@ -59,9 +64,9 @@ struct is_nothrow_move_constructible_or_uncopyable
 {
    //The standard requires is_nothrow_move_constructible for move_if_noexcept
    //but a user (usually in C++03) might specialize has_nothrow_move which includes it
-   static const bool value = autoboost::is_nothrow_move_constructible<T>::value ||
+   static const bool value = is_nothrow_move_constructible<T>::value ||
                              has_nothrow_move<T>::value ||
-                            !autoboost::is_copy_constructible<T>::value;
+                            !is_copy_constructible<T>::value;
 };
 
 }  //move_detail {
@@ -69,4 +74,4 @@ struct is_nothrow_move_constructible_or_uncopyable
 
 #include <autoboost/move/detail/config_end.hpp>
 
-#endif //#ifndef AUTOBOOST_MOVE_MOVE_TRAITS_HPP
+#endif //#ifndef AUTOBOOST_MOVE_TRAITS_HPP

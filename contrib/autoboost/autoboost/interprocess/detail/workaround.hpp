@@ -11,7 +11,11 @@
 #ifndef AUTOBOOST_INTERPROCESS_DETAIL_WORKAROUND_HPP
 #define AUTOBOOST_INTERPROCESS_DETAIL_WORKAROUND_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -26,7 +30,24 @@
 #else
    #include <unistd.h>
 
-   #if defined(_POSIX_THREAD_PROCESS_SHARED) && ((_POSIX_THREAD_PROCESS_SHARED - 0) > 0)
+   //////////////////////////////////////////////////////
+   //Check for XSI shared memory objects. They are available in nearly all UNIX platforms
+   //////////////////////////////////////////////////////
+   #if !defined(__QNXNTO__) && !defined(__ANDROID__) && !defined(__HAIKU__)
+      #define AUTOBOOST_INTERPROCESS_XSI_SHARED_MEMORY_OBJECTS
+   #endif
+
+   //////////////////////////////////////////////////////
+   // From SUSv3/UNIX 98, pthread_mutexattr_settype is mandatory
+   //////////////////////////////////////////////////////
+   #if defined(_XOPEN_UNIX) && ((_XOPEN_VERSION + 0) >= 500)
+      #define AUTOBOOST_INTERPROCESS_POSIX_RECURSIVE_MUTEXES
+   #endif
+
+   //////////////////////////////////////////////////////
+   // _POSIX_THREAD_PROCESS_SHARED (POSIX.1b/POSIX.4)
+   //////////////////////////////////////////////////////
+   #if defined(_POSIX_THREAD_PROCESS_SHARED) && ((_POSIX_THREAD_PROCESS_SHARED + 0) > 0)
       //Cygwin defines _POSIX_THREAD_PROCESS_SHARED but does not implement it.
       #if defined(__CYGWIN__)
          #define AUTOBOOST_INTERPROCESS_BUGGY_POSIX_PROCESS_SHARED
@@ -51,62 +72,12 @@
       #endif
    #endif
 
-   #if defined(_POSIX_BARRIERS) && ((_POSIX_BARRIERS - 0) > 0)
-      #define AUTOBOOST_INTERPROCESS_POSIX_BARRIERS
-   #endif
-
-   #if defined(_POSIX_SEMAPHORES) && ((_POSIX_SEMAPHORES - 0) > 0)
-      #define AUTOBOOST_INTERPROCESS_POSIX_NAMED_SEMAPHORES
-      #if defined(__CYGWIN__)
-         #define AUTOBOOST_INTERPROCESS_POSIX_SEMAPHORES_NO_UNLINK
-      #endif
-   //Some platforms have a limited (name length) named semaphore support
-   #elif (defined(__FreeBSD__) && (__FreeBSD__ >= 4)) || defined(__APPLE__)
-      #define AUTOBOOST_INTERPROCESS_POSIX_NAMED_SEMAPHORES
-   #endif
-
-   #if (defined (_V6_ILP32_OFFBIG)  &&(_V6_ILP32_OFFBIG   - 0 > 0)) ||\
-       (defined (_V6_LP64_OFF64)    &&(_V6_LP64_OFF64     - 0 > 0)) ||\
-       (defined (_V6_LPBIG_OFFBIG)  &&(_V6_LPBIG_OFFBIG   - 0 > 0)) ||\
-       (defined (_XBS5_ILP32_OFFBIG)&&(_XBS5_ILP32_OFFBIG - 0 > 0)) ||\
-       (defined (_XBS5_LP64_OFF64)  &&(_XBS5_LP64_OFF64   - 0 > 0)) ||\
-       (defined (_XBS5_LPBIG_OFFBIG)&&(_XBS5_LPBIG_OFFBIG - 0 > 0)) ||\
-       (defined (_FILE_OFFSET_BITS) &&(_FILE_OFFSET_BITS  - 0 >= 64))||\
-       (defined (_FILE_OFFSET_BITS) &&(_FILE_OFFSET_BITS  - 0 >= 64))
-      #define AUTOBOOST_INTERPROCESS_UNIX_64_BIT_OR_BIGGER_OFF_T
-   #endif
-
-   //Check for XSI shared memory objects. They are available in nearly all UNIX platforms
-   #if !defined(__QNXNTO__) && !defined(__ANDROID__)
-      #define AUTOBOOST_INTERPROCESS_XSI_SHARED_MEMORY_OBJECTS
-   #endif
-
-   #if defined(_POSIX_SHARED_MEMORY_OBJECTS) && ((_POSIX_SHARED_MEMORY_OBJECTS - 0) > 0)
+   //////////////////////////////////////////////////////
+   // _POSIX_SHARED_MEMORY_OBJECTS (POSIX.1b/POSIX.4)
+   //////////////////////////////////////////////////////
+   #if ( defined(_POSIX_SHARED_MEMORY_OBJECTS) && ((_POSIX_SHARED_MEMORY_OBJECTS + 0) > 0) ) ||\
+         (defined(__vms) && __CRTL_VER >= 70200000)
       #define AUTOBOOST_INTERPROCESS_POSIX_SHARED_MEMORY_OBJECTS
-   #else
-      //VMS and MACOS don't define it but they have shm_open/close interface
-      #if defined(__vms)
-         #if __CRTL_VER >= 70200000
-            #define AUTOBOOST_INTERPROCESS_POSIX_SHARED_MEMORY_OBJECTS
-         #endif
-         //Mac OS has some non-conformant features like names limited to SHM_NAME_MAX
-      #elif defined (__APPLE__)
-         //#define AUTOBOOST_INTERPROCESS_POSIX_SHARED_MEMORY_OBJECTS
-         //#define AUTOBOOST_INTERPROCESS_POSIX_SHARED_MEMORY_OBJECTS_NO_GROW
-      #endif
-   #endif
-
-   //Now check if we have only XSI shared memory
-   #if defined(AUTOBOOST_INTERPROCESS_XSI_SHARED_MEMORY_OBJECTS) &&\
-      !defined(AUTOBOOST_INTERPROCESS_POSIX_SHARED_MEMORY_OBJECTS)
-      //#define AUTOBOOST_INTERPROCESS_XSI_SHARED_MEMORY_OBJECTS_ONLY
-   #endif
-
-   #if defined(_POSIX_TIMEOUTS) && ((_POSIX_TIMEOUTS - 0) > 0)
-      #define AUTOBOOST_INTERPROCESS_POSIX_TIMEOUTS
-   #endif
-
-   #ifdef AUTOBOOST_INTERPROCESS_POSIX_SHARED_MEMORY_OBJECTS
       //Some systems have filesystem-based resources, so the
       //portable "/shmname" format does not work due to permission issues
       //For those systems we need to form a path to a temporary directory:
@@ -114,23 +85,52 @@
       #if defined(__hpux) || defined(__osf__) || defined(__vms) || (defined(__FreeBSD__) && (__FreeBSD__ < 7))
          #define AUTOBOOST_INTERPROCESS_FILESYSTEM_BASED_POSIX_SHARED_MEMORY
       //Some systems have "jailed" environments where shm usage is restricted at runtime
-      //and temporary file file based shm is possible in those executions.
+      //and temporary file based shm is possible in those executions.
       #elif defined(__FreeBSD__)
          #define AUTOBOOST_INTERPROCESS_RUNTIME_FILESYSTEM_BASED_POSIX_SHARED_MEMORY
       #endif
    #endif
 
-   #ifdef AUTOBOOST_INTERPROCESS_POSIX_NAMED_SEMAPHORES
+   //////////////////////////////////////////////////////
+   // _POSIX_MAPPED_FILES (POSIX.1b/POSIX.4)
+   //////////////////////////////////////////////////////
+   #if defined(_POSIX_MAPPED_FILES) && ((_POSIX_MAPPED_FILES + 0) > 0)
+      #define AUTOBOOST_INTERPROCESS_POSIX_MAPPED_FILES
+   #endif
+
+   //////////////////////////////////////////////////////
+   // _POSIX_SEMAPHORES (POSIX.1b/POSIX.4)
+   //////////////////////////////////////////////////////
+   #if ( defined(_POSIX_SEMAPHORES) && ((_POSIX_SEMAPHORES + 0) > 0) ) ||\
+       ( defined(__FreeBSD__) && (__FreeBSD__ >= 4)) || \
+         defined(__APPLE__)
+      #define AUTOBOOST_INTERPROCESS_POSIX_NAMED_SEMAPHORES
+      //MacOsX declares _POSIX_SEMAPHORES but sem_init returns ENOSYS
+      #if !defined(__APPLE__)
+         #define AUTOBOOST_INTERPROCESS_POSIX_UNNAMED_SEMAPHORES
+      #endif
       #if defined(__osf__) || defined(__vms)
          #define AUTOBOOST_INTERPROCESS_FILESYSTEM_BASED_POSIX_SEMAPHORES
       #endif
    #endif
 
-   #if defined(_POSIX_VERSION) && defined(_XOPEN_VERSION) && \
-       (((_POSIX_VERSION + 0)>= 200112L || (_XOPEN_VERSION + 0)>= 500))
-      #define AUTOBOOST_INTERPROCESS_POSIX_RECURSIVE_MUTEXES
+   //////////////////////////////////////////////////////
+   // _POSIX_BARRIERS (SUSv3/Unix03)
+   //////////////////////////////////////////////////////
+   #if defined(_POSIX_BARRIERS) && ((_POSIX_BARRIERS + 0) >= 200112L)
+      #define AUTOBOOST_INTERPROCESS_POSIX_BARRIERS
    #endif
 
+   //////////////////////////////////////////////////////
+   // _POSIX_TIMEOUTS (SUSv3/Unix03)
+   //////////////////////////////////////////////////////
+   #if defined(_POSIX_TIMEOUTS) && ((_POSIX_TIMEOUTS + 0L) >= 200112L)
+      #define AUTOBOOST_INTERPROCESS_POSIX_TIMEOUTS
+   #endif
+
+   //////////////////////////////////////////////////////
+   // Detect BSD derivatives to detect sysctl
+   //////////////////////////////////////////////////////
    #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
       #define AUTOBOOST_INTERPROCESS_BSD_DERIVATIVE
       //Some *BSD systems (OpenBSD & NetBSD) need sys/param.h before sys/sysctl.h, whereas
@@ -142,16 +142,34 @@
          //#define AUTOBOOST_INTERPROCESS_HAS_KERNEL_BOOTTIME
       #endif
    #endif
+
+   //////////////////////////////////////////////////////
+   //64 bit offset
+   //////////////////////////////////////////////////////
+   #if (defined (_V6_ILP32_OFFBIG)  &&(_V6_ILP32_OFFBIG   - 0 > 0)) ||\
+       (defined (_V6_LP64_OFF64)    &&(_V6_LP64_OFF64     - 0 > 0)) ||\
+       (defined (_V6_LPBIG_OFFBIG)  &&(_V6_LPBIG_OFFBIG   - 0 > 0)) ||\
+       (defined (_XBS5_ILP32_OFFBIG)&&(_XBS5_ILP32_OFFBIG - 0 > 0)) ||\
+       (defined (_XBS5_LP64_OFF64)  &&(_XBS5_LP64_OFF64   - 0 > 0)) ||\
+       (defined (_XBS5_LPBIG_OFFBIG)&&(_XBS5_LPBIG_OFFBIG - 0 > 0)) ||\
+       (defined (_FILE_OFFSET_BITS) &&(_FILE_OFFSET_BITS  - 0 >= 64))||\
+       (defined (_FILE_OFFSET_BITS) &&(_FILE_OFFSET_BITS  - 0 >= 64))
+      #define AUTOBOOST_INTERPROCESS_UNIX_64_BIT_OR_BIGGER_OFF_T
+   #endif
 #endif   //!defined(AUTOBOOST_INTERPROCESS_WINDOWS)
 
-#if    !defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
-   #define AUTOBOOST_INTERPROCESS_PERFECT_FORWARDING
+#if defined(AUTOBOOST_INTERPROCESS_WINDOWS) || defined(AUTOBOOST_INTERPROCESS_POSIX_MAPPED_FILES)
+#  define AUTOBOOST_INTERPROCESS_MAPPED_FILES
 #endif
 
 //Now declare some Boost.Interprocess features depending on the implementation
 #if defined(AUTOBOOST_INTERPROCESS_POSIX_NAMED_SEMAPHORES) && !defined(AUTOBOOST_INTERPROCESS_POSIX_SEMAPHORES_NO_UNLINK)
    #define AUTOBOOST_INTERPROCESS_NAMED_MUTEX_USES_POSIX_SEMAPHORES
    #define AUTOBOOST_INTERPROCESS_NAMED_SEMAPHORE_USES_POSIX_SEMAPHORES
+#endif
+
+#if    !defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+   #define AUTOBOOST_INTERPROCESS_PERFECT_FORWARDING
 #endif
 
 // Timeout duration use if AUTOBOOST_INTERPROCESS_ENABLE_TIMEOUT_WHEN_LOCKING is set
@@ -166,36 +184,12 @@
 //with processes compiled with those versions.
 #define AUTOBOOST_INTERPROCESS_MSG_QUEUE_CIRCULAR_INDEX
 
-//Inline attributes
-#if defined(_MSC_VER)
-   #define AUTOBOOST_INTERPROCESS_ALWAYS_INLINE __forceinline
-#elif defined (__GNUC__)
-   #define AUTOBOOST_INTERPROCESS_ALWAYS_INLINE __attribute__((__always_inline__))
-#else
-   #define AUTOBOOST_INTERPROCESS_ALWAYS_INLINE inline
-#endif
-
-#if defined(_MSC_VER)
-   #define AUTOBOOST_INTERPROCESS_NEVER_INLINE __declspec(noinline)
-#elif defined (__GNUC__)
-   #define AUTOBOOST_INTERPROCESS_NEVER_INLINE __attribute__((__noinline__))
-#endif
-
 //Macros for documentation purposes. For code, expands to the argument
 #define AUTOBOOST_INTERPROCESS_IMPDEF(TYPE) TYPE
 #define AUTOBOOST_INTERPROCESS_SEEDOC(TYPE) TYPE
-
-#if defined(AUTOBOOST_NO_CXX11_NOEXCEPT)
-   #if defined(AUTOBOOST_MSVC)
-      #define AUTOBOOST_INTERPROCESS_NOEXCEPT throw()
-   #else
-      #define AUTOBOOST_INTERPROCESS_NOEXCEPT
-   #endif
-   #define AUTOBOOST_INTERPROCESS_NOEXCEPT_IF(x)
-#else
-   #define AUTOBOOST_INTERPROCESS_NOEXCEPT    noexcept
-   #define AUTOBOOST_INTERPROCESS_NOEXCEPT_IF(x) noexcept(x)
-#endif
+#define AUTOBOOST_INTERPROCESS_DOC1ST(TYPE1, TYPE2) TYPE2
+#define AUTOBOOST_INTERPROCESS_I ,
+#define AUTOBOOST_INTERPROCESS_DOCIGN(T1) T1
 
 #include <autoboost/interprocess/detail/config_end.hpp>
 

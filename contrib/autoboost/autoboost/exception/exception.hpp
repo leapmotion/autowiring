@@ -3,8 +3,8 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef AB_UUID_274DA366004E11DCB1DDFE2E56D89593
-#define AB_UUID_274DA366004E11DCB1DDFE2E56D89593
+#ifndef UUID_274DA366004E11DCB1DDFE2E56D89593
+#define UUID_274DA366004E11DCB1DDFE2E56D89593
 #if (__GNUC__*100+__GNUC_MINOR__>301) && !defined(AUTOBOOST_EXCEPTION_ENABLE_WARNINGS)
 #pragma GCC system_header
 #endif
@@ -432,6 +432,11 @@ autoboost
             {
             }
 
+#if defined(__GNUC__)
+# if (__GNUC__ == 4 && __GNUC_MINOR__ >= 1) || (__GNUC__ > 4)
+#  pragma GCC visibility push (default)
+# endif
+#endif
         template <class T>
         class
         clone_impl:
@@ -473,6 +478,11 @@ autoboost
                 }
             };
         }
+#if defined(__GNUC__)
+# if (__GNUC__ == 4 && __GNUC_MINOR__ >= 1) || (__GNUC__ > 4)
+#  pragma GCC visibility pop
+# endif
+#endif
 
     template <class T>
     inline

@@ -410,18 +410,16 @@ namespace autoboost {
 namespace archive {
 namespace detail {
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 basic_oarchive::basic_oarchive(unsigned int flags)
     : pimpl(new basic_oarchive_impl(flags))
 {}
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 basic_oarchive::~basic_oarchive()
-{
-    delete pimpl;
-}
+{}
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_oarchive::save_object(
     const void *x,
     const basic_oserializer & bos
@@ -429,7 +427,7 @@ basic_oarchive::save_object(
     pimpl->save_object(*this, x, bos);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_oarchive::save_pointer(
     const void * t,
     const basic_pointer_oserializer * bpos_ptr
@@ -437,23 +435,28 @@ basic_oarchive::save_pointer(
     pimpl->save_pointer(*this, t, bpos_ptr);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_oarchive::register_basic_serializer(const basic_oserializer & bos){
     pimpl->register_type(bos);
 }
 
-AUTOBOOST_ARCHIVE_DECL(library_version_type)
+AUTOBOOST_ARCHIVE_DECL library_version_type
 basic_oarchive::get_library_version() const{
     return AUTOBOOST_ARCHIVE_VERSION();
 }
 
-AUTOBOOST_ARCHIVE_DECL(unsigned int)
+AUTOBOOST_ARCHIVE_DECL unsigned int
 basic_oarchive::get_flags() const{
     return pimpl->m_flags;
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_oarchive::end_preamble(){
+}
+
+AUTOBOOST_ARCHIVE_DECL helper_collection &
+basic_oarchive::get_helper_collection(){
+	return *this;
 }
 
 } // namespace detail

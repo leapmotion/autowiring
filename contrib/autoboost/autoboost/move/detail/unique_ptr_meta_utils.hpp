@@ -14,6 +14,14 @@
 #ifndef AUTOBOOST_MOVE_UNIQUE_PTR_DETAIL_META_UTILS_HPP
 #define AUTOBOOST_MOVE_UNIQUE_PTR_DETAIL_META_UTILS_HPP
 
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <cstddef>   //for std::size_t
 
 //Small meta-typetraits to support move

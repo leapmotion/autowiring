@@ -15,14 +15,14 @@ namespace autoboost {
 namespace archive {
 namespace detail {
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 basic_pointer_iserializer::basic_pointer_iserializer(
     const autoboost::serialization::extended_type_info & eti
 ) :
     basic_serializer(eti)
 {}
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 basic_pointer_iserializer::~basic_pointer_iserializer() {}
 
 } // namespace detail

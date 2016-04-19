@@ -46,5 +46,25 @@
 # define AUTOBOOST_SYSTEM_DECL
 #endif
 
+//  enable automatic library variant selection  ----------------------------------------//
+
+#if !defined(AUTOBOOST_SYSTEM_SOURCE) && !defined(AUTOBOOST_ALL_NO_LIB) && !defined(AUTOBOOST_SYSTEM_NO_LIB)
+//
+// Set the name of our library, this will get undef'ed by auto_link.hpp
+// once it's done with it:
+//
+#define AUTOBOOST_LIB_NAME autoboost_system
+//
+// If we're importing code from a dll, then tell auto_link.hpp about it:
+//
+#if defined(AUTOBOOST_ALL_DYN_LINK) || defined(AUTOBOOST_SYSTEM_DYN_LINK)
+#  define AUTOBOOST_DYN_LINK
+#endif
+//
+// And include the header that does the work:
+//
+#include <autoboost/config/auto_link.hpp>
+#endif  // auto-linking disabled
+
 #endif // AUTOBOOST_SYSTEM_CONFIG_HPP
 

@@ -15,7 +15,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <memory>
-
+#include <string.h> // memcmp.
 namespace autoboost
 {
     namespace thread_detail
@@ -42,7 +42,6 @@ namespace autoboost
                 }
             }
 
-#if defined AUTOBOOST_THREAD_PATCH
             const pthread_once_t pthread_once_init_value=PTHREAD_ONCE_INIT;
             struct AUTOBOOST_THREAD_DECL delete_epoch_tss_key_on_dlclose_t
             {
@@ -58,7 +57,6 @@ namespace autoboost
                 }
             };
             delete_epoch_tss_key_on_dlclose_t delete_epoch_tss_key_on_dlclose;
-#endif
         }
 
         uintmax_atomic_t& get_once_per_thread_epoch()

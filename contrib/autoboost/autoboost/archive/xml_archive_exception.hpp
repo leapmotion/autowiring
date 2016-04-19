@@ -20,7 +20,6 @@
 #include <autoboost/assert.hpp>
 
 #include <autoboost/config.hpp>
-#include <autoboost/preprocessor/empty.hpp>
 #include <autoboost/archive/detail/decl.hpp>
 #include <autoboost/archive/archive_exception.hpp>
 
@@ -32,7 +31,7 @@ namespace archive {
 //////////////////////////////////////////////////////////////////////
 // exceptions thrown by xml archives
 //
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) xml_archive_exception :
+class AUTOBOOST_SYMBOL_VISIBLE xml_archive_exception :
     public virtual autoboost::archive::archive_exception
 {
 public:
@@ -41,11 +40,13 @@ public:
         xml_archive_tag_mismatch,
         xml_archive_tag_name_error
     } exception_code;
-    xml_archive_exception(
+    AUTOBOOST_ARCHIVE_DECL xml_archive_exception(
         exception_code c,
         const char * e1 = NULL,
         const char * e2 = NULL
     );
+    AUTOBOOST_ARCHIVE_DECL xml_archive_exception(xml_archive_exception const &) ;
+    virtual AUTOBOOST_ARCHIVE_DECL ~xml_archive_exception() AUTOBOOST_NOEXCEPT_OR_NOTHROW ;
 };
 
 }// namespace archive

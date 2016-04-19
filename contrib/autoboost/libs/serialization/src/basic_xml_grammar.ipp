@@ -14,11 +14,11 @@
 
 #include <istream>
 #include <algorithm>
-#include <autoboost/config.hpp> // AUTOBOOST_DEDUCED_TYPENAME
+#include <autoboost/config.hpp> // typename
 
 #ifdef AUTOBOOST_MSVC
 #  pragma warning(push)
-#  pragma warning(disable : 4511 4512)
+#  pragma warning(disable : 4244 4511 4512)
 #endif
 
 // spirit stuff
@@ -33,7 +33,6 @@
 // for head_iterator test
 //#include <autoboost/bind.hpp>
 #include <autoboost/function.hpp>
-#include <autoboost/serialization/pfto.hpp>
 
 #include <autoboost/io/ios_state.hpp>
 #include <autoboost/serialization/throw_exception.hpp>
@@ -146,7 +145,7 @@ template<class String>
 struct append_char {
     String & contents;
     void operator()(const unsigned int char_value) const {
-        const AUTOBOOST_DEDUCED_TYPENAME String::value_type z = char_value;
+        const typename String::value_type z = char_value;
         contents += z;
     }
     append_char(String & contents_)
@@ -159,7 +158,7 @@ struct append_lit {
     String & contents;
     template<class X, class Y>
     void operator()(const X & /*x*/, const Y & /*y*/) const {
-        const AUTOBOOST_DEDUCED_TYPENAME String::value_type z = c;
+        const typename String::value_type z = c;
         contents += z;
     }
     append_lit(String & contents_)
@@ -175,7 +174,7 @@ struct append_lit {
 
 template<class CharType>
 bool basic_xml_grammar<CharType>::my_parse(
-    AUTOBOOST_DEDUCED_TYPENAME basic_xml_grammar<CharType>::IStream & is,
+    typename basic_xml_grammar<CharType>::IStream & is,
     const rule_t & rule_,
     CharType delimiter
 ) const {
@@ -192,7 +191,7 @@ bool basic_xml_grammar<CharType>::my_parse(
 
     CharType val;
     do{
-        AUTOBOOST_DEDUCED_TYPENAME basic_xml_grammar<CharType>::IStream::int_type
+        typename basic_xml_grammar<CharType>::IStream::int_type
             result = is.get();
         if(is.fail())
             return false;
@@ -206,14 +205,14 @@ bool basic_xml_grammar<CharType>::my_parse(
     // is terminated.  This will permit the archive to be used for debug
     // and transaction data logging in the standard way.
 
-    parse_info<AUTOBOOST_DEDUCED_TYPENAME std::basic_string<CharType>::iterator>
+    parse_info<typename std::basic_string<CharType>::iterator>
         result = autoboost::spirit::classic::parse(arg.begin(), arg.end(), rule_);
     return result.hit;
 }
 
 template<class CharType>
 bool basic_xml_grammar<CharType>::parse_start_tag(
-    AUTOBOOST_DEDUCED_TYPENAME basic_xml_grammar<CharType>::IStream & is
+    typename basic_xml_grammar<CharType>::IStream & is
 ){
     rv.class_name.resize(0);
     return my_parse(is, STag);
@@ -283,7 +282,7 @@ basic_xml_grammar<CharType>::basic_xml_grammar(){
         CharDataChars [
             xml::append_string<
                 StringType,
-                AUTOBOOST_DEDUCED_TYPENAME std::basic_string<CharType>::const_iterator
+                typename std::basic_string<CharType>::const_iterator
             >(rv.contents)
         ]
     ;
@@ -457,7 +456,7 @@ void basic_xml_grammar<CharType>::init(IStream & is){
 
 template<class CharType>
 void basic_xml_grammar<CharType>::windup(IStream & is){
-    if(is.fail())
+    if(is.fail() || is.eof())
         return;
     // uh-oh - don't throw exception from code called by a destructor !
     // so just ignore any failure.

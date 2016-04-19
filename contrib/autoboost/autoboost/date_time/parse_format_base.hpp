@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_PARSE_FORMAT_BASE__
-#define AB_DATE_TIME_PARSE_FORMAT_BASE__
+#ifndef DATE_TIME_PARSE_FORMAT_BASE__
+#define DATE_TIME_PARSE_FORMAT_BASE__
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

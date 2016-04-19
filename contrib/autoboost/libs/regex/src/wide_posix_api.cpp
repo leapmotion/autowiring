@@ -78,23 +78,20 @@ typedef autoboost::basic_regex<wchar_t, c_regex_traits<wchar_t> > wc_regex_type;
 
 AUTOBOOST_REGEX_DECL int AUTOBOOST_REGEX_CCALL regcompW(regex_tW* expression, const wchar_t* ptr, int f)
 {
-   if(expression->re_magic != wmagic_value)
-   {
-      expression->guts = 0;
 #ifndef AUTOBOOST_NO_EXCEPTIONS
-      try{
+   try{
 #endif
       expression->guts = new wc_regex_type();
 #ifndef AUTOBOOST_NO_EXCEPTIONS
-      } catch(...)
-      {
-         return REG_ESPACE;
-      }
-#else
-      if(0 == expression->guts)
-         return REG_E_MEMORY;
-#endif
+   } catch(...)
+   {
+      expression->guts = 0;
+      return REG_ESPACE;
    }
+#else
+   if(0 == expression->guts)
+      return REG_E_MEMORY;
+#endif
    // set default flags:
    autoboost::uint_fast32_t flags = (f & REG_PERLEX) ? 0 : ((f & REG_EXTENDED) ? wregex::extended : wregex::basic);
    expression->eflags = (f & REG_NEWLINE) ? match_not_dot_newline : match_default;
@@ -218,12 +215,12 @@ AUTOBOOST_REGEX_DECL regsize_t AUTOBOOST_REGEX_CCALL regerrorW(int code, const r
          p = static_cast<wc_regex_type*>(e->guts)->get_traits().error_string(static_cast< ::autoboost::regex_constants::error_type>(code));
       else
       {
-         p = re_detail::get_default_error_string(static_cast< ::autoboost::regex_constants::error_type>(code));
+         p = AUTOBOOST_REGEX_DETAIL_NS::get_default_error_string(static_cast< ::autoboost::regex_constants::error_type>(code));
       }
       std::size_t len = p.size();
       if(len < buf_size)
       {
-         re_detail::copy(p.c_str(), p.c_str() + p.size() + 1, buf);
+         AUTOBOOST_REGEX_DETAIL_NS::copy(p.c_str(), p.c_str() + p.size() + 1, buf);
       }
       return len + 1;
    }

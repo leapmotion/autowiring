@@ -2,8 +2,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-#ifndef AB_WORKAROUND_DWA2002126_HPP
-# define AB_WORKAROUND_DWA2002126_HPP
+#ifndef WORKAROUND_DWA2002126_HPP
+# define WORKAROUND_DWA2002126_HPP
 
 // Compiler/library version workaround macro
 //

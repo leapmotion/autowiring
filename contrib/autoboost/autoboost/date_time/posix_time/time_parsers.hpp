@@ -1,5 +1,5 @@
-#ifndef AB_POSIXTIME_PARSERS_HPP___
-#define AB_POSIXTIME_PARSERS_HPP___
+#ifndef POSIXTIME_PARSERS_HPP___
+#define POSIXTIME_PARSERS_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

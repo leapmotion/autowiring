@@ -113,7 +113,7 @@ AUTOBOOST_MPL_CFG_GPU_ENABLED
 inline
 void for_each(F f, Sequence* = 0)
 {
-  // jfalcou: fully qualifying this call so it doesnt clash with autoboostphoenix::for_each
+  // jfalcou: fully qualifying this call so it doesnt clash with phoenix::for_each
   // ons ome compilers -- done on 02/28/2011
   autoboost::mpl::for_each<Sequence, identity<> >(f);
 }

@@ -1,52 +1,57 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2015. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/container for documentation.
 //
-
+//////////////////////////////////////////////////////////////////////////////
 #ifndef AUTOBOOST_CONTAINER_LIST_HPP
 #define AUTOBOOST_CONTAINER_LIST_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
 #include <autoboost/container/detail/config_begin.hpp>
 #include <autoboost/container/detail/workaround.hpp>
+
+// container
 #include <autoboost/container/container_fwd.hpp>
-#include <autoboost/container/detail/version_type.hpp>
+#include <autoboost/container/new_allocator.hpp> //new_allocator
+#include <autoboost/container/throw_exception.hpp>
+// container/detail
+#include <autoboost/container/detail/algorithm.hpp>
+#include <autoboost/container/detail/compare_functors.hpp>
+#include <autoboost/container/detail/iterator.hpp>
 #include <autoboost/container/detail/iterators.hpp>
 #include <autoboost/container/detail/mpl.hpp>
-#include <autoboost/container/throw_exception.hpp>
+#include <autoboost/container/detail/node_alloc_holder.hpp>
+#include <autoboost/container/detail/version_type.hpp>
+// move
 #include <autoboost/move/utility_core.hpp>
 #include <autoboost/move/iterator.hpp>
-#include <autoboost/move/detail/move_helpers.hpp>
 #include <autoboost/move/traits.hpp>
-#include <autoboost/intrusive/pointer_traits.hpp>
-#include <autoboost/container/detail/utilities.hpp>
-#include <autoboost/container/detail/algorithms.hpp>
-#include <autoboost/intrusive/list.hpp>
-#include <autoboost/assert.hpp>
-#include <autoboost/container/detail/node_alloc_holder.hpp>
-
-#if defined(AUTOBOOST_CONTAINER_PERFECT_FORWARDING) || defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
-#else
-//Preprocessor library to emulate perfect forwarding
-#include <autoboost/container/detail/preprocessor.hpp>
+// move/detail
+#if defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#  include <autoboost/move/detail/fwd_macros.hpp>
 #endif
+#include <autoboost/move/detail/move_helpers.hpp>
 
+// intrusive
+#include <autoboost/intrusive/pointer_traits.hpp>
+#include <autoboost/intrusive/list.hpp>
+// other
+#include <autoboost/assert.hpp>
+// std
 #if !defined(AUTOBOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif
-
-#include <iterator>
-#include <utility>
-#include <memory>
-#include <functional>
-#include <algorithm>
 
 namespace autoboost {
 namespace container {
@@ -124,7 +129,7 @@ struct intrusive_list_type
 //! \tparam T The type of object that is stored in the list
 //! \tparam Allocator The allocator used for all internal memory management
 #ifdef AUTOBOOST_CONTAINER_DOXYGEN_INVOKED
-template <class T, class Allocator = std::allocator<T> >
+template <class T, class Allocator = new_allocator<T> >
 #else
 template <class T, class Allocator>
 #endif
@@ -141,44 +146,14 @@ class list
    typedef typename AllocHolder::ValAlloc                         ValAlloc;
    typedef typename AllocHolder::Node                             Node;
    typedef container_detail::allocator_destroyer<NodeAlloc>       Destroyer;
-   typedef typename AllocHolder::allocator_v1                     allocator_v1;
-   typedef typename AllocHolder::allocator_v2                     allocator_v2;
    typedef typename AllocHolder::alloc_version                    alloc_version;
    typedef autoboost::container::allocator_traits<Allocator>          allocator_traits_type;
-
-   class equal_to_value
-   {
-      typedef typename AllocHolder::value_type value_type;
-      const value_type &t_;
-
-      public:
-      equal_to_value(const value_type &t)
-         :  t_(t)
-      {}
-
-      bool operator()(const value_type &t)const
-      {  return t_ == t;   }
-   };
-
-   template<class Pred>
-   struct ValueCompareToNodeCompare
-      :  Pred
-   {
-      ValueCompareToNodeCompare(Pred pred)
-         :  Pred(pred)
-      {}
-
-      bool operator()(const Node &a, const Node &b) const
-      {  return static_cast<const Pred&>(*this)(a.m_data, b.m_data);  }
-
-      bool operator()(const Node &a) const
-      {  return static_cast<const Pred&>(*this)(a.m_data);  }
-   };
+   typedef autoboost::container::equal_to_value<Allocator>            equal_to_value_type;
 
    AUTOBOOST_COPYABLE_AND_MOVABLE(list)
 
-   typedef container_detail::iterator<typename Icont::iterator, false>  iterator_impl;
-   typedef container_detail::iterator<typename Icont::iterator, true>   const_iterator_impl;
+   typedef container_detail::iterator_from_iiterator<typename Icont::iterator, false>  iterator_impl;
+   typedef container_detail::iterator_from_iiterator<typename Icont::iterator, true>   const_iterator_impl;
    #endif   //#ifndef AUTOBOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -199,8 +174,8 @@ class list
    typedef AUTOBOOST_CONTAINER_IMPDEF(NodeAlloc)                                           stored_allocator_type;
    typedef AUTOBOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
    typedef AUTOBOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
-   typedef AUTOBOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<iterator>)                          reverse_iterator;
-   typedef AUTOBOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<const_iterator>)                    const_reverse_iterator;
+   typedef AUTOBOOST_CONTAINER_IMPDEF(autoboost::container::reverse_iterator<iterator>)        reverse_iterator;
+   typedef AUTOBOOST_CONTAINER_IMPDEF(autoboost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
    //////////////////////////////////////////////
    //
@@ -222,9 +197,20 @@ class list
    //! <b>Throws</b>: Nothing
    //!
    //! <b>Complexity</b>: Constant.
-   explicit list(const allocator_type &a) AUTOBOOST_CONTAINER_NOEXCEPT
+   explicit list(const allocator_type &a) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       : AllocHolder(a)
    {}
+
+   //! <b>Effects</b>: Constructs a list
+   //!   and inserts n value-initialized value_types.
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's default or copy constructor throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   explicit list(size_type n)
+      : AllocHolder(Allocator())
+   {  this->resize(n);  }
 
    //! <b>Effects</b>: Constructs a list that will use a copy of allocator a
    //!   and inserts n copies of value.
@@ -233,8 +219,8 @@ class list
    //!   throws or T's default or copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
-   explicit list(size_type n)
-      : AllocHolder(Allocator())
+   list(size_type n, const allocator_type &a)
+      : AllocHolder(a)
    {  this->resize(n);  }
 
    //! <b>Effects</b>: Constructs a list that will use a copy of allocator a
@@ -259,13 +245,13 @@ class list
       : AllocHolder(x)
    {  this->insert(this->cbegin(), x.begin(), x.end());   }
 
-   //! <b>Effects</b>: Move constructor. Moves mx's resources to *this.
+   //! <b>Effects</b>: Move constructor. Moves x's resources to *this.
    //!
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
    list(AUTOBOOST_RV_REF(list) x)
-      : AllocHolder(autoboost::move(static_cast<AllocHolder&>(x)))
+      : AllocHolder(AUTOBOOST_MOVE_BASE(AllocHolder, x))
    {}
 
    //! <b>Effects</b>: Copy constructs a list using the specified allocator.
@@ -280,7 +266,7 @@ class list
    {  this->insert(this->cbegin(), x.begin(), x.end());   }
 
    //! <b>Effects</b>: Move constructor sing the specified allocator.
-   //!                 Moves mx's resources to *this.
+   //!                 Moves x's resources to *this.
    //!
    //! <b>Throws</b>: If allocation or value_type's copy constructor throws.
    //!
@@ -292,7 +278,7 @@ class list
          this->icont().swap(x.icont());
       }
       else{
-         this->insert(this->cbegin(), x.begin(), x.end());
+         this->insert(this->cbegin(), autoboost::make_move_iterator(x.begin()), autoboost::make_move_iterator(x.end()));
       }
    }
 
@@ -329,7 +315,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the number of elements.
-   ~list() AUTOBOOST_CONTAINER_NOEXCEPT
+   ~list() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {} //AllocHolder clears the list
 
    //! <b>Effects</b>: Makes *this contain the same elements as x.
@@ -368,7 +354,8 @@ class list
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    list& operator=(AUTOBOOST_RV_REF(list) x)
-      AUTOBOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
+      AUTOBOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
+                                  || allocator_traits_type::is_always_equal::value)
    {
       AUTOBOOST_ASSERT(this != &x);
       NodeAlloc &this_alloc = this->node_alloc();
@@ -430,9 +417,7 @@ class list
    template <class InpIt>
    void assign(InpIt first, InpIt last
       #if !defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<InpIt, size_type>::value
-         >::type * = 0
+      , typename container_detail::disable_if_convertible<InpIt, size_type>::type * = 0
       #endif
       )
    {
@@ -463,7 +448,7 @@ class list
    //! <b>Throws</b>: If allocator's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   allocator_type get_allocator() const AUTOBOOST_CONTAINER_NOEXCEPT
+   allocator_type get_allocator() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return allocator_type(this->node_alloc()); }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
@@ -473,7 +458,7 @@ class list
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   stored_allocator_type &get_stored_allocator() AUTOBOOST_CONTAINER_NOEXCEPT
+   stored_allocator_type &get_stored_allocator() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return this->node_alloc(); }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
@@ -483,7 +468,7 @@ class list
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   const stored_allocator_type &get_stored_allocator() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const stored_allocator_type &get_stored_allocator() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return this->node_alloc(); }
 
    //////////////////////////////////////////////
@@ -497,7 +482,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator begin() AUTOBOOST_CONTAINER_NOEXCEPT
+   iterator begin() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    { return iterator(this->icont().begin()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the list.
@@ -505,7 +490,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator begin() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_iterator begin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return this->cbegin();   }
 
    //! <b>Effects</b>: Returns an iterator to the end of the list.
@@ -513,7 +498,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator end() AUTOBOOST_CONTAINER_NOEXCEPT
+   iterator end() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return iterator(this->icont().end());  }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the list.
@@ -521,7 +506,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator end() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_iterator end() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return this->cend();  }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the beginning
@@ -530,7 +515,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rbegin() AUTOBOOST_CONTAINER_NOEXCEPT
+   reverse_iterator rbegin() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return reverse_iterator(end());  }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -539,7 +524,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rbegin() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator rbegin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return this->crbegin();  }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the end
@@ -548,7 +533,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rend() AUTOBOOST_CONTAINER_NOEXCEPT
+   reverse_iterator rend() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return reverse_iterator(begin());   }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -557,7 +542,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rend() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator rend() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return this->crend();   }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the list.
@@ -565,7 +550,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cbegin() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_iterator cbegin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return const_iterator(this->non_const_icont().begin());   }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the list.
@@ -573,7 +558,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cend() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_iterator cend() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return const_iterator(this->non_const_icont().end());  }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -582,7 +567,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crbegin() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator crbegin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return const_reverse_iterator(this->cend());  }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -591,7 +576,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crend() const AUTOBOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator crend() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return const_reverse_iterator(this->cbegin());   }
 
    //////////////////////////////////////////////
@@ -605,7 +590,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   bool empty() const AUTOBOOST_CONTAINER_NOEXCEPT
+   bool empty() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return !this->size();  }
 
    //! <b>Effects</b>: Returns the number of the elements contained in the list.
@@ -613,7 +598,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type size() const AUTOBOOST_CONTAINER_NOEXCEPT
+   size_type size() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {   return this->icont().size();   }
 
    //! <b>Effects</b>: Returns the largest possible size of the list.
@@ -621,7 +606,7 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type max_size() const AUTOBOOST_CONTAINER_NOEXCEPT
+   size_type max_size() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return AllocHolder::max_size();  }
 
    //! <b>Effects</b>: Inserts or erases elements at the end such that
@@ -665,8 +650,11 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reference front() AUTOBOOST_CONTAINER_NOEXCEPT
-   { return *this->begin(); }
+   reference front() AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(!this->empty());
+      return *this->begin();
+   }
 
    //! <b>Requires</b>: !empty()
    //!
@@ -676,8 +664,11 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reference front() const AUTOBOOST_CONTAINER_NOEXCEPT
-   { return *this->begin(); }
+   const_reference front() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(!this->empty());
+      return *this->begin();
+   }
 
    //! <b>Requires</b>: !empty()
    //!
@@ -687,8 +678,11 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reference back() AUTOBOOST_CONTAINER_NOEXCEPT
-   { return *(--this->end()); }
+   reference back() AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(!this->empty());
+      return *(--this->end());
+   }
 
    //! <b>Requires</b>: !empty()
    //!
@@ -698,8 +692,11 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reference back() const AUTOBOOST_CONTAINER_NOEXCEPT
-   { return *(--this->end()); }
+   const_reference back() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(!this->empty());
+      return *(--this->end());
+   }
 
    //////////////////////////////////////////////
    //
@@ -707,7 +704,7 @@ class list
    //
    //////////////////////////////////////////////
 
-   #if defined(AUTOBOOST_CONTAINER_PERFECT_FORWARDING) || defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... in the end of the list.
@@ -717,7 +714,7 @@ class list
    //!
    //! <b>Complexity</b>: Constant
    template <class... Args>
-   void emplace_back(Args&&... args)
+   void emplace_back(AUTOBOOST_FWD_REF(Args)... args)
    {  this->emplace(this->cend(), autoboost::forward<Args>(args)...); }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
@@ -728,7 +725,7 @@ class list
    //!
    //! <b>Complexity</b>: Constant
    template <class... Args>
-   void emplace_front(Args&&... args)
+   void emplace_front(AUTOBOOST_FWD_REF(Args)... args)
    {  this->emplace(this->cbegin(), autoboost::forward<Args>(args)...);  }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
@@ -739,42 +736,36 @@ class list
    //!
    //! <b>Complexity</b>: Constant
    template <class... Args>
-   iterator emplace(const_iterator p, Args&&... args)
+   iterator emplace(const_iterator position, AUTOBOOST_FWD_REF(Args)... args)
    {
+      AUTOBOOST_ASSERT((priv_is_linked)(position));
       NodePtr pnode(AllocHolder::create_node(autoboost::forward<Args>(args)...));
-      return iterator(this->icont().insert(p.get(), *pnode));
+      return iterator(this->icont().insert(position.get(), *pnode));
    }
 
-   #else //#ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
+   #else // !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   #define AUTOBOOST_PP_LOCAL_MACRO(n)                                                              \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >)       \
-   void emplace_back(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))                        \
-   {                                                                                            \
-      this->emplace(this->cend()                                                                \
-                    AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _));            \
-   }                                                                                            \
-                                                                                                \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >)       \
-   void emplace_front(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))                       \
-   {                                                                                            \
-      this->emplace(this->cbegin()                                                              \
-                    AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _));            \
-   }                                                                                            \
-                                                                                                \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >)       \
-   iterator emplace(const_iterator p                                                            \
-                    AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))                \
-   {                                                                                            \
-      NodePtr pnode (AllocHolder::create_node                                                   \
-         (AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _)));                              \
-      return iterator(this->icont().insert(p.get(), *pnode));                                   \
-   }                                                                                            \
-   //!
-   #define AUTOBOOST_PP_LOCAL_LIMITS (0, AUTOBOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include AUTOBOOST_PP_LOCAL_ITERATE()
+   #define AUTOBOOST_CONTAINER_LIST_EMPLACE_CODE(N) \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N \
+   void emplace_back(AUTOBOOST_MOVE_UREF##N)\
+   {  this->emplace(this->cend() AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_FWD##N);  }\
+   \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N \
+   void emplace_front(AUTOBOOST_MOVE_UREF##N)\
+   {  this->emplace(this->cbegin() AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_FWD##N);}\
+   \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N \
+   iterator emplace(const_iterator position AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_UREF##N)\
+   {\
+      AUTOBOOST_ASSERT(position == this->cend() || (--(++position) == position) );\
+      NodePtr pnode (AllocHolder::create_node(AUTOBOOST_MOVE_FWD##N));\
+      return iterator(this->icont().insert(position.get(), *pnode));\
+   }\
+   //
+   AUTOBOOST_MOVE_ITERATE_0TO9(AUTOBOOST_CONTAINER_LIST_EMPLACE_CODE)
+   #undef AUTOBOOST_CONTAINER_LIST_EMPLACE_CODE
 
-   #endif   //#ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
+   #endif   // !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #if defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Effects</b>: Inserts a copy of x at the beginning of the list.
@@ -786,7 +777,7 @@ class list
    void push_front(const T &x);
 
    //! <b>Effects</b>: Constructs a new element in the beginning of the list
-   //!   and moves the resources of mx to this new element.
+   //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
    //!
@@ -806,7 +797,7 @@ class list
    void push_back(const T &x);
 
    //! <b>Effects</b>: Constructs a new element in the end of the list
-   //!   and moves the resources of mx to this new element.
+   //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
    //!
@@ -830,7 +821,7 @@ class list
 
    //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Insert a new element before p with mx's resources.
+   //! <b>Effects</b>: Insert a new element before p with x's resources.
    //!
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
@@ -851,10 +842,11 @@ class list
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
-   iterator insert(const_iterator p, size_type n, const T& x)
+   iterator insert(const_iterator position, size_type n, const T& x)
    {
+      //range check is done by insert
       typedef constant_iterator<value_type, difference_type> cvalue_iterator;
-      return this->insert(p, cvalue_iterator(x, n), cvalue_iterator());
+      return this->insert(position, cvalue_iterator(x, n), cvalue_iterator());
    }
 
    //! <b>Requires</b>: p must be a valid iterator of *this.
@@ -866,19 +858,20 @@ class list
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws.
    //!
-   //! <b>Complexity</b>: Linear to std::distance [first, last).
+   //! <b>Complexity</b>: Linear to distance [first, last).
    template <class InpIt>
    iterator insert(const_iterator p, InpIt first, InpIt last
       #if !defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
       , typename container_detail::enable_if_c
          < !container_detail::is_convertible<InpIt, size_type>::value
             && (container_detail::is_input_iterator<InpIt>::value
-                || container_detail::is_same<alloc_version, allocator_v1>::value
+                || container_detail::is_same<alloc_version, version_1>::value
                )
          >::type * = 0
       #endif
       )
    {
+      AUTOBOOST_ASSERT((priv_is_linked)(p));
       const typename Icont::iterator ipos(p.get());
       iterator ret_it(ipos);
       if(first != last){
@@ -893,20 +886,21 @@ class list
 
    #if !defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
    template <class FwdIt>
-   iterator insert(const_iterator p, FwdIt first, FwdIt last
+   iterator insert(const_iterator position, FwdIt first, FwdIt last
       , typename container_detail::enable_if_c
          < !container_detail::is_convertible<FwdIt, size_type>::value
             && !(container_detail::is_input_iterator<FwdIt>::value
-                || container_detail::is_same<alloc_version, allocator_v1>::value
+                || container_detail::is_same<alloc_version, version_1>::value
                )
          >::type * = 0
       )
    {
+      AUTOBOOST_ASSERT((priv_is_linked)(position));
       //Optimized allocation and construction
-      insertion_functor func(this->icont(), p.get());
-      iterator before_p(p.get());
+      insertion_functor func(this->icont(), position.get());
+      iterator before_p(position.get());
       --before_p;
-      this->allocate_many_and_construct(first, std::distance(first, last), func);
+      this->allocate_many_and_construct(first, autoboost::container::iterator_distance(first, last), func);
       return ++before_p;
    }
    #endif
@@ -921,9 +915,12 @@ class list
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced std::initializer_list iterator throws.
    //!
-   //! <b>Complexity</b>: Linear to std::distance [il.begin(), il.end()).
+   //! <b>Complexity</b>: Linear to distance [il.begin(), il.end()).
    iterator insert(const_iterator p, std::initializer_list<value_type> il)
-   { return insert(p, il.begin(), il.end()); }
+   {
+      //position range check is done by insert()
+      return insert(p, il.begin(), il.end());
+   }
 #endif
 
    //! <b>Effects</b>: Removes the first element from the list.
@@ -931,16 +928,23 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Amortized constant time.
-   void pop_front() AUTOBOOST_CONTAINER_NOEXCEPT
-   {  this->erase(this->cbegin());      }
+   void pop_front() AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(!this->empty());
+      this->erase(this->cbegin());
+   }
 
    //! <b>Effects</b>: Removes the last element from the list.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Amortized constant time.
-   void pop_back() AUTOBOOST_CONTAINER_NOEXCEPT
-   {  const_iterator tmp = this->cend(); this->erase(--tmp);  }
+   void pop_back() AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(!this->empty());
+      const_iterator tmp = this->cend();
+      this->erase(--tmp);
+   }
 
    //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
@@ -949,8 +953,11 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Amortized constant time.
-   iterator erase(const_iterator p) AUTOBOOST_CONTAINER_NOEXCEPT
-   {  return iterator(this->icont().erase_and_dispose(p.get(), Destroyer(this->node_alloc()))); }
+   iterator erase(const_iterator p) AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(p != this->cend() && (priv_is_linked)(p));
+      return iterator(this->icont().erase_and_dispose(p.get(), Destroyer(this->node_alloc())));
+   }
 
    //! <b>Requires</b>: first and last must be valid iterator to elements in *this.
    //!
@@ -959,8 +966,12 @@ class list
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the distance between first and last.
-   iterator erase(const_iterator first, const_iterator last) AUTOBOOST_CONTAINER_NOEXCEPT
-   {  return iterator(AllocHolder::erase_range(first.get(), last.get(), alloc_version())); }
+   iterator erase(const_iterator first, const_iterator last) AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(first == last || (first != this->cend() && (priv_is_linked)(first)));
+      AUTOBOOST_ASSERT(first == last || (priv_is_linked)(last));
+      return iterator(AllocHolder::erase_range(first.get(), last.get(), alloc_version()));
+   }
 
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
@@ -968,14 +979,21 @@ class list
    //!
    //! <b>Complexity</b>: Constant.
    void swap(list& x)
-   {  AllocHolder::swap(x);   }
+      AUTOBOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_swap::value
+                               || allocator_traits_type::is_always_equal::value)
+   {
+      AUTOBOOST_ASSERT(allocator_traits_type::propagate_on_container_swap::value ||
+                   allocator_traits_type::is_always_equal::value ||
+                   this->get_stored_allocator() == x.get_stored_allocator());
+      AllocHolder::swap(x);
+   }
 
    //! <b>Effects</b>: Erases all the elements of the list.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the list.
-   void clear() AUTOBOOST_CONTAINER_NOEXCEPT
+   void clear() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  AllocHolder::clear(alloc_version());  }
 
    //////////////////////////////////////////////
@@ -996,8 +1014,9 @@ class list
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of
    //!    this list. Iterators of this list and all the references are not invalidated.
-   void splice(const_iterator p, list& x) AUTOBOOST_CONTAINER_NOEXCEPT
+   void splice(const_iterator p, list& x) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
+      AUTOBOOST_ASSERT((priv_is_linked)(p));
       AUTOBOOST_ASSERT(this != &x);
       AUTOBOOST_ASSERT(this->node_alloc() == x.node_alloc());
       this->icont().splice(p.get(), x.icont());
@@ -1015,8 +1034,11 @@ class list
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of
    //!    this list. Iterators of this list and all the references are not invalidated.
-   void splice(const_iterator p, AUTOBOOST_RV_REF(list) x) AUTOBOOST_CONTAINER_NOEXCEPT
-   {  this->splice(p, static_cast<list&>(x));  }
+   void splice(const_iterator p, AUTOBOOST_RV_REF(list) x) AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      //Checks done in splice
+      this->splice(p, static_cast<list&>(x));
+   }
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. i must point to an element contained in list x.
@@ -1032,9 +1054,9 @@ class list
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
-   void splice(const_iterator p, list &x, const_iterator i) AUTOBOOST_CONTAINER_NOEXCEPT
+   void splice(const_iterator p, list &x, const_iterator i) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
-      //AUTOBOOST_ASSERT(this != &x);
+      AUTOBOOST_ASSERT((priv_is_linked)(p));
       AUTOBOOST_ASSERT(this->node_alloc() == x.node_alloc());
       this->icont().splice(p.get(), x.icont(), i.get());
    }
@@ -1053,8 +1075,12 @@ class list
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
-   void splice(const_iterator p, AUTOBOOST_RV_REF(list) x, const_iterator i) AUTOBOOST_CONTAINER_NOEXCEPT
-   {  this->splice(p, static_cast<list&>(x), i);  }
+   void splice(const_iterator p, AUTOBOOST_RV_REF(list) x, const_iterator i) AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(this != &x);
+      //Additional checks done in splice()
+      this->splice(p, static_cast<list&>(x), i);
+   }
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. first and last must point to elements contained in list x.
@@ -1069,8 +1095,11 @@ class list
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
-   void splice(const_iterator p, list &x, const_iterator first, const_iterator last) AUTOBOOST_CONTAINER_NOEXCEPT
+   void splice(const_iterator p, list &x, const_iterator first, const_iterator last) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
+      AUTOBOOST_ASSERT((priv_is_linked)(p));
+      AUTOBOOST_ASSERT(first == last || (first != x.cend() && x.priv_is_linked(first)));
+      AUTOBOOST_ASSERT(first == last || x.priv_is_linked(last));
       AUTOBOOST_ASSERT(this->node_alloc() == x.node_alloc());
       this->icont().splice(p.get(), x.icont(), first.get(), last.get());
    }
@@ -1088,12 +1117,16 @@ class list
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
-   void splice(const_iterator p, AUTOBOOST_RV_REF(list) x, const_iterator first, const_iterator last) AUTOBOOST_CONTAINER_NOEXCEPT
-   {  this->splice(p, static_cast<list&>(x), first, last);  }
+   void splice(const_iterator p, AUTOBOOST_RV_REF(list) x, const_iterator first, const_iterator last) AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {
+      AUTOBOOST_ASSERT(this != &x);
+      //Additional checks done in splice()
+      this->splice(p, static_cast<list&>(x), first, last);
+   }
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. first and last must point to elements contained in list x.
-   //!   n == std::distance(first, last). this' allocator and x's allocator shall compare equal
+   //!   n == distance(first, last). this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
    //!   before the the element pointed by p. No destructors or copy constructors are called.
@@ -1106,7 +1139,7 @@ class list
    //!   list. Iterators of this list and all the references are not invalidated.
    //!
    //! <b>Note</b>: Non-standard extension
-   void splice(const_iterator p, list &x, const_iterator first, const_iterator last, size_type n) AUTOBOOST_CONTAINER_NOEXCEPT
+   void splice(const_iterator p, list &x, const_iterator first, const_iterator last, size_type n) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
       AUTOBOOST_ASSERT(this->node_alloc() == x.node_alloc());
       this->icont().splice(p.get(), x.icont(), first.get(), last.get(), n);
@@ -1114,7 +1147,7 @@ class list
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. first and last must point to elements contained in list x.
-   //!   n == std::distance(first, last). this' allocator and x's allocator shall compare equal
+   //!   n == distance(first, last). this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
    //!   before the the element pointed by p. No destructors or copy constructors are called.
@@ -1127,7 +1160,7 @@ class list
    //!   list. Iterators of this list and all the references are not invalidated.
    //!
    //! <b>Note</b>: Non-standard extension
-   void splice(const_iterator p, AUTOBOOST_RV_REF(list) x, const_iterator first, const_iterator last, size_type n) AUTOBOOST_CONTAINER_NOEXCEPT
+   void splice(const_iterator p, AUTOBOOST_RV_REF(list) x, const_iterator first, const_iterator last, size_type n) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  this->splice(p, static_cast<list&>(x), first, last, n);  }
 
    //! <b>Effects</b>: Removes all the elements that compare equal to value.
@@ -1139,7 +1172,7 @@ class list
    //! <b>Note</b>: The relative order of elements that are not removed is unchanged,
    //!   and iterators to elements that are not removed remain valid.
    void remove(const T& value)
-   {  this->remove_if(equal_to_value(value));  }
+   {  this->remove_if(equal_to_value_type(value));  }
 
    //! <b>Effects</b>: Removes all the elements for which a specified
    //!   predicate is satisfied.
@@ -1153,8 +1186,8 @@ class list
    template <class Pred>
    void remove_if(Pred pred)
    {
-      typedef ValueCompareToNodeCompare<Pred> Predicate;
-      this->icont().remove_and_dispose_if(Predicate(pred), Destroyer(this->node_alloc()));
+      typedef value_to_node_compare<Node, Pred> value_to_node_compare_type;
+      this->icont().remove_and_dispose_if(value_to_node_compare_type(pred), Destroyer(this->node_alloc()));
    }
 
    //! <b>Effects</b>: Removes adjacent duplicate elements or adjacent
@@ -1181,8 +1214,8 @@ class list
    template <class BinaryPredicate>
    void unique(BinaryPredicate binary_pred)
    {
-      typedef ValueCompareToNodeCompare<BinaryPredicate> Predicate;
-      this->icont().unique_and_dispose(Predicate(binary_pred), Destroyer(this->node_alloc()));
+      typedef value_to_node_compare<Node, BinaryPredicate> value_to_node_compare_type;
+      this->icont().unique_and_dispose(value_to_node_compare_type(binary_pred), Destroyer(this->node_alloc()));
    }
 
    //! <b>Requires</b>: The lists x and *this must be distinct.
@@ -1231,8 +1264,8 @@ class list
    void merge(list &x, const StrictWeakOrdering &comp)
    {
       AUTOBOOST_ASSERT(this->node_alloc() == x.node_alloc());
-      this->icont().merge(x.icont(),
-         ValueCompareToNodeCompare<StrictWeakOrdering>(comp));
+      typedef value_to_node_compare<Node, StrictWeakOrdering> value_to_node_compare_type;
+      this->icont().merge(x.icont(), value_to_node_compare_type(comp));
    }
 
    //! <b>Requires</b>: p must be a comparison function that induces a strict weak
@@ -1280,7 +1313,8 @@ class list
       // nothing if the list has length 0 or 1.
       if (this->size() < 2)
          return;
-      this->icont().sort(ValueCompareToNodeCompare<StrictWeakOrdering>(comp));
+      typedef value_to_node_compare<Node, StrictWeakOrdering> value_to_node_compare_type;
+      this->icont().sort(value_to_node_compare_type(comp));
    }
 
    //! <b>Effects</b>: Reverses the order of elements in the list.
@@ -1290,28 +1324,14 @@ class list
    //! <b>Complexity</b>: This function is linear time.
    //!
    //! <b>Note</b>: Iterators and references are not invalidated
-   void reverse() AUTOBOOST_CONTAINER_NOEXCEPT
+   void reverse() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  this->icont().reverse(); }
 
    //! <b>Effects</b>: Returns true if x and y are equal
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const list& x, const list& y)
-   {
-      if(x.size() != y.size()){
-         return false;
-      }
-      typedef typename list::const_iterator const_iterator;
-      const_iterator end1 = x.end();
-
-      const_iterator i1 = x.begin();
-      const_iterator i2 = y.begin();
-      while (i1 != end1 && *i1 == *i2) {
-         ++i1;
-         ++i2;
-      }
-      return i1 == end1;
-   }
+   {  return x.size() == y.size() && ::autoboost::container::algo_equal(x.begin(), x.end(), y.begin());  }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
@@ -1323,7 +1343,7 @@ class list
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<(const list& x, const list& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+   {  return autoboost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!
@@ -1351,6 +1371,13 @@ class list
 
    #ifndef AUTOBOOST_CONTAINER_DOXYGEN_INVOKED
    private:
+
+   static bool priv_is_linked(const_iterator const position)
+   {
+      const_iterator cur(position);
+      //This list is circular including end nodes
+      return (--(++cur)) == position && (++(--cur)) == position;
+   }
 
    bool priv_try_shrink(size_type new_size)
    {
@@ -1382,12 +1409,14 @@ class list
 
    iterator priv_insert(const_iterator p, const T &x)
    {
+      AUTOBOOST_ASSERT((priv_is_linked)(p));
       NodePtr tmp = AllocHolder::create_node(x);
       return iterator(this->icont().insert(p.get(), *tmp));
    }
 
    iterator priv_insert(const_iterator p, AUTOBOOST_RV_REF(T) x)
    {
+      AUTOBOOST_ASSERT((priv_is_linked)(p));
       NodePtr tmp = AllocHolder::create_node(autoboost::move(x));
       return iterator(this->icont().insert(p.get(), *tmp));
    }
@@ -1448,8 +1477,11 @@ class list
 //!specialization for optimizations
 template <class T, class Allocator>
 struct has_trivial_destructor_after_move<autoboost::container::list<T, Allocator> >
-   : public ::autoboost::has_trivial_destructor_after_move<Allocator>
-{};
+{
+   typedef typename ::autoboost::container::allocator_traits<Allocator>::pointer pointer;
+   static const bool value = ::autoboost::has_trivial_destructor_after_move<Allocator>::value &&
+                             ::autoboost::has_trivial_destructor_after_move<pointer>::value;
+};
 
 namespace container {
 

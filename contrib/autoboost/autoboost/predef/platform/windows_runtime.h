@@ -1,5 +1,6 @@
 /*
 Copyright (c) Microsoft Corporation 2014
+Copyright Rene Rivera 2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -32,13 +33,13 @@ http://www.boost.org/LICENSE_1_0.txt)
 #endif
 
 #if AUTOBOOST_PLAT_WINDOWS_RUNTIME
-#   define AUTOBOOST_PLAT_WINDOWS_RUNTIME_AVALIABLE
+#   define AUTOBOOST_PLAT_WINDOWS_RUNTIME_AVAILABLE
 #   include <autoboost/predef/detail/platform_detected.h>
 #endif
 
 #define AUTOBOOST_PLAT_WINDOWS_RUNTIME_NAME "Windows Runtime"
 
+#endif
+
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_PLAT_WINDOWS_RUNTIME,AUTOBOOST_PLAT_WINDOWS_RUNTIME_NAME)
-
-#endif

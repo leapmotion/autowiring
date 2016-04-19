@@ -18,9 +18,10 @@
 #include <autoboost/range/config.hpp>
 #include <autoboost/range/detail/sfinae.hpp>
 #include <autoboost/type_traits/is_void.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
+#include <autoboost/mpl/bool.hpp>
 #include <autoboost/mpl/if.hpp>
 #include <autoboost/mpl/int.hpp>
+#include <autoboost/mpl/or.hpp>
 #include <cstddef>
 
 //////////////////////////////////////////////////////////////////////////////
@@ -70,7 +71,7 @@ namespace autoboost
             AUTOBOOST_STATIC_CONSTANT( bool, is_const_wchar_t_ptr_   = sizeof( autoboost::range_detail::is_const_wchar_t_ptr_impl( ptr ) ) == sizeof( yes_type ) );
             AUTOBOOST_STATIC_CONSTANT( bool, is_char_array_          = sizeof( autoboost::range_detail::is_char_array_impl( ptr ) ) == sizeof( yes_type ) );
             AUTOBOOST_STATIC_CONSTANT( bool, is_wchar_t_array_       = sizeof( autoboost::range_detail::is_wchar_t_array_impl( ptr ) ) == sizeof( yes_type ) );
-            AUTOBOOST_STATIC_CONSTANT( bool, is_string_              = (autoboost::type_traits::ice_or<is_const_char_ptr_, is_const_wchar_t_ptr_>::value ));
+            AUTOBOOST_STATIC_CONSTANT( bool, is_string_              = (autoboost::mpl::or_<autoboost::mpl::bool_<is_const_char_ptr_>, autoboost::mpl::bool_<is_const_wchar_t_ptr_> >::value ));
             AUTOBOOST_STATIC_CONSTANT( bool, is_array_               = autoboost::is_array<C>::value );
 
         };

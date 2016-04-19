@@ -72,7 +72,7 @@ namespace autoboost
           void run2(tuple_indices<Indices...>)
           {
 
-              invoke(std::move(std::get<0>(fp)), std::move(std::get<Indices>(fp))...);
+              detail::invoke(std::move(std::get<0>(fp)), std::move(std::get<Indices>(fp))...);
           }
           void run()
           {
@@ -173,7 +173,6 @@ namespace autoboost
     private:
         bool start_thread_noexcept();
         bool start_thread_noexcept(const attributes& attr);
-    //public:
         void start_thread()
         {
           if (!start_thread_noexcept())
@@ -355,6 +354,8 @@ namespace autoboost
 
 #if defined AUTOBOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
             if (joinable()) std::terminate();
+#else
+            detach();
 #endif
             thread_info=AUTOBOOST_THREAD_RV(other).thread_info;
             AUTOBOOST_THREAD_RV(other).thread_info.reset();
@@ -485,9 +486,9 @@ namespace autoboost
         bool try_join_until(const chrono::time_point<Clock, Duration>& t)
         {
           using namespace chrono;
-          system_clock::time_point     s_now = system_clock::now();
           bool joined= false;
           do {
+            system_clock::time_point     s_now = system_clock::now();
             typename Clock::duration   d = ceil<nanoseconds>(t-Clock::now());
             if (d <= Clock::duration::zero()) return false; // in case the Clock::time_point t is already reached
             joined = try_join_until(s_now + d);
@@ -839,23 +840,23 @@ namespace autoboost
         void AUTOBOOST_THREAD_DECL add_thread_exit_function(thread_exit_function_base*);
         struct shared_state_base;
 #if defined(AUTOBOOST_THREAD_PLATFORM_WIN32)
-        inline void make_ready_autoboostat_thread_exit(shared_ptr<shared_state_base> as)
+        inline void make_ready_at_thread_exit(shared_ptr<shared_state_base> as)
         {
           detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());
           if(current_thread_data)
           {
-            current_thread_data->make_ready_autoboostat_thread_exit(as);
+            current_thread_data->make_ready_at_thread_exit(as);
           }
         }
 #else
-        void AUTOBOOST_THREAD_DECL make_ready_autoboostat_thread_exit(shared_ptr<shared_state_base> as);
+        void AUTOBOOST_THREAD_DECL make_ready_at_thread_exit(shared_ptr<shared_state_base> as);
 #endif
     }
 
     namespace this_thread
     {
         template<typename F>
-        void autoboostat_thread_exit(F f)
+        void at_thread_exit(F f)
         {
             detail::thread_exit_function_base* const thread_exit_func=detail::heap_new<detail::thread_exit_function<F> >(f);
             detail::add_thread_exit_function(thread_exit_func);

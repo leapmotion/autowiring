@@ -24,13 +24,15 @@
 #endif
 
 #include <autoboost/limits.hpp>
+#include <autoboost/mpl/eval_if.hpp>
+#include <autoboost/mpl/identity.hpp>
 #include <autoboost/mpl/if.hpp>
-#include <autoboost/type_traits/ice.hpp>
 #include <autoboost/type_traits/make_unsigned.hpp>
 #include <autoboost/type_traits/is_signed.hpp>
 #include <autoboost/type_traits/is_integral.hpp>
 #include <autoboost/type_traits/is_arithmetic.hpp>
 #include <autoboost/type_traits/is_base_of.hpp>
+#include <autoboost/type_traits/is_float.hpp>
 
 #include <autoboost/numeric/conversion/cast.hpp>
 
@@ -152,22 +154,35 @@ struct dynamic_num_converter_impl
 {
     static inline bool try_convert(const Source &arg, Target& result) AUTOBOOST_NOEXCEPT {
         typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::mpl::if_c<
-            autoboost::type_traits::ice_and<
-                autoboost::is_unsigned<Target>::value,
-                autoboost::type_traits::ice_or<
-                    autoboost::is_signed<Source>::value,
-                    autoboost::is_float<Source>::value
-                >::value,
-                autoboost::type_traits::ice_not<
-                    autoboost::is_same<Source, bool>::value
-                >::value,
-                autoboost::type_traits::ice_not<
-                    autoboost::is_same<Target, bool>::value
-                >::value
-            >::value,
+        	autoboost::is_unsigned<Target>::value &&
+        	(autoboost::is_signed<Source>::value || autoboost::is_float<Source>::value) &&
+        	!(autoboost::is_same<Source, bool>::value) &&
+        	!(autoboost::is_same<Target, bool>::value),
             lexical_cast_dynamic_num_ignoring_minus<Target, Source>,
             lexical_cast_dynamic_num_not_ignoring_minus<Target, Source>
         >::type caster_type;
+
+#if 0
+
+        typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::mpl::if_<
+            AUTOBOOST_DEDUCED_TYPENAME autoboost::mpl::and_<
+                autoboost::is_unsigned<Target>,
+                autoboost::mpl::or_<
+                    autoboost::is_signed<Source>,
+                    autoboost::is_float<Source>
+                >,
+                autoboost::mpl::not_<
+                    autoboost::is_same<Source, bool>
+                >,
+                autoboost::mpl::not_<
+                    autoboost::is_same<Target, bool>
+                >
+            >::type,
+            lexical_cast_dynamic_num_ignoring_minus<Target, Source>,
+            lexical_cast_dynamic_num_not_ignoring_minus<Target, Source>
+        >::type caster_type;
+
+#endif
 
         return caster_type::try_convert(arg, result);
     }

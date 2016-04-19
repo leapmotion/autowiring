@@ -27,14 +27,14 @@ namespace autoboost {
 namespace serialization {
 namespace no_rtti_system {
 
-AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_SERIALIZATION_DECL
 extended_type_info_no_rtti_0::extended_type_info_no_rtti_0(
     const char * key
 ) :
     extended_type_info(EXTENDED_TYPE_INFO_NO_RTTI_KEY, key)
 {}
 
-AUTOBOOST_SERIALIZATION_DECL(bool)
+AUTOBOOST_SERIALIZATION_DECL bool
 extended_type_info_no_rtti_0::is_less_than(
     const autoboost::serialization::extended_type_info &rhs) const
 {
@@ -57,7 +57,7 @@ extended_type_info_no_rtti_0::is_less_than(
     return std::strcmp(l, r) < 0;
 }
 
-AUTOBOOST_SERIALIZATION_DECL(bool)
+AUTOBOOST_SERIALIZATION_DECL bool
 extended_type_info_no_rtti_0::is_equal(
     const autoboost::serialization::extended_type_info &rhs) const
 {
@@ -76,7 +76,7 @@ extended_type_info_no_rtti_0::is_equal(
     return 0 == std::strcmp(l, r);
 }
 
-AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_SERIALIZATION_DECL
 extended_type_info_no_rtti_0::~extended_type_info_no_rtti_0()
 {}
 

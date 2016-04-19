@@ -57,7 +57,7 @@ namespace filesystem
     basic_filebuf<charT,traits>*
       open(const path& p, std::ios_base::openmode mode)
     {
-      return std::basic_filebuf<charT,traits>::open(p.AUTOBOOST_FILESYSTEM_C_STR, mode)
+      return std::basic_filebuf<charT,traits>::open(p.BOOST_FILESYSTEM_C_STR, mode)
         ? this : 0;
     }
   };
@@ -80,16 +80,16 @@ namespace filesystem
     // argument, to workaround VC++ 7.1 bug (ID VSWhidbey 38416)
 
     explicit basic_ifstream(const path& p)
-      : std::basic_ifstream<charT,traits>(p.AUTOBOOST_FILESYSTEM_C_STR, std::ios_base::in) {}
+      : std::basic_ifstream<charT,traits>(p.BOOST_FILESYSTEM_C_STR, std::ios_base::in) {}
 
     basic_ifstream(const path& p, std::ios_base::openmode mode)
-      : std::basic_ifstream<charT,traits>(p.AUTOBOOST_FILESYSTEM_C_STR, mode) {}
+      : std::basic_ifstream<charT,traits>(p.BOOST_FILESYSTEM_C_STR, mode) {}
 
     void open(const path& p)
-      { std::basic_ifstream<charT,traits>::open(p.AUTOBOOST_FILESYSTEM_C_STR, std::ios_base::in); }
+      { std::basic_ifstream<charT,traits>::open(p.BOOST_FILESYSTEM_C_STR, std::ios_base::in); }
 
     void open(const path& p, std::ios_base::openmode mode)
-      { std::basic_ifstream<charT,traits>::open(p.AUTOBOOST_FILESYSTEM_C_STR, mode); }
+      { std::basic_ifstream<charT,traits>::open(p.BOOST_FILESYSTEM_C_STR, mode); }
 
     virtual ~basic_ifstream() {}
   };
@@ -112,16 +112,16 @@ namespace filesystem
     // argument, to workaround VC++ 7.1 bug (ID VSWhidbey 38416)
 
     explicit basic_ofstream(const path& p)
-      : std::basic_ofstream<charT,traits>(p.AUTOBOOST_FILESYSTEM_C_STR, std::ios_base::out) {}
+      : std::basic_ofstream<charT,traits>(p.BOOST_FILESYSTEM_C_STR, std::ios_base::out) {}
 
     basic_ofstream(const path& p, std::ios_base::openmode mode)
-      : std::basic_ofstream<charT,traits>(p.AUTOBOOST_FILESYSTEM_C_STR, mode) {}
+      : std::basic_ofstream<charT,traits>(p.BOOST_FILESYSTEM_C_STR, mode) {}
 
     void open(const path& p)
-      { std::basic_ofstream<charT,traits>::open(p.AUTOBOOST_FILESYSTEM_C_STR, std::ios_base::out); }
+      { std::basic_ofstream<charT,traits>::open(p.BOOST_FILESYSTEM_C_STR, std::ios_base::out); }
 
     void open(const path& p, std::ios_base::openmode mode)
-      { std::basic_ofstream<charT,traits>::open(p.AUTOBOOST_FILESYSTEM_C_STR, mode); }
+      { std::basic_ofstream<charT,traits>::open(p.BOOST_FILESYSTEM_C_STR, mode); }
 
     virtual ~basic_ofstream() {}
   };
@@ -144,18 +144,18 @@ namespace filesystem
     // argument, to workaround VC++ 7.1 bug (ID VSWhidbey 38416)
 
     explicit basic_fstream(const path& p)
-      : std::basic_fstream<charT,traits>(p.AUTOBOOST_FILESYSTEM_C_STR,
+      : std::basic_fstream<charT,traits>(p.BOOST_FILESYSTEM_C_STR,
           std::ios_base::in | std::ios_base::out) {}
 
     basic_fstream(const path& p, std::ios_base::openmode mode)
-      : std::basic_fstream<charT,traits>(p.AUTOBOOST_FILESYSTEM_C_STR, mode) {}
+      : std::basic_fstream<charT,traits>(p.BOOST_FILESYSTEM_C_STR, mode) {}
 
     void open(const path& p)
-      { std::basic_fstream<charT,traits>::open(p.AUTOBOOST_FILESYSTEM_C_STR,
+      { std::basic_fstream<charT,traits>::open(p.BOOST_FILESYSTEM_C_STR,
           std::ios_base::in | std::ios_base::out); }
 
     void open(const path& p, std::ios_base::openmode mode)
-      { std::basic_fstream<charT,traits>::open(p.AUTOBOOST_FILESYSTEM_C_STR, mode); }
+      { std::basic_fstream<charT,traits>::open(p.BOOST_FILESYSTEM_C_STR, mode); }
 
     virtual ~basic_fstream() {}
 

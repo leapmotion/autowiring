@@ -14,7 +14,7 @@
 #include <autoboost/config.hpp>
 #include <autoboost/detail/workaround.hpp>
 
-#if defined(_MSC_VER)
+#ifdef AUTOBOOST_HAS_PRAGMA_ONCE
 #  pragma once
 #endif
 
@@ -59,9 +59,9 @@ typedef bool (*indeterminate_keyword_t)(tribool, detail::indeterminate_t);
  * \returns <tt>x.value == tribool::indeterminate_value</tt>
  * \throws nothrow
  */
-inline bool
+AUTOBOOST_CONSTEXPR inline bool
 indeterminate(tribool x,
-              detail::indeterminate_t dummy = detail::indeterminate_t());
+              detail::indeterminate_t dummy = detail::indeterminate_t()) AUTOBOOST_NOEXCEPT;
 
 /**
  * \brief A 3-state boolean type.
@@ -85,7 +85,7 @@ public:
    *
    * \throws nothrow
    */
-  tribool() : value(false_value) {}
+  AUTOBOOST_CONSTEXPR tribool() AUTOBOOST_NOEXCEPT : value(false_value) {}
 
   /**
    * Construct a new 3-state boolean value with the given boolean
@@ -93,14 +93,14 @@ public:
    *
    * \throws nothrow
    */
-  tribool(bool initial_value) : value(initial_value? true_value : false_value) {}
+  AUTOBOOST_CONSTEXPR tribool(bool initial_value) AUTOBOOST_NOEXCEPT : value(initial_value? true_value : false_value) {}
 
   /**
    * Construct a new 3-state boolean value with an indeterminate value.
    *
    * \throws nothrow
    */
-  tribool(indeterminate_keyword_t) : value(indeterminate_value) {}
+  AUTOBOOST_CONSTEXPR tribool(indeterminate_keyword_t) AUTOBOOST_NOEXCEPT : value(indeterminate_value) {}
 
   /**
    * Use a 3-state boolean in a boolean context. Will evaluate true in a
@@ -109,7 +109,7 @@ public:
    * \returns true if the 3-state boolean is true, false otherwise
    * \throws nothrow
    */
-  operator safe_bool() const
+  AUTOBOOST_CONSTEXPR operator safe_bool() const AUTOBOOST_NOEXCEPT
   {
     return value == true_value? &dummy::nonnull : 0;
   }
@@ -123,7 +123,7 @@ public:
 
 // Check if the given tribool has an indeterminate value. Also doubles as a
 // keyword for the 'indeterminate' value
-inline bool indeterminate(tribool x, detail::indeterminate_t)
+AUTOBOOST_CONSTEXPR inline bool indeterminate(tribool x, detail::indeterminate_t) AUTOBOOST_NOEXCEPT
 {
   return x.value == tribool::indeterminate_value;
 }
@@ -156,7 +156,7 @@ inline bool indeterminate(tribool x, detail::indeterminate_t)
  *  </table>
  * \throws nothrow
  */
-inline tribool operator!(tribool x)
+AUTOBOOST_CONSTEXPR inline tribool operator!(tribool x) AUTOBOOST_NOEXCEPT
 {
   return x.value == tribool::false_value? tribool(true)
         :x.value == tribool::true_value? tribool(false)
@@ -196,38 +196,36 @@ inline tribool operator!(tribool x)
  *       </table>
  * \throws nothrow
  */
-inline tribool operator&&(tribool x, tribool y)
+AUTOBOOST_CONSTEXPR inline tribool operator&&(tribool x, tribool y) AUTOBOOST_NOEXCEPT
 {
-  if (static_cast<bool>(!x) || static_cast<bool>(!y))
-    return false;
-  else if (static_cast<bool>(x) && static_cast<bool>(y))
-    return true;
-  else
-    return indeterminate;
+  return (static_cast<bool>(!x) || static_cast<bool>(!y))
+    ? tribool(false)
+    : ((static_cast<bool>(x) && static_cast<bool>(y)) ? tribool(true) : indeterminate)
+  ;
 }
 
 /**
  * \overload
  */
-inline tribool operator&&(tribool x, bool y)
+AUTOBOOST_CONSTEXPR inline tribool operator&&(tribool x, bool y) AUTOBOOST_NOEXCEPT
 { return y? x : tribool(false); }
 
 /**
  * \overload
  */
-inline tribool operator&&(bool x, tribool y)
+AUTOBOOST_CONSTEXPR inline tribool operator&&(bool x, tribool y) AUTOBOOST_NOEXCEPT
 { return x? y : tribool(false); }
 
 /**
  * \overload
  */
-inline tribool operator&&(indeterminate_keyword_t, tribool x)
+AUTOBOOST_CONSTEXPR inline tribool operator&&(indeterminate_keyword_t, tribool x) AUTOBOOST_NOEXCEPT
 { return !x? tribool(false) : tribool(indeterminate); }
 
 /**
  * \overload
  */
-inline tribool operator&&(tribool x, indeterminate_keyword_t)
+AUTOBOOST_CONSTEXPR inline tribool operator&&(tribool x, indeterminate_keyword_t) AUTOBOOST_NOEXCEPT
 { return !x? tribool(false) : tribool(indeterminate); }
 
 /**
@@ -263,38 +261,36 @@ inline tribool operator&&(tribool x, indeterminate_keyword_t)
  *       </table>
  *  \throws nothrow
  */
-inline tribool operator||(tribool x, tribool y)
+AUTOBOOST_CONSTEXPR inline tribool operator||(tribool x, tribool y) AUTOBOOST_NOEXCEPT
 {
-  if (static_cast<bool>(!x) && static_cast<bool>(!y))
-    return false;
-  else if (static_cast<bool>(x) || static_cast<bool>(y))
-    return true;
-  else
-    return indeterminate;
+  return (static_cast<bool>(!x) && static_cast<bool>(!y))
+    ? tribool(false)
+    : ((static_cast<bool>(x) || static_cast<bool>(y)) ? tribool(true) : tribool(indeterminate))
+  ;
 }
 
 /**
  * \overload
  */
-inline tribool operator||(tribool x, bool y)
+AUTOBOOST_CONSTEXPR inline tribool operator||(tribool x, bool y) AUTOBOOST_NOEXCEPT
 { return y? tribool(true) : x; }
 
 /**
  * \overload
  */
-inline tribool operator||(bool x, tribool y)
+AUTOBOOST_CONSTEXPR inline tribool operator||(bool x, tribool y) AUTOBOOST_NOEXCEPT
 { return x? tribool(true) : y; }
 
 /**
  * \overload
  */
-inline tribool operator||(indeterminate_keyword_t, tribool x)
+AUTOBOOST_CONSTEXPR inline tribool operator||(indeterminate_keyword_t, tribool x) AUTOBOOST_NOEXCEPT
 { return x? tribool(true) : tribool(indeterminate); }
 
 /**
  * \overload
  */
-inline tribool operator||(tribool x, indeterminate_keyword_t)
+AUTOBOOST_CONSTEXPR inline tribool operator||(tribool x, indeterminate_keyword_t) AUTOBOOST_NOEXCEPT
 { return x? tribool(true) : tribool(indeterminate); }
 //@}
 
@@ -331,34 +327,34 @@ inline tribool operator||(tribool x, indeterminate_keyword_t)
  *      </table>
  * \throws nothrow
  */
-inline tribool operator==(tribool x, tribool y)
+AUTOBOOST_CONSTEXPR inline tribool operator==(tribool x, tribool y) AUTOBOOST_NOEXCEPT
 {
-  if (indeterminate(x) || indeterminate(y))
-    return indeterminate;
-  else
-    return (x && y) || (!x && !y);
+  return (indeterminate(x) || indeterminate(y))
+    ? indeterminate
+    : ((x && y) || (!x && !y))
+  ;
 }
 
 /**
  * \overload
  */
-inline tribool operator==(tribool x, bool y) { return x == tribool(y); }
+AUTOBOOST_CONSTEXPR inline tribool operator==(tribool x, bool y) AUTOBOOST_NOEXCEPT { return x == tribool(y); }
 
 /**
  * \overload
  */
-inline tribool operator==(bool x, tribool y) { return tribool(x) == y; }
+AUTOBOOST_CONSTEXPR inline tribool operator==(bool x, tribool y) AUTOBOOST_NOEXCEPT { return tribool(x) == y; }
 
 /**
  * \overload
  */
-inline tribool operator==(indeterminate_keyword_t, tribool x)
+AUTOBOOST_CONSTEXPR inline tribool operator==(indeterminate_keyword_t, tribool x) AUTOBOOST_NOEXCEPT
 { return tribool(indeterminate) == x; }
 
 /**
  * \overload
  */
-inline tribool operator==(tribool x, indeterminate_keyword_t)
+AUTOBOOST_CONSTEXPR inline tribool operator==(tribool x, indeterminate_keyword_t) AUTOBOOST_NOEXCEPT
 { return tribool(indeterminate) == x; }
 
 /**
@@ -394,34 +390,34 @@ inline tribool operator==(tribool x, indeterminate_keyword_t)
  *       </table>
  * \throws nothrow
  */
-inline tribool operator!=(tribool x, tribool y)
+AUTOBOOST_CONSTEXPR inline tribool operator!=(tribool x, tribool y) AUTOBOOST_NOEXCEPT
 {
-  if (indeterminate(x) || indeterminate(y))
-    return indeterminate;
-  else
-    return !((x && y) || (!x && !y));
+  return (indeterminate(x) || indeterminate(y))
+    ? indeterminate
+    : !((x && y) || (!x && !y))
+  ;
 }
 
 /**
  * \overload
  */
-inline tribool operator!=(tribool x, bool y) { return x != tribool(y); }
+AUTOBOOST_CONSTEXPR inline tribool operator!=(tribool x, bool y) AUTOBOOST_NOEXCEPT { return x != tribool(y); }
 
 /**
  * \overload
  */
-inline tribool operator!=(bool x, tribool y) { return tribool(x) != y; }
+AUTOBOOST_CONSTEXPR inline tribool operator!=(bool x, tribool y) AUTOBOOST_NOEXCEPT { return tribool(x) != y; }
 
 /**
  * \overload
  */
-inline tribool operator!=(indeterminate_keyword_t, tribool x)
+AUTOBOOST_CONSTEXPR inline tribool operator!=(indeterminate_keyword_t, tribool x) AUTOBOOST_NOEXCEPT
 { return tribool(indeterminate) != x; }
 
 /**
  * \overload
  */
-inline tribool operator!=(tribool x, indeterminate_keyword_t)
+AUTOBOOST_CONSTEXPR inline tribool operator!=(tribool x, indeterminate_keyword_t) AUTOBOOST_NOEXCEPT
 { return x != tribool(indeterminate); }
 
 } } // end namespace autoboost::logic

@@ -41,7 +41,7 @@ namespace archive {
 // constants used in archive signature
 //This should never ever change. note that is not an std::string
 // string.
-AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_SYMBOL_VISIBLE const char *
 AUTOBOOST_ARCHIVE_SIGNATURE(){
     return "serialization::archive";
 }
@@ -71,10 +71,14 @@ AUTOBOOST_ARCHIVE_SIGNATURE(){
 //     separated version_type into library_version_type and class_version_type
 //     changed version_type to be stored as 8 bits.
 // 10- fixed base64 output/input.
+// 11- not changes
+// 12- improved serialization of collections
+// 13- simplified visibility, removed Borland, removed pfto
+// 14- improved visibility, refactor map/set
 
-AUTOBOOST_ARCHIVE_DECL(library_version_type)
+AUTOBOOST_SYMBOL_VISIBLE library_version_type
 AUTOBOOST_ARCHIVE_VERSION(){
-    return library_version_type(11);
+    return library_version_type(14);
 }
 
 } // namespace archive

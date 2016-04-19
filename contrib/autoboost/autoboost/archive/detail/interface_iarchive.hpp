@@ -20,6 +20,7 @@
 #include <autoboost/mpl/bool.hpp>
 #include <autoboost/archive/detail/auto_link_archive.hpp>
 #include <autoboost/archive/detail/iserializer.hpp>
+#include <autoboost/archive/detail/helper_collection.hpp>
 #include <autoboost/serialization/singleton.hpp>
 #include <autoboost/archive/detail/abi_prefix.hpp> // must be the last header
 
@@ -27,7 +28,7 @@ namespace autoboost {
 namespace archive {
 namespace detail {
 
-class AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_pointer_iserializer;
+class basic_pointer_iserializer;
 
 template<class Archive>
 class interface_iarchive
@@ -55,9 +56,16 @@ public:
         this->This()->register_basic_serializer(bpis.get_basic_serializer());
         return & bpis;
     }
+    template<class Helper>
+    Helper &
+    get_helper(void * const id = 0){
+        helper_collection & hc = this->This()->get_helper_collection();
+        return hc.template find_helper<Helper>(id);
+    }
+
     template<class T>
     Archive & operator>>(T & t){
-        this->This()->load_override(t, 0);
+        this->This()->load_override(t);
         return * this->This();
     }
 

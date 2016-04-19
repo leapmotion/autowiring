@@ -11,10 +11,15 @@
 // $Date$
 // $Revision$
 
+//
+// This header is deprecated and no longer used by type_traits:
+//
+#if defined(__GNUC__) || defined(_MSC_VER)
+# pragma message("NOTE: Use of this header (bool_trait_def.hpp) is deprecated")
+#endif
+
 #include <autoboost/type_traits/detail/template_arity_spec.hpp>
 #include <autoboost/type_traits/integral_constant.hpp>
-#include <autoboost/mpl/bool.hpp>
-#include <autoboost/mpl/aux_/lambda_support.hpp>
 #include <autoboost/config.hpp>
 
 //
@@ -39,14 +44,6 @@
 #undef AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1
 #endif
 
-#if defined(__SUNPRO_CC) && (__SUNPRO_CC < 0x570)
-#   define AUTOBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL(C) \
-    typedef ::autoboost::integral_constant<bool,C> type; \
-    enum { value = type::value }; \
-    /**/
-#   define AUTOBOOST_TT_AUX_BOOL_C_BASE(C)
-#endif
-
 #ifndef AUTOBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL
 #   define AUTOBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL(C) /**/
 #endif
@@ -62,7 +59,6 @@ template< typename T > struct trait \
 { \
 public:\
     AUTOBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL(C) \
-    AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT(1,trait,(T)) \
 }; \
 \
 AUTOBOOST_TT_AUX_TEMPLATE_ARITY_SPEC(1,trait) \
@@ -75,7 +71,6 @@ template< typename T1, typename T2 > struct trait \
 { \
 public:\
     AUTOBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL(C) \
-    AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT(2,trait,(T1,T2)) \
 }; \
 \
 AUTOBOOST_TT_AUX_TEMPLATE_ARITY_SPEC(2,trait) \
@@ -87,7 +82,6 @@ template< typename T1, typename T2, typename T3 > struct trait \
 { \
 public:\
     AUTOBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL(C) \
-    AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT(3,trait,(T1,T2,T3)) \
 }; \
 \
 AUTOBOOST_TT_AUX_TEMPLATE_ARITY_SPEC(3,trait) \
@@ -99,7 +93,6 @@ template<> struct trait< sp > \
 { \
 public:\
     AUTOBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL(C) \
-    AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT_SPEC(1,trait,(sp)) \
 }; \
 /**/
 
@@ -109,7 +102,6 @@ template<> struct trait< sp1,sp2 > \
 { \
 public:\
     AUTOBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL(C) \
-    AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT_SPEC(2,trait,(sp1,sp2)) \
 }; \
 /**/
 
@@ -153,7 +145,6 @@ template< param > struct trait< sp1,sp2 > \
 { \
 public:\
     AUTOBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL(C) \
-    AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT_SPEC(2,trait,(sp1,sp2)) \
 }; \
 /**/
 

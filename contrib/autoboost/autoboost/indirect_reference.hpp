@@ -1,5 +1,5 @@
-#ifndef AB_INDIRECT_REFERENCE_DWA200415_HPP
-# define AB_INDIRECT_REFERENCE_DWA200415_HPP
+#ifndef INDIRECT_REFERENCE_DWA200415_HPP
+# define INDIRECT_REFERENCE_DWA200415_HPP
 
 //
 // Copyright David Abrahams 2004. Use, modification and distribution is

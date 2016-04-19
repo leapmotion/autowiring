@@ -47,7 +47,7 @@ namespace detail {
 } // namespace detail
 
 template<class Archive>
-class xml_oarchive_impl :
+class AUTOBOOST_SYMBOL_VISIBLE xml_oarchive_impl :
     public basic_text_oprimitive<std::ostream>,
     public basic_xml_oarchive<Archive>
 {
@@ -82,19 +82,19 @@ protected:
     save(const autoboost::serialization::item_version_type & t){
         save(static_cast<const unsigned int>(t));
     }
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     save(const char * t);
     #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     save(const wchar_t * t);
     #endif
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     save(const std::string &s);
     #ifndef AUTOBOOST_NO_STD_WSTRING
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     save(const std::wstring &ws);
     #endif
-    AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_DECL
     xml_oarchive_impl(std::ostream & os, unsigned int flags);
     ~xml_oarchive_impl(){}
 public:
@@ -118,7 +118,7 @@ public:
 // do not derive from this class.  If you want to extend this functionality
 // via inhertance, derived from xml_oarchive_impl instead.  This will
 // preserve correct static polymorphism.
-class xml_oarchive :
+class AUTOBOOST_SYMBOL_VISIBLE xml_oarchive :
     public xml_oarchive_impl<xml_oarchive>
 {
 public:

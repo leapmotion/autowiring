@@ -23,9 +23,17 @@
 #   pragma once
 #endif
 
+#if defined(__clang__) || (defined(__GNUC__) && \
+    !(defined(__INTEL_COMPILER) || defined(__ICL) || defined(__ICC) || defined(__ECC)) && \
+    (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
+#endif
+
 #include <string>
+#include <autoboost/mpl/bool.hpp>
+#include <autoboost/mpl/identity.hpp>
 #include <autoboost/mpl/if.hpp>
-#include <autoboost/type_traits/ice.hpp>
 #include <autoboost/type_traits/is_same.hpp>
 #include <autoboost/type_traits/is_arithmetic.hpp>
 
@@ -57,17 +65,15 @@ namespace autoboost {
         template<typename Target, typename Source>
         struct is_arithmetic_and_not_xchars
         {
-            AUTOBOOST_STATIC_CONSTANT(bool, value = (
-                autoboost::type_traits::ice_and<
-                    autoboost::type_traits::ice_not<
-                        autoboost::detail::is_character<Target>::value
-                    >::value,
-                    autoboost::type_traits::ice_not<
-                        autoboost::detail::is_character<Source>::value
-                    >::value,
-                    autoboost::is_arithmetic<Source>::value,
+            typedef autoboost::mpl::bool_<
+                    !(autoboost::detail::is_character<Target>::value) &&
+                    !(autoboost::detail::is_character<Source>::value) &&
+                    autoboost::is_arithmetic<Source>::value &&
                     autoboost::is_arithmetic<Target>::value
-                >::value
+                > type;
+
+            AUTOBOOST_STATIC_CONSTANT(bool, value = (
+                type::value
             ));
         };
 
@@ -78,13 +84,15 @@ namespace autoboost {
         template<typename Target, typename Source>
         struct is_xchar_to_xchar
         {
-            AUTOBOOST_STATIC_CONSTANT(bool, value = (
-                autoboost::type_traits::ice_and<
-                     autoboost::type_traits::ice_eq<sizeof(Source), sizeof(Target)>::value,
-                     autoboost::type_traits::ice_eq<sizeof(Source), sizeof(char)>::value,
-                     autoboost::detail::is_character<Target>::value,
+            typedef autoboost::mpl::bool_<
+                     sizeof(Source) == sizeof(Target) &&
+                     sizeof(Source) == sizeof(char) &&
+                     autoboost::detail::is_character<Target>::value &&
                      autoboost::detail::is_character<Source>::value
-                >::value
+                > type;
+
+            AUTOBOOST_STATIC_CONSTANT(bool, value = (
+                type::value
             ));
         };
 
@@ -140,17 +148,17 @@ namespace autoboost {
         {
             typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::detail::array_to_pointer_decay<Source>::type src;
 
-            typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::type_traits::ice_or<
-                autoboost::detail::is_xchar_to_xchar<Target, src >::value,
-                autoboost::detail::is_char_array_to_stdstring<Target, src >::value,
-                autoboost::type_traits::ice_and<
-                     autoboost::is_same<Target, src >::value,
+            typedef autoboost::mpl::bool_<
+                autoboost::detail::is_xchar_to_xchar<Target, src >::value ||
+                autoboost::detail::is_char_array_to_stdstring<Target, src >::value ||
+                (
+                     autoboost::is_same<Target, src >::value &&
                      autoboost::detail::is_stdstring<Target >::value
-                >::value,
-                autoboost::type_traits::ice_and<
-                     autoboost::is_same<Target, src >::value,
+                ) ||
+                (
+                     autoboost::is_same<Target, src >::value &&
                      autoboost::detail::is_character<Target >::value
-                >::value
+                )
             > shall_we_copy_t;
 
             typedef autoboost::detail::is_arithmetic_and_not_xchars<Target, src >
@@ -193,6 +201,12 @@ namespace autoboost {
     }
 
 } // namespace autoboost
+
+#if defined(__clang__) || (defined(__GNUC__) && \
+    !(defined(__INTEL_COMPILER) || defined(__ICL) || defined(__ICC) || defined(__ECC)) && \
+    (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)))
+#pragma GCC diagnostic pop
+#endif
 
 #endif // AUTOBOOST_LEXICAL_CAST_TRY_LEXICAL_CONVERT_HPP
 

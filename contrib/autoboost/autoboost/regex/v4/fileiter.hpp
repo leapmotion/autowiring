@@ -49,7 +49,7 @@
 #include <cstddef>
 
 namespace autoboost{
-   namespace re_detail{
+   namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 #ifndef AUTOBOOST_NO_ANSI_APIS
 typedef WIN32_FIND_DATAA _fi_find_data;
@@ -58,7 +58,7 @@ typedef WIN32_FIND_DATAW _fi_find_data;
 #endif
 typedef HANDLE _fi_find_handle;
 
-   } // namespace re_detail
+   } // namespace AUTOBOOST_REGEX_DETAIL_NS
 
 } // namespace autoboost
 
@@ -84,7 +84,7 @@ using std::list;
 #endif
 
 namespace autoboost{
-   namespace re_detail{
+   namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 #ifdef AUTOBOOST_HAS_ABI_HEADERS
 #  include AUTOBOOST_ABI_PREFIX
@@ -110,7 +110,7 @@ bool _fi_FindClose(_fi_find_handle hFindFile);
 #  include AUTOBOOST_ABI_SUFFIX
 #endif
 
-   } // namespace re_detail
+   } // namespace AUTOBOOST_REGEX_DETAIL_NS
 } // namespace autoboost
 
 #ifdef FindFirstFile
@@ -130,7 +130,7 @@ bool _fi_FindClose(_fi_find_handle hFindFile);
 #endif
 
 namespace autoboost{
-   namespace re_detail{
+   namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 #ifdef AUTOBOOST_HAS_ABI_HEADERS
 #  include AUTOBOOST_ABI_PREFIX
@@ -427,10 +427,10 @@ inline bool operator < (const directory_iterator&, const directory_iterator&)
 #endif
 
 
-} // namespace re_detail
-using autoboost::re_detail::directory_iterator;
-using autoboost::re_detail::file_iterator;
-using autoboost::re_detail::mapfile;
+} // namespace AUTOBOOST_REGEX_DETAIL_NS
+using autoboost::AUTOBOOST_REGEX_DETAIL_NS::directory_iterator;
+using autoboost::AUTOBOOST_REGEX_DETAIL_NS::file_iterator;
+using autoboost::AUTOBOOST_REGEX_DETAIL_NS::mapfile;
 } // namespace autoboost
 
 #endif     // AUTOBOOST_REGEX_NO_FILEITER

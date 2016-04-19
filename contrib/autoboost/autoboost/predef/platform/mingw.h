@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2013
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -58,13 +58,12 @@ Version number available as major, minor, and patch.
 
 #define AUTOBOOST_PLAT_MINGW_NAME "MinGW"
 
+#endif
+
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_PLAT_MINGW,AUTOBOOST_PLAT_MINGW_NAME)
 
 #ifdef AUTOBOOST_PLAT_MINGW_EMULATED
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_PLAT_MINGW_EMULATED,AUTOBOOST_PLAT_MINGW_NAME)
-#endif
-
-
 #endif

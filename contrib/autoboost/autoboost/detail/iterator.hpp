@@ -3,8 +3,8 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef AB_ITERATOR_DWA122600_HPP_
-#define AB_ITERATOR_DWA122600_HPP_
+#ifndef ITERATOR_DWA122600_HPP_
+#define ITERATOR_DWA122600_HPP_
 
 // This header is obsolete and will be deprecated.
 

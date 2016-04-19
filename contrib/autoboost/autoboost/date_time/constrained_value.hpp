@@ -1,5 +1,5 @@
-#ifndef AB_CONSTRAINED_VALUE_HPP___
-#define AB_CONSTRAINED_VALUE_HPP___
+#ifndef CONSTRAINED_VALUE_HPP___
+#define CONSTRAINED_VALUE_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

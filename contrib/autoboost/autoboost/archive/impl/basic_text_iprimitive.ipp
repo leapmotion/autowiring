@@ -19,7 +19,6 @@ namespace std{
 #endif
 
 #include <autoboost/serialization/throw_exception.hpp>
-#include <autoboost/serialization/pfto.hpp>
 
 #include <autoboost/archive/basic_text_iprimitive.hpp>
 #include <autoboost/archive/codecvt_null.hpp>
@@ -53,7 +52,7 @@ namespace detail {
 // translate base64 text into binary and copy into buffer
 // until buffer is full.
 template<class IStream>
-AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
 basic_text_iprimitive<IStream>::load_binary(
     void *address,
     std::size_t count
@@ -87,11 +86,7 @@ basic_text_iprimitive<IStream>::load_binary(
         >
         binary;
 
-    binary i = binary(
-        AUTOBOOST_MAKE_PFTO_WRAPPER(
-            iterators::istream_iterator<CharType>(is)
-        )
-    );
+    binary i = binary(iterators::istream_iterator<CharType>(is));
 
     char * caddr = static_cast<char *>(address);
 
@@ -112,7 +107,7 @@ basic_text_iprimitive<IStream>::load_binary(
 }
 
 template<class IStream>
-AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
 basic_text_iprimitive<IStream>::basic_text_iprimitive(
     IStream  &is_,
     bool no_codecvt
@@ -121,17 +116,16 @@ basic_text_iprimitive<IStream>::basic_text_iprimitive(
     is(is_),
     flags_saver(is_),
     precision_saver(is_),
-    archive_locale(NULL),
     locale_saver(* is_.rdbuf())
 {
     if(! no_codecvt){
         archive_locale.reset(
             add_facet(
                 std::locale::classic(),
-                new codecvt_null<typename IStream::char_type>
+                new autoboost::archive::codecvt_null<typename IStream::char_type>
             )
         );
-        is.imbue(* archive_locale);
+        //is.imbue(* archive_locale);
     }
     is >> std::noboolalpha;
 }
@@ -143,7 +137,7 @@ basic_text_iprimitive<IStream>::basic_text_iprimitive(
 #endif
 
 template<class IStream>
-AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
 basic_text_iprimitive<IStream>::~basic_text_iprimitive(){
     is.sync();
 }

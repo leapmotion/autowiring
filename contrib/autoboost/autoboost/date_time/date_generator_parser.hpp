@@ -1,6 +1,6 @@
 
-#ifndef AB_DATE_TIME_DATE_GENERATOR_PARSER_HPP__
-#define AB_DATE_TIME_DATE_GENERATOR_PARSER_HPP__
+#ifndef DATE_TIME_DATE_GENERATOR_PARSER_HPP__
+#define DATE_TIME_DATE_GENERATOR_PARSER_HPP__
 
 /* Copyright (c) 2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

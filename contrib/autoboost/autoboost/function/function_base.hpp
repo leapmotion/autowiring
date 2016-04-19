@@ -25,7 +25,6 @@
 #include <autoboost/type_traits/is_integral.hpp>
 #include <autoboost/type_traits/is_volatile.hpp>
 #include <autoboost/type_traits/composite_traits.hpp>
-#include <autoboost/type_traits/ice.hpp>
 #include <autoboost/ref.hpp>
 #include <autoboost/mpl/if.hpp>
 #include <autoboost/detail/workaround.hpp>
@@ -72,19 +71,10 @@
 #  define AUTOBOOST_FUNCTION_TARGET_FIX(x)
 #endif // __ICL etc
 
-#if !AUTOBOOST_WORKAROUND(__BORLANDC__, < 0x5A0)
 #  define AUTOBOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL(Functor,Type)              \
-      typename ::autoboost::enable_if_c<(::autoboost::type_traits::ice_not<          \
-                            (::autoboost::is_integral<Functor>::value)>::value), \
+      typename ::autoboost::enable_if_c<          \
+                           !(::autoboost::is_integral<Functor>::value), \
                            Type>::type
-#else
-// BCC doesn't recognize this depends on a template argument and complains
-// about the use of 'typename'
-#  define AUTOBOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL(Functor,Type)     \
-      ::autoboost::enable_if_c<(::autoboost::type_traits::ice_not<          \
-                   (::autoboost::is_integral<Functor>::value)>::value), \
-                       Type>::type
-#endif
 
 namespace autoboost {
   namespace detail {
@@ -294,7 +284,7 @@ namespace autoboost {
           } else if (op == destroy_functor_tag)
             out_buffer.func_ptr = 0;
           else if (op == check_functor_type_tag) {
-            const detail::sp_typeinfo& check_type
+            const autoboost::detail::sp_typeinfo& check_type
               = *out_buffer.type.type;
             if (AUTOBOOST_FUNCTION_COMPARE_TYPE_ID(check_type, AUTOBOOST_SP_TYPEID(Functor)))
               out_buffer.obj_ptr = &in_buffer.func_ptr;

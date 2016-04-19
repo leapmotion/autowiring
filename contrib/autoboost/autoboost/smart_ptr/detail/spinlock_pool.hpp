@@ -31,7 +31,7 @@ namespace autoboost
 namespace detail
 {
 
-template< int I > class spinlock_pool
+template< int M > class spinlock_pool
 {
 private:
 
@@ -72,7 +72,7 @@ public:
     };
 };
 
-template< int I > spinlock spinlock_pool< I >::pool_[ 41 ] =
+template< int M > spinlock spinlock_pool< M >::pool_[ 41 ] =
 {
     AUTOBOOST_DETAIL_SPINLOCK_INIT, AUTOBOOST_DETAIL_SPINLOCK_INIT, AUTOBOOST_DETAIL_SPINLOCK_INIT, AUTOBOOST_DETAIL_SPINLOCK_INIT, AUTOBOOST_DETAIL_SPINLOCK_INIT,
     AUTOBOOST_DETAIL_SPINLOCK_INIT, AUTOBOOST_DETAIL_SPINLOCK_INIT, AUTOBOOST_DETAIL_SPINLOCK_INIT, AUTOBOOST_DETAIL_SPINLOCK_INIT, AUTOBOOST_DETAIL_SPINLOCK_INIT,

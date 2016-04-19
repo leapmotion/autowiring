@@ -1,5 +1,5 @@
-#ifndef AB_GREG_DURATION_HPP___
-#define AB_GREG_DURATION_HPP___
+#ifndef GREG_DURATION_HPP___
+#define GREG_DURATION_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

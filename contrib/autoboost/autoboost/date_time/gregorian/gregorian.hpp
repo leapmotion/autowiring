@@ -1,5 +1,5 @@
-#ifndef AB_GREGORIAN_HPP__
-#define AB_GREGORIAN_HPP__
+#ifndef GREGORIAN_HPP__
+#define GREGORIAN_HPP__
 
 /* Copyright (c) 2002-2004 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

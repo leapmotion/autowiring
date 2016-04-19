@@ -10,7 +10,6 @@
 
 #include <cstddef> // NULL
 #include <algorithm> // std::copy
-#include <autoboost/serialization/pfto.hpp>
 
 #include <autoboost/archive/basic_text_oprimitive.hpp>
 #include <autoboost/archive/codecvt_null.hpp>
@@ -26,7 +25,7 @@ namespace archive {
 
 // translate to base64 and copy in to buffer.
 template<class OStream>
-AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
 basic_text_oprimitive<OStream>::save_binary(
     const void *address,
     std::size_t count
@@ -59,9 +58,9 @@ basic_text_oprimitive<OStream>::save_binary(
 
     autoboost::archive::iterators::ostream_iterator<CharType> oi(os);
     std::copy(
-        base64_text(AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast<const char *>(address))),
+        base64_text(static_cast<const char *>(address)),
         base64_text(
-            AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast<const char *>(address) + count)
+            static_cast<const char *>(address) + count
         ),
         oi
     );
@@ -75,7 +74,7 @@ basic_text_oprimitive<OStream>::save_binary(
 }
 
 template<class OStream>
-AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
 basic_text_oprimitive<OStream>::basic_text_oprimitive(
     OStream & os_,
     bool no_codecvt
@@ -84,17 +83,16 @@ basic_text_oprimitive<OStream>::basic_text_oprimitive(
     os(os_),
     flags_saver(os_),
     precision_saver(os_),
-    archive_locale(NULL),
     locale_saver(* os_.rdbuf())
 {
     if(! no_codecvt){
         archive_locale.reset(
             add_facet(
                 std::locale::classic(),
-                new codecvt_null<typename OStream::char_type>
+                new autoboost::archive::codecvt_null<typename OStream::char_type>
             )
         );
-        os.imbue(* archive_locale);
+        //os.imbue(* archive_locale);
     }
     os << std::noboolalpha;
 }
@@ -106,7 +104,7 @@ basic_text_oprimitive<OStream>::basic_text_oprimitive(
 #endif
 
 template<class OStream>
-AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
 basic_text_oprimitive<OStream>::~basic_text_oprimitive(){
     os << std::endl;
 }

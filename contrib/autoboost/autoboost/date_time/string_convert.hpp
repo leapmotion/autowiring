@@ -1,5 +1,5 @@
-#ifndef AB__STRING_CONVERT_HPP___
-#define AB__STRING_CONVERT_HPP___
+#ifndef _STRING_CONVERT_HPP___
+#define _STRING_CONVERT_HPP___
 
 /* Copyright (c) 2005 CrystalClear Software, Inc.
  * Subject to the Boost Software License, Version 1.0. (See accompanying

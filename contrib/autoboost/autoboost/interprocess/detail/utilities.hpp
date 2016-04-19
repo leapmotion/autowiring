@@ -14,7 +14,11 @@
 #ifndef AUTOBOOST_INTERPROCESS_DETAIL_UTILITIES_HPP
 #define AUTOBOOST_INTERPROCESS_DETAIL_UTILITIES_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -23,17 +27,13 @@
 
 #include <autoboost/interprocess/interprocess_fwd.hpp>
 #include <autoboost/move/utility_core.hpp>
-#include <autoboost/type_traits/has_trivial_destructor.hpp>
 #include <autoboost/interprocess/detail/min_max.hpp>
 #include <autoboost/interprocess/detail/type_traits.hpp>
-#include <autoboost/interprocess/detail/transform_iterator.hpp>
 #include <autoboost/interprocess/detail/mpl.hpp>
-#include <autoboost/interprocess/containers/version_type.hpp>
 #include <autoboost/intrusive/pointer_traits.hpp>
 #include <autoboost/move/utility_core.hpp>
 #include <autoboost/static_assert.hpp>
-#include <utility>
-#include <algorithm>
+#include <autoboost/cstdint.hpp>
 #include <climits>
 
 namespace autoboost {
@@ -48,14 +48,6 @@ template <class Pointer>
 inline typename autoboost::intrusive::pointer_traits<Pointer>::element_type*
 to_raw_pointer(const Pointer &p)
 {  return autoboost::interprocess::ipcdetail::to_raw_pointer(p.operator->());  }
-
-//!To avoid ADL problems with swap
-template <class T>
-inline void do_swap(T& x, T& y)
-{
-   using std::swap;
-   swap(x, y);
-}
 
 //Rounds "orig_size" by excess to round_to bytes
 template<class SizeType>
@@ -165,27 +157,28 @@ inline bool size_overflows(SizeType count)
 }
 
 template<class RawPointer>
-class pointer_size_t_caster
+class pointer_uintptr_caster;
+
+template<class T>
+class pointer_uintptr_caster<T*>
 {
    public:
-   AUTOBOOST_STATIC_ASSERT(sizeof(std::size_t) == sizeof(void*));
-
-   explicit pointer_size_t_caster(std::size_t sz)
-      : m_ptr(reinterpret_cast<RawPointer>(sz))
+   AUTOBOOST_FORCEINLINE explicit pointer_uintptr_caster(uintptr_t sz)
+      : m_uintptr(sz)
    {}
 
-   explicit pointer_size_t_caster(RawPointer p)
-      : m_ptr(p)
+   AUTOBOOST_FORCEINLINE explicit pointer_uintptr_caster(const volatile T *p)
+      : m_uintptr(reinterpret_cast<uintptr_t>(p))
    {}
 
-   std::size_t size() const
-   {   return reinterpret_cast<std::size_t>(m_ptr);   }
+   AUTOBOOST_FORCEINLINE uintptr_t uintptr() const
+   {   return m_uintptr;   }
 
-   RawPointer pointer() const
-   {   return m_ptr;   }
+   AUTOBOOST_FORCEINLINE T* pointer() const
+   {   return reinterpret_cast<T*>(m_uintptr);   }
 
    private:
-   RawPointer m_ptr;
+   uintptr_t m_uintptr;
 };
 
 

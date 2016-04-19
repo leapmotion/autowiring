@@ -4,6 +4,7 @@
 #ifndef AUTOBOOST_CONCEPT_DETAIL_GENERAL_DWA2006429_HPP
 # define AUTOBOOST_CONCEPT_DETAIL_GENERAL_DWA2006429_HPP
 
+# include <autoboost/config.hpp>
 # include <autoboost/preprocessor/cat.hpp>
 # include <autoboost/concept/detail/backward_compatibility.hpp>
 
@@ -65,19 +66,11 @@ struct requirement_<void(*)(Model)>
 
 # endif
 
-// Version check from https://svn.boost.org/trac/autoboost/changeset/82886
-// (autoboost/static_assert.hpp)
-#if defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 7)))
-#define AUTOBOOST_CONCEPT_UNUSED_TYPEDEF __attribute__((unused))
-#else
-#define AUTOBOOST_CONCEPT_UNUSED_TYPEDEF /**/
-#endif
-
 #  define AUTOBOOST_CONCEPT_ASSERT_FN( ModelFnPtr )             \
     typedef ::autoboost::concepts::detail::instantiate<          \
     &::autoboost::concepts::requirement_<ModelFnPtr>::failed>    \
       AUTOBOOST_PP_CAT(autoboost_concept_check,__LINE__)             \
-      AUTOBOOST_CONCEPT_UNUSED_TYPEDEF
+      AUTOBOOST_ATTRIBUTE_UNUSED
 
 }}
 

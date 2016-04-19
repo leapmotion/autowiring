@@ -15,7 +15,11 @@
 #ifndef AUTOBOOST_INTERPROCESS_SYNC_WAIT_HPP_INCLUDED
 #define AUTOBOOST_INTERPROCESS_SYNC_WAIT_HPP_INCLUDED
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 # pragma once
 #endif
 

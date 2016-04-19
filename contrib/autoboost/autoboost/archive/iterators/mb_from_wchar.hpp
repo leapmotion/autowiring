@@ -18,17 +18,17 @@
 
 #include <autoboost/assert.hpp>
 #include <cstddef> // size_t
-#include <cstdlib> // for wctomb()
+#include <cwchar> // for mbstate_t and wcrtomb()
 
 #include <autoboost/config.hpp>
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
 namespace std{
     using ::size_t;
-    using ::wctomb;
+    using ::mbstate_t;
+    using ::wcrtomb;
 } // namespace std
 #endif
 
-#include <autoboost/serialization/pfto.hpp>
 #include <autoboost/iterator/iterator_adaptor.hpp>
 
 namespace autoboost {
@@ -83,13 +83,10 @@ class mb_from_wchar
     }
 
     void fill(){
+        std::mbstate_t mbs;
+        std::wcrtomb(0, 0, &mbs);
         wchar_t value = * this->base_reference();
-        #if (defined(__MINGW32__) && ((__MINGW32_MAJOR_VERSION > 3) \
-        || ((__MINGW32_MAJOR_VERSION == 3) && (__MINGW32_MINOR_VERSION >= 8))))
-        m_bend = std::wcrtomb(m_buffer, value, 0);
-        #else
-        m_bend = std::wctomb(m_buffer, value);
-        #endif
+        m_bend = std::wcrtomb(m_buffer, value, &mbs);
         AUTOBOOST_ASSERT(-1 != m_bend);
         AUTOBOOST_ASSERT((std::size_t)m_bend <= sizeof(m_buffer));
         AUTOBOOST_ASSERT(m_bend > 0);
@@ -114,8 +111,8 @@ class mb_from_wchar
 public:
     // make composible buy using templated constructor
     template<class T>
-    mb_from_wchar(AUTOBOOST_PFTO_WRAPPER(T) start) :
-        super_t(Base(AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast< T >(start)))),
+    mb_from_wchar(T start) :
+        super_t(Base(static_cast< T >(start))),
         m_bend(0),
         m_bnext(0),
         m_full(false)

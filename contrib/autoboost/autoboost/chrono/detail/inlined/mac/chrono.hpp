@@ -112,8 +112,8 @@ AUTOBOOST_CHRONO_STATIC
 steady_clock::rep
 steady_full()
 {
-    static kern_return_t err;
-    static const double factor = chrono_detail::compute_steady_factor(err);
+    kern_return_t err;
+    const double factor = chrono_detail::compute_steady_factor(err);
     if (err != 0)
     {
       AUTOBOOST_ASSERT(0 && "Boost::Chrono - Internal Error");
@@ -126,8 +126,8 @@ AUTOBOOST_CHRONO_STATIC
 steady_clock::rep
 steady_full_ec(system::error_code & ec)
 {
-    static kern_return_t err;
-    static const double factor = chrono_detail::compute_steady_factor(err);
+    kern_return_t err;
+    const double factor = chrono_detail::compute_steady_factor(err);
     if (err != 0)
     {
         if (AUTOBOOST_CHRONO_IS_THROWS(ec))
@@ -199,8 +199,8 @@ init_steady_clock_ec(kern_return_t & err)
 steady_clock::time_point
 steady_clock::now() AUTOBOOST_NOEXCEPT
 {
-    static kern_return_t err;
-    static chrono_detail::FP fp = chrono_detail::init_steady_clock(err);
+    kern_return_t err;
+    chrono_detail::FP fp = chrono_detail::init_steady_clock(err);
     if ( err != 0  )
     {
       AUTOBOOST_ASSERT(0 && "Boost::Chrono - Internal Error");
@@ -212,8 +212,8 @@ steady_clock::now() AUTOBOOST_NOEXCEPT
 steady_clock::time_point
 steady_clock::now(system::error_code & ec)
 {
-    static kern_return_t err;
-    static chrono_detail::FP_ec fp = chrono_detail::init_steady_clock_ec(err);
+    kern_return_t err;
+    chrono_detail::FP_ec fp = chrono_detail::init_steady_clock_ec(err);
     if ( err != 0  )
     {
         if (AUTOBOOST_CHRONO_IS_THROWS(ec))

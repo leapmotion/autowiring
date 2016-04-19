@@ -11,6 +11,14 @@
 #ifndef AUTOBOOST_MOVE_DEFAULT_DELETE_HPP_INCLUDED
 #define AUTOBOOST_MOVE_DEFAULT_DELETE_HPP_INCLUDED
 
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <autoboost/move/detail/config_begin.hpp>
 #include <autoboost/move/detail/workaround.hpp>
 #include <autoboost/move/detail/unique_ptr_meta_utils.hpp>
@@ -23,6 +31,7 @@
 //! Describes the default deleter (destruction policy) of <tt>unique_ptr</tt>: <tt>default_delete</tt>.
 
 namespace autoboost{
+// @cond
 namespace move_upd {
 
 namespace bmupmu = ::autoboost::move_upmu;
@@ -88,6 +97,7 @@ typedef int bool_conversion::* explicit_bool_arg;
 #endif
 
 }  //namespace move_upd {
+// @endcond
 
 namespace movelib {
 
@@ -115,7 +125,11 @@ struct default_delete
    #endif
 
    #if defined(AUTOBOOST_MOVE_DOXYGEN_INVOKED)
+   //! Trivial copy constructor
+   //!
    default_delete(const default_delete&) AUTOBOOST_NOEXCEPT = default;
+   //! Trivial assignment
+   //!
    default_delete &operator=(const default_delete&) AUTOBOOST_NOEXCEPT = default;
    #else
    typedef typename bmupmu::remove_extent<T>::type element_type;

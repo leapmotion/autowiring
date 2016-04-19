@@ -42,6 +42,7 @@
 #include <autoboost/scoped_array.hpp>
 #include <autoboost/shared_ptr.hpp>
 #include <autoboost/mpl/bool_fwd.hpp>
+#include <autoboost/regex/config.hpp>
 #ifndef AUTOBOOST_NO_STD_LOCALE
 #   include <locale>
 #endif
@@ -52,7 +53,7 @@ namespace std{
 }
 #endif
 
-namespace autoboost{ namespace re_detail{
+namespace autoboost{ namespace AUTOBOOST_REGEX_DETAIL_NS{
 #ifdef AUTOBOOST_NO_STD_DISTANCE
 template <class T>
 std::ptrdiff_t distance(const T& x, const T& y)
@@ -71,7 +72,7 @@ using std::distance;
 
 /*****************************************************************************
  *
- *  Fix broken broken namespace support:
+ *  Fix broken namespace support:
  *
  ****************************************************************************/
 
@@ -94,7 +95,7 @@ namespace std{
  ****************************************************************************/
 
 #ifdef __cplusplus
-namespace autoboost{ namespace re_detail{
+namespace autoboost{ namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 #ifdef AUTOBOOST_MSVC
 #pragma warning (push)
@@ -123,7 +124,7 @@ inline void pointer_construct(T* p, const T& t)
  ****************************************************************************/
 
 #ifdef __cplusplus
-namespace autoboost{ namespace re_detail{
+namespace autoboost{ namespace AUTOBOOST_REGEX_DETAIL_NS{
 #if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC,>=1400) && AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, <1600) && defined(_CPPLIB_VER) && defined(AUTOBOOST_DINKUMWARE_STDLIB) && !(defined(__SGI_STL_PORT) || defined(_STLPORT_VERSION))
    //
    // MSVC 8 will either emit warnings or else refuse to compile

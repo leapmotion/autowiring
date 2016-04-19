@@ -428,6 +428,34 @@
 #   define AUTOBOOST_THREAD_DECL
 #endif // AUTOBOOST_HAS_DECLSPEC
 
+//
+// Automatically link to the correct build variant where possible.
+//
+#if !defined(AUTOBOOST_ALL_NO_LIB) && !defined(AUTOBOOST_THREAD_NO_LIB) && !defined(AUTOBOOST_THREAD_BUILD_DLL) && !defined(AUTOBOOST_THREAD_BUILD_LIB)
+//
+// Tell the autolink to link dynamically, this will get undef'ed by auto_link.hpp
+// once it's done with it:
+//
+#if defined(AUTOBOOST_THREAD_USE_DLL)
+#   define AUTOBOOST_DYN_LINK
+#endif
+//
+// Set the name of our library, this will get undef'ed by auto_link.hpp
+// once it's done with it:
+//
+#if defined(AUTOBOOST_THREAD_LIB_NAME)
+#    define AUTOBOOST_LIB_NAME AUTOBOOST_THREAD_LIB_NAME
+#else
+#    define AUTOBOOST_LIB_NAME autoboost_thread
+#endif
+//
+// If we're importing code from a dll, then tell auto_link.hpp about it:
+//
+// And include the header that does the work:
+//
+#include <autoboost/config/auto_link.hpp>
+#endif  // auto-linking disabled
+
 #endif // AUTOBOOST_THREAD_CONFIG_WEK1032003_HPP
 
 // Change Log:

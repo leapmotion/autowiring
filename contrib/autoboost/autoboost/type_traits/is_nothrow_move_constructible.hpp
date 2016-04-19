@@ -12,23 +12,26 @@
 #define AUTOBOOST_TT_IS_NOTHROW_MOVE_CONSTRUCTIBLE_HPP_INCLUDED
 
 #include <autoboost/config.hpp>
-#include <autoboost/type_traits/has_trivial_move_constructor.hpp>
-#include <autoboost/type_traits/has_nothrow_copy.hpp>
-#include <autoboost/type_traits/is_array.hpp>
-#include <autoboost/type_traits/is_reference.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
-#include <autoboost/type_traits/detail/ice_and.hpp>
-#include <autoboost/utility/declval.hpp>
-#include <autoboost/utility/enable_if.hpp>
+#include <autoboost/type_traits/intrinsics.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
+#include <autoboost/detail/workaround.hpp>
 
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#ifdef AUTOBOOST_IS_NOTHROW_MOVE_CONSTRUCT
 
 namespace autoboost {
 
-namespace detail{
+template <class T>
+struct is_nothrow_move_constructible : public integral_constant<bool, AUTOBOOST_IS_NOTHROW_MOVE_CONSTRUCT(T)>{};
 
-#if !defined(AUTOBOOST_NO_CXX11_NOEXCEPT) && !defined(AUTOBOOST_NO_SFINAE_EXPR)
+template <class T> struct is_nothrow_move_constructible<volatile T> : public ::autoboost::false_type {};
+template <class T> struct is_nothrow_move_constructible<const volatile T> : public ::autoboost::false_type{};
+
+#elif !defined(AUTOBOOST_NO_CXX11_NOEXCEPT) && !defined(AUTOBOOST_NO_SFINAE_EXPR) && !AUTOBOOST_WORKAROUND(AUTOBOOST_GCC_VERSION, < 40700)
+
+#include <autoboost/type_traits/declval.hpp>
+#include <autoboost/utility/enable_if.hpp>
+
+namespace autoboost{ namespace detail{
 
 template <class T, class Enable = void>
 struct false_or_cpp11_noexcept_move_constructible: public ::autoboost::false_type {};
@@ -40,51 +43,44 @@ struct false_or_cpp11_noexcept_move_constructible <
     > : public ::autoboost::integral_constant<bool, AUTOBOOST_NOEXCEPT_EXPR(T(::autoboost::declval<T>()))>
 {};
 
-template <class T>
-struct is_nothrow_move_constructible_imp{
-   AUTOBOOST_STATIC_CONSTANT(bool, value = ::autoboost::detail::false_or_cpp11_noexcept_move_constructible<T>::value);
-};
+}
 
-template <class T>
-struct is_nothrow_move_constructible_imp<volatile T> : public ::autoboost::false_type {};
-template <class T>
-struct is_nothrow_move_constructible_imp<const volatile T> : public ::autoboost::false_type{};
-template <class T>
-struct is_nothrow_move_constructible_imp<T&> : public ::autoboost::false_type{};
-#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
-template <class T>
-struct is_nothrow_move_constructible_imp<T&&> : public ::autoboost::false_type{};
-#endif
+template <class T> struct is_nothrow_move_constructible
+   : public integral_constant<bool, ::autoboost::detail::false_or_cpp11_noexcept_move_constructible<T>::value>{};
+
+template <class T> struct is_nothrow_move_constructible<volatile T> : public ::autoboost::false_type {};
+template <class T> struct is_nothrow_move_constructible<const volatile T> : public ::autoboost::false_type{};
+template <class T, std::size_t N> struct is_nothrow_move_constructible<T[N]> : public ::autoboost::false_type{};
+template <class T> struct is_nothrow_move_constructible<T[]> : public ::autoboost::false_type{};
 
 #else
 
+#include <autoboost/type_traits/has_trivial_move_constructor.hpp>
+#include <autoboost/type_traits/has_nothrow_copy.hpp>
+#include <autoboost/type_traits/is_array.hpp>
+
+namespace autoboost{
+
 template <class T>
-struct is_nothrow_move_constructible_imp{
-    AUTOBOOST_STATIC_CONSTANT(bool, value =(
-        ::autoboost::type_traits::ice_and<
-            ::autoboost::type_traits::ice_or<
-                ::autoboost::has_trivial_move_constructor<T>::value,
-                ::autoboost::has_nothrow_copy<T>::value
-            >::value,
-            ::autoboost::type_traits::ice_not< ::autoboost::is_array<T>::value >::value
-        >::value));
-};
+struct is_nothrow_move_constructible
+   : public integral_constant<bool,
+   (::autoboost::has_trivial_move_constructor<T>::value || ::autoboost::has_nothrow_copy<T>::value) && !::autoboost::is_array<T>::value>
+{};
 
 #endif
 
-}
-
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_nothrow_move_constructible,T,::autoboost::detail::is_nothrow_move_constructible_imp<T>::value)
-
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(is_nothrow_move_constructible,void,false)
+template <> struct is_nothrow_move_constructible<void> : false_type{};
 #ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(is_nothrow_move_constructible,void const,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(is_nothrow_move_constructible,void const volatile,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(is_nothrow_move_constructible,void volatile,false)
+template <> struct is_nothrow_move_constructible<void const> : false_type{};
+template <> struct is_nothrow_move_constructible<void volatile> : false_type{};
+template <> struct is_nothrow_move_constructible<void const volatile> : false_type{};
+#endif
+// References are always trivially constructible, even if the thing they reference is not:
+template <class T> struct is_nothrow_move_constructible<T&> : public ::autoboost::true_type{};
+#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+template <class T> struct is_nothrow_move_constructible<T&&> : public ::autoboost::true_type{};
 #endif
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_IS_NOTHROW_MOVE_CONSTRUCTIBLE_HPP_INCLUDED

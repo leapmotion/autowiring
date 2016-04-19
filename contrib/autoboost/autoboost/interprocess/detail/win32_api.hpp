@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2015. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,7 +11,11 @@
 #ifndef AUTOBOOST_INTERPROCESS_WIN32_API_HPP
 #define AUTOBOOST_INTERPROCESS_WIN32_API_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -26,12 +30,15 @@
 #include <autoboost/assert.hpp>
 #include <string>
 #include <vector>
-#include <memory>
 
 #ifdef AUTOBOOST_USE_WINDOWS_H
 #include <windows.h>
-#include <Wbemidl.h>
-#include <Objbase.h>
+
+#  if defined(AUTOBOOST_INTERPROCESS_BOOTSTAMP_IS_LASTBOOTUPTIME)
+#  include <Wbemidl.h>
+#  include <Objbase.h>
+#  endif
+
 #include <Shlobj.h>
 #endif
 
@@ -40,8 +47,7 @@
 #  pragma comment( lib, "Advapi32.lib" )
 #  pragma comment( lib, "oleaut32.lib" )
 #  pragma comment( lib, "Ole32.lib" )
-#  pragma comment( lib, "Psapi.lib" )
-#  pragma comment( lib, "Shell32.lib" )   //SHGetSpecialFolderPathA
+#  pragma comment( lib, "Shell32.lib" )   //SHGetFolderPath
 #endif
 
 #if defined (AUTOBOOST_INTERPROCESS_WINDOWS)
@@ -56,6 +62,12 @@
 // Declaration of Windows structures or typedefs if AUTOBOOST_USE_WINDOWS_H is used
 //
 //////////////////////////////////////////////////////////////////////////////
+
+//Ignore -pedantic errors here (anonymous structs, etc.)
+#if defined(AUTOBOOST_GCC) && (AUTOBOOST_GCC >= 40600)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-pedantic"
+#endif
 
 namespace autoboost  {
 namespace interprocess  {
@@ -95,7 +107,7 @@ struct decimal
             unsigned long Lo32;
             unsigned long Mid32;
         };
-        unsigned __int64 Lo64;
+        ::autoboost::ulong_long_type Lo64;
     };
 };
 
@@ -129,22 +141,6 @@ struct wchar_variant
 #if defined(_MSC_VER)
 #pragma warning (pop)
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 struct IUnknown_BIPC
 {
@@ -639,6 +635,8 @@ typedef int     (__stdcall *farproc_t)();
 typedef GUID GUID_BIPC;
 typedef VARIANT wchar_variant;
 
+#if defined(AUTOBOOST_INTERPROCESS_BOOTSTAMP_IS_LASTBOOTUPTIME)
+
 typedef IUnknown IUnknown_BIPC;
 
 typedef IWbemClassObject IWbemClassObject_BIPC;
@@ -650,6 +648,8 @@ typedef IEnumWbemClassObject IEnumWbemClassObject_BIPC;
 typedef IWbemServices IWbemServices_BIPC;
 
 typedef IWbemLocator IWbemLocator_BIPC;
+
+#endif
 
 typedef OVERLAPPED interprocess_overlapped;
 
@@ -740,8 +740,8 @@ union system_timeofday_information
       __int64 liExpTimeZoneBias;
       unsigned long uCurrentTimeZoneId;
       unsigned long dwReserved;
-      unsigned __int64 ullBootTimeBias;
-      unsigned __int64 ullSleepTimeBias;
+      ::autoboost::ulong_long_type ullBootTimeBias;
+      ::autoboost::ulong_long_type ullSleepTimeBias;
    } data;
    unsigned char Reserved1[sizeof(data_t)];
 };
@@ -1314,7 +1314,7 @@ class interprocess_all_access_security
    {  return &sa; }
 };
 
-inline void * create_file_mapping (void * handle, unsigned long access, unsigned __int64 file_offset, const char * name, interprocess_security_attributes *psec)
+inline void * create_file_mapping (void * handle, unsigned long access, ::autoboost::ulong_long_type file_offset, const char * name, interprocess_security_attributes *psec)
 {
    const unsigned long high_size(file_offset >> 32), low_size((autoboost::uint32_t)file_offset);
    return CreateFileMappingA (handle, psec, access, high_size, low_size, name);
@@ -1323,9 +1323,9 @@ inline void * create_file_mapping (void * handle, unsigned long access, unsigned
 inline void * open_file_mapping (unsigned long access, const char *name)
 {  return OpenFileMappingA (access, 0, name);   }
 
-inline void *map_view_of_file_ex(void *handle, unsigned long file_access, unsigned __int64 offset, std::size_t numbytes, void *base_addr)
+inline void *map_view_of_file_ex(void *handle, unsigned long file_access, ::autoboost::ulong_long_type offset, std::size_t numbytes, void *base_addr)
 {
-   const unsigned long offset_low  = (unsigned long)(offset & ((unsigned __int64)0xFFFFFFFF));
+   const unsigned long offset_low  = (unsigned long)(offset & ((::autoboost::ulong_long_type)0xFFFFFFFF));
    const unsigned long offset_high = offset >> 32;
    return MapViewOfFileEx(handle, file_access, offset_high, offset_low, numbytes, base_addr);
 }
@@ -1403,13 +1403,13 @@ inline bool get_file_information_by_handle(void *hnd, interprocess_by_handle_fil
 {  return 0 != GetFileInformationByHandle(hnd, info);  }
 
 inline long interlocked_increment(long volatile *addr)
-{  return AUTOBOOST_INTERLOCKED_INCREMENT(addr);  }
+{  return AUTOBOOST_INTERLOCKED_INCREMENT(const_cast<long*>(addr));  }
 
 inline long interlocked_decrement(long volatile *addr)
-{  return AUTOBOOST_INTERLOCKED_DECREMENT(addr);  }
+{  return AUTOBOOST_INTERLOCKED_DECREMENT(const_cast<long*>(addr));  }
 
 inline long interlocked_compare_exchange(long volatile *addr, long val1, long val2)
-{  return AUTOBOOST_INTERLOCKED_COMPARE_EXCHANGE(addr, val1, val2);  }
+{  return AUTOBOOST_INTERLOCKED_COMPARE_EXCHANGE(const_cast<long*>(addr), val1, val2);  }
 
 inline long interlocked_exchange_add(long volatile* addend, long value)
 {  return AUTOBOOST_INTERLOCKED_EXCHANGE_ADD(const_cast<long*>(addend), value);  }
@@ -1955,7 +1955,7 @@ inline void get_shared_documents_folder(std::string &s)
          (void)err;
       }
    }
-   #else //registry alternative: SHGetSpecialFolderPathA
+   #else //registry alternative: SHGetFolderPath
    const int BIPC_CSIDL_COMMON_APPDATA = 0x0023;  // All Users\Application Data
    const int BIPC_CSIDL_FLAG_CREATE = 0x8000;     // new for Win2K, or this in to force creation of folder
    const int BIPC_SHGFP_TYPE_CURRENT  = 0;        // current value for user, verify it exists
@@ -1997,6 +1997,8 @@ inline void get_registry_value(const char *folder, const char *value_key, std::v
       }
    }
 }
+
+#if defined(AUTOBOOST_INTERPROCESS_BOOTSTAMP_IS_LASTBOOTUPTIME)
 
 struct co_uninitializer
 {
@@ -2137,8 +2139,6 @@ inline bool get_wmi_class_attribute( std::wstring& strValue, const wchar_t *wmi_
    }
    return bRet;
 }
-
-#ifdef AUTOBOOST_INTERPROCESS_BOOTSTAMP_IS_LASTBOOTUPTIME
 
 //Obtains the bootup time from WMI LastBootUpTime.
 //This time seems to change with hibernation and clock synchronization so avoid it.
@@ -2331,6 +2331,10 @@ inline unsigned long get_tick_count()
 }  //namespace winapi
 }  //namespace interprocess
 }  //namespace autoboost
+
+#if defined(AUTOBOOST_GCC) && (AUTOBOOST_GCC >= 40600)
+#  pragma GCC diagnostic pop
+#endif
 
 #include <autoboost/interprocess/detail/config_end.hpp>
 

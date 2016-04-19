@@ -1,5 +1,5 @@
-#ifndef AB_POSIX_PTIME_HPP___
-#define AB_POSIX_PTIME_HPP___
+#ifndef POSIX_PTIME_HPP___
+#define POSIX_PTIME_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

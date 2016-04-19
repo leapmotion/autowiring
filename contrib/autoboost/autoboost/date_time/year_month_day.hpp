@@ -1,5 +1,5 @@
-#ifndef AB_YearMonthDayBase_HPP__
-#define AB_YearMonthDayBase_HPP__
+#ifndef YearMonthDayBase_HPP__
+#define YearMonthDayBase_HPP__
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

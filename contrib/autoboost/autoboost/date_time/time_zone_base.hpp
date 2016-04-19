@@ -1,5 +1,5 @@
-#ifndef AB__DATE_TIME_TIME_ZONE_BASE__
-#define AB__DATE_TIME_TIME_ZONE_BASE__
+#ifndef _DATE_TIME_TIME_ZONE_BASE__
+#define _DATE_TIME_TIME_ZONE_BASE__
 
 /* Copyright (c) 2003-2005 CrystalClear Software, Inc.
  * Subject to the Boost Software License, Version 1.0.

@@ -555,7 +555,8 @@ struct select_native<long double>
    && !defined(__SGI_STL_PORT) && !defined(_STLPORT_VERSION)\
    && !defined(__FAST_MATH__)\
    && !defined(AUTOBOOST_MATH_DISABLE_STD_FPCLASSIFY)\
-   && !defined(AUTOBOOST_INTEL)
+   && !defined(AUTOBOOST_INTEL)\
+   && !defined(sun)
 #  define AUTOBOOST_MATH_USE_STD_FPCLASSIFY
 #endif
 

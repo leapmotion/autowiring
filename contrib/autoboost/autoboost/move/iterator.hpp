@@ -14,9 +14,17 @@
 #ifndef AUTOBOOST_MOVE_ITERATOR_HPP
 #define AUTOBOOST_MOVE_ITERATOR_HPP
 
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <autoboost/move/detail/config_begin.hpp>
+#include <autoboost/move/detail/iterator_traits.hpp>
 #include <autoboost/move/utility_core.hpp>
-#include <iterator>  //std::iterator
 
 namespace autoboost {
 
@@ -36,7 +44,7 @@ class move_iterator
 {
    public:
    typedef It                                                              iterator_type;
-   typedef typename std::iterator_traits<iterator_type>::value_type        value_type;
+   typedef typename autoboost::movelib::iterator_traits<iterator_type>::value_type        value_type;
    #if !defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES) || defined(AUTOBOOST_MOVE_DOXYGEN_INVOKED)
    typedef value_type &&                                                   reference;
    #else
@@ -46,8 +54,8 @@ class move_iterator
       , value_type & >::type                                               reference;
    #endif
    typedef It                                                              pointer;
-   typedef typename std::iterator_traits<iterator_type>::difference_type   difference_type;
-   typedef typename std::iterator_traits<iterator_type>::iterator_category iterator_category;
+   typedef typename autoboost::movelib::iterator_traits<iterator_type>::difference_type   difference_type;
+   typedef typename autoboost::movelib::iterator_traits<iterator_type>::iterator_category iterator_category;
 
    move_iterator()
    {}

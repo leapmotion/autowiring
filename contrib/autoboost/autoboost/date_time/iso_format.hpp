@@ -1,5 +1,5 @@
-#ifndef AB_ISO_FORMAT_HPP___
-#define AB_ISO_FORMAT_HPP___
+#ifndef ISO_FORMAT_HPP___
+#define ISO_FORMAT_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

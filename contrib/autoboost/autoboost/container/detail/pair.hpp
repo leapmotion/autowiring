@@ -13,7 +13,11 @@
 #ifndef AUTOBOOST_CONTAINER_CONTAINER_DETAIL_PAIR_HPP
 #define AUTOBOOST_CONTAINER_CONTAINER_DETAIL_PAIR_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -23,17 +27,11 @@
 #include <autoboost/container/detail/mpl.hpp>
 #include <autoboost/container/detail/type_traits.hpp>
 #include <autoboost/container/detail/mpl.hpp>
-#include <autoboost/container/detail/type_traits.hpp>
+#include <autoboost/container/detail/std_fwd.hpp>
+#include <autoboost/move/adl_move_swap.hpp> //swap
 
-#include <utility>   //std::pair
-#include <algorithm> //std::swap
-
+#include <autoboost/intrusive/detail/minimal_pair_header.hpp>      //pair
 #include <autoboost/move/utility_core.hpp>
-
-
-#ifndef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
-#include <autoboost/container/detail/preprocessor.hpp>
-#endif
 
 namespace autoboost {
 namespace container {
@@ -60,37 +58,25 @@ struct is_pair< std::pair<T1, T2> >
    static const bool value = true;
 };
 
-struct pair_nat;
-
-struct piecewise_construct_t { };
-static const piecewise_construct_t piecewise_construct = piecewise_construct_t();
-
-/*
-template <class T1, class T2>
-struct pair
+template <class T>
+struct is_not_pair
 {
-    template <class U, class V> pair(pair<U, V>&& p);
-    template <class... Args1, class... Args2>
-        pair(piecewise_construct_t, tuple<Args1...> first_args,
-             tuple<Args2...> second_args);
-
-    template <class U, class V> pair& operator=(const pair<U, V>& p);
-    pair& operator=(pair&& p) noexcept(is_nothrow_move_assignable<T1>::value &&
-                                       is_nothrow_move_assignable<T2>::value);
-    template <class U, class V> pair& operator=(pair<U, V>&& p);
-
-    void swap(pair& p) noexcept(noexcept(swap(first, p.first)) &&
-                                noexcept(swap(second, p.second)));
+   static const bool value = !is_pair<T>::value;
 };
 
-template <class T1, class T2> bool operator==(const pair<T1,T2>&, const pair<T1,T2>&);
-template <class T1, class T2> bool operator!=(const pair<T1,T2>&, const pair<T1,T2>&);
-template <class T1, class T2> bool operator< (const pair<T1,T2>&, const pair<T1,T2>&);
-template <class T1, class T2> bool operator> (const pair<T1,T2>&, const pair<T1,T2>&);
-template <class T1, class T2> bool operator>=(const pair<T1,T2>&, const pair<T1,T2>&);
-template <class T1, class T2> bool operator<=(const pair<T1,T2>&, const pair<T1,T2>&);
-*/
+template <class T>
+struct is_std_pair
+{
+   static const bool value = false;
+};
 
+template <class T1, class T2>
+struct is_std_pair< std::pair<T1, T2> >
+{
+   static const bool value = true;
+};
+
+struct pair_nat;
 
 template <class T1, class T2>
 struct pair
@@ -166,37 +152,7 @@ struct pair
    //template <class... Args1, class... Args2>
    //   pair(piecewise_construct_t, tuple<Args1...> first_args,
    //        tuple<Args2...> second_args);
-/*
-   //Variadic versions
-   template<class U>
-   pair(AUTOBOOST_CONTAINER_PP_PARAM(U, u), typename container_detail::disable_if
-         < container_detail::is_pair< typename container_detail::remove_ref_const<U>::type >, pair_nat>::type* = 0)
-      : first(::autoboost::forward<U>(u))
-      , second()
-   {}
 
-   #ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
-
-   template<class U, class V, class ...Args>
-   pair(U &&u, V &&v)
-      : first(::autoboost::forward<U>(u))
-      , second(::autoboost::forward<V>(v), ::autoboost::forward<Args>(args)...)
-   {}
-
-   #else
-
-   #define AUTOBOOST_PP_LOCAL_MACRO(n)                                                            \
-   template<class U, AUTOBOOST_PP_ENUM_PARAMS(n, class P)>                                        \
-   pair(AUTOBOOST_CONTAINER_PP_PARAM(U, u)                                                          \
-       ,AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))                                  \
-      : first(::autoboost::forward<U>(u))                             \
-      , second(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _))                        \
-   {}                                                                                         \
-   //!
-   #define AUTOBOOST_PP_LOCAL_LIMITS (1, AUTOBOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include AUTOBOOST_PP_LOCAL_ITERATE()
-   #endif
-*/
    //pair copy assignment
    pair& operator=(AUTOBOOST_COPY_ASSIGN_REF(pair) p)
    {
@@ -214,10 +170,11 @@ struct pair
    }
 
    template <class D, class S>
-   typename ::autoboost::container::container_detail::enable_if_c
-      < !(::autoboost::container::container_detail::is_same<T1, D>::value &&
-          ::autoboost::container::container_detail::is_same<T2, S>::value)
-      , pair &>::type
+   typename ::autoboost::container::container_detail::disable_if_or
+      < pair &
+      , ::autoboost::container::container_detail::is_same<T1, D>
+      , ::autoboost::container::container_detail::is_same<T2, S>
+      >::type
       operator=(const pair<D, S>&p)
    {
       first  = p.first;
@@ -226,18 +183,18 @@ struct pair
    }
 
    template <class D, class S>
-   typename ::autoboost::container::container_detail::enable_if_c
-      < !(::autoboost::container::container_detail::is_same<T1, D>::value &&
-          ::autoboost::container::container_detail::is_same<T2, S>::value)
-      , pair &>::type
+   typename ::autoboost::container::container_detail::disable_if_or
+      < pair &
+      , ::autoboost::container::container_detail::is_same<T1, D>
+      , ::autoboost::container::container_detail::is_same<T2, S>
+      >::type
       operator=(AUTOBOOST_RV_REF_BEG pair<D, S> AUTOBOOST_RV_REF_END p)
    {
       first  = ::autoboost::move(p.first);
       second = ::autoboost::move(p.second);
       return *this;
    }
-
-   //std::pair copy assignment
+//std::pair copy assignment
    pair& operator=(const std::pair<T1, T2> &p)
    {
       first  = p.first;
@@ -272,9 +229,8 @@ struct pair
    //swap
    void swap(pair& p)
    {
-      using std::swap;
-      swap(this->first, p.first);
-      swap(this->second, p.second);
+      ::autoboost::adl_move_swap(this->first, p.first);
+      ::autoboost::adl_move_swap(this->second, p.second);
    }
 };
 
@@ -309,10 +265,7 @@ inline pair<T1, T2> make_pair(T1 x, T2 y)
 
 template <class T1, class T2>
 inline void swap(pair<T1, T2>& x, pair<T1, T2>& y)
-{
-   swap(x.first, y.first);
-   swap(x.second, y.second);
-}
+{  x.swap(y);  }
 
 }  //namespace container_detail {
 }  //namespace container {

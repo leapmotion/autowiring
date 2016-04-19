@@ -11,11 +11,20 @@
 #ifndef AUTOBOOST_MOVE_UNIQUE_PTR_HPP_INCLUDED
 #define AUTOBOOST_MOVE_UNIQUE_PTR_HPP_INCLUDED
 
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <autoboost/move/detail/config_begin.hpp>
 #include <autoboost/move/detail/workaround.hpp>
 #include <autoboost/move/detail/unique_ptr_meta_utils.hpp>
 #include <autoboost/move/default_delete.hpp>
 #include <autoboost/move/utility_core.hpp>
+#include <autoboost/move/adl_move_swap.hpp>
 #include <autoboost/static_assert.hpp>
 #include <autoboost/assert.hpp>
 
@@ -29,7 +38,7 @@
 //! specially in C++03 compilers:
 //!   - <tt>operator < </tt> uses pointer <tt>operator < </tt>instead of <tt>std::less<common_type></tt>.
 //!      This avoids dependencies on <tt>std::common_type</tt> and <tt>std::less</tt>
-//!      (<tt><type_traits>/<functional></tt> headers. In C++03 this avoid pulling Boost.Typeof and other
+//!      (<tt><type_traits>/<functional></tt> headers). In C++03 this avoid pulling Boost.Typeof and other
 //!      cascading dependencies. As in all Boost platforms <tt>operator <</tt> on raw pointers and
 //!      other smart pointers provides strict weak ordering in practice this should not be a problem for users.
 //!   - assignable from literal 0 for compilers without nullptr
@@ -37,6 +46,7 @@
 //!      cv-less T and cv-less U are the same type and T is more CV qualified than U.
 
 namespace autoboost{
+// @cond
 namespace move_upd {
 
 ////////////////////////////////////////////
@@ -96,8 +106,8 @@ struct unique_ptr_data
    {}
 
    template <class U>
-   unique_ptr_data(P p, AUTOBOOST_FWD_REF(U) d) AUTOBOOST_NOEXCEPT
-      : m_p(p), d(::autoboost::forward<U>(d))
+   unique_ptr_data(P p, AUTOBOOST_FWD_REF(U) d1) AUTOBOOST_NOEXCEPT
+      : m_p(p), d(::autoboost::forward<U>(d1))
    {}
 
    del_ref deleter()       { return d; }
@@ -210,9 +220,14 @@ struct enable_up_ptr
 template<class T, class D, class U, class E>
 struct unique_moveconvert_assignable
 {
-   static const bool value = (bmupmu::extent<T>::value == bmupmu::extent<U>::value) && is_unique_ptr_convertible
-      < bmupmu::is_array<T>::value
-      , typename bmupmu::pointer_type<U, E>::type, typename bmupmu::pointer_type<T, D>::type>::value;
+   static const bool t_is_array = bmupmu::is_array<T>::value;
+   static const bool value =
+      t_is_array == bmupmu::is_array<U>::value &&
+      bmupmu::extent<T>::value == bmupmu::extent<U>::value &&
+      is_unique_ptr_convertible
+         < t_is_array
+         , typename bmupmu::pointer_type<U, E>::type, typename bmupmu::pointer_type<T, D>::type
+         >::value;
 };
 
 template<class T, class D, class U, class E, std::size_t N>
@@ -281,11 +296,13 @@ struct unique_deleter_is_initializable<D, E, false>
 
 template<class T, class D, class U, class E, class Type = bmupmu::nat>
 struct enable_up_moveconv_constr
-   : bmupmu::enable_if_c<unique_moveconvert_assignable<T, D, U, E>::value &&
-                      unique_deleter_is_initializable<D, E>::value, Type>
+   : bmupmu::enable_if_c
+      < unique_moveconvert_assignable<T, D, U, E>::value && unique_deleter_is_initializable<D, E>::value
+      , Type>
 {};
 
 }  //namespace move_upd {
+// @endcond
 
 namespace movelib {
 
@@ -529,7 +546,7 @@ class unique_ptr
    //! <b>Postconditions</b>: <tt>get()</tt> yields the value <tt>u.get()</tt> yielded before the construction. <tt>get_deleter()</tt>
    //!   returns a reference to the stored deleter that was constructed from <tt>u.get_deleter()</tt>.
    template <class U, class E>
-   unique_ptr( AUTOBOOST_RV_REF_BEG unique_ptr<U, E> AUTOBOOST_RV_REF_END u
+   unique_ptr( AUTOBOOST_RV_REF_BEG_IF_CXX11 unique_ptr<U, E> AUTOBOOST_RV_REF_END_IF_CXX11 u
       AUTOBOOST_MOVE_DOCIGN(AUTOBOOST_MOVE_I typename bmupd::enable_up_moveconv_constr<T AUTOBOOST_MOVE_I D AUTOBOOST_MOVE_I U AUTOBOOST_MOVE_I E>::type* =0)
       ) AUTOBOOST_NOEXCEPT
       : m_data(u.release(), ::autoboost::move_if_not_lvalue_reference<E>(u.get_deleter()))
@@ -723,9 +740,8 @@ class unique_ptr
    //! <b>Effects</b>: Invokes swap on the stored pointers and on the stored deleters of *this and u.
    void swap(unique_ptr& u) AUTOBOOST_NOEXCEPT
    {
-      using ::autoboost::move_detail::swap;
-      swap(m_data.m_p, u.m_data.m_p);
-      swap(m_data.deleter(), u.m_data.deleter());
+      ::autoboost::adl_move_swap(m_data.m_p, u.m_data.m_p);
+      ::autoboost::adl_move_swap(m_data.deleter(), u.m_data.deleter());
    }
 };
 

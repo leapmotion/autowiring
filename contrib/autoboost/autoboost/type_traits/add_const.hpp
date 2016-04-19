@@ -10,10 +10,7 @@
 #ifndef AUTOBOOST_TT_ADD_CONST_HPP_INCLUDED
 #define AUTOBOOST_TT_ADD_CONST_HPP_INCLUDED
 
-#include <autoboost/config.hpp>
-
-// should be the last #include
-#include <autoboost/type_traits/detail/type_trait_def.hpp>
+#include <autoboost/type_traits/detail/config.hpp>
 
 namespace autoboost {
 
@@ -30,16 +27,20 @@ namespace autoboost {
 #   pragma warning(disable:4181) // warning C4181: qualifier applied to reference type ignored
 #endif
 
-AUTOBOOST_TT_AUX_TYPE_TRAIT_DEF1(add_const,T,T const)
+   template <class T> struct add_const
+   {
+      typedef T const type;
+   };
 
 #if defined(AUTOBOOST_MSVC)
 #   pragma warning(pop)
 #endif
 
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_1(typename T,add_const,T&,T&)
+   template <class T> struct add_const<T&>
+   {
+      typedef T& type;
+   };
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/type_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_ADD_CONST_HPP_INCLUDED

@@ -9,45 +9,64 @@
 #ifndef AUTOBOOST_TT_HAS_NOTHROW_CONSTRUCTOR_HPP_INCLUDED
 #define AUTOBOOST_TT_HAS_NOTHROW_CONSTRUCTOR_HPP_INCLUDED
 
-#include <autoboost/type_traits/has_trivial_constructor.hpp>
+#include <autoboost/type_traits/intrinsics.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
 
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#ifdef AUTOBOOST_HAS_NOTHROW_CONSTRUCTOR
+
+#if defined(AUTOBOOST_MSVC) || defined(AUTOBOOST_INTEL)
+#include <autoboost/type_traits/has_trivial_constructor.hpp>
+#endif
+#if defined(__GNUC__ ) || defined(__SUNPRO_CC)
+#include <autoboost/type_traits/is_default_constructible.hpp>
+#endif
 
 namespace autoboost {
 
-namespace detail{
+template <class T> struct has_nothrow_constructor : public integral_constant<bool, AUTOBOOST_HAS_NOTHROW_CONSTRUCTOR(T)>{};
 
-template <class T>
-struct has_nothrow_constructor_imp{
-#ifdef AUTOBOOST_HAS_NOTHROW_CONSTRUCTOR
-   AUTOBOOST_STATIC_CONSTANT(bool, value = AUTOBOOST_HAS_NOTHROW_CONSTRUCTOR(T));
-#else
-   AUTOBOOST_STATIC_CONSTANT(bool, value = ::autoboost::has_trivial_constructor<T>::value);
+#elif !defined(AUTOBOOST_NO_CXX11_NOEXCEPT)
+
+#include <autoboost/type_traits/is_default_constructible.hpp>
+#include <autoboost/type_traits/remove_all_extents.hpp>
+
+#ifdef AUTOBOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4197) // top-level volatile in cast is ignored
 #endif
-};
 
+namespace autoboost { namespace detail{
+
+   template <class T, bool b> struct has_nothrow_constructor_imp : public autoboost::integral_constant<bool, false>{};
+   template <class T> struct has_nothrow_constructor_imp<T, true> : public autoboost::integral_constant<bool, noexcept(T())>{};
+   template <class T, std::size_t N> struct has_nothrow_constructor_imp<T[N], true> : public has_nothrow_constructor_imp<T, true> {};
 }
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(has_nothrow_constructor,T,::autoboost::detail::has_nothrow_constructor_imp<T>::value)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(has_nothrow_default_constructor,T,::autoboost::detail::has_nothrow_constructor_imp<T>::value)
+template <class T> struct has_nothrow_constructor : public detail::has_nothrow_constructor_imp<T, is_default_constructible<T>::value>{};
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_nothrow_constructor,void,false)
-#ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_nothrow_constructor,void const,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_nothrow_constructor,void const volatile,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_nothrow_constructor,void volatile,false)
+#ifdef AUTOBOOST_MSVC
+#pragma warning(pop)
 #endif
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_nothrow_default_constructor,void,false)
-#ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_nothrow_default_constructor,void const,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_nothrow_default_constructor,void const volatile,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_nothrow_default_constructor,void volatile,false)
+#else
+
+#include <autoboost/type_traits/has_trivial_constructor.hpp>
+
+namespace autoboost {
+
+template <class T> struct has_nothrow_constructor : public ::autoboost::has_trivial_constructor<T> {};
+
 #endif
+
+template<> struct has_nothrow_constructor<void> : public false_type {};
+#ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
+template<> struct has_nothrow_constructor<void const> : public false_type{};
+template<> struct has_nothrow_constructor<void const volatile> : public false_type{};
+template<> struct has_nothrow_constructor<void volatile> : public false_type{};
+#endif
+
+template <class T> struct has_nothrow_default_constructor : public has_nothrow_constructor<T>{};
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_HAS_NOTHROW_CONSTRUCTOR_HPP_INCLUDED

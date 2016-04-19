@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_DST_RULES_HPP__
-#define AB_DATE_TIME_DST_RULES_HPP__
+#ifndef DATE_TIME_DST_RULES_HPP__
+#define DATE_TIME_DST_RULES_HPP__
 
 /* Copyright (c) 2002,2003, 2007 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

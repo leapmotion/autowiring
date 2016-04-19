@@ -12,8 +12,8 @@
 #include <autoboost/thread/detail/config.hpp>
 #include <autoboost/thread/detail/delete.hpp>
 #include <autoboost/thread/detail/move.hpp>
-#include <autoboost/thread/sync_queue.hpp>
-#include <autoboost/thread/detail/work.hpp>
+#include <autoboost/thread/concurrent_queues/sync_queue.hpp>
+#include <autoboost/thread/executors/work.hpp>
 
 #include <autoboost/config/abi_prefix.hpp>
 
@@ -39,7 +39,7 @@ namespace autoboost
       work task;
       try
       {
-        if (work_queue.try_pull_front(task) == queue_op_status::success)
+        if (work_queue.try_pull(task) == queue_op_status::success)
         {
           task();
           return true;
@@ -144,23 +144,23 @@ namespace autoboost
     void submit(Closure & closure)
     {
       work w ((closure));
-      work_queue.push_back(autoboost::move(w));
+      work_queue.push(autoboost::move(w));
       //work_queue.push(work(closure)); // todo check why this doesn't work
     }
 #endif
     void submit(void (*closure)())
     {
       work w ((closure));
-      work_queue.push_back(autoboost::move(w));
-      //work_queue.push_back(work(closure)); // todo check why this doesn't work
+      work_queue.push(autoboost::move(w));
+      //work_queue.push(work(closure)); // todo check why this doesn't work
     }
 
     template <typename Closure>
     void submit(AUTOBOOST_THREAD_RV_REF(Closure) closure)
     {
       work w =autoboost::move(closure);
-      work_queue.push_back(autoboost::move(w));
-      //work_queue.push_back(work(autoboost::move(closure))); // todo check why this doesn't work
+      work_queue.push(autoboost::move(w));
+      //work_queue.push(work(autoboost::move(closure))); // todo check why this doesn't work
     }
 
     /**

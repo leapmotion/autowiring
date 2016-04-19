@@ -69,7 +69,7 @@ namespace autoboost{
 template <class charT>
 class cpp_regex_traits;
 
-namespace re_detail{
+namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 //
 // class parser_buf:
@@ -290,7 +290,7 @@ void cpp_regex_traits_char_layer<charT>::init()
       {
          std::string m("Unable to open message catalog: ");
          std::runtime_error err(m + cat_name);
-         autoboost::re_detail::raise_runtime_error(err);
+         autoboost::AUTOBOOST_REGEX_DETAIL_NS::raise_runtime_error(err);
       }
    }
    //
@@ -415,8 +415,9 @@ template <class charT>
 class cpp_regex_traits_implementation : public cpp_regex_traits_char_layer<charT>
 {
 public:
-   typedef typename cpp_regex_traits<charT>::char_class_type char_class_type;
-   typedef typename std::ctype<charT>::mask                  native_mask_type;
+   typedef typename cpp_regex_traits<charT>::char_class_type      char_class_type;
+   typedef typename std::ctype<charT>::mask                       native_mask_type;
+   typedef typename autoboost::make_unsigned<native_mask_type>::type  unsigned_native_mask_type;
 #ifndef AUTOBOOST_REGEX_BUGGY_CTYPE_FACET
    AUTOBOOST_STATIC_CONSTANT(char_class_type, mask_blank = 1u << 24);
    AUTOBOOST_STATIC_CONSTANT(char_class_type, mask_word = 1u << 25);
@@ -717,7 +718,7 @@ void cpp_regex_traits_implementation<charT>::init()
       {
          std::string m("Unable to open message catalog: ");
          std::runtime_error err(m + cat_name);
-         autoboost::re_detail::raise_runtime_error(err);
+         autoboost::AUTOBOOST_REGEX_DETAIL_NS::raise_runtime_error(err);
       }
    }
    //
@@ -753,19 +754,19 @@ void cpp_regex_traits_implementation<charT>::init()
 #ifndef AUTOBOOST_REGEX_BUGGY_CTYPE_FACET
       static const char_class_type masks[16] =
       {
-         std::ctype<charT>::alnum,
-         std::ctype<charT>::alpha,
-         std::ctype<charT>::cntrl,
-         std::ctype<charT>::digit,
-         std::ctype<charT>::graph,
+         static_cast<unsigned_native_mask_type>(std::ctype<charT>::alnum),
+         static_cast<unsigned_native_mask_type>(std::ctype<charT>::alpha),
+         static_cast<unsigned_native_mask_type>(std::ctype<charT>::cntrl),
+         static_cast<unsigned_native_mask_type>(std::ctype<charT>::digit),
+         static_cast<unsigned_native_mask_type>(std::ctype<charT>::graph),
          cpp_regex_traits_implementation<charT>::mask_horizontal,
-         std::ctype<charT>::lower,
-         std::ctype<charT>::print,
-         std::ctype<charT>::punct,
-         std::ctype<charT>::space,
-         std::ctype<charT>::upper,
+         static_cast<unsigned_native_mask_type>(std::ctype<charT>::lower),
+         static_cast<unsigned_native_mask_type>(std::ctype<charT>::print),
+         static_cast<unsigned_native_mask_type>(std::ctype<charT>::punct),
+         static_cast<unsigned_native_mask_type>(std::ctype<charT>::space),
+         static_cast<unsigned_native_mask_type>(std::ctype<charT>::upper),
          cpp_regex_traits_implementation<charT>::mask_vertical,
-         std::ctype<charT>::xdigit,
+         static_cast<unsigned_native_mask_type>(std::ctype<charT>::xdigit),
          cpp_regex_traits_implementation<charT>::mask_blank,
          cpp_regex_traits_implementation<charT>::mask_word,
          cpp_regex_traits_implementation<charT>::mask_unicode,
@@ -773,22 +774,22 @@ void cpp_regex_traits_implementation<charT>::init()
 #else
       static const char_class_type masks[16] =
       {
-         ::autoboost::re_detail::char_class_alnum,
-         ::autoboost::re_detail::char_class_alpha,
-         ::autoboost::re_detail::char_class_cntrl,
-         ::autoboost::re_detail::char_class_digit,
-         ::autoboost::re_detail::char_class_graph,
-         ::autoboost::re_detail::char_class_horizontal_space,
-         ::autoboost::re_detail::char_class_lower,
-         ::autoboost::re_detail::char_class_print,
-         ::autoboost::re_detail::char_class_punct,
-         ::autoboost::re_detail::char_class_space,
-         ::autoboost::re_detail::char_class_upper,
-         ::autoboost::re_detail::char_class_vertical_space,
-         ::autoboost::re_detail::char_class_xdigit,
-         ::autoboost::re_detail::char_class_blank,
-         ::autoboost::re_detail::char_class_word,
-         ::autoboost::re_detail::char_class_unicode,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_alnum,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_alpha,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_cntrl,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_digit,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_graph,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_horizontal_space,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_lower,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_print,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_punct,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_space,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_upper,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_vertical_space,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_xdigit,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_blank,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_word,
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_unicode,
       };
 #endif
       static const string_type null_string;
@@ -803,7 +804,7 @@ void cpp_regex_traits_implementation<charT>::init()
    //
    // get the collation format used by m_pcollate:
    //
-   m_collate_type = re_detail::find_sort_syntax(this, &m_collate_delim);
+   m_collate_type = AUTOBOOST_REGEX_DETAIL_NS::find_sort_syntax(this, &m_collate_delim);
 }
 
 template <class charT>
@@ -814,53 +815,53 @@ typename cpp_regex_traits_implementation<charT>::char_class_type
    static const char_class_type masks[22] =
    {
       0,
-      std::ctype<char>::alnum,
-      std::ctype<char>::alpha,
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::alnum),
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::alpha),
       cpp_regex_traits_implementation<charT>::mask_blank,
-      std::ctype<char>::cntrl,
-      std::ctype<char>::digit,
-      std::ctype<char>::digit,
-      std::ctype<char>::graph,
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::cntrl),
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::digit),
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::digit),
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::graph),
       cpp_regex_traits_implementation<charT>::mask_horizontal,
-      std::ctype<char>::lower,
-      std::ctype<char>::lower,
-      std::ctype<char>::print,
-      std::ctype<char>::punct,
-      std::ctype<char>::space,
-      std::ctype<char>::space,
-      std::ctype<char>::upper,
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::lower),
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::lower),
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::print),
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::punct),
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::space),
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::space),
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::upper),
       cpp_regex_traits_implementation<charT>::mask_unicode,
-      std::ctype<char>::upper,
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::upper),
       cpp_regex_traits_implementation<charT>::mask_vertical,
-      std::ctype<char>::alnum | cpp_regex_traits_implementation<charT>::mask_word,
-      std::ctype<char>::alnum | cpp_regex_traits_implementation<charT>::mask_word,
-      std::ctype<char>::xdigit,
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::alnum) | cpp_regex_traits_implementation<charT>::mask_word,
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::alnum) | cpp_regex_traits_implementation<charT>::mask_word,
+      static_cast<unsigned_native_mask_type>(std::ctype<char>::xdigit),
    };
 #else
    static const char_class_type masks[22] =
    {
       0,
-      ::autoboost::re_detail::char_class_alnum,
-      ::autoboost::re_detail::char_class_alpha,
-      ::autoboost::re_detail::char_class_blank,
-      ::autoboost::re_detail::char_class_cntrl,
-      ::autoboost::re_detail::char_class_digit,
-      ::autoboost::re_detail::char_class_digit,
-      ::autoboost::re_detail::char_class_graph,
-      ::autoboost::re_detail::char_class_horizontal_space,
-      ::autoboost::re_detail::char_class_lower,
-      ::autoboost::re_detail::char_class_lower,
-      ::autoboost::re_detail::char_class_print,
-      ::autoboost::re_detail::char_class_punct,
-      ::autoboost::re_detail::char_class_space,
-      ::autoboost::re_detail::char_class_space,
-      ::autoboost::re_detail::char_class_upper,
-      ::autoboost::re_detail::char_class_unicode,
-      ::autoboost::re_detail::char_class_upper,
-      ::autoboost::re_detail::char_class_vertical_space,
-      ::autoboost::re_detail::char_class_alnum | ::autoboost::re_detail::char_class_word,
-      ::autoboost::re_detail::char_class_alnum | ::autoboost::re_detail::char_class_word,
-      ::autoboost::re_detail::char_class_xdigit,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_alnum,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_alpha,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_blank,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_cntrl,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_digit,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_digit,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_graph,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_horizontal_space,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_lower,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_lower,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_print,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_punct,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_space,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_space,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_upper,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_unicode,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_upper,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_vertical_space,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_alnum | ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_word,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_alnum | ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_word,
+      ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_xdigit,
    };
 #endif
    if(m_custom_class_names.size())
@@ -870,7 +871,7 @@ typename cpp_regex_traits_implementation<charT>::char_class_type
       if(pos != m_custom_class_names.end())
          return pos->second;
    }
-   std::size_t state_id = 1 + re_detail::get_default_class_id(p1, p2);
+   std::size_t state_id = 1 + AUTOBOOST_REGEX_DETAIL_NS::get_default_class_id(p1, p2);
    AUTOBOOST_ASSERT(state_id < sizeof(masks) / sizeof(masks[0]));
    return masks[state_id];
 }
@@ -880,20 +881,20 @@ template <class charT>
 bool cpp_regex_traits_implementation<charT>::isctype(const charT c, char_class_type mask) const
 {
    return
-      ((mask & ::autoboost::re_detail::char_class_space) && (this->m_pctype->is(std::ctype<charT>::space, c)))
-      || ((mask & ::autoboost::re_detail::char_class_print) && (this->m_pctype->is(std::ctype<charT>::print, c)))
-      || ((mask & ::autoboost::re_detail::char_class_cntrl) && (this->m_pctype->is(std::ctype<charT>::cntrl, c)))
-      || ((mask & ::autoboost::re_detail::char_class_upper) && (this->m_pctype->is(std::ctype<charT>::upper, c)))
-      || ((mask & ::autoboost::re_detail::char_class_lower) && (this->m_pctype->is(std::ctype<charT>::lower, c)))
-      || ((mask & ::autoboost::re_detail::char_class_alpha) && (this->m_pctype->is(std::ctype<charT>::alpha, c)))
-      || ((mask & ::autoboost::re_detail::char_class_digit) && (this->m_pctype->is(std::ctype<charT>::digit, c)))
-      || ((mask & ::autoboost::re_detail::char_class_punct) && (this->m_pctype->is(std::ctype<charT>::punct, c)))
-      || ((mask & ::autoboost::re_detail::char_class_xdigit) && (this->m_pctype->is(std::ctype<charT>::xdigit, c)))
-      || ((mask & ::autoboost::re_detail::char_class_blank) && (this->m_pctype->is(std::ctype<charT>::space, c)) && !::autoboost::re_detail::is_separator(c))
-      || ((mask & ::autoboost::re_detail::char_class_word) && (c == '_'))
-      || ((mask & ::autoboost::re_detail::char_class_unicode) && ::autoboost::re_detail::is_extended(c))
-      || ((mask & ::autoboost::re_detail::char_class_vertical_space) && (is_separator(c) || (c == '\v')))
-      || ((mask & ::autoboost::re_detail::char_class_horizontal_space) && this->m_pctype->is(std::ctype<charT>::space, c) && !(is_separator(c) || (c == '\v')));
+      ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_space) && (this->m_pctype->is(std::ctype<charT>::space, c)))
+      || ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_print) && (this->m_pctype->is(std::ctype<charT>::print, c)))
+      || ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_cntrl) && (this->m_pctype->is(std::ctype<charT>::cntrl, c)))
+      || ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_upper) && (this->m_pctype->is(std::ctype<charT>::upper, c)))
+      || ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_lower) && (this->m_pctype->is(std::ctype<charT>::lower, c)))
+      || ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_alpha) && (this->m_pctype->is(std::ctype<charT>::alpha, c)))
+      || ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_digit) && (this->m_pctype->is(std::ctype<charT>::digit, c)))
+      || ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_punct) && (this->m_pctype->is(std::ctype<charT>::punct, c)))
+      || ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_xdigit) && (this->m_pctype->is(std::ctype<charT>::xdigit, c)))
+      || ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_blank) && (this->m_pctype->is(std::ctype<charT>::space, c)) && !::autoboost::AUTOBOOST_REGEX_DETAIL_NS::is_separator(c))
+      || ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_word) && (c == '_'))
+      || ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_unicode) && ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::is_extended(c))
+      || ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_vertical_space) && (is_separator(c) || (c == '\v')))
+      || ((mask & ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::char_class_horizontal_space) && this->m_pctype->is(std::ctype<charT>::space, c) && !(is_separator(c) || (c == '\v')));
 }
 #endif
 
@@ -905,7 +906,7 @@ inline autoboost::shared_ptr<const cpp_regex_traits_implementation<charT> > crea
    return ::autoboost::object_cache<cpp_regex_traits_base<charT>, cpp_regex_traits_implementation<charT> >::get(key, 5);
 }
 
-} // re_detail
+} // AUTOBOOST_REGEX_DETAIL_NS
 
 template <class charT>
 class cpp_regex_traits
@@ -922,7 +923,7 @@ public:
    struct autoboost_extensions_tag{};
 
    cpp_regex_traits()
-      : m_pimpl(re_detail::create_cpp_regex_traits<charT>(std::locale()))
+      : m_pimpl(AUTOBOOST_REGEX_DETAIL_NS::create_cpp_regex_traits<charT>(std::locale()))
    { }
    static size_type length(const char_type* p)
    {
@@ -995,20 +996,32 @@ public:
          && (m_pimpl->m_pctype->is(
             static_cast<ctype_mask>(f & mask_base), c)))
          return true;
-      else if((f & re_detail::cpp_regex_traits_implementation<charT>::mask_unicode) && re_detail::is_extended(c))
+      else if((f & AUTOBOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT>::mask_unicode) && AUTOBOOST_REGEX_DETAIL_NS::is_extended(c))
          return true;
-      else if((f & re_detail::cpp_regex_traits_implementation<charT>::mask_word) && (c == '_'))
+      else if((f & AUTOBOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT>::mask_word) && (c == '_'))
          return true;
-      else if((f & re_detail::cpp_regex_traits_implementation<charT>::mask_blank)
+      else if((f & AUTOBOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT>::mask_blank)
          && m_pimpl->m_pctype->is(std::ctype<charT>::space, c)
-         && !re_detail::is_separator(c))
+         && !AUTOBOOST_REGEX_DETAIL_NS::is_separator(c))
          return true;
-      else if((f & re_detail::cpp_regex_traits_implementation<charT>::mask_vertical)
-         && (::autoboost::re_detail::is_separator(c) || (c == '\v')))
+      else if((f & AUTOBOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT>::mask_vertical)
+         && (::autoboost::AUTOBOOST_REGEX_DETAIL_NS::is_separator(c) || (c == '\v')))
          return true;
-      else if((f & re_detail::cpp_regex_traits_implementation<charT>::mask_horizontal)
-         && this->isctype(c, std::ctype<charT>::space) && !this->isctype(c, re_detail::cpp_regex_traits_implementation<charT>::mask_vertical))
+      else if((f & AUTOBOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT>::mask_horizontal)
+         && this->isctype(c, std::ctype<charT>::space) && !this->isctype(c, AUTOBOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT>::mask_vertical))
          return true;
+#ifdef __CYGWIN__
+      //
+      // Cygwin has a buggy ctype facet, see https://www.cygwin.com/ml/cygwin/2012-08/msg00178.html:
+      //
+      else if((f & std::ctype<charT>::xdigit) == std::ctype<charT>::xdigit)
+      {
+         if((c >= 'a') && (c <= 'f'))
+            return true;
+         if((c >= 'A') && (c <= 'F'))
+            return true;
+      }
+#endif
       return false;
 #else
       return m_pimpl->isctype(c, f);
@@ -1023,7 +1036,7 @@ public:
    locale_type imbue(locale_type l)
    {
       std::locale result(getloc());
-      m_pimpl = re_detail::create_cpp_regex_traits<charT>(l);
+      m_pimpl = AUTOBOOST_REGEX_DETAIL_NS::create_cpp_regex_traits<charT>(l);
       return result;
    }
    locale_type getloc()const
@@ -1043,7 +1056,7 @@ public:
    static std::string get_catalog_name();
 
 private:
-   autoboost::shared_ptr<const re_detail::cpp_regex_traits_implementation<charT> > m_pimpl;
+   autoboost::shared_ptr<const AUTOBOOST_REGEX_DETAIL_NS::cpp_regex_traits_implementation<charT> > m_pimpl;
    //
    // catalog name handler:
    //
@@ -1058,7 +1071,7 @@ private:
 template <class charT>
 int cpp_regex_traits<charT>::toi(const charT*& first, const charT* last, int radix)const
 {
-   re_detail::parser_buf<charT>   sbuf;            // buffer for parsing numbers.
+   AUTOBOOST_REGEX_DETAIL_NS::parser_buf<charT>   sbuf;            // buffer for parsing numbers.
    std::basic_istream<charT>      is(&sbuf);       // stream for parsing numbers.
 
    // we do NOT want to parse any thousands separators inside the stream:

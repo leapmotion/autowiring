@@ -21,7 +21,6 @@
 #
 # else
 #
-# include <autoboost/preprocessor/config/config.hpp>
 # if ~AUTOBOOST_PP_CONFIG_FLAGS() & AUTOBOOST_PP_CONFIG_MSVC() && ~AUTOBOOST_PP_CONFIG_FLAGS() & AUTOBOOST_PP_CONFIG_MWCC()
 # include <autoboost/preprocessor/tuple/elem.hpp>
 # include <autoboost/preprocessor/facilities/identity.hpp>

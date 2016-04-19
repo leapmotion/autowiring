@@ -29,7 +29,7 @@ namespace autoboost {
 namespace archive {
 namespace detail {
 
-class AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_pointer_oserializer;
+class basic_pointer_oserializer;
 
 template<class Archive>
 class interface_oarchive
@@ -58,20 +58,23 @@ public:
         return & bpos;
     }
 
+    template<class Helper>
+    Helper &
+    get_helper(void * const id = 0){
+        helper_collection & hc = this->This()->get_helper_collection();
+        return hc.template find_helper<Helper>(id);
+    }
+
     template<class T>
-    Archive & operator<<(T & t){
-        this->This()->save_override(t, 0);
+    Archive & operator<<(const T & t){
+        this->This()->save_override(t);
         return * this->This();
     }
 
     // the & operator
     template<class T>
-    Archive & operator&(T & t){
-        #ifndef AUTOBOOST_NO_FUNCTION_TEMPLATE_ORDERING
-            return * this->This() << const_cast<const T &>(t);
-        #else
-            return * this->This() << t;
-        #endif
+    Archive & operator&(const T & t){
+        return * this ->This() << t;
     }
 };
 

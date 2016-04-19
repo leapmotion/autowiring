@@ -30,11 +30,21 @@ namespace std{
 
 #include <ostream>
 
+#include <autoboost/smart_ptr/scoped_ptr.hpp>
 #include <autoboost/archive/detail/auto_link_warchive.hpp>
 #include <autoboost/archive/basic_text_oprimitive.hpp>
 #include <autoboost/archive/basic_xml_oarchive.hpp>
 #include <autoboost/archive/detail/register_archive.hpp>
 #include <autoboost/serialization/item_version_type.hpp>
+
+#ifdef AUTOBOOST_NO_CXX11_HDR_CODECVT
+    #include <autoboost/archive/detail/utf8_codecvt_facet.hpp>
+#else
+    #include <codecvt>
+    namespace autoboost { namespace archive { namespace detail {
+        typedef std::codecvt_utf8<wchar_t> utf8_codecvt_facet;
+    } } }
+#endif
 
 #include <autoboost/archive/detail/abi_prefix.hpp> // must be the last header
 
@@ -51,7 +61,7 @@ namespace detail {
 } // namespace detail
 
 template<class Archive>
-class xml_woarchive_impl :
+class AUTOBOOST_SYMBOL_VISIBLE xml_woarchive_impl :
     public basic_text_oprimitive<std::wostream>,
     public basic_xml_oarchive<Archive>
 {
@@ -71,7 +81,6 @@ protected:
         friend class save_access;
     #endif
 #endif
-
     //void end_preamble(){
     //    basic_xml_oarchive<Archive>::end_preamble();
     //}
@@ -88,21 +97,22 @@ protected:
     save(const autoboost::serialization::item_version_type & t){
         save(static_cast<const unsigned int>(t));
     }
-    AUTOBOOST_WARCHIVE_DECL(void)
+    AUTOBOOST_WARCHIVE_DECL void
     save(const char * t);
     #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
-    AUTOBOOST_WARCHIVE_DECL(void)
+    AUTOBOOST_WARCHIVE_DECL void
     save(const wchar_t * t);
     #endif
-    AUTOBOOST_WARCHIVE_DECL(void)
+    AUTOBOOST_WARCHIVE_DECL void
     save(const std::string &s);
     #ifndef AUTOBOOST_NO_STD_WSTRING
-    AUTOBOOST_WARCHIVE_DECL(void)
+    AUTOBOOST_WARCHIVE_DECL void
     save(const std::wstring &ws);
     #endif
-    AUTOBOOST_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_WARCHIVE_DECL
     xml_woarchive_impl(std::wostream & os, unsigned int flags);
-    ~xml_woarchive_impl(){}
+    AUTOBOOST_WARCHIVE_DECL
+    ~xml_woarchive_impl();
 public:
     void
     save_binary(const void *address, std::size_t count){
@@ -125,7 +135,7 @@ public:
 // do not derive from this class.  If you want to extend this functionality
 // via inhertance, derived from xml_woarchive_impl instead.  This will
 // preserve correct static polymorphism.
-class xml_woarchive :
+class AUTOBOOST_SYMBOL_VISIBLE xml_woarchive :
     public xml_woarchive_impl<xml_woarchive>
 {
 public:

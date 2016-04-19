@@ -9,43 +9,14 @@
 #ifndef AUTOBOOST_TT_IS_ARITHMETIC_HPP_INCLUDED
 #define AUTOBOOST_TT_IS_ARITHMETIC_HPP_INCLUDED
 
-#if !defined( __CODEGEARC__ )
 #include <autoboost/type_traits/is_integral.hpp>
-#include <autoboost/type_traits/is_float.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
-#include <autoboost/config.hpp>
-#endif
-
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#include <autoboost/type_traits/is_floating_point.hpp>
 
 namespace autoboost {
 
-#if !defined(__CODEGEARC__)
-namespace detail {
-
-template< typename T >
-struct is_arithmetic_impl
-{
-    AUTOBOOST_STATIC_CONSTANT(bool, value =
-        (::autoboost::type_traits::ice_or<
-            ::autoboost::is_integral<T>::value,
-            ::autoboost::is_float<T>::value
-        >::value));
-};
-
-} // namespace detail
-#endif
-
-//* is a type T an arithmetic type described in the standard (3.9.1p8)
-#if defined(__CODEGEARC__)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_arithmetic,T,__is_arithmetic(T))
-#else
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_arithmetic,T,::autoboost::detail::is_arithmetic_impl<T>::value)
-#endif
+template <class T>
+struct is_arithmetic : public integral_constant<bool, is_integral<T>::value || is_floating_point<T>::value> {};
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_IS_ARITHMETIC_HPP_INCLUDED

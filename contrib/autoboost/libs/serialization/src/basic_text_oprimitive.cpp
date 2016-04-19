@@ -15,6 +15,7 @@
 #include <ostream>
 
 #define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/archive/detail/auto_link_archive.hpp>
 #include <autoboost/archive/impl/basic_text_oprimitive.ipp>
 
 namespace autoboost {

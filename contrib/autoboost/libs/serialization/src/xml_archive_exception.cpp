@@ -23,7 +23,7 @@
 namespace autoboost {
 namespace archive {
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 xml_archive_exception::xml_archive_exception(
         exception_code c,
         const char * e1,
@@ -51,6 +51,14 @@ xml_archive_exception::xml_archive_exception(
             break;
         }
     }
+
+AUTOBOOST_ARCHIVE_DECL
+xml_archive_exception::xml_archive_exception(xml_archive_exception const & oth) :
+ 	archive_exception(oth)
+	{
+	}
+
+AUTOBOOST_ARCHIVE_DECL xml_archive_exception::~xml_archive_exception() AUTOBOOST_NOEXCEPT_OR_NOTHROW {}
 
 } // archive
 } // autoboost

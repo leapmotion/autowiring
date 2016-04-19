@@ -18,11 +18,11 @@
 #ifndef AUTOBOOST_TOKENIZER_POLICY_JRB070303_HPP_
 #define AUTOBOOST_TOKENIZER_POLICY_JRB070303_HPP_
 
-#include<autoboost/assert.hpp>
-#include<autoboost/iterator/iterator_adaptor.hpp>
-#include<autoboost/iterator/detail/minimum_category.hpp>
-#include<autoboost/token_functions.hpp>
-#include<utility>
+#include <autoboost/assert.hpp>
+#include <autoboost/iterator/iterator_adaptor.hpp>
+#include <autoboost/iterator/minimum_category.hpp>
+#include <autoboost/token_functions.hpp>
+#include <utility>
 
 namespace autoboost
 {
@@ -31,7 +31,7 @@ namespace autoboost
       : public iterator_facade<
             token_iterator<TokenizerFunc, Iterator, Type>
           , Type
-          , typename detail::minimum_category<
+          , typename iterators::minimum_category<
                 forward_traversal_tag
               , typename iterator_traversal<Iterator>::type
             >::type

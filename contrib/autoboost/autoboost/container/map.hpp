@@ -7,36 +7,45 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-
 #ifndef AUTOBOOST_CONTAINER_MAP_HPP
 #define AUTOBOOST_CONTAINER_MAP_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
 #include <autoboost/container/detail/config_begin.hpp>
 #include <autoboost/container/detail/workaround.hpp>
 
+// container
 #include <autoboost/container/container_fwd.hpp>
-#include <utility>
-#include <functional>
-#include <memory>
-#include <autoboost/container/detail/tree.hpp>
-#include <autoboost/container/detail/value_init.hpp>
-#include <autoboost/type_traits/has_trivial_destructor.hpp>
-#include <autoboost/container/detail/mpl.hpp>
-#include <autoboost/container/detail/utilities.hpp>
-#include <autoboost/container/detail/pair.hpp>
-#include <autoboost/container/detail/type_traits.hpp>
+#include <autoboost/container/new_allocator.hpp> //new_allocator
 #include <autoboost/container/throw_exception.hpp>
-#include <autoboost/move/utility_core.hpp>
-#include <autoboost/move/detail/move_helpers.hpp>
-#include <autoboost/move/traits.hpp>
-#include <autoboost/static_assert.hpp>
+// container/detail
+#include <autoboost/container/detail/mpl.hpp>
+#include <autoboost/container/detail/tree.hpp>
+#include <autoboost/container/detail/type_traits.hpp>
 #include <autoboost/container/detail/value_init.hpp>
+#include <autoboost/container/detail/pair.hpp>
+// move
+#include <autoboost/move/traits.hpp>
+#include <autoboost/move/utility_core.hpp>
+// move/detail
+#if defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#include <autoboost/move/detail/fwd_macros.hpp>
+#endif
+#include <autoboost/move/detail/move_helpers.hpp>
+// intrusive/detail
+#include <autoboost/intrusive/detail/minimal_pair_header.hpp>      //pair
+#include <autoboost/intrusive/detail/minimal_less_equal_header.hpp>//less, equal
+// other
+#include <autoboost/static_assert.hpp>
 #include <autoboost/core/no_exceptions_support.hpp>
-
+// std
 #if !defined(AUTOBOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif
@@ -55,13 +64,13 @@ namespace container {
 //! by this container is the value_type is std::pair<const Key, T>.
 //!
 //! \tparam Key is the key_type of the map
-//! \tparam Value is the <code>mapped_type</code>
+//! \tparam T is the <code>mapped_type</code>
 //! \tparam Compare is the ordering function for Keys (e.g. <i>std::less<Key></i>).
 //! \tparam Allocator is the allocator to allocate the <code>value_type</code>s
 //!   (e.g. <i>allocator< std::pair<const Key, T> > </i>).
 //! \tparam MapOptions is an packed option type generated using using autoboost::container::tree_assoc_options.
 template < class Key, class T, class Compare = std::less<Key>
-         , class Allocator = std::allocator< std::pair< const Key, T> >, class MapOptions = tree_assoc_defaults >
+         , class Allocator = new_allocator< std::pair< const Key, T> >, class MapOptions = tree_assoc_defaults >
 #else
 template <class Key, class T, class Compare, class Allocator, class MapOptions>
 #endif
@@ -93,10 +102,10 @@ class map
    //
    //////////////////////////////////////////////
 
-   typedef Key                                                                      key_type;
-   typedef ::autoboost::container::allocator_traits<Allocator>                          allocator_traits_type;
-   typedef T                                                                        mapped_type;
-   typedef std::pair<const Key, T>                                                  value_type;
+   typedef Key                                                              key_type;
+   typedef ::autoboost::container::allocator_traits<Allocator>                  allocator_traits_type;
+   typedef T                                                                mapped_type;
+   typedef std::pair<const Key, T>                                          value_type;
    typedef typename autoboost::container::allocator_traits<Allocator>::pointer          pointer;
    typedef typename autoboost::container::allocator_traits<Allocator>::const_pointer    const_pointer;
    typedef typename autoboost::container::allocator_traits<Allocator>::reference        reference;
@@ -126,7 +135,7 @@ class map
    map()
       : base_t()
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -134,11 +143,10 @@ class map
    //! and allocator.
    //!
    //! <b>Complexity</b>: Constant.
-   explicit map(const Compare& comp,
-                const allocator_type& a = allocator_type())
+   explicit map(const Compare& comp, const allocator_type& a = allocator_type())
       : base_t(comp, a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -148,7 +156,7 @@ class map
    explicit map(const allocator_type& a)
       : base_t(a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -162,7 +170,20 @@ class map
          const allocator_type& a = allocator_type())
       : base_t(true, first, last, comp, a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
+      AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty map using the specified
+   //! allocator, and inserts elements from the range [first ,last ).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is last - first.
+   template <class InputIterator>
+   map(InputIterator first, InputIterator last, const allocator_type& a)
+      : base_t(true, first, last, Compare(), a)
+   {
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -181,7 +202,7 @@ class map
       , const Compare& comp = Compare(), const allocator_type& a = allocator_type())
       : base_t(ordered_range, first, last, comp, a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -194,15 +215,37 @@ class map
    map(std::initializer_list<value_type> il, const Compare& comp = Compare(), const allocator_type& a = allocator_type())
       : base_t(true, il.begin(), il.end(), comp, a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
+   //! <b>Effects</b>: Constructs an empty map using the specified
+   //! allocator, and inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is il.first() - il.end().
+   map(std::initializer_list<value_type> il, const allocator_type& a)
+      : base_t(true, il.begin(), il.end(), Compare(), a)
+   {
+      //A type must be std::pair<CONST Key, T>
+      AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty set using the specified comparison object and
+   //! allocator, and inserts elements from the ordered unique range [il.begin(), il.end()). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate and must be
+   //! unique values.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
    map(ordered_unique_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(),
        const allocator_type& a = allocator_type())
       : base_t(ordered_range, il.begin(), il.end(), comp, a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 #endif
@@ -213,7 +256,7 @@ class map
    map(const map& x)
       : base_t(static_cast<const base_t&>(x))
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -223,9 +266,9 @@ class map
    //!
    //! <b>Postcondition</b>: x is emptied.
    map(AUTOBOOST_RV_REF(map) x)
-      : base_t(autoboost::move(static_cast<base_t&>(x)))
+      : base_t(AUTOBOOST_MOVE_BASE(base_t, x))
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -235,7 +278,7 @@ class map
    map(const map& x, const allocator_type &a)
       : base_t(static_cast<const base_t&>(x), a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -246,9 +289,9 @@ class map
    //!
    //! <b>Postcondition</b>: x is emptied.
    map(AUTOBOOST_RV_REF(map) x, const allocator_type &a)
-      : base_t(autoboost::move(static_cast<base_t&>(x)), a)
+      : base_t(AUTOBOOST_MOVE_BASE(base_t, x), a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -267,8 +310,10 @@ class map
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    map& operator=(AUTOBOOST_RV_REF(map) x)
-      AUTOBOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
-   {  return static_cast<map&>(this->base_t::operator=(autoboost::move(static_cast<base_t&>(x))));  }
+      AUTOBOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && autoboost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
+
+   {  return static_cast<map&>(this->base_t::operator=(AUTOBOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(AUTOBOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Assign content of il to *this.
@@ -283,7 +328,7 @@ class map
 
    #if defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
 
-   //! <b>Effects</b>: Returns a copy of the Allocator that
+   //! <b>Effects</b>: Returns a copy of the allocator that
    //!   was passed to the object's constructor.
    //!
    //! <b>Complexity</b>: Constant.
@@ -296,7 +341,7 @@ class map
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   stored_allocator_type &get_stored_allocator() AUTOBOOST_CONTAINER_NOEXCEPT;
+   stored_allocator_type &get_stored_allocator() AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
    //!
@@ -305,49 +350,49 @@ class map
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   const stored_allocator_type &get_stored_allocator() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const stored_allocator_type &get_stored_allocator() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns an iterator to the first element contained in the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator begin() AUTOBOOST_CONTAINER_NOEXCEPT;
+   iterator begin() AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator begin() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_iterator begin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cbegin() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_iterator cbegin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns an iterator to the end of the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator end() AUTOBOOST_CONTAINER_NOEXCEPT;
+   iterator end() AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator end() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_iterator end() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cend() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_iterator cend() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the beginning
    //! of the reversed container.
@@ -355,7 +400,7 @@ class map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rbegin() AUTOBOOST_CONTAINER_NOEXCEPT;
+   reverse_iterator rbegin() AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
    //! of the reversed container.
@@ -363,7 +408,7 @@ class map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rbegin() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator rbegin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
    //! of the reversed container.
@@ -371,7 +416,7 @@ class map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crbegin() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator crbegin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the end
    //! of the reversed container.
@@ -379,7 +424,7 @@ class map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rend() AUTOBOOST_CONTAINER_NOEXCEPT;
+   reverse_iterator rend() AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
    //! of the reversed container.
@@ -387,7 +432,7 @@ class map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rend() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator rend() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
    //! of the reversed container.
@@ -395,28 +440,28 @@ class map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crend() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator crend() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns true if the container contains no elements.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   bool empty() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   bool empty() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns the number of the elements contained in the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type size() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   size_type size() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns the largest possible size of the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type max_size() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   size_type max_size() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    #endif   //#if defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -424,7 +469,7 @@ class map
    //! Effects: If there is no key equivalent to x in the map, inserts
    //! value_type(x, T()) into the map.
    //!
-   //! Returns: Allocator reference to the mapped_type corresponding to x in *this.
+   //! Returns: A reference to the mapped_type corresponding to x in *this.
    //!
    //! Complexity: Logarithmic.
    mapped_type& operator[](const key_type &k);
@@ -432,15 +477,19 @@ class map
    //! Effects: If there is no key equivalent to x in the map, inserts
    //! value_type(autoboost::move(x), T()) into the map (the key is move-constructed)
    //!
-   //! Returns: Allocator reference to the mapped_type corresponding to x in *this.
+   //! Returns: A reference to the mapped_type corresponding to x in *this.
    //!
    //! Complexity: Logarithmic.
    mapped_type& operator[](key_type &&k);
+   #elif defined(AUTOBOOST_MOVE_HELPERS_RETURN_SFINAE_BROKEN)
+      //in compilers like GCC 3.4, we can't catch temporaries
+      mapped_type& operator[](const key_type &k)         {  return this->priv_subscript(k);  }
+      mapped_type& operator[](AUTOBOOST_RV_REF(key_type) k)  {  return this->priv_subscript(::autoboost::move(k));  }
    #else
-   AUTOBOOST_MOVE_CONVERSION_AWARE_CATCH( operator[] , key_type, mapped_type&, this->priv_subscript)
+      AUTOBOOST_MOVE_CONVERSION_AWARE_CATCH( operator[] , key_type, mapped_type&, this->priv_subscript)
    #endif
 
-   //! Returns: Allocator reference to the element whose key is equivalent to x.
+   //! Returns: A reference to the element whose key is equivalent to x.
    //! Throws: An exception object of type out_of_range if no such element is present.
    //! Complexity: logarithmic.
    T& at(const key_type& k)
@@ -452,7 +501,7 @@ class map
       return i->second;
    }
 
-   //! Returns: Allocator reference to the element whose key is equivalent to x.
+   //! Returns: A reference to the element whose key is equivalent to x.
    //! Throws: An exception object of type out_of_range if no such element is present.
    //! Complexity: logarithmic.
    const T& at(const key_type& k) const
@@ -598,7 +647,7 @@ class map
    {  this->base_t::insert_unique(il.begin(), il.end()); }
 #endif
 
-   #if defined(AUTOBOOST_CONTAINER_PERFECT_FORWARDING) || defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Inserts an object x of type T constructed with
    //!   std::forward<Args>(args)... in the container if and only if there is
@@ -612,7 +661,7 @@ class map
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
-   std::pair<iterator,bool> emplace(Args&&... args)
+   std::pair<iterator,bool> emplace(AUTOBOOST_FWD_REF(Args)... args)
    {  return this->base_t::emplace_unique(autoboost::forward<Args>(args)...); }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
@@ -626,26 +675,24 @@ class map
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
-   iterator emplace_hint(const_iterator p, Args&&... args)
+   iterator emplace_hint(const_iterator p, AUTOBOOST_FWD_REF(Args)... args)
    {  return this->base_t::emplace_hint_unique(p, autoboost::forward<Args>(args)...); }
 
-   #else //#ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
+   #else // !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   #define AUTOBOOST_PP_LOCAL_MACRO(n)                                                                 \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >)          \
-   std::pair<iterator,bool> emplace(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))            \
-   {  return this->base_t::emplace_unique(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _)); }\
-                                                                                                   \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace_hint(const_iterator p                                                          \
-                         AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))              \
-   {  return this->base_t::emplace_hint_unique(p                                                   \
-                               AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _));}   \
-   //!
-   #define AUTOBOOST_PP_LOCAL_LIMITS (0, AUTOBOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include AUTOBOOST_PP_LOCAL_ITERATE()
+   #define AUTOBOOST_CONTAINER_MAP_EMPLACE_CODE(N) \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N \
+   std::pair<iterator,bool> emplace(AUTOBOOST_MOVE_UREF##N)\
+   {  return this->base_t::emplace_unique(AUTOBOOST_MOVE_FWD##N);   }\
+   \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N \
+   iterator emplace_hint(const_iterator hint AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_UREF##N)\
+   {  return this->base_t::emplace_hint_unique(hint AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_FWD##N);  }\
+   //
+   AUTOBOOST_MOVE_ITERATE_0TO9(AUTOBOOST_CONTAINER_MAP_EMPLACE_CODE)
+   #undef AUTOBOOST_CONTAINER_MAP_EMPLACE_CODE
 
-   #endif   //#ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
+   #endif   // !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #if defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -656,35 +703,37 @@ class map
    //!   returns end().
    //!
    //! <b>Complexity</b>: Amortized constant time
-   iterator erase(const_iterator p) AUTOBOOST_CONTAINER_NOEXCEPT;
+   iterator erase(const_iterator p) AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Erases all elements in the container with key equivalent to x.
    //!
    //! <b>Returns</b>: Returns the number of erased elements.
    //!
    //! <b>Complexity</b>: log(size()) + count(k)
-   size_type erase(const key_type& x) AUTOBOOST_CONTAINER_NOEXCEPT;
+   size_type erase(const key_type& x) AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Erases all the elements in the range [first, last).
    //!
    //! <b>Returns</b>: Returns last.
    //!
    //! <b>Complexity</b>: log(size())+N where N is the distance from first to last.
-   iterator erase(const_iterator first, const_iterator last) AUTOBOOST_CONTAINER_NOEXCEPT;
+   iterator erase(const_iterator first, const_iterator last) AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   void swap(map& x);
+   void swap(map& x)
+      AUTOBOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && autoboost::container::container_detail::is_nothrow_swappable<Compare>::value )
 
    //! <b>Effects</b>: erase(a.begin(),a.end()).
    //!
    //! <b>Postcondition</b>: size() == 0.
    //!
    //! <b>Complexity</b>: linear in size().
-   void clear() AUTOBOOST_CONTAINER_NOEXCEPT;
+   void clear() AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns the comparison object out
    //!   of which a was constructed.
@@ -704,7 +753,7 @@ class map
    //! <b>Complexity</b>: Logarithmic.
    iterator find(const key_type& x);
 
-   //! <b>Returns</b>: Allocator const_iterator pointing to an element with the key
+   //! <b>Returns</b>: A const_iterator pointing to an element with the key
    //!   equivalent to x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic.
@@ -726,7 +775,7 @@ class map
    //! <b>Complexity</b>: Logarithmic
    iterator lower_bound(const key_type& x);
 
-   //! <b>Returns</b>: Allocator const iterator pointing to the first element with key not
+   //! <b>Returns</b>: A const iterator pointing to the first element with key not
    //!   less than k, or a.end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
@@ -738,7 +787,7 @@ class map
    //! <b>Complexity</b>: Logarithmic
    iterator upper_bound(const key_type& x);
 
-   //! <b>Returns</b>: Allocator const iterator pointing to the first element with key not
+   //! <b>Returns</b>: A const iterator pointing to the first element with key not
    //!   less than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
@@ -835,10 +884,13 @@ class map
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class K, class T, class C, class Allocator>
-struct has_trivial_destructor_after_move<autoboost::container::map<K, T, C, Allocator> >
+template <class Key, class T, class Compare, class Allocator>
+struct has_trivial_destructor_after_move<autoboost::container::map<Key, T, Compare, Allocator> >
 {
-   static const bool value = has_trivial_destructor_after_move<Allocator>::value && has_trivial_destructor_after_move<C>::value;
+   typedef typename ::autoboost::container::allocator_traits<Allocator>::pointer pointer;
+   static const bool value = ::autoboost::has_trivial_destructor_after_move<Allocator>::value &&
+                             ::autoboost::has_trivial_destructor_after_move<pointer>::value &&
+                             ::autoboost::has_trivial_destructor_after_move<Compare>::value;
 };
 
 namespace container {
@@ -863,7 +915,7 @@ namespace container {
 //!   (e.g. <i>allocator< std::pair<const Key, T> > </i>).
 //! \tparam MultiMapOptions is an packed option type generated using using autoboost::container::tree_assoc_options.
 template < class Key, class T, class Compare = std::less<Key>
-         , class Allocator = std::allocator< std::pair< const Key, T> >, class MultiMapOptions = tree_assoc_defaults>
+         , class Allocator = new_allocator< std::pair< const Key, T> >, class MultiMapOptions = tree_assoc_defaults>
 #else
 template <class Key, class T, class Compare, class Allocator, class MultiMapOptions>
 #endif
@@ -887,6 +939,8 @@ class multimap
       < Key, value_type_impl, Compare, container_detail::select1st<value_type_impl>
       >  value_compare_impl;
    #endif   //#ifndef AUTOBOOST_CONTAINER_DOXYGEN_INVOKED
+
+   typedef ::autoboost::container::allocator_traits<Allocator>                          allocator_traits_type;
 
    public:
    //////////////////////////////////////////////
@@ -927,7 +981,7 @@ class multimap
    multimap()
       : base_t()
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -937,7 +991,7 @@ class multimap
    explicit multimap(const Compare& comp, const allocator_type& a = allocator_type())
       : base_t(comp, a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -948,7 +1002,7 @@ class multimap
    explicit multimap(const allocator_type& a)
       : base_t(a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -963,7 +1017,20 @@ class multimap
             const allocator_type& a = allocator_type())
       : base_t(false, first, last, comp, a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
+      AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty multimap using the specified
+   //! allocator, and inserts elements from the range [first ,last ).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is last - first.
+   template <class InputIterator>
+   multimap(InputIterator first, InputIterator last, const allocator_type& a)
+      : base_t(false, first, last, Compare(), a)
+   {
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -992,15 +1059,36 @@ class multimap
            const allocator_type& a = allocator_type())
       : base_t(false, il.begin(), il.end(), comp, a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
+   //! <b>Effects</b>: Constructs an empty multimap using the specified
+   //! allocator, and inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is il.first() - il.end().
+   multimap(std::initializer_list<value_type> il, const allocator_type& a)
+      : base_t(false, il.begin(), il.end(), Compare(), a)
+   {
+      //A type must be std::pair<CONST Key, T>
+      AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty set using the specified comparison object and
+   //! allocator, and inserts elements from the ordered range [il.begin(), il.end()). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
    multimap(ordered_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(),
        const allocator_type& a = allocator_type())
       : base_t(ordered_range, il.begin(), il.end(), comp, a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 #endif
@@ -1011,7 +1099,7 @@ class multimap
    multimap(const multimap& x)
       : base_t(static_cast<const base_t&>(x))
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1021,9 +1109,9 @@ class multimap
    //!
    //! <b>Postcondition</b>: x is emptied.
    multimap(AUTOBOOST_RV_REF(multimap) x)
-      : base_t(autoboost::move(static_cast<base_t&>(x)))
+      : base_t(AUTOBOOST_MOVE_BASE(base_t, x))
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1033,7 +1121,7 @@ class multimap
    multimap(const multimap& x, const allocator_type &a)
       : base_t(static_cast<const base_t&>(x), a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1043,9 +1131,9 @@ class multimap
    //!
    //! <b>Postcondition</b>: x is emptied.
    multimap(AUTOBOOST_RV_REF(multimap) x, const allocator_type &a)
-      : base_t(autoboost::move(static_cast<base_t&>(x)), a)
+      : base_t(AUTOBOOST_MOVE_BASE(base_t, x), a)
    {
-      //Allocator type must be std::pair<CONST Key, T>
+      //A type must be std::pair<CONST Key, T>
       AUTOBOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1059,7 +1147,9 @@ class multimap
    //!
    //! <b>Complexity</b>: Constant.
    multimap& operator=(AUTOBOOST_RV_REF(multimap) x)
-   {  return static_cast<multimap&>(this->base_t::operator=(autoboost::move(static_cast<base_t&>(x))));  }
+      AUTOBOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && autoboost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
+   {  return static_cast<multimap&>(this->base_t::operator=(AUTOBOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(AUTOBOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Assign content of il to *this.
@@ -1093,31 +1183,31 @@ class multimap
    const_iterator cbegin() const;
 
    //! @copydoc ::autoboost::container::set::end()
-   iterator end() AUTOBOOST_CONTAINER_NOEXCEPT;
+   iterator end() AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::autoboost::container::set::end() const
-   const_iterator end() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_iterator end() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::autoboost::container::set::cend() const
-   const_iterator cend() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_iterator cend() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::autoboost::container::set::rbegin()
-   reverse_iterator rbegin() AUTOBOOST_CONTAINER_NOEXCEPT;
+   reverse_iterator rbegin() AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::autoboost::container::set::rbegin() const
-   const_reverse_iterator rbegin() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator rbegin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::autoboost::container::set::crbegin() const
-   const_reverse_iterator crbegin() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator crbegin() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::autoboost::container::set::rend()
-   reverse_iterator rend() AUTOBOOST_CONTAINER_NOEXCEPT;
+   reverse_iterator rend() AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::autoboost::container::set::rend() const
-   const_reverse_iterator rend() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator rend() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::autoboost::container::set::crend() const
-   const_reverse_iterator crend() const AUTOBOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator crend() const AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::autoboost::container::set::empty() const
    bool empty() const;
@@ -1130,7 +1220,7 @@ class multimap
 
    #endif   //#if defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
 
-   #if defined(AUTOBOOST_CONTAINER_PERFECT_FORWARDING) || defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... in the container.
@@ -1142,7 +1232,7 @@ class multimap
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
-   iterator emplace(Args&&... args)
+   iterator emplace(AUTOBOOST_FWD_REF(Args)... args)
    {  return this->base_t::emplace_equal(autoboost::forward<Args>(args)...); }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
@@ -1155,26 +1245,24 @@ class multimap
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
-   iterator emplace_hint(const_iterator p, Args&&... args)
+   iterator emplace_hint(const_iterator p, AUTOBOOST_FWD_REF(Args)... args)
    {  return this->base_t::emplace_hint_equal(p, autoboost::forward<Args>(args)...); }
 
-   #else //#ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
+   #else // !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   #define AUTOBOOST_PP_LOCAL_MACRO(n)                                                                 \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))                            \
-   {  return this->base_t::emplace_equal(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _)); } \
-                                                                                                   \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace_hint(const_iterator p                                                          \
-                         AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))              \
-   {  return this->base_t::emplace_hint_equal(p                                                    \
-                               AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _));}   \
-   //!
-   #define AUTOBOOST_PP_LOCAL_LIMITS (0, AUTOBOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include AUTOBOOST_PP_LOCAL_ITERATE()
+   #define AUTOBOOST_CONTAINER_MULTIMAP_EMPLACE_CODE(N) \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N \
+   iterator emplace(AUTOBOOST_MOVE_UREF##N)\
+   {  return this->base_t::emplace_equal(AUTOBOOST_MOVE_FWD##N);   }\
+   \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N \
+   iterator emplace_hint(const_iterator hint AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_UREF##N)\
+   {  return this->base_t::emplace_hint_equal(hint AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_FWD##N);  }\
+   //
+   AUTOBOOST_MOVE_ITERATE_0TO9(AUTOBOOST_CONTAINER_MULTIMAP_EMPLACE_CODE)
+   #undef AUTOBOOST_CONTAINER_MULTIMAP_EMPLACE_CODE
 
-   #endif   //#ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
+   #endif   // !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    //! <b>Effects</b>: Inserts x and returns the iterator pointing to the
    //!   newly inserted element.
@@ -1277,10 +1365,12 @@ class multimap
    iterator erase(const_iterator first, const_iterator last);
 
    //! @copydoc ::autoboost::container::set::swap
-   void swap(flat_multiset& x);
+   void swap(multiset& x)
+      AUTOBOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && autoboost::container::container_detail::is_nothrow_swappable<Compare>::value );
 
    //! @copydoc ::autoboost::container::set::clear
-   void clear() AUTOBOOST_CONTAINER_NOEXCEPT;
+   void clear() AUTOBOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::autoboost::container::set::key_comp
    key_compare key_comp() const;
@@ -1294,7 +1384,7 @@ class multimap
    //! <b>Complexity</b>: Logarithmic.
    iterator find(const key_type& x);
 
-   //! <b>Returns</b>: Allocator const iterator pointing to an element with the key
+   //! <b>Returns</b>: A const iterator pointing to an element with the key
    //!   equivalent to x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic.
@@ -1311,7 +1401,7 @@ class multimap
    //! <b>Complexity</b>: Logarithmic
    iterator lower_bound(const key_type& x);
 
-   //! <b>Returns</b>: Allocator const iterator pointing to the first element with key not
+   //! <b>Returns</b>: A const iterator pointing to the first element with key not
    //!   less than k, or a.end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
@@ -1323,7 +1413,7 @@ class multimap
    //! <b>Complexity</b>: Logarithmic
    iterator upper_bound(const key_type& x);
 
-   //! <b>Returns</b>: Allocator const iterator pointing to the first element with key not
+   //! <b>Returns</b>: A const iterator pointing to the first element with key not
    //!   less than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
@@ -1388,10 +1478,13 @@ class multimap
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class K, class T, class C, class Allocator>
-struct has_trivial_destructor_after_move<autoboost::container::multimap<K, T, C, Allocator> >
+template <class Key, class T, class Compare, class Allocator>
+struct has_trivial_destructor_after_move<autoboost::container::multimap<Key, T, Compare, Allocator> >
 {
-   static const bool value = has_trivial_destructor_after_move<Allocator>::value && has_trivial_destructor_after_move<C>::value;
+   typedef typename ::autoboost::container::allocator_traits<Allocator>::pointer pointer;
+   static const bool value = ::autoboost::has_trivial_destructor_after_move<Allocator>::value &&
+                             ::autoboost::has_trivial_destructor_after_move<pointer>::value &&
+                             ::autoboost::has_trivial_destructor_after_move<Compare>::value;
 };
 
 namespace container {
@@ -1402,5 +1495,5 @@ namespace container {
 
 #include <autoboost/container/detail/config_end.hpp>
 
-#endif /* AUTOBOOST_CONTAINER_MAP_HPP */
+#endif   // AUTOBOOST_CONTAINER_MAP_HPP
 

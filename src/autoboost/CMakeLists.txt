@@ -1,15 +1,12 @@
-add_conditional_sources(
+list(APPEND
   Autoboost_SRCS
-  "ON"
-  GROUP_NAME "Autoboost"
-  FILES
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/system/src/error_code.cpp
 )
 
 add_conditional_sources(
   Autoboost_SRCS
   "NOT MSVC"
-  GROUP_NAME "Autoboost"
+  GROUP_NAME "Non-Windows Sources"
   FILES
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/process_cpu_clocks.cpp
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/thread_clock.cpp
@@ -19,33 +16,25 @@ add_conditional_sources(
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/future.cpp
 )
 
-add_conditional_sources(
+list(APPEND
   Autoboost_SRCS
-  "ON"
-  GROUP_NAME "Autoboost"
-  FILES
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/codecvt_error_category.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/operations.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/path.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/path_traits.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/portability.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/unique_path.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/utf8_codecvt_facet.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/path.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/path_traits.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/portability.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/unique_path.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/utf8_codecvt_facet.cpp
 )
 
-add_conditional_sources(
+add_windows_sources(
   Autoboost_SRCS
-  "MSVC"
-  GROUP_NAME "Autoboost"
-  FILES
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/windows_file_codecvt.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/windows_file_codecvt.hpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/windows_file_codecvt.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/windows_file_codecvt.hpp
 )
 
-add_library(Autoboost STATIC ${Autoboost_SRCS})
+add_library(AutoBoost STATIC ${Autoboost_SRCS})
 
 target_include_directories(
-  Autoboost
+  AutoBoost
   PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/contrib/autoboost>"
 )
@@ -53,9 +42,9 @@ target_include_directories(
 #
 # Install library
 #
-install(TARGETS Autoboost EXPORT AutowiringTargets
+install(TARGETS AutoBoost EXPORT AutowiringTargets
   DESTINATION lib
   COMPONENT autowiring
   CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
 )
-install_headers(TARGET Autoboost DESTINATION include/autowiring COMPONENT autowiring)
+install_headers(TARGET AutoBoost DESTINATION include/autowiring COMPONENT autowiring)

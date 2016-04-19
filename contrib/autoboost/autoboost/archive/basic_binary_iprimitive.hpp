@@ -49,22 +49,25 @@ namespace std{
 #include <autoboost/integer.hpp>
 #include <autoboost/integer_traits.hpp>
 
-#include <autoboost/archive/basic_streambuf_locale_saver.hpp>
-#include <autoboost/archive/archive_exception.hpp>
 #include <autoboost/mpl/placeholders.hpp>
 #include <autoboost/serialization/is_bitwise_serializable.hpp>
 #include <autoboost/serialization/array.hpp>
+
+#include <autoboost/archive/basic_streambuf_locale_saver.hpp>
+#include <autoboost/archive/archive_exception.hpp>
 #include <autoboost/archive/detail/auto_link_archive.hpp>
 #include <autoboost/archive/detail/abi_prefix.hpp> // must be the last header
 
 namespace autoboost {
 namespace archive {
 
+template<class Ch>
+class codecvt_null;
+
 /////////////////////////////////////////////////////////////////////////////
 // class binary_iarchive - read serialized objects from a input binary stream
 template<class Archive, class Elem, class Tr>
-class basic_binary_iprimitive
-{
+class AUTOBOOST_SYMBOL_VISIBLE basic_binary_iprimitive {
 #ifndef AUTOBOOST_NO_MEMBER_TEMPLATE_FRIENDS
     friend class load_access;
 protected:
@@ -78,6 +81,7 @@ public:
     }
 
     #ifndef AUTOBOOST_NO_STD_LOCALE
+    autoboost::scoped_ptr<codecvt_null<Elem> > codecvt_facet;
     autoboost::scoped_ptr<std::locale> archive_locale;
     basic_streambuf_locale_saver<Elem, Tr> locale_saver;
     #endif
@@ -98,25 +102,25 @@ public:
         AUTOBOOST_ASSERT(0 == i || 1 == i);
         (void)i; // warning suppression for release builds.
     }
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     load(std::string &s);
     #ifndef AUTOBOOST_NO_STD_WSTRING
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     load(std::wstring &ws);
     #endif
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     load(char * t);
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     load(wchar_t * t);
 
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     init();
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     basic_binary_iprimitive(
         std::basic_streambuf<Elem, Tr> & sb,
         bool no_codecvt
     );
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     ~basic_binary_iprimitive();
 public:
     // we provide an optimized load for all fundamental types
