@@ -13,21 +13,25 @@ namespace autowiring {
     config_registry_entry_base* pFlink = nullptr;
   };
 
-  template<typename T, typename = void>
-  struct config_registry_entry {
-    static const config_descriptor* desc(void) { return nullptr; }
+  struct config_registry_entry_default {
+    static const config_descriptor desc;
   };
+
+  template<typename T, typename = void>
+  struct config_registry_entry :
+    config_registry_entry_default
+  {};
 
   template<typename T>
   struct config_registry_entry<T, typename std::enable_if<has_getconfigdescriptor<T>::value>::type> :
     config_registry_entry_base
   {
   public:
-    static const config_descriptor* desc(void) {
-      static const config_descriptor desc = T::GetConfigDescriptor();
-      return &desc;
-    }
+    static const config_descriptor desc;
   };
+
+  template<typename T>
+  const config_descriptor config_registry_entry<T, typename std::enable_if<has_getconfigdescriptor<T>::value>::type>::desc = T::GetConfigDescriptor();
 
   extern std::atomic<config_registry_entry_base*> g_pFirstEntry;
 
@@ -36,7 +40,7 @@ namespace autowiring {
   /// </summary>
   template<typename T>
   std::string ConfigGet(const char* name, T& obj) {
-    const config_descriptor& desc = *config_registry_entry<T>::desc();
+    const config_descriptor& desc = config_registry_entry<T>::desc;
     auto q = desc.fields.find(name);
     if (q == desc.fields.end())
       throw std::invalid_argument("Configuration name not found in the specified object's configuration descriptor");
@@ -50,7 +54,7 @@ namespace autowiring {
   /// </summary>
   template<typename T>
   void ConfigSet(const char* name, T& obj, const char* value) {
-    const config_descriptor& desc = *config_registry_entry<T>::desc();
+    const config_descriptor& desc = config_registry_entry<T>::desc;
     auto q = desc.fields.find(name);
     if (q == desc.fields.end())
       throw std::invalid_argument("Configuration name not found in the specified object's configuration descriptor");
