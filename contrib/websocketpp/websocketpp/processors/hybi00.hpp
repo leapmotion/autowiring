@@ -122,7 +122,7 @@ public:
 
         res.append_header(
             "Sec-WebSocket-Key3",
-            md5::md5_hash_string(std::string(key_final.data(),16))
+            md5::md5_hash_string(std::string(key_final.data(),key_final.size()))
         );
 
         res.append_header("Upgrade","WebSocket");
