@@ -256,7 +256,7 @@ add_conditional_sources(
 
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 add_pch(Autowiring "stdafx.h" "stdafx.cpp")
-target_link_libraries(Autowiring INTERFACE Autoboost)
+target_link_libraries(Autowiring INTERFACE AutoBoost)
 
 target_include_directories(
   Autowiring

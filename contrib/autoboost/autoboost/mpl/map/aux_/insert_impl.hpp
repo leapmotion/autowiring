@@ -5,8 +5,8 @@
 // Copyright Aleksey Gurtovoy 2003-2004
 // Copyright David Abrahams 2003-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -26,9 +26,9 @@
 namespace autoboost { namespace mpl {
 
 namespace aux {
-template< typename Map, typename Pair > 
+template< typename Map, typename Pair >
 struct map_insert_impl
-    : if_< 
+    : if_<
           contains_impl<aux::map_tag>::apply<Map,Pair>
         , Map
 #if defined(AUTOBOOST_MPL_CFG_TYPEOF_BASED_SEQUENCES)
@@ -53,11 +53,11 @@ struct map_insert_impl
 template<>
 struct insert_impl< aux::map_tag >
 {
-    template< 
+    template<
           typename Map
         , typename PosOrKey
         , typename KeyOrNA
-        > 
+        >
     struct apply
         : aux::map_insert_impl<
               Map

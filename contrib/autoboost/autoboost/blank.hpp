@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// boost blank.hpp header file
+// autoboost blank.hpp header file
 // See http://www.boost.org for updates, documentation, and revision history.
 //-----------------------------------------------------------------------------
 //

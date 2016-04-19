@@ -11,7 +11,11 @@
 #ifndef AUTOBOOST_INTERPROCESS_MAPPED_REGION_HPP
 #define AUTOBOOST_INTERPROCESS_MAPPED_REGION_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -26,6 +30,8 @@
 #include <string>
 #include <autoboost/cstdint.hpp>
 #include <autoboost/assert.hpp>
+#include <autoboost/move/adl_move_swap.hpp>
+
 //Some Unixes use caddr_t instead of void * in madvise
 //              SunOS                                 Tru64                               HP-UX                    AIX
 #if defined(sun) || defined(__sun) || defined(__osf__) || defined(__osf) || defined(_hpux) || defined(hpux) || defined(_AIX)
@@ -517,8 +523,8 @@ inline bool mapped_region::flush(std::size_t mapping_offset, std::size_t numbyte
 
 inline bool mapped_region::shrink_by(std::size_t bytes, bool from_back)
 {
-   void *shrink_page_start;
-   std::size_t shrink_page_bytes;
+   void *shrink_page_start = 0;
+   std::size_t shrink_page_bytes = 0;
    if(!this->priv_shrink_param_check(bytes, from_back, shrink_page_start, shrink_page_bytes)){
       return false;
    }
@@ -853,14 +859,14 @@ inline std::size_t mapped_region::get_page_size()
 
 inline void mapped_region::swap(mapped_region &other)
 {
-   ipcdetail::do_swap(this->m_base, other.m_base);
-   ipcdetail::do_swap(this->m_size, other.m_size);
-   ipcdetail::do_swap(this->m_page_offset, other.m_page_offset);
-   ipcdetail::do_swap(this->m_mode,  other.m_mode);
+   ::autoboost::adl_move_swap(this->m_base, other.m_base);
+   ::autoboost::adl_move_swap(this->m_size, other.m_size);
+   ::autoboost::adl_move_swap(this->m_page_offset, other.m_page_offset);
+   ::autoboost::adl_move_swap(this->m_mode,  other.m_mode);
    #if defined (AUTOBOOST_INTERPROCESS_WINDOWS)
-   ipcdetail::do_swap(this->m_file_or_mapping_hnd, other.m_file_or_mapping_hnd);
+   ::autoboost::adl_move_swap(this->m_file_or_mapping_hnd, other.m_file_or_mapping_hnd);
    #else
-   ipcdetail::do_swap(this->m_is_xsi, other.m_is_xsi);
+   ::autoboost::adl_move_swap(this->m_is_xsi, other.m_is_xsi);
    #endif
 }
 

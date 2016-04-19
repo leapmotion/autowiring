@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2008
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -65,18 +65,18 @@ struct for_each_impl<false>
     static void execute(
           Iterator*
         , LastIterator*
-        , TransformFunc* 
+        , TransformFunc*
         , F f
         )
     {
         typedef typename deref<Iterator>::type item;
         typedef typename apply1<TransformFunc,item>::type arg;
-    
+
         // dwa 2002/9/10 -- make sure not to invoke undefined behavior
         // when we pass arg.
         value_initialized<arg> x;
         aux::unwrap(f, 0)(autoboost::get(x));
-        
+
         typedef typename mpl::next<Iterator>::type iter;
         for_each_impl<autoboost::is_same<iter,LastIterator>::value>
             ::execute( static_cast<iter*>(0), static_cast<LastIterator*>(0), static_cast<TransformFunc*>(0), f);
@@ -85,7 +85,7 @@ struct for_each_impl<false>
 
 } // namespace aux
 
-// agurt, 17/mar/02: pointer default parameters are necessary to workaround 
+// agurt, 17/mar/02: pointer default parameters are necessary to workaround
 // MSVC 6.5 function template signature's mangling bug
 template<
       typename Sequence
@@ -113,7 +113,7 @@ AUTOBOOST_MPL_CFG_GPU_ENABLED
 inline
 void for_each(F f, Sequence* = 0)
 {
-  // jfalcou: fully qualifying this call so it doesnt clash with autoboostphoenix::for_each
+  // jfalcou: fully qualifying this call so it doesnt clash with phoenix::for_each
   // ons ome compilers -- done on 02/28/2011
   autoboost::mpl::for_each<Sequence, identity<> >(f);
 }

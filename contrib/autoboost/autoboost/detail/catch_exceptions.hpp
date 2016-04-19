@@ -1,4 +1,4 @@
-//  boost/catch_exceptions.hpp -----------------------------------------------//
+//  autoboost/catch_exceptions.hpp -----------------------------------------------//
 
 //  Copyright Beman Dawes 1995-2001.  Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
@@ -11,13 +11,13 @@
 //   26 Feb 01 Numerous changes suggested during formal review. (Beman)
 //   25 Jan 01 catch_exceptions.hpp code factored out of cpp_main.cpp.
 //   22 Jan 01 Remove test_tools dependencies to reduce coupling.
-//    5 Nov 00 Initial boost version (Beman Dawes)
+//    5 Nov 00 Initial autoboost version (Beman Dawes)
 
 #ifndef AUTOBOOST_CATCH_EXCEPTIONS_HPP
 #define AUTOBOOST_CATCH_EXCEPTIONS_HPP
 
 //  header dependencies are deliberately restricted to the standard library
-//  to reduce coupling to other boost libraries.
+//  to reduce coupling to other autoboost libraries.
 #include <string>             // for string
 #include <new>                // for bad_alloc
 #include <typeinfo>           // for bad_cast, bad_typeid
@@ -27,11 +27,11 @@
 #include <ostream>         // for ostream
 
 # if defined(__BORLANDC__) && (__BORLANDC__ <= 0x0551)
-#   define AUTOBOOST_BUILT_IN_EXCEPTIONS_MISSING_WHAT 
+#   define AUTOBOOST_BUILT_IN_EXCEPTIONS_MISSING_WHAT
 # endif
 
 #if defined(MPW_CPLUS) && (MPW_CPLUS <= 0x890)
-#   define AUTOBOOST_BUILT_IN_EXCEPTIONS_MISSING_WHAT 
+#   define AUTOBOOST_BUILT_IN_EXCEPTIONS_MISSING_WHAT
     namespace std { class bad_typeid { }; }
 # endif
 
@@ -41,7 +41,7 @@ namespace autoboost
   namespace detail
   {
     //  A separate reporting function was requested during formal review.
-    inline void report_exception( std::ostream & os, 
+    inline void report_exception( std::ostream & os,
                                   const char * name, const char * info )
       { os << "\n** uncaught exception: " << name << " " << info << std::endl; }
   }
@@ -68,7 +68,7 @@ namespace autoboost
     //  under some compilers, there is a lot of use of endl in the code below
     //  where a simple '\n' might appear to do.
 
-    //  The rules for catch & arguments are a bit different from function 
+    //  The rules for catch & arguments are a bit different from function
     //  arguments (ISO 15.3 paragraphs 18 & 19). Apparently const isn't
     //  required, but it doesn't hurt and some programmers ask for it.
 
@@ -136,7 +136,7 @@ namespace autoboost
     return result;
   } // catch_exceptions
 
-} // boost
+} // autoboost
 
 #endif  // AUTOBOOST_CATCH_EXCEPTIONS_HPP
 

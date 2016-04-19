@@ -12,32 +12,32 @@
 #define AUTOBOOST_TT_TRAIT_NAME has_less_equal
 #define AUTOBOOST_TT_TRAIT_OP <=
 #define AUTOBOOST_TT_FORBIDDEN_IF\
-   ::autoboost::type_traits::ice_or<\
+   (\
       /* Lhs==pointer and Rhs==fundamental */\
-      ::autoboost::type_traits::ice_and<\
-         ::autoboost::is_pointer< Lhs_noref >::value,\
+      (\
+         ::autoboost::is_pointer< Lhs_noref >::value && \
          ::autoboost::is_fundamental< Rhs_nocv >::value\
-      >::value,\
+      ) || \
       /* Rhs==pointer and Lhs==fundamental */\
-      ::autoboost::type_traits::ice_and<\
-         ::autoboost::is_pointer< Rhs_noref >::value,\
+      (\
+         ::autoboost::is_pointer< Rhs_noref >::value && \
          ::autoboost::is_fundamental< Lhs_nocv >::value\
-      >::value,\
+      ) || \
       /* Lhs==pointer and Rhs==pointer and Lhs!=base(Rhs) and Rhs!=base(Lhs) and Lhs!=void* and Rhs!=void* */\
-      ::autoboost::type_traits::ice_and<\
-         ::autoboost::is_pointer< Lhs_noref >::value,\
-         ::autoboost::is_pointer< Rhs_noref >::value,\
-         ::autoboost::type_traits::ice_not<\
-            ::autoboost::type_traits::ice_or<\
-               ::autoboost::is_base_of< Lhs_noptr, Rhs_noptr >::value,\
-               ::autoboost::is_base_of< Rhs_noptr, Lhs_noptr >::value,\
-               ::autoboost::is_same< Lhs_noptr, Rhs_noptr >::value,\
-               ::autoboost::is_void< Lhs_noptr >::value,\
+      (\
+         ::autoboost::is_pointer< Lhs_noref >::value && \
+         ::autoboost::is_pointer< Rhs_noref >::value && \
+         (! \
+            ( \
+               ::autoboost::is_base_of< Lhs_noptr, Rhs_noptr >::value || \
+               ::autoboost::is_base_of< Rhs_noptr, Lhs_noptr >::value || \
+               ::autoboost::is_same< Lhs_noptr, Rhs_noptr >::value || \
+               ::autoboost::is_void< Lhs_noptr >::value || \
                ::autoboost::is_void< Rhs_noptr >::value\
-            >::value\
-         >::value\
-      >::value\
-   >::value
+            )\
+         )\
+      )\
+      )
 
 
 #include <autoboost/type_traits/detail/has_binary_operator.hpp>

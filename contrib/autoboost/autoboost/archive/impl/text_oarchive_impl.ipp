@@ -15,8 +15,8 @@
 
 #include <autoboost/config.hpp>
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
-    using ::size_t; 
+namespace std{
+    using ::size_t;
 } // namespace std
 #endif
 
@@ -30,7 +30,7 @@ namespace std{ using ::wcslen; }
 #include <autoboost/archive/add_facet.hpp>
 #include <autoboost/archive/text_oarchive.hpp>
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 
 //////////////////////////////////////////////////////////////////////
@@ -38,7 +38,7 @@ namespace archive {
 // of template parameters used to create a text_oprimitive
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 text_oarchive_impl<Archive>::save(const char * s)
 {
     const std::size_t len = std::ostream::traits_type::length(s);
@@ -48,7 +48,7 @@ text_oarchive_impl<Archive>::save(const char * s)
 }
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 text_oarchive_impl<Archive>::save(const std::string &s)
 {
     const std::size_t size = s.size();
@@ -60,7 +60,7 @@ text_oarchive_impl<Archive>::save(const std::string &s)
 #ifndef AUTOBOOST_NO_CWCHAR
 #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 text_oarchive_impl<Archive>::save(const wchar_t * ws)
 {
     const std::size_t l = std::wcslen(ws);
@@ -72,7 +72,7 @@ text_oarchive_impl<Archive>::save(const wchar_t * ws)
 
 #ifndef AUTOBOOST_NO_STD_WSTRING
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 text_oarchive_impl<Archive>::save(const std::wstring &ws)
 {
     const std::size_t l = ws.size();
@@ -84,13 +84,13 @@ text_oarchive_impl<Archive>::save(const std::wstring &ws)
 #endif // AUTOBOOST_NO_CWCHAR
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
+AUTOBOOST_ARCHIVE_DECL
 text_oarchive_impl<Archive>::text_oarchive_impl(
-    std::ostream & os, 
+    std::ostream & os,
     unsigned int flags
 ) :
     basic_text_oprimitive<std::ostream>(
-        os, 
+        os,
         0 != (flags & no_codecvt)
     ),
     basic_text_oarchive<Archive>(flags)
@@ -104,7 +104,7 @@ text_oarchive_impl<Archive>::text_oarchive_impl(
 }
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 text_oarchive_impl<Archive>::save_binary(const void *address, std::size_t count){
     put('\n');
     this->end_preamble();
@@ -113,7 +113,7 @@ text_oarchive_impl<Archive>::save_binary(const void *address, std::size_t count)
     #else
     this->basic_text_oprimitive::save_binary(
     #endif
-        address, 
+        address,
         count
     );
     this->delimiter = this->eol;

@@ -1,4 +1,4 @@
-/* boost random/linear_congruential.hpp header file
+/* autoboost random/linear_congruential.hpp header file
  *
  * Copyright Jens Maurer 2000-2001
  * Distributed under the Boost Software License, Version 1.0. (See
@@ -72,11 +72,11 @@ public:
     AUTOBOOST_STATIC_CONSTANT(IntType, increment = c);
     AUTOBOOST_STATIC_CONSTANT(IntType, modulus = m);
     AUTOBOOST_STATIC_CONSTANT(IntType, default_seed = 1);
-    
+
     AUTOBOOST_STATIC_ASSERT(std::numeric_limits<IntType>::is_integer);
     AUTOBOOST_STATIC_ASSERT(m == 0 || a < m);
     AUTOBOOST_STATIC_ASSERT(m == 0 || c < m);
-    
+
     /**
      * Constructs a @c linear_congruential_engine, using the default seed
      */
@@ -88,7 +88,7 @@ public:
     AUTOBOOST_RANDOM_DETAIL_ARITHMETIC_CONSTRUCTOR(linear_congruential_engine,
                                                IntType, x0)
     { seed(x0); }
-    
+
     /**
      * Constructs a @c linear_congruential_engine, seeding it with values
      * produced by a call to @c seq.generate().
@@ -181,7 +181,7 @@ public:
         _x = const_mod<IntType, m>::mult_add(a, _x, c);
         return _x;
     }
-  
+
     /** Fills a range with random values */
     template<class Iter>
     void generate(Iter first, Iter last)
@@ -195,7 +195,7 @@ public:
         IntType b_gcd = mod_type::mult(a-1, b_inv);
         if(b_gcd == 1) {
             IntType a_z = mod_type::pow(a, z);
-            _x = mod_type::mult_add(a_z, _x, 
+            _x = mod_type::mult_add(a_z, _x,
                 mod_type::mult(mod_type::mult(c, b_inv), a_z - 1));
         } else {
             // compute (a^z - 1)*c % (b_gcd * m) / (b / b_gcd) * inv(b / b_gcd)
@@ -217,7 +217,7 @@ public:
                     mod_type::add(a_km1_over_gcd, a_km1_over_gcd));
                 exponent /= 2;
             }
-            
+
             IntType a_z = mod_type::mult_add(b_gcd, a_zm1_over_gcd, 1);
             IntType num = mod_type::mult(c, a_zm1_over_gcd);
             b_inv = mod_type::invert((a-1)/b_gcd);
@@ -231,7 +231,7 @@ public:
     friend bool operator!=(const linear_congruential_engine& x,
                            const linear_congruential_engine& y)
     { return !(x == y); }
-    
+
 #if !defined(AUTOBOOST_RANDOM_NO_STREAM_OPERATORS)
     /** Writes a @c linear_congruential_engine to a @c std::ostream. */
     template<class CharT, class Traits>
@@ -317,7 +317,7 @@ public:
  *  @blockquote
  *  "Random Number Generators: Good ones are hard to find",
  *  Stephen K. Park and Keith W. Miller, Communications of
- *  the ACM, Vol. 31, No. 10, October 1988, pp. 1192-1201 
+ *  the ACM, Vol. 31, No. 10, October 1988, pp. 1192-1201
  *  @endblockquote
  */
 typedef linear_congruential_engine<uint32_t, 16807, 0, 2147483647> minstd_rand0;
@@ -344,7 +344,7 @@ typedef linear_congruential_engine<uint32_t, 48271, 0, 2147483647> minstd_rand;
  * integral type, so that for example static in-class constants and/or
  * enum definitions with large @c uint64_t numbers work.
  */
-class rand48 
+class rand48
 {
 public:
     typedef autoboost::uint32_t result_type;
@@ -359,7 +359,7 @@ public:
      */
     static uint32_t max AUTOBOOST_PREVENT_MACRO_SUBSTITUTION ()
     { return 0x7FFFFFFF; }
-  
+
     /** Seeds the generator with the default seed. */
     rand48() : lcf(cnv(static_cast<uint32_t>(1))) {}
     /**
@@ -400,10 +400,10 @@ public:
 
     /**  Returns the next value of the generator. */
     uint32_t operator()() { return static_cast<uint32_t>(lcf() >> 17); }
-    
+
     /** Advances the state of the generator by @c z. */
     void discard(autoboost::uintmax_t z) { lcf.discard(z); }
-  
+
     /** Fills a range with random values */
     template<class Iter>
     void generate(Iter first, Iter last)

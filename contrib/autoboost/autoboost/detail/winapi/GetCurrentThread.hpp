@@ -1,6 +1,7 @@
 //  GetCurrentThread.hpp  --------------------------------------------------------------//
 
 //  Copyright 2010 Vicente J. Botet Escriba
+//  Copyright 2015 Andrey Semashev
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
@@ -15,22 +16,17 @@
 #pragma once
 #endif
 
+// Windows CE define GetCurrentThread as an inline function in kfuncs.h
+#if !defined( AUTOBOOST_USE_WINDOWS_H ) && !defined( UNDER_CE )
+extern "C" {
+AUTOBOOST_SYMBOL_IMPORT autoboost::detail::winapi::HANDLE_ WINAPI GetCurrentThread(AUTOBOOST_DETAIL_WINAPI_VOID);
+}
+#endif
+
 namespace autoboost {
 namespace detail {
 namespace winapi {
-#if defined( UNDER_CE )
-// Windows CE define GetCurrentThread as an inline function in kfuncs.h
-inline HANDLE_ GetCurrentThread() 
-{
-  return ::GetCurrentThread();
-}
-#else
-#if defined( AUTOBOOST_USE_WINDOWS_H )
-    using ::GetCurrentThread;
-#else
-    extern "C" __declspec(dllimport) HANDLE_ WINAPI GetCurrentThread();
-#endif
-#endif
+using ::GetCurrentThread;
 }
 }
 }

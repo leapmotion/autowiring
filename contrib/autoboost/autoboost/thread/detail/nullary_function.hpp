@@ -4,7 +4,7 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 // 2013/09 Vicente J. Botet Escriba
-//    Adapt to boost from CCIA C++11 implementation
+//    Adapt to autoboost from CCIA C++11 implementation
 //    Make use of Boost.Move
 
 #ifndef AUTOBOOST_THREAD_DETAIL_NULLARY_FUNCTION_HPP
@@ -228,7 +228,7 @@ namespace autoboost
 
     };
   }
-  //AUTOBOOST_THREAD_DCL_MOVABLE_BEG(F) detail::nullary_function<F> AUTOBOOST_THREAD_DCL_MOVABLE_END
+  AUTOBOOST_THREAD_DCL_MOVABLE_BEG(F) detail::nullary_function<F> AUTOBOOST_THREAD_DCL_MOVABLE_END
 }
 
 #endif // header

@@ -26,8 +26,8 @@
     };                                                                          \
                                                                                 \
     template < AUTOBOOST_PP_SEQ_FOR_EACH_I(AUTOBOOST_CONCEPT_typename,~,params) >       \
-    struct name                                                                
-    
+    struct name
+
 // Helper for AUTOBOOST_concept, above.
 # define AUTOBOOST_CONCEPT_typename(r, ignored, index, t) \
     AUTOBOOST_PP_COMMA_IF(index) typename t

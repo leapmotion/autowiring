@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // basic_text_iprimitive.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -30,8 +30,8 @@
 
 #include <autoboost/config.hpp>
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
-    using ::size_t; 
+namespace std{
+    using ::size_t;
     #if ! defined(AUTOBOOST_DINKUMWARE_STDLIB) && ! defined(__SGI_STL_PORT)
         using ::locale;
     #endif
@@ -64,7 +64,7 @@ namespace archive {
 #endif
 
 template<class IStream>
-class basic_text_iprimitive {
+class AUTOBOOST_SYMBOL_VISIBLE basic_text_iprimitive {
 protected:
     IStream &is;
     io::ios_flags_saver flags_saver;
@@ -73,7 +73,7 @@ protected:
     #ifndef AUTOBOOST_NO_STD_LOCALE
     autoboost::scoped_ptr<std::locale> archive_locale;
     basic_streambuf_locale_saver<
-        typename IStream::char_type, 
+        typename IStream::char_type,
         typename IStream::traits_type
     > locale_saver;
     #endif
@@ -116,12 +116,12 @@ protected:
         t = i;
     }
     #endif
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     basic_text_iprimitive(IStream  &is, bool no_codecvt);
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     ~basic_text_iprimitive();
 public:
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     load_binary(void *address, std::size_t count);
 };
 

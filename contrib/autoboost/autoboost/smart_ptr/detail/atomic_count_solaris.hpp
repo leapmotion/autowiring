@@ -2,8 +2,8 @@
 #define AUTOBOOST_SMART_PTR_DETAIL_ATOMIC_COUNT_SOLARIS_HPP_INCLUDED
 
 //
-//  boost/detail/atomic_count_solaris.hpp
-//   based on: boost/detail/atomic_count_win32.hpp
+//  autoboost/detail/atomic_count_solaris.hpp
+//   based on: autoboost/detail/atomic_count_win32.hpp
 //
 //  Copyright (c) 2001-2005 Peter Dimov
 //  Copyright (c) 2006 Michael van der Westhuizen

@@ -8,8 +8,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2008
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -144,7 +144,7 @@ struct AUTOBOOST_PP_CAT(apply_wrap,i_)
     : F::template apply< AUX778076_APPLY_WRAP_PARAMS(i_, T) >
 {
 #else
-{    
+{
     typedef typename F::template apply<
          AUX778076_APPLY_WRAP_PARAMS(i_, T)
         >::type type;

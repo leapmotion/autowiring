@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2001-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -17,16 +17,15 @@
 #include <autoboost/mpl/bool.hpp>
 #include <autoboost/mpl/aux_/config/msvc.hpp>
 #include <autoboost/mpl/aux_/config/workaround.hpp>
+#include <autoboost/mpl/aux_/lambda_support.hpp>
 
+#include <autoboost/type_traits/integral_constant.hpp>
 #include <autoboost/type_traits/is_empty.hpp>
-
-// should be always the last #include directive
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
 
 namespace autoboost { namespace mpl {
 
 // empty base class, guaranteed to have no members; inheritance from
-// 'empty_base' through the 'inherit' metafunction is a no-op - see 
+// 'empty_base' through the 'inherit' metafunction is a no-op - see
 // "mpl/inherit.hpp> header for the details
 struct empty_base {};
 
@@ -51,9 +50,14 @@ struct is_empty_base<empty_base>
 }}
 
 namespace autoboost {
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(is_empty, mpl::empty_base, true)
-}
 
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
+template<> struct is_empty< mpl::empty_base >
+    : public ::autoboost::integral_constant<bool,true>
+{
+public:
+    AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT_SPEC(1,is_empty,(mpl::empty_base))
+};
+
+}
 
 #endif // AUTOBOOST_MPL_EMPTY_BASE_HPP_INCLUDED

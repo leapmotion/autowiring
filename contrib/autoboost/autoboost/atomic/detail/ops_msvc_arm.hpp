@@ -48,7 +48,7 @@ namespace detail {
 // However, some compiler optimizations may break a seemingly valid code relying on data
 // dependency tracking by injecting bogus branches to aid out of order execution.
 // This may happen not only in Boost.Atomic code but also in user's code, which we have no
-// control of. See this thread: http://lists.boost.org/Archives/boost/2014/06/213890.php.
+// control of. See this thread: http://lists.boost.org/Archives/autoboost/2014/06/213890.php.
 // For this reason we promote memory_order_consume to memory_order_acquire.
 
 struct msvc_arm_operations_base
@@ -135,6 +135,7 @@ struct operations< 1u, Signed > :
 {
     typedef msvc_arm_operations< typename make_storage_type< 1u, Signed >::type, operations< 1u, Signed > > base_type;
     typedef typename base_type::storage_type storage_type;
+    typedef typename make_storage_type< 1u, Signed >::aligned aligned_storage_type;
 
     static AUTOBOOST_FORCEINLINE void store(storage_type volatile& storage, storage_type v, memory_order order) AUTOBOOST_NOEXCEPT
     {
@@ -300,6 +301,7 @@ struct operations< 2u, Signed > :
 {
     typedef msvc_arm_operations< typename make_storage_type< 2u, Signed >::type, operations< 2u, Signed > > base_type;
     typedef typename base_type::storage_type storage_type;
+    typedef typename make_storage_type< 2u, Signed >::aligned aligned_storage_type;
 
     static AUTOBOOST_FORCEINLINE void store(storage_type volatile& storage, storage_type v, memory_order order) AUTOBOOST_NOEXCEPT
     {
@@ -465,6 +467,7 @@ struct operations< 4u, Signed > :
 {
     typedef msvc_arm_operations< typename make_storage_type< 4u, Signed >::type, operations< 4u, Signed > > base_type;
     typedef typename base_type::storage_type storage_type;
+    typedef typename make_storage_type< 4u, Signed >::aligned aligned_storage_type;
 
     static AUTOBOOST_FORCEINLINE void store(storage_type volatile& storage, storage_type v, memory_order order) AUTOBOOST_NOEXCEPT
     {
@@ -630,6 +633,7 @@ struct operations< 8u, Signed > :
 {
     typedef msvc_arm_operations< typename make_storage_type< 8u, Signed >::type, operations< 8u, Signed > > base_type;
     typedef typename base_type::storage_type storage_type;
+    typedef typename make_storage_type< 8u, Signed >::aligned aligned_storage_type;
 
     static AUTOBOOST_FORCEINLINE void store(storage_type volatile& storage, storage_type v, memory_order order) AUTOBOOST_NOEXCEPT
     {

@@ -25,36 +25,36 @@ namespace detail {
     template<class Ch, class Tr, class Alloc> struct format_item;
 
 
-  // these functions were intended as methods, 
+  // these functions were intended as methods,
   // but MSVC have problems with template member functions :
   // defined in format_implementation.hpp :
-    template<class Ch, class Tr, class Alloc, class T> 
-    basic_format<Ch, Tr, Alloc>&  
-    modify_item_body (basic_format<Ch, Tr, Alloc>& self, 
+    template<class Ch, class Tr, class Alloc, class T>
+    basic_format<Ch, Tr, Alloc>&
+    modify_item_body (basic_format<Ch, Tr, Alloc>& self,
                       int itemN, T manipulator);
 
-    template<class Ch, class Tr, class Alloc, class T> 
-    basic_format<Ch, Tr, Alloc>&  
+    template<class Ch, class Tr, class Alloc, class T>
+    basic_format<Ch, Tr, Alloc>&
     bind_arg_body (basic_format<Ch, Tr, Alloc>& self,
                    int argN, const T& val);
 
     // in internals.hpp :
-    template<class Ch, class Tr, class T> 
+    template<class Ch, class Tr, class T>
     void apply_manip_body (stream_format_state<Ch, Tr>& self,
                            T manipulator);
 
     // argument feeding (defined in feed_args.hpp ) :
-    template<class Ch, class Tr, class Alloc, class T> 
+    template<class Ch, class Tr, class Alloc, class T>
     void distribute (basic_format<Ch,Tr, Alloc>& self, T x);
 
-    template<class Ch, class Tr, class Alloc, class T> 
-    basic_format<Ch, Tr, Alloc>& 
+    template<class Ch, class Tr, class Alloc, class T>
+    basic_format<Ch, Tr, Alloc>&
     feed (basic_format<Ch,Tr, Alloc>& self, T x);
 
-    template<class Ch, class Tr, class Alloc, class T> 
-    basic_format<Ch, Tr, Alloc>& 
+    template<class Ch, class Tr, class Alloc, class T>
+    basic_format<Ch, Tr, Alloc>&
     feed_impl (basic_format<Ch,Tr, Alloc>& self, T x);
- 
+
 } // namespace detail
 
 } // namespace io

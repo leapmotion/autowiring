@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -67,7 +67,7 @@ struct vector41
     typedef T38 item38;
     typedef T39 item39;
     typedef T40 item40;
-    
+
 
     typedef void_ item41;
     typedef T40 back;
@@ -262,7 +262,7 @@ struct vector42
     typedef T39 item39;
     typedef T40 item40;
     typedef T41 item41;
-    
+
 
     typedef void_ item42;
     typedef T41 back;
@@ -462,7 +462,7 @@ struct vector43
     typedef T40 item40;
     typedef T41 item41;
     typedef T42 item42;
-    
+
 
     typedef void_ item43;
     typedef T42 back;
@@ -663,7 +663,7 @@ struct vector44
     typedef T41 item41;
     typedef T42 item42;
     typedef T43 item43;
-    
+
 
     typedef void_ item44;
     typedef T43 back;
@@ -869,7 +869,7 @@ struct vector45
     typedef T42 item42;
     typedef T43 item43;
     typedef T44 item44;
-    
+
 
     typedef void_ item45;
     typedef T44 back;
@@ -1077,7 +1077,7 @@ struct vector46
     typedef T43 item43;
     typedef T44 item44;
     typedef T45 item45;
-    
+
 
     typedef void_ item46;
     typedef T45 back;
@@ -1290,7 +1290,7 @@ struct vector47
     typedef T44 item44;
     typedef T45 item45;
     typedef T46 item46;
-    
+
 
     typedef void_ item47;
     typedef T46 back;
@@ -1504,7 +1504,7 @@ struct vector48
     typedef T45 item45;
     typedef T46 item46;
     typedef T47 item47;
-    
+
 
     typedef void_ item48;
     typedef T47 back;
@@ -1723,7 +1723,7 @@ struct vector49
     typedef T46 item46;
     typedef T47 item47;
     typedef T48 item48;
-    
+
 
     typedef void_ item49;
     typedef T48 back;
@@ -1943,7 +1943,7 @@ struct vector50
     typedef T47 item47;
     typedef T48 item48;
     typedef T49 item49;
-    
+
 
     typedef void_ item50;
     typedef T49 back;

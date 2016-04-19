@@ -5,8 +5,8 @@
 // Copyright Aleksey Gurtovoy 2000-2004
 // Copyright Peter Dimov 2000-2003
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -25,8 +25,8 @@ template< typename T > struct type_wrapper
 };
 
 #if !defined(AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
-// agurt 08/may/03: a complicated way to extract the wrapped type; need it 
-// mostly for the sake of GCC (3.2.x), which ICEs if you try to extract the 
+// agurt 08/may/03: a complicated way to extract the wrapped type; need it
+// mostly for the sake of GCC (3.2.x), which ICEs if you try to extract the
 // nested 'type' from 'type_wrapper<T>' when the latter was the result of a
 // 'typeof' expression
 template< typename T > struct wrapped_type;

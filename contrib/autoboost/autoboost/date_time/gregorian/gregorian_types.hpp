@@ -1,8 +1,8 @@
-#ifndef AB__GREGORIAN_TYPES_HPP__
-#define AB__GREGORIAN_TYPES_HPP__
+#ifndef _GREGORIAN_TYPES_HPP__
+#define _GREGORIAN_TYPES_HPP__
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
@@ -10,7 +10,7 @@
  */
 
 /*! @file gregorian_types.hpp
-  Single file header that defines most of the types for the gregorian 
+  Single file header that defines most of the types for the gregorian
   date-time system.
 */
 
@@ -38,10 +38,10 @@ namespace gregorian {
   //! Date periods for the gregorian system
   /*!\ingroup date_basics
    */
-  typedef date_time::period<date, date_duration> date_period;  
+  typedef date_time::period<date, date_duration> date_period;
 
   //! A unifying date_generator base type
-  /*! A unifying date_generator base type for: 
+  /*! A unifying date_generator base type for:
    * partial_date, nth_day_of_the_week_in_month,
    * first_day_of_the_week_in_month, and last_day_of_the_week_in_month
    */

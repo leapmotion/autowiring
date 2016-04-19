@@ -8,7 +8,7 @@
 #endif
 
 //
-//  boost/detail/sp_interlocked.hpp
+//  autoboost/detail/sp_interlocked.hpp
 //
 //  Copyright 2005, 2014 Peter Dimov
 //
@@ -110,6 +110,17 @@ extern "C" long __cdecl _InterlockedDecrement( long volatile * );
 extern "C" long __cdecl _InterlockedCompareExchange( long volatile *, long, long );
 extern "C" long __cdecl _InterlockedExchange( long volatile *, long );
 extern "C" long __cdecl _InterlockedExchangeAdd( long volatile *, long );
+
+# if defined( AUTOBOOST_MSVC ) && AUTOBOOST_MSVC == 1310
+//From MSDN, Visual Studio .NET 2003 spedific: To declare one of the interlocked functions
+//for use as an intrinsic, the function must be declared with the leading underscore and
+//the new function must appear in a #pragma intrinsic statement.
+#  pragma intrinsic( _InterlockedIncrement )
+#  pragma intrinsic( _InterlockedDecrement )
+#  pragma intrinsic( _InterlockedCompareExchange )
+#  pragma intrinsic( _InterlockedExchange )
+#  pragma intrinsic( _InterlockedExchangeAdd )
+# endif
 
 #endif
 

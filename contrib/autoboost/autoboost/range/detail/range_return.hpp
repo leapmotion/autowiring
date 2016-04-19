@@ -102,7 +102,7 @@ namespace autoboost
         static type pack(AUTOBOOST_DEDUCED_TYPENAME range_iterator<SinglePassRange>::type found,
                          SinglePassRange& rng)
         {
-            return type( autoboost::begin(rng), 
+            return type( autoboost::begin(rng),
                          found == autoboost::end(rng) ? found : autoboost::next(found) );
         }
     };

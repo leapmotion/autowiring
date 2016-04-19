@@ -1,8 +1,8 @@
-#ifndef AB_DATE_TIME_SIMPLE_FORMAT_HPP___
-#define AB_DATE_TIME_SIMPLE_FORMAT_HPP___
+#ifndef DATE_TIME_SIMPLE_FORMAT_HPP___
+#define DATE_TIME_SIMPLE_FORMAT_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
@@ -26,7 +26,7 @@ public:
   }
   //! String used to for positive infinity value
   static const charT* pos_infinity()
-  {  
+  {
     return "+infinity";
   }
   //! String used to for positive infinity value
@@ -95,7 +95,7 @@ public:
   }
   //! String used to for positive infinity value
   static const wchar_t* pos_infinity()
-  {   
+  {
     return L"+infinity";
   }
   //! String used to for positive infinity value

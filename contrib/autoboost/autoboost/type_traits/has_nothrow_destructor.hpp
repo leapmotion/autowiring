@@ -11,15 +11,37 @@
 
 #include <autoboost/type_traits/has_trivial_destructor.hpp>
 
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#if !defined(AUTOBOOST_NO_CXX11_NOEXCEPT) && !defined(__SUNPRO_CC) && !defined(AUTOBOOST_MSVC)
+
+#include <autoboost/type_traits/declval.hpp>
+#include <autoboost/type_traits/is_destructible.hpp>
+
+namespace autoboost{
+
+   namespace detail{
+
+      template <class T, bool b>
+      struct has_nothrow_destructor_imp : public autoboost::integral_constant<bool, false>{};
+      template <class T>
+      struct has_nothrow_destructor_imp<T, true> : public autoboost::integral_constant<bool, noexcept(autoboost::declval<T*&>()->~T())>{};
+
+   }
+
+   template <class T> struct has_nothrow_destructor : public detail::has_nothrow_destructor_imp<T, autoboost::is_destructible<T>::value>{};
+   template <class T, std::size_t N> struct has_nothrow_destructor<T[N]> : public has_nothrow_destructor<T>{};
+   template <class T> struct has_nothrow_destructor<T&> : public integral_constant<bool, false>{};
+#if !defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES)
+   template <class T> struct has_nothrow_destructor<T&&> : public integral_constant<bool, false>{};
+#endif
+}
+#else
 
 namespace autoboost {
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(has_nothrow_destructor,T,::autoboost::has_trivial_destructor<T>::value)
+template <class T> struct has_nothrow_destructor : public ::autoboost::has_trivial_destructor<T> {};
 
 } // namespace autoboost
 
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
+#endif
 
 #endif // AUTOBOOST_TT_HAS_NOTHROW_DESTRUCTOR_HPP_INCLUDED

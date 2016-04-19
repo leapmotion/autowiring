@@ -1,5 +1,5 @@
-#ifndef AB__DATE_TIME_DATE_PARSING_HPP___
-#define AB__DATE_TIME_DATE_PARSING_HPP___
+#ifndef _DATE_TIME_DATE_PARSING_HPP___
+#define _DATE_TIME_DATE_PARSING_HPP___
 
 /* Copyright (c) 2002,2003,2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -72,7 +72,7 @@ namespace date_time {
       }
       return 13; // intentionally out of range - name not found
     }
- 
+
     //! Find index of a string in either of 2 arrays
     /*! find_match searches both arrays for a match to 's'. Both arrays
      * must contain 'size' elements. The index of the match is returned.

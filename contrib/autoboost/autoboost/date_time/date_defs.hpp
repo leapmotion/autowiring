@@ -1,8 +1,8 @@
-#ifndef AB_DATE_TIME_DATE_DEFS_HPP
-#define AB_DATE_TIME_DATE_DEFS_HPP
+#ifndef DATE_TIME_DATE_DEFS_HPP
+#define DATE_TIME_DATE_DEFS_HPP
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland

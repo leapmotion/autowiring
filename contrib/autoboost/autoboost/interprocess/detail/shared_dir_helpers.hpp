@@ -11,7 +11,11 @@
 #ifndef AUTOBOOST_INTERPROCESS_DETAIL_SHARED_DIR_HELPERS_HPP
 #define AUTOBOOST_INTERPROCESS_DETAIL_SHARED_DIR_HELPERS_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -111,7 +115,7 @@ inline void get_shared_dir_root(std::string &dir_path)
       throw interprocess_exception(err);
    }
    //Remove final null.
-   dir_path += "/boost_interprocess";
+   dir_path += "/autoboost_interprocess";
 }
 
 inline void get_shared_dir(std::string &shared_dir)

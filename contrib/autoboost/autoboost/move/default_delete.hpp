@@ -11,6 +11,14 @@
 #ifndef AUTOBOOST_MOVE_DEFAULT_DELETE_HPP_INCLUDED
 #define AUTOBOOST_MOVE_DEFAULT_DELETE_HPP_INCLUDED
 
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <autoboost/move/detail/config_begin.hpp>
 #include <autoboost/move/detail/workaround.hpp>
 #include <autoboost/move/detail/unique_ptr_meta_utils.hpp>
@@ -23,6 +31,7 @@
 //! Describes the default deleter (destruction policy) of <tt>unique_ptr</tt>: <tt>default_delete</tt>.
 
 namespace autoboost{
+// @cond
 namespace move_upd {
 
 namespace bmupmu = ::autoboost::move_upmu;
@@ -53,8 +62,8 @@ struct enable_def_del
 ////        enable_defdel_call
 ////////////////////////////////////////
 
-//When 2nd is T[N], 1st(*)[N] shall be convertible to T(*)[N]; 
-//When 2nd is T[],  1st(*)[] shall be convertible to T(*)[]; 
+//When 2nd is T[N], 1st(*)[N] shall be convertible to T(*)[N];
+//When 2nd is T[],  1st(*)[] shall be convertible to T(*)[];
 //Otherwise, 1st* shall be convertible to 2nd*.
 
 template<class U, class T, class Type = bmupmu::nat>
@@ -88,6 +97,7 @@ typedef int bool_conversion::* explicit_bool_arg;
 #endif
 
 }  //namespace move_upd {
+// @endcond
 
 namespace movelib {
 
@@ -115,7 +125,11 @@ struct default_delete
    #endif
 
    #if defined(AUTOBOOST_MOVE_DOXYGEN_INVOKED)
+   //! Trivial copy constructor
+   //!
    default_delete(const default_delete&) AUTOBOOST_NOEXCEPT = default;
+   //! Trivial assignment
+   //!
    default_delete &operator=(const default_delete&) AUTOBOOST_NOEXCEPT = default;
    #else
    typedef typename bmupmu::remove_extent<T>::type element_type;
@@ -142,7 +156,7 @@ struct default_delete
    //!   - If T is not an array type and U* is implicitly convertible to T*.
    //!   - If T is an array type and U* is a more CV qualified pointer to remove_extent<T>::type.
    template <class U>
-   AUTOBOOST_MOVE_DOC1ST(default_delete&, 
+   AUTOBOOST_MOVE_DOC1ST(default_delete&,
       typename bmupd::enable_def_del<U AUTOBOOST_MOVE_I T AUTOBOOST_MOVE_I default_delete &>::type)
       operator=(const default_delete<U>&) AUTOBOOST_NOEXCEPT
    {

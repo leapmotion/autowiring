@@ -8,7 +8,7 @@
 #endif
 
 //
-//  boost/smart_ptr/detail/sp_has_sync.hpp
+//  autoboost/smart_ptr/detail/sp_has_sync.hpp
 //
 //  Copyright (c) 2008, 2009 Peter Dimov
 //
@@ -58,7 +58,7 @@
 #undef AUTOBOOST_SP_HAS_SYNC
 #endif
 
-#if defined(__PATHSCALE__) && ((__PATHCC__ == 4) && (__PATHCC_MINOR__ < 9)) 
+#if defined(__PATHSCALE__) && ((__PATHCC__ == 4) && (__PATHCC_MINOR__ < 9))
 #undef AUTOBOOST_SP_HAS_SYNC
 #endif
 

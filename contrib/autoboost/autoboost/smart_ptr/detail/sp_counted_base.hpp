@@ -20,6 +20,12 @@
 #include <autoboost/config.hpp>
 #include <autoboost/smart_ptr/detail/sp_has_sync.hpp>
 
+#if defined( __clang__ ) && defined( __has_extension )
+# if __has_extension( __c_atomic__ )
+#   define AUTOBOOST_SP_HAS_CLANG_C11_ATOMICS
+# endif
+#endif
+
 #if defined( AUTOBOOST_SP_DISABLE_THREADS )
 # include <autoboost/smart_ptr/detail/sp_counted_base_nt.hpp>
 
@@ -34,6 +40,9 @@
 
 #elif defined( AUTOBOOST_DISABLE_THREADS ) && !defined( AUTOBOOST_SP_ENABLE_THREADS ) && !defined( AUTOBOOST_DISABLE_WIN32 )
 # include <autoboost/smart_ptr/detail/sp_counted_base_nt.hpp>
+
+#elif defined( AUTOBOOST_SP_HAS_CLANG_C11_ATOMICS )
+# include <autoboost/smart_ptr/detail/sp_counted_base_clang.hpp>
 
 #elif defined( __SNC__ )
 # include <autoboost/smart_ptr/detail/sp_counted_base_snc_ps3.hpp>
@@ -78,5 +87,7 @@
 # include <autoboost/smart_ptr/detail/sp_counted_base_spin.hpp>
 
 #endif
+
+#undef AUTOBOOST_SP_HAS_CLANG_C11_ATOMICS
 
 #endif  // #ifndef AUTOBOOST_SMART_PTR_DETAIL_SP_COUNTED_BASE_HPP_INCLUDED

@@ -1,8 +1,8 @@
 // Copyright David Abrahams 2003. Use, modification and distribution is
 // subject to the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef AB_FACADE_ITERATOR_CATEGORY_DWA20031118_HPP
-# define AB_FACADE_ITERATOR_CATEGORY_DWA20031118_HPP
+#ifndef FACADE_ITERATOR_CATEGORY_DWA20031118_HPP
+# define FACADE_ITERATOR_CATEGORY_DWA20031118_HPP
 
 # include <autoboost/iterator/iterator_categories.hpp>
 
@@ -79,7 +79,7 @@ struct iterator_writability_disabled
 // Due to changeset 21683, this now never results in a category convertible
 // to output_iterator_tag.
 //
-// Change at: https://svn.boost.org/trac/boost/changeset/21683
+// Change at: https://svn.boost.org/trac/autoboost/changeset/21683
 template <class Traversal, class ValueParam, class Reference>
 struct iterator_facade_default_category
   : mpl::eval_if<

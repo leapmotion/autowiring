@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -14,9 +14,10 @@
 // $Date$
 // $Revision$
 
-#include <autoboost/mpl/copy.hpp>
+#include <autoboost/mpl/placeholders.hpp>
+#include <autoboost/mpl/fold.hpp>
+#include <autoboost/mpl/insert.hpp>
 #include <autoboost/mpl/clear.hpp>
-#include <autoboost/mpl/front_inserter.hpp>
 #include <autoboost/mpl/joint_view.hpp>
 #include <autoboost/mpl/iterator_range.hpp>
 #include <autoboost/mpl/aux_/na_spec.hpp>
@@ -28,8 +29,8 @@
 
 namespace autoboost { namespace mpl {
 
-// default implementation; conrete sequences might override it by 
-// specializing either the 'insert_range_impl' or the primary 
+// default implementation; conrete sequences might override it by
+// specializing either the 'insert_range_impl' or the primary
 // 'insert_range' template
 
 
@@ -43,29 +44,31 @@ struct insert_range_impl
         >
     struct apply
 #if !defined(AUTOBOOST_MPL_CFG_NO_NESTED_FORWARDING)
-        : reverse_copy<
-              joint_view< 
+        : reverse_fold<
+              joint_view<
                   iterator_range<typename begin<Sequence>::type,Pos>
-                , joint_view< 
+                , joint_view<
                       Range
                     , iterator_range<Pos,typename end<Sequence>::type>
                     >
                 >
-            , front_inserter< typename clear<Sequence>::type >
+            , typename clear<Sequence>::type
+            , insert<_1, begin<_1>, _2>
             >
     {
 #else
     {
-        typedef typename reverse_copy<
-              joint_view< 
-                  iterator_range<typename begin<Sequence>::type,Pos>
-                , joint_view< 
-                      Range
-                    , iterator_range<Pos,typename end<Sequence>::type>
-                    >
-                >
-            , front_inserter< typename clear<Sequence>::type >
-            >::type type;
+        typedef typename reverse_fold<
+                joint_view<
+                    iterator_range<typename begin<Sequence>::type,Pos>
+                  , joint_view<
+                        Range
+                      , iterator_range<Pos,typename end<Sequence>::type>
+                      >
+                  >
+              , typename clear<Sequence>::type
+              , insert<_1, begin<_1>, _2>
+              >::type type;
 #endif
     };
 };

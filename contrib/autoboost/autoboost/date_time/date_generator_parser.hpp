@@ -1,9 +1,9 @@
 
-#ifndef AB_DATE_TIME_DATE_GENERATOR_PARSER_HPP__
-#define AB_DATE_TIME_DATE_GENERATOR_PARSER_HPP__
+#ifndef DATE_TIME_DATE_GENERATOR_PARSER_HPP__
+#define DATE_TIME_DATE_GENERATOR_PARSER_HPP__
 
 /* Copyright (c) 2005 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
@@ -21,10 +21,10 @@
 
 namespace autoboost { namespace date_time {
 
-  //! Class for date_generator parsing 
-  /*! The elements of a date_generator "phrase" are parsed from the input stream in a 
-   *  particular order. All elements are required and the order in which they appear 
-   *  cannot change, however, the elements themselves can be changed. The default 
+  //! Class for date_generator parsing
+  /*! The elements of a date_generator "phrase" are parsed from the input stream in a
+   *  particular order. All elements are required and the order in which they appear
+   *  cannot change, however, the elements themselves can be changed. The default
    *  elements and their order are as follows:
    *
    * - partial_date                     => "dd Month"
@@ -34,7 +34,7 @@ namespace autoboost { namespace date_time {
    * - first_day_of_the_week_after      => "weekday after"
    * - first_day_of_the_week_before     => "weekday before"
    *
-   * Weekday and Month names and formats are handled via the date_input_facet. 
+   * Weekday and Month names and formats are handled via the date_input_facet.
    *
    */
   template<class date_type, typename charT>
@@ -160,7 +160,7 @@ namespace autoboost { namespace date_time {
     {
       // skip leading whitespace
       while(std::isspace(*sitr) && sitr != stream_end) { ++sitr; }
- 
+
       typename nth_kday_type::week_num wn;
       day_of_week_type wd(0); // no default constructor
       month_type m(1);        // no default constructor
@@ -221,7 +221,7 @@ namespace autoboost { namespace date_time {
 
       day_of_week_type wd(0); // no default constructor
       month_type m(1);        // no default constructor
- 
+
       extract_element(sitr, stream_end, last); // "last" element
       facet.get(sitr, stream_end, a_ios, wd);  // day_of_week
       extract_element(sitr, stream_end, of);   // "of" element

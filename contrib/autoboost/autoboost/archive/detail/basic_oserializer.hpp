@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // basic_oserializer.hpp: extenstion of type_info required for serialization.
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -40,23 +40,19 @@ namespace serialization {
 namespace archive {
 namespace detail {
 
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_oarchive;
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_pointer_oserializer;
+class basic_oarchive;
+class basic_pointer_oserializer;
 
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_oserializer : 
+class AUTOBOOST_SYMBOL_VISIBLE basic_oserializer :
     public basic_serializer
 {
 private:
     basic_pointer_oserializer *m_bpos;
 protected:
-    explicit basic_oserializer(
+    explicit AUTOBOOST_ARCHIVE_DECL basic_oserializer(
         const autoboost::serialization::extended_type_info & type_
     );
-    // account for bogus gcc warning
-    #if defined(__GNUC__)
-    virtual
-    #endif
-    ~basic_oserializer();
+    virtual AUTOBOOST_ARCHIVE_DECL ~basic_oserializer();
 public:
     bool serialized_as_pointer() const {
         return m_bpos != NULL;

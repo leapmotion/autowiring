@@ -19,8 +19,8 @@
 #include <autoboost/range/begin.hpp>
 #include <autoboost/range/end.hpp>
 
-namespace autoboost 
-{ 
+namespace autoboost
+{
 
     template< class T >
     inline bool empty( const T& r )
@@ -28,7 +28,7 @@ namespace autoboost
         return autoboost::begin( r ) == autoboost::end( r );
     }
 
-} // namespace 'boost'
+} // namespace 'autoboost'
 
 
 #endif

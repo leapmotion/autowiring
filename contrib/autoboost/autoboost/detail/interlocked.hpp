@@ -2,7 +2,7 @@
 #define AUTOBOOST_DETAIL_INTERLOCKED_HPP_INCLUDED
 
 //
-//  boost/detail/interlocked.hpp
+//  autoboost/detail/interlocked.hpp
 //
 //  Copyright 2005 Peter Dimov
 //

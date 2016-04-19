@@ -1,6 +1,6 @@
 
-#ifndef AB__DATE_TIME_FACET__HPP__
-#define AB__DATE_TIME_FACET__HPP__
+#ifndef _DATE_TIME_FACET__HPP__
+#define _DATE_TIME_FACET__HPP__
 
 /* Copyright (c) 2004-2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

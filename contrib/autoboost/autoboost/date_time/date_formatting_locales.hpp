@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_DATE_FORMATTING_LOCALES_HPP___
-#define AB_DATE_TIME_DATE_FORMATTING_LOCALES_HPP___
+#ifndef DATE_TIME_DATE_FORMATTING_LOCALES_HPP___
+#define DATE_TIME_DATE_FORMATTING_LOCALES_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -221,7 +221,7 @@ namespace date_time {
         facet_type default_facet;
         date_put(d, os, default_facet);
       }
-    } // date_to_ostream 
+    } // date_to_ostream
   }; //class date_formatter
 
 

@@ -7,10 +7,10 @@
 #endif
 
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
-// basic_pointer_oserializer.hpp: extenstion of type_info required for 
+// basic_pointer_oserializer.hpp: extenstion of type_info required for
 // serialization.
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -37,25 +37,21 @@ namespace serialization {
 namespace archive {
 namespace detail {
 
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_iarchive;
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_iserializer;
+class basic_iarchive;
+class basic_iserializer;
 
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_pointer_iserializer 
+class AUTOBOOST_SYMBOL_VISIBLE basic_pointer_iserializer
     : public basic_serializer {
 protected:
-    explicit basic_pointer_iserializer(
+    explicit AUTOBOOST_ARCHIVE_DECL basic_pointer_iserializer(
         const autoboost::serialization::extended_type_info & type_
     );
-    // account for bogus gcc warning
-    #if defined(__GNUC__)
-    virtual
-    #endif
-    ~basic_pointer_iserializer();
+    virtual AUTOBOOST_ARCHIVE_DECL ~basic_pointer_iserializer();
 public:
     virtual void * heap_allocation() const = 0;
     virtual const basic_iserializer & get_basic_serializer() const = 0;
     virtual void load_object_ptr(
-        basic_iarchive & ar, 
+        basic_iarchive & ar,
         void * x,
         const unsigned int file_version
     ) const = 0;

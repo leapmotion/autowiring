@@ -1,5 +1,5 @@
-#ifndef AB__DATE_TIME_WRAPPING_INT_HPP__
-#define AB__DATE_TIME_WRAPPING_INT_HPP__
+#ifndef _DATE_TIME_WRAPPING_INT_HPP__
+#define _DATE_TIME_WRAPPING_INT_HPP__
 
 /* Copyright (c) 2002,2003,2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

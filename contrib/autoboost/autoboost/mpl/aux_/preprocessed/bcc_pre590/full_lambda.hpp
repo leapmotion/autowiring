@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2001-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -199,10 +199,10 @@ struct lambda<
 {
     typedef lambda< T1,Tag > l1;
     typedef lambda< T2,Tag > l2;
-    
+
     typedef typename l1::is_le is_le1;
     typedef typename l2::is_le is_le2;
-    
+
 
     typedef typename aux::lambda_or<
           is_le1::value, is_le2::value
@@ -282,11 +282,11 @@ struct lambda<
     typedef lambda< T1,Tag > l1;
     typedef lambda< T2,Tag > l2;
     typedef lambda< T3,Tag > l3;
-    
+
     typedef typename l1::is_le is_le1;
     typedef typename l2::is_le is_le2;
     typedef typename l3::is_le is_le3;
-    
+
 
     typedef typename aux::lambda_or<
           is_le1::value, is_le2::value, is_le3::value
@@ -369,12 +369,12 @@ struct lambda<
     typedef lambda< T2,Tag > l2;
     typedef lambda< T3,Tag > l3;
     typedef lambda< T4,Tag > l4;
-    
+
     typedef typename l1::is_le is_le1;
     typedef typename l2::is_le is_le2;
     typedef typename l3::is_le is_le3;
     typedef typename l4::is_le is_le4;
-    
+
 
     typedef typename aux::lambda_or<
           is_le1::value, is_le2::value, is_le3::value, is_le4::value
@@ -462,13 +462,13 @@ struct lambda<
     typedef lambda< T3,Tag > l3;
     typedef lambda< T4,Tag > l4;
     typedef lambda< T5,Tag > l5;
-    
+
     typedef typename l1::is_le is_le1;
     typedef typename l2::is_le is_le2;
     typedef typename l3::is_le is_le3;
     typedef typename l4::is_le is_le4;
     typedef typename l5::is_le is_le5;
-    
+
 
     typedef typename aux::lambda_or<
           is_le1::value, is_le2::value, is_le3::value, is_le4::value

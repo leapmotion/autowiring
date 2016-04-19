@@ -1,12 +1,14 @@
 //
-//  boost/assert.hpp - AUTOBOOST_ASSERT(expr)
+//  autoboost/assert.hpp - AUTOBOOST_ASSERT(expr)
 //                     AUTOBOOST_ASSERT_MSG(expr, msg)
 //                     AUTOBOOST_VERIFY(expr)
 //                     AUTOBOOST_VERIFY_MSG(expr, msg)
+//                     AUTOBOOST_ASSERT_IS_VOID
 //
 //  Copyright (c) 2001, 2002 Peter Dimov and Multi Media Ltd.
 //  Copyright (c) 2007, 2014 Peter Dimov
 //  Copyright (c) Beman Dawes 2011
+//  Copyright (c) 2015 Ion Gaztanaga
 //
 //  Distributed under the Boost Software License, Version 1.0.
 //  See accompanying file LICENSE_1_0.txt or copy at
@@ -20,20 +22,22 @@
 //
 // Stop inspect complaining about use of 'assert':
 //
-// boostinspect:naassert_macro
+// autoboostinspect:naassert_macro
 //
 
 //
-// AUTOBOOST_ASSERT, AUTOBOOST_ASSERT_MSG
+// AUTOBOOST_ASSERT, AUTOBOOST_ASSERT_MSG, AUTOBOOST_ASSERT_IS_VOID
 //
 
 #undef AUTOBOOST_ASSERT
 #undef AUTOBOOST_ASSERT_MSG
+#undef AUTOBOOST_ASSERT_IS_VOID
 
 #if defined(AUTOBOOST_DISABLE_ASSERTS) || ( defined(AUTOBOOST_ENABLE_ASSERT_DEBUG_HANDLER) && defined(NDEBUG) )
 
 # define AUTOBOOST_ASSERT(expr) ((void)0)
 # define AUTOBOOST_ASSERT_MSG(expr, msg) ((void)0)
+# define AUTOBOOST_ASSERT_IS_VOID
 
 #elif defined(AUTOBOOST_ENABLE_ASSERT_HANDLER) || ( defined(AUTOBOOST_ENABLE_ASSERT_DEBUG_HANDLER) && !defined(NDEBUG) )
 
@@ -55,6 +59,9 @@ namespace autoboost
 
 # define AUTOBOOST_ASSERT(expr) assert(expr)
 # define AUTOBOOST_ASSERT_MSG(expr, msg) assert((expr)&&(msg))
+#if defined(NDEBUG)
+# define AUTOBOOST_ASSERT_IS_VOID
+#endif
 
 #endif
 

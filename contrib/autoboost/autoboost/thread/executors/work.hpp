@@ -8,36 +8,23 @@
 #define AUTOBOOST_THREAD_EXECUTORS_WORK_HPP
 
 #include <autoboost/thread/detail/config.hpp>
-
-#if ! defined AUTOBOOST_THREAD_EXECUTORS_WORK_ACCEPTS_MOVABLE \
- && ! defined AUTOBOOST_THREAD_EXECUTORS_WORK_DONT_ACCEPT_MOVABLE
-#define AUTOBOOST_THREAD_EXECUTORS_WORK_ACCEPTS_MOVABLE
-//#define AUTOBOOST_THREAD_EXECUTORS_WORK_DONT_ACCEPT_MOVABLE
-#endif
-
-#if defined AUTOBOOST_THREAD_EXECUTORS_WORK_ACCEPTS_MOVABLE
-
 #include <autoboost/thread/detail/nullary_function.hpp>
-
-namespace autoboost
-{
-  namespace executors
-  {
-    typedef detail::nullary_function<void()> work;
-  }
-} // namespace autoboost
-
-#else
 #include <autoboost/thread/csbl/functional.hpp>
 
 namespace autoboost
 {
   namespace executors
   {
-    typedef csbl::function<void()> work;
+    typedef detail::nullary_function<void()> work;
+
+#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+    typedef detail::nullary_function<void()> work_pq;
+    //typedef csbl::function<void()> work_pq;
+#else
+    typedef csbl::function<void()> work_pq;
+#endif
   }
 } // namespace autoboost
 
-#endif
 
 #endif //  AUTOBOOST_THREAD_EXECUTORS_WORK_HPP

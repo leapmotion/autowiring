@@ -1,4 +1,4 @@
-//  boost integer.hpp header file  -------------------------------------------//
+//  autoboost integer.hpp header file  -------------------------------------------//
 
 //  Copyright Beman Dawes and Daryle Walker 1999.  Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
@@ -25,7 +25,7 @@
 //
 // We simply cannot include this header on gcc without getting copious warnings of the kind:
 //
-// boost/integer.hpp:77:30: warning: use of C99 long long integer constant
+// autoboost/integer.hpp:77:30: warning: use of C99 long long integer constant
 //
 // And yet there is no other reasonable implementation, so we declare this a system header
 // to suppress these warnings.
@@ -42,15 +42,15 @@ namespace autoboost
   //  fast integers from least integers
   //  int_fast_t<> works correctly for unsigned too, in spite of the name.
   template< typename LeastInt >
-  struct int_fast_t 
-  { 
-     typedef LeastInt fast; 
+  struct int_fast_t
+  {
+     typedef LeastInt fast;
      typedef fast     type;
   }; // imps may specialize
 
   namespace detail{
 
-  //  convert category to type 
+  //  convert category to type
   template< int Category > struct int_least_helper {}; // default is empty
   template< int Category > struct uint_least_helper {}; // default is empty
 
@@ -91,7 +91,8 @@ namespace autoboost
   template <> struct exact_signed_base_helper<sizeof(int)* CHAR_BIT> { typedef int exact; };
   template <> struct exact_unsigned_base_helper<sizeof(unsigned int)* CHAR_BIT> { typedef unsigned int exact; };
 #endif
-#if ULONG_MAX != UINT_MAX
+#if ULONG_MAX != UINT_MAX && ( !defined __TI_COMPILER_VERSION__ || \
+    ( __TI_COMPILER_VERSION__ >= 7000000 && !defined __TI_40BIT_LONG__ ) )
   template <> struct exact_signed_base_helper<sizeof(long)* CHAR_BIT> { typedef long exact; };
   template <> struct exact_unsigned_base_helper<sizeof(unsigned long)* CHAR_BIT> { typedef unsigned long exact; };
 #endif
@@ -111,11 +112,11 @@ namespace autoboost
 
   //  signed
   template< int Bits >   // bits (including sign) required
-  struct int_t : public detail::exact_signed_base_helper<Bits>
+  struct int_t : public autoboost::detail::exact_signed_base_helper<Bits>
   {
       AUTOBOOST_STATIC_ASSERT_MSG(Bits <= (int)(sizeof(autoboost::intmax_t) * CHAR_BIT),
          "No suitable signed integer type with the requested number of bits is available.");
-      typedef typename detail::int_least_helper
+      typedef typename autoboost::detail::int_least_helper
         <
 #ifdef AUTOBOOST_HAS_LONG_LONG
           (Bits <= (int)(sizeof(autoboost::long_long_type) * CHAR_BIT)) +
@@ -132,13 +133,13 @@ namespace autoboost
 
   //  unsigned
   template< int Bits >   // bits required
-  struct uint_t : public detail::exact_unsigned_base_helper<Bits>
+  struct uint_t : public autoboost::detail::exact_unsigned_base_helper<Bits>
   {
      AUTOBOOST_STATIC_ASSERT_MSG(Bits <= (int)(sizeof(autoboost::uintmax_t) * CHAR_BIT),
          "No suitable unsigned integer type with the requested number of bits is available.");
 #if (defined(__BORLANDC__) || defined(__CODEGEAR__)) && defined(AUTOBOOST_NO_INTEGRAL_INT64_T)
      // It's really not clear why this workaround should be needed... shrug I guess!  JM
-     AUTOBOOST_STATIC_CONSTANT(int, s = 
+     AUTOBOOST_STATIC_CONSTANT(int, s =
            6 +
           (Bits <= ::std::numeric_limits<unsigned long>::digits) +
           (Bits <= ::std::numeric_limits<unsigned int>::digits) +
@@ -146,8 +147,8 @@ namespace autoboost
           (Bits <= ::std::numeric_limits<unsigned char>::digits));
      typedef typename detail::int_least_helper< ::autoboost::uint_t<Bits>::s>::least least;
 #else
-      typedef typename detail::uint_least_helper
-        < 
+      typedef typename autoboost::detail::uint_least_helper
+        <
 #ifdef AUTOBOOST_HAS_LONG_LONG
           (Bits <= (int)(sizeof(autoboost::long_long_type) * CHAR_BIT)) +
 #else
@@ -166,16 +167,16 @@ namespace autoboost
   //  integer templates specifying extreme value  ----------------------------//
 
   //  signed
-#if !defined(AUTOBOOST_NO_INTEGRAL_INT64_T) && defined(AUTOBOOST_HAS_LONG_LONG)
+#if !defined(AUTOBOOST_NO_INTEGRAL_INT64_T) && !defined(AUTOBOOST_NO_INT64_T) && defined(AUTOBOOST_HAS_LONG_LONG)
   template< autoboost::long_long_type MaxValue >   // maximum value to require support
 #else
   template< long MaxValue >   // maximum value to require support
 #endif
-  struct int_max_value_t 
+  struct int_max_value_t
   {
-      typedef typename detail::int_least_helper
+      typedef typename autoboost::detail::int_least_helper
         <
-#if !defined(AUTOBOOST_NO_INTEGRAL_INT64_T) && defined(AUTOBOOST_HAS_LONG_LONG)
+#if !defined(AUTOBOOST_NO_INTEGRAL_INT64_T) && !defined(AUTOBOOST_NO_INT64_T) && defined(AUTOBOOST_HAS_LONG_LONG)
           (MaxValue <= ::autoboost::integer_traits<autoboost::long_long_type>::const_max) +
 #else
            1 +
@@ -188,16 +189,16 @@ namespace autoboost
       typedef typename int_fast_t<least>::type  fast;
   };
 
-#if !defined(AUTOBOOST_NO_INTEGRAL_INT64_T) && defined(AUTOBOOST_HAS_LONG_LONG)
+#if !defined(AUTOBOOST_NO_INTEGRAL_INT64_T) && !defined(AUTOBOOST_NO_INT64_T) && defined(AUTOBOOST_HAS_LONG_LONG)
   template< autoboost::long_long_type MinValue >   // minimum value to require support
 #else
   template< long MinValue >   // minimum value to require support
 #endif
-  struct int_min_value_t 
+  struct int_min_value_t
   {
-      typedef typename detail::int_least_helper
+      typedef typename autoboost::detail::int_least_helper
         <
-#if !defined(AUTOBOOST_NO_INTEGRAL_INT64_T) && defined(AUTOBOOST_HAS_LONG_LONG)
+#if !defined(AUTOBOOST_NO_INTEGRAL_INT64_T) && !defined(AUTOBOOST_NO_INT64_T) && defined(AUTOBOOST_HAS_LONG_LONG)
           (MinValue >= ::autoboost::integer_traits<autoboost::long_long_type>::const_min) +
 #else
            1 +
@@ -216,12 +217,12 @@ namespace autoboost
 #else
   template< unsigned long MaxValue >   // minimum value to require support
 #endif
-  struct uint_value_t 
+  struct uint_value_t
   {
 #if (defined(__BORLANDC__) || defined(__CODEGEAR__))
      // It's really not clear why this workaround should be needed... shrug I guess!  JM
 #if defined(AUTOBOOST_NO_INTEGRAL_INT64_T)
-      AUTOBOOST_STATIC_CONSTANT(unsigned, which = 
+      AUTOBOOST_STATIC_CONSTANT(unsigned, which =
            1 +
           (MaxValue <= ::autoboost::integer_traits<unsigned long>::const_max) +
           (MaxValue <= ::autoboost::integer_traits<unsigned int>::const_max) +
@@ -229,7 +230,7 @@ namespace autoboost
           (MaxValue <= ::autoboost::integer_traits<unsigned char>::const_max));
       typedef typename detail::int_least_helper< ::autoboost::uint_value_t<MaxValue>::which>::least least;
 #else // AUTOBOOST_NO_INTEGRAL_INT64_T
-      AUTOBOOST_STATIC_CONSTANT(unsigned, which = 
+      AUTOBOOST_STATIC_CONSTANT(unsigned, which =
            1 +
           (MaxValue <= ::autoboost::integer_traits<autoboost::ulong_long_type>::const_max) +
           (MaxValue <= ::autoboost::integer_traits<unsigned long>::const_max) +
@@ -239,8 +240,8 @@ namespace autoboost
       typedef typename detail::uint_least_helper< ::autoboost::uint_value_t<MaxValue>::which>::least least;
 #endif // AUTOBOOST_NO_INTEGRAL_INT64_T
 #else
-      typedef typename detail::uint_least_helper
-        < 
+      typedef typename autoboost::detail::uint_least_helper
+        <
 #if !defined(AUTOBOOST_NO_INTEGRAL_INT64_T) && defined(AUTOBOOST_HAS_LONG_LONG)
           (MaxValue <= ::autoboost::integer_traits<autoboost::ulong_long_type>::const_max) +
 #else

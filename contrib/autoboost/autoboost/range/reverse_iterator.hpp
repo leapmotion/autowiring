@@ -26,15 +26,15 @@ namespace autoboost
     //////////////////////////////////////////////////////////////////////////
     // default
     //////////////////////////////////////////////////////////////////////////
-    
+
     template< typename T >
     struct range_reverse_iterator
     {
-        typedef reverse_iterator< 
+        typedef reverse_iterator<
             AUTOBOOST_DEDUCED_TYPENAME range_iterator<
                 AUTOBOOST_DEDUCED_TYPENAME remove_reference<T>::type>::type > type;
     };
-    
+
 
 } // namespace autoboost
 

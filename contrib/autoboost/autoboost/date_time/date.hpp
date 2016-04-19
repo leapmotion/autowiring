@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_DATE_HPP___
-#define AB_DATE_TIME_DATE_HPP___
+#ifndef DATE_TIME_DATE_HPP___
+#define DATE_TIME_DATE_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -159,7 +159,7 @@ namespace date_time {
       {
         return date_type(date_rep_type(days_) - dd.get_rep());
       }
-      return date_type(date_rep_type(days_) - dd.days());
+      return date_type(date_rep_type(days_) - static_cast<date_int_type>(dd.days()));
     }
     date_type operator-=(const duration_type& dd)
     {
@@ -177,7 +177,7 @@ namespace date_time {
       {
         return date_type(date_rep_type(days_) + dd.get_rep());
       }
-      return date_type(date_rep_type(days_) + dd.days());
+      return date_type(date_rep_type(days_) + static_cast<date_int_type>(dd.days()));
     }
     date_type operator+=(const duration_type& dd)
     {

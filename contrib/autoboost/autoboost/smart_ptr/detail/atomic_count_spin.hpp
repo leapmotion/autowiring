@@ -2,7 +2,7 @@
 #define AUTOBOOST_SMART_PTR_DETAIL_ATOMIC_COUNT_SPIN_HPP_INCLUDED
 
 //
-//  boost/detail/atomic_count_spin.hpp
+//  autoboost/detail/atomic_count_spin.hpp
 //
 //  Copyright (c) 2013 Peter Dimov
 //

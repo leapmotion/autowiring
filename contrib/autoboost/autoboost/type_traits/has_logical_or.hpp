@@ -13,22 +13,22 @@
 #define AUTOBOOST_TT_TRAIT_OP ||
 #define AUTOBOOST_TT_FORBIDDEN_IF\
    /* pointer with fundamental non convertible to bool */\
-   ::autoboost::type_traits::ice_or<\
-      ::autoboost::type_traits::ice_and<\
-         ::autoboost::is_pointer< Lhs_noref >::value,\
-         ::autoboost::type_traits::ice_and<\
-            ::autoboost::is_fundamental< Rhs_nocv >::value,\
-            ::autoboost::type_traits::ice_not< ::autoboost::is_convertible< Rhs_nocv, bool >::value >::value\
-         >::value\
-      >::value,\
-      ::autoboost::type_traits::ice_and<\
-         ::autoboost::is_pointer< Rhs_noref >::value,\
-         ::autoboost::type_traits::ice_and<\
-            ::autoboost::is_fundamental< Lhs_nocv >::value,\
-            ::autoboost::type_traits::ice_not< ::autoboost::is_convertible< Lhs_nocv, bool >::value >::value\
-         >::value\
-      >::value\
-   >::value
+   (\
+      (\
+         ::autoboost::is_pointer< Lhs_noref >::value && \
+         (\
+            ::autoboost::is_fundamental< Rhs_nocv >::value && \
+            (!  ::autoboost::is_convertible< Rhs_nocv, bool >::value )\
+          )\
+      )||\
+      (\
+         ::autoboost::is_pointer< Rhs_noref >::value && \
+         (\
+            ::autoboost::is_fundamental< Lhs_nocv >::value && \
+            (!  ::autoboost::is_convertible< Lhs_nocv, bool >::value )\
+          )\
+      )\
+      )
 
 
 #include <autoboost/type_traits/detail/has_binary_operator.hpp>

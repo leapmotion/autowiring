@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // basic_oarchive.cpp:
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -118,7 +118,7 @@ class basic_oarchive_impl {
         // the following cannot be defined because of the const
         // member.  This will generate a link error if an attempt
         // is made to assign.  This should never be necessary
-        // use this only for lookup argument 
+        // use this only for lookup argument
         cobject_type & operator=(const cobject_type &rhs);
         bool operator<(const cobject_type &rhs) const {
             return *m_bos_ptr < *(rhs.m_bos_ptr);
@@ -145,7 +145,7 @@ class basic_oarchive_impl {
 
     const cobject_type &
     find(const basic_oserializer & bos);
-    const basic_oserializer *  
+    const basic_oserializer *
     find(const serialization::extended_type_info &ti) const;
 
 //public:
@@ -158,7 +158,7 @@ class basic_oarchive_impl {
     );
     void save_pointer(
         basic_oarchive & ar,
-        const void * t, 
+        const void * t,
         const basic_pointer_oserializer * bpos
     );
 };
@@ -174,11 +174,11 @@ basic_oarchive_impl::find(const serialization::extended_type_info & ti) const {
     #  pragma warning(push)
     #  pragma warning(disable : 4511 4512)
     #endif
-    class bosarg : 
+    class bosarg :
         public basic_oserializer
     {
         bool class_info() const {
-            AUTOBOOST_ASSERT(false); 
+            AUTOBOOST_ASSERT(false);
             return false;
         }
         // returns true if objects should be tracked
@@ -196,7 +196,7 @@ basic_oarchive_impl::find(const serialization::extended_type_info & ti) const {
             AUTOBOOST_ASSERT(false);
             return false;
         }
-        void save_object_data(      
+        void save_object_data(
             basic_oarchive & /*ar*/, const void * /*x*/
         ) const {
             AUTOBOOST_ASSERT(false);
@@ -210,13 +210,13 @@ basic_oarchive_impl::find(const serialization::extended_type_info & ti) const {
     #pragma warning(pop)
     #endif
     bosarg bos(ti);
-    cobject_info_set_type::const_iterator cit 
+    cobject_info_set_type::const_iterator cit
         = cobject_info_set.find(cobject_type(bos));
     // it should already have been "registered" - see below
     if(cit == cobject_info_set.end()){
         // if an entry is not found in the table it is because a pointer
         // of a derived class has been serialized through its base class
-        // but the derived class hasn't been "registered" 
+        // but the derived class hasn't been "registered"
         return NULL;
     }
     // return pointer to the real class
@@ -226,7 +226,7 @@ basic_oarchive_impl::find(const serialization::extended_type_info & ti) const {
 inline const basic_oarchive_impl::cobject_type &
 basic_oarchive_impl::find(const basic_oserializer & bos)
 {
-    std::pair<cobject_info_set_type::iterator, bool> cresult = 
+    std::pair<cobject_info_set_type::iterator, bool> cresult =
         cobject_info_set.insert(cobject_type(cobject_info_set.size(), bos));
     return *(cresult.first);
 }
@@ -311,7 +311,7 @@ basic_oarchive_impl::save_object(
 inline void
 basic_oarchive_impl::save_pointer(
     basic_oarchive & ar,
-    const void * t, 
+    const void * t,
     const basic_pointer_oserializer * bpos_ptr
 ){
     const basic_oserializer & bos = bpos_ptr->get_basic_serializer();
@@ -319,7 +319,7 @@ basic_oarchive_impl::save_pointer(
     const cobject_type & co = register_type(bos);
     if(! co.m_initialized){
         ar.vsave(co.m_class_id);
-        // if its a previously unregistered class 
+        // if its a previously unregistered class
         if((cobject_info_set.size() > original_count)){
             if(bos.is_polymorphic()){
                 const serialization::extended_type_info *eti = & bos.get_eti();
@@ -410,50 +410,53 @@ namespace autoboost {
 namespace archive {
 namespace detail {
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
+AUTOBOOST_ARCHIVE_DECL
 basic_oarchive::basic_oarchive(unsigned int flags)
     : pimpl(new basic_oarchive_impl(flags))
 {}
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
+AUTOBOOST_ARCHIVE_DECL
 basic_oarchive::~basic_oarchive()
-{
-    delete pimpl;
-}
+{}
 
-AUTOBOOST_ARCHIVE_DECL(void) 
+AUTOBOOST_ARCHIVE_DECL void
 basic_oarchive::save_object(
-    const void *x, 
+    const void *x,
     const basic_oserializer & bos
 ){
     pimpl->save_object(*this, x, bos);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void) 
+AUTOBOOST_ARCHIVE_DECL void
 basic_oarchive::save_pointer(
-    const void * t, 
+    const void * t,
     const basic_pointer_oserializer * bpos_ptr
 ){
     pimpl->save_pointer(*this, t, bpos_ptr);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void) 
+AUTOBOOST_ARCHIVE_DECL void
 basic_oarchive::register_basic_serializer(const basic_oserializer & bos){
     pimpl->register_type(bos);
 }
 
-AUTOBOOST_ARCHIVE_DECL(library_version_type)
+AUTOBOOST_ARCHIVE_DECL library_version_type
 basic_oarchive::get_library_version() const{
     return AUTOBOOST_ARCHIVE_VERSION();
 }
 
-AUTOBOOST_ARCHIVE_DECL(unsigned int)
+AUTOBOOST_ARCHIVE_DECL unsigned int
 basic_oarchive::get_flags() const{
     return pimpl->m_flags;
 }
 
-AUTOBOOST_ARCHIVE_DECL(void) 
+AUTOBOOST_ARCHIVE_DECL void
 basic_oarchive::end_preamble(){
+}
+
+AUTOBOOST_ARCHIVE_DECL helper_collection &
+basic_oarchive::get_helper_collection(){
+	return *this;
 }
 
 } // namespace detail

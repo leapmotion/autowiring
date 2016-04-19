@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // stl_port.cpp: implementation of run-time casting of void pointers
 
-// (C) Copyright 2005 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2005 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -13,8 +13,7 @@
 #endif
 
 // this befuddles the msvc 6 compiler so we can't use it
-#if ! ((defined _MSC_VER) && (_MSC_VER <= 1300)) \
-&&  ! defined(__BORLANDC__)
+#if ! ((defined _MSC_VER) && (_MSC_VER <= 1300))
 
 #include <autoboost/config.hpp>
 

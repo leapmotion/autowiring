@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // extended_type_info.cpp: implementation for portable version of type_info
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -25,7 +25,7 @@
 namespace std{ using ::strcmp; }
 #endif
 
-#include <autoboost/detail/no_exceptions_support.hpp>
+#include <autoboost/core/no_exceptions_support.hpp>
 #include <autoboost/serialization/singleton.hpp>
 #include <autoboost/serialization/force_include.hpp>
 
@@ -37,7 +37,7 @@ namespace std{ using ::strcmp; }
 #  pragma warning(disable : 4511 4512)
 #endif
 
-namespace autoboost { 
+namespace autoboost {
 namespace serialization {
 namespace detail {
 
@@ -45,7 +45,7 @@ struct key_compare
 {
     bool
     operator()(
-        const extended_type_info * lhs, 
+        const extended_type_info * lhs,
         const extended_type_info * rhs
     ) const {
         // performance shortcut
@@ -110,14 +110,14 @@ public:
 
 } // namespace detail
 
-AUTOBOOST_SERIALIZATION_DECL(void)  
+AUTOBOOST_SERIALIZATION_DECL void
 extended_type_info::key_register() const{
     if(NULL == get_key())
         return;
     singleton<detail::ktmap>::get_mutable_instance().insert(this);
 }
 
-AUTOBOOST_SERIALIZATION_DECL(void)  
+AUTOBOOST_SERIALIZATION_DECL void
 extended_type_info::key_unregister() const{
     if(NULL == get_key())
         return;
@@ -135,7 +135,7 @@ extended_type_info::key_unregister() const{
     }
 }
 
-AUTOBOOST_SERIALIZATION_DECL(const extended_type_info *) 
+AUTOBOOST_SERIALIZATION_DECL const extended_type_info *
 extended_type_info::find(const char *key) {
     AUTOBOOST_ASSERT(NULL != key);
     const detail::ktmap & k = singleton<detail::ktmap>::get_const_instance();
@@ -146,7 +146,7 @@ extended_type_info::find(const char *key) {
     return *(it);
 }
 
-AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_SERIALIZATION_DECL
 extended_type_info::extended_type_info(
     const unsigned int type_info_key,
     const char * key
@@ -156,11 +156,11 @@ extended_type_info::extended_type_info(
 {
 }
 
-AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY()) 
+AUTOBOOST_SERIALIZATION_DECL
 extended_type_info::~extended_type_info(){
 }
 
-AUTOBOOST_SERIALIZATION_DECL(bool)  
+AUTOBOOST_SERIALIZATION_DECL bool
 extended_type_info::operator<(const extended_type_info &rhs) const {
     // short cut for a common cases
     if(this == & rhs)
@@ -173,7 +173,7 @@ extended_type_info::operator<(const extended_type_info &rhs) const {
     return false;
 }
 
-AUTOBOOST_SERIALIZATION_DECL(bool)
+AUTOBOOST_SERIALIZATION_DECL bool
 extended_type_info::operator==(const extended_type_info &rhs) const {
     // short cut for a common cases
     if(this == & rhs)

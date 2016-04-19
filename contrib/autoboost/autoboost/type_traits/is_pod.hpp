@@ -9,16 +9,16 @@
 #ifndef AUTOBOOST_TT_IS_POD_HPP_INCLUDED
 #define AUTOBOOST_TT_IS_POD_HPP_INCLUDED
 
-#include <autoboost/type_traits/config.hpp>
+#include <autoboost/type_traits/detail/config.hpp>
 #include <autoboost/type_traits/is_void.hpp>
 #include <autoboost/type_traits/is_scalar.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
 #include <autoboost/type_traits/intrinsics.hpp>
 
-#include <cstddef>
+#ifdef __SUNPRO_CC
+#include <autoboost/type_traits/is_function.hpp>
+#endif
 
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#include <cstddef>
 
 #ifndef AUTOBOOST_IS_POD
 #define AUTOBOOST_INTERNAL_IS_POD(T) false
@@ -31,48 +31,27 @@ namespace autoboost {
 // forward declaration, needed by 'is_pod_array_helper' template below
 template< typename T > struct is_POD;
 
-namespace detail {
-
-
-template <typename T> struct is_pod_impl
-{ 
-    AUTOBOOST_STATIC_CONSTANT(
-        bool, value =
-        (::autoboost::type_traits::ice_or<
-            ::autoboost::is_scalar<T>::value,
-            ::autoboost::is_void<T>::value,
-            AUTOBOOST_INTERNAL_IS_POD(T)
-         >::value));
-};
+template <typename T> struct is_pod
+: public integral_constant<bool, ::autoboost::is_scalar<T>::value || ::autoboost::is_void<T>::value || AUTOBOOST_INTERNAL_IS_POD(T)>
+{};
 
 #if !defined(AUTOBOOST_NO_ARRAY_TYPE_SPECIALIZATIONS)
-template <typename T, std::size_t sz>
-struct is_pod_impl<T[sz]>
-    : public is_pod_impl<T>
-{
-};
+template <typename T, std::size_t sz> struct is_pod<T[sz]> : public is_pod<T>{};
 #endif
 
 
 // the following help compilers without partial specialization support:
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,void,true)
+template<> struct is_pod<void> : public true_type{};
 
 #ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,void const,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,void volatile,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,void const volatile,true)
+template<> struct is_pod<void const> : public true_type{};
+template<> struct is_pod<void const volatile> : public true_type{};
+template<> struct is_pod<void volatile> : public true_type{};
 #endif
 
-} // namespace detail
-
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_pod,T,::autoboost::detail::is_pod_impl<T>::value)
-// is_POD is the old depricated name for this trait, do not use this as it may
-// be removed in future without warning!!
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_POD,T,::autoboost::is_pod<T>::value)
+template<class T> struct is_POD : public is_pod<T>{};
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #undef AUTOBOOST_INTERNAL_IS_POD
 

@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // interface_iarchive.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -20,6 +20,7 @@
 #include <autoboost/mpl/bool.hpp>
 #include <autoboost/archive/detail/auto_link_archive.hpp>
 #include <autoboost/archive/detail/iserializer.hpp>
+#include <autoboost/archive/detail/helper_collection.hpp>
 #include <autoboost/serialization/singleton.hpp>
 #include <autoboost/archive/detail/abi_prefix.hpp> // must be the last header
 
@@ -27,10 +28,10 @@ namespace autoboost {
 namespace archive {
 namespace detail {
 
-class AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_pointer_iserializer;
+class basic_pointer_iserializer;
 
 template<class Archive>
-class interface_iarchive 
+class interface_iarchive
 {
 protected:
     interface_iarchive(){};
@@ -46,22 +47,29 @@ public:
     }
 
     template<class T>
-    const basic_pointer_iserializer * 
+    const basic_pointer_iserializer *
     register_type(T * = NULL){
         const basic_pointer_iserializer & bpis =
             autoboost::serialization::singleton<
-                pointer_iserializer<Archive, T> 
+                pointer_iserializer<Archive, T>
             >::get_const_instance();
         this->This()->register_basic_serializer(bpis.get_basic_serializer());
         return & bpis;
     }
+    template<class Helper>
+    Helper &
+    get_helper(void * const id = 0){
+        helper_collection & hc = this->This()->get_helper_collection();
+        return hc.template find_helper<Helper>(id);
+    }
+
     template<class T>
     Archive & operator>>(T & t){
-        this->This()->load_override(t, 0);
+        this->This()->load_override(t);
         return * this->This();
     }
 
-    // the & operator 
+    // the & operator
     template<class T>
     Archive & operator&(T & t){
         return *(this->This()) >> t;

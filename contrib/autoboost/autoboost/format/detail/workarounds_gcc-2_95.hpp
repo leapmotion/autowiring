@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-//  workarounds for gcc < 3.0. 
+//  workarounds for gcc < 3.0.
 // ----------------------------------------------------------------------------
 
 //  Copyright Samuel Krempp 2003. Use, modification, and distribution are
@@ -11,8 +11,8 @@
 
 // ----------------------------------------------------------------------------
 
-// There's a lot to do, the stdlib shipped with gcc prior to 3.x 
-// was terribly non-conforming. 
+// There's a lot to do, the stdlib shipped with gcc prior to 3.x
+// was terribly non-conforming.
 // . defines macros switches
 // . supplies template classes basic_foo<char,Tr> where gcc only supplies foo.
 //  i.e :
@@ -20,8 +20,8 @@
 //     -  basic_ostream<char, Tr>    from ostream
 //     -  basic_srteambuf<char, Tr>  from streambuf
 // these can be used transparently. (it obviously does not work for wchar_t)
-// . specialise CompatAlloc and CompatTraits to wrap gcc-2.95's 
-//    string_char_traits and std::alloc 
+// . specialise CompatAlloc and CompatTraits to wrap gcc-2.95's
+//    string_char_traits and std::alloc
 
 #if  AUTOBOOST_WORKAROUND(__GNUC__, < 3) && !defined(__SGI_STL_PORT) && !defined(_STLPORT_VERSION)
    // only for gcc-2.95's native stdlib
@@ -30,7 +30,7 @@
 #define AUTOBOOST_FORMAT_WORKAROUNDS_GCC295_H
 
 // SGI STL doesnt have <ostream> and others, so we need iostream.
-#include <iostream> 
+#include <iostream>
 #define AUTOBOOST_FORMAT_OSTREAM_DEFINED
 
 #include <streambuf.h>
@@ -44,7 +44,7 @@
 
 
 
-// *** 
+// ***
 // gcc's simple classes turned into standard-like template classes :
 
 namespace std {
@@ -59,7 +59,7 @@ namespace std {
     template <class Ch, class Tr>
     class basic_streambuf;
 
-    template <class Tr> 
+    template <class Tr>
     class basic_streambuf<char, Tr> : public streambuf {
     };
 
@@ -90,7 +90,7 @@ namespace std {
     template <class Ch, class Tr>
     class basic_ostream;
 
-     template <class Tr> 
+     template <class Tr>
      class basic_ostream<char, Tr> : public basic_ios<char, Tr>
      {
      public:
@@ -107,7 +107,7 @@ namespace autoboost {
         // ** CompatTraits gcc2.95 specialisations ----------------------------
         template<class Ch>
         class CompatTraits< ::std::string_char_traits<Ch> >
-            : public ::std::string_char_traits<Ch> 
+            : public ::std::string_char_traits<Ch>
         {
         public:
             typedef CompatTraits                compatible_type;
@@ -116,21 +116,21 @@ namespace autoboost {
             typedef int int_type;
             typedef ::std::streampos pos_type;
             typedef ::std::streamoff off_type;
-        
-            static char_type 
+
+            static char_type
             to_char_type(const int_type& meta) {
                 return static_cast<char_type>(meta); }
-            static int_type 
+            static int_type
             to_int_type(const char_type& ch) {
                 return static_cast<int_type>(static_cast<unsigned char>(ch) );}
-            static bool 
+            static bool
             eq_int_type(const int_type& left, const int_type& right) {
                 return left == right; }
-            static int_type 
+            static int_type
             eof() {
                 return static_cast<int_type>(EOF);
             }
-            static int_type 
+            static int_type
             not_eof(const int_type& meta) {
                 return (meta == eof()) ? 0 : meta;
             }
@@ -151,7 +151,7 @@ namespace autoboost {
         };
 
     } // N.S. io
-} // N.S. boost
+} // N.S. autoboost
 
 
 

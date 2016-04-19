@@ -8,8 +8,8 @@
 
 // Copyright Aleksey Gurtovoy 2001-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -48,9 +48,9 @@
 namespace autoboost { namespace mpl {
 
 // 'inherit<T1,T2,..,Tn>' metafunction; returns an unspecified class type
-// produced by public derivation from all metafunction's parameters 
-// (T1,T2,..,Tn), except the parameters of 'empty_base' class type; 
-// regardless the position and number of 'empty_base' parameters in the 
+// produced by public derivation from all metafunction's parameters
+// (T1,T2,..,Tn), except the parameters of 'empty_base' class type;
+// regardless the position and number of 'empty_base' parameters in the
 // metafunction's argument list, derivation from them is always a no-op;
 // for instance:
 //      inherit<her>::type == her
@@ -62,10 +62,10 @@ namespace autoboost { namespace mpl {
 
 #if !defined(AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
 
-template< 
+template<
       typename AUTOBOOST_MPL_AUX_NA_PARAM(T1)
     , typename AUTOBOOST_MPL_AUX_NA_PARAM(T2)
-    > 
+    >
 struct inherit2
     : T1, T2
 {
@@ -73,23 +73,23 @@ struct inherit2
     AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT(2, inherit2, (T1,T2))
 };
 
-template< typename T1 > 
+template< typename T1 >
 struct inherit2<T1,empty_base>
 {
     typedef T1 type;
     AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT_SPEC(2, inherit2, (T1,empty_base))
 };
 
-template< typename T2 > 
+template< typename T2 >
 struct inherit2<empty_base,T2>
 {
     typedef T2 type;
     AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT_SPEC(2, inherit2, (empty_base,T2))
 };
 
-// needed to disambiguate the previous two in case when both 
+// needed to disambiguate the previous two in case when both
 // T1 and T2 == empty_base
-template<> 
+template<>
 struct inherit2<empty_base,empty_base>
 {
     typedef empty_base type;
@@ -103,7 +103,7 @@ namespace aux {
 template< bool C1, bool C2 >
 struct inherit2_impl
 {
-    template< typename Derived, typename T1, typename T2 > struct result_ 
+    template< typename Derived, typename T1, typename T2 > struct result_
         : T1, T2
     {
         typedef Derived type_;
@@ -124,7 +124,7 @@ template<>
 struct inherit2_impl<true,false>
 {
     template< typename Derived, typename T1, typename T2 > struct result_
-        : T2 
+        : T2
     {
         typedef T2 type_;
     };
@@ -141,10 +141,10 @@ struct inherit2_impl<true,true>
 
 } // namespace aux
 
-template< 
+template<
       typename AUTOBOOST_MPL_AUX_NA_PARAM(T1)
     , typename AUTOBOOST_MPL_AUX_NA_PARAM(T2)
-    > 
+    >
 struct inherit2
     : aux::inherit2_impl<
           is_empty_base<T1>::value

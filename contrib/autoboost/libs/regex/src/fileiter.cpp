@@ -3,12 +3,12 @@
  * Copyright (c) 1998-2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
- 
+
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE:        fileiter.cpp
@@ -58,7 +58,7 @@ namespace std{
 #endif
 
 namespace autoboost{
-   namespace re_detail{
+   namespace AUTOBOOST_REGEX_DETAIL_NS{
 // start with the operating system specific stuff:
 
 #if (defined(__BORLANDC__) || defined(AUTOBOOST_REGEX_FI_WIN32_DIR) || defined(AUTOBOOST_MSVC)) && !defined(AUTOBOOST_RE_NO_WIN32)
@@ -110,7 +110,7 @@ void mapfile::open(const char* file)
          hmap = 0;
          hfile = 0;
          std::runtime_error err("Unable to create file mapping.");
-         autoboost::re_detail::raise_runtime_error(err);
+         autoboost::AUTOBOOST_REGEX_DETAIL_NS::raise_runtime_error(err);
       }
       _first = static_cast<const char*>(MapViewOfFile(hmap, FILE_MAP_READ, 0, 0, 0));
       if(_first == 0)
@@ -259,22 +259,23 @@ void mapfile::lock(pointer* node)const
             *p = 0;
             *(reinterpret_cast<int*>(*node)) = 1;
          }
- 
-        std::size_t read_size = 0; 
-        int read_pos = std::fseek(hfile, (node - _first) * buf_size, SEEK_SET); 
 
-        if(0 == read_pos && node == _last - 1) 
-           read_size = std::fread(*node + sizeof(int), _size % buf_size, 1, hfile); 
+        std::size_t read_size = 0;
+        int read_pos = std::fseek(hfile, (node - _first) * buf_size, SEEK_SET);
+
+        if(0 == read_pos && node == _last - 1)
+           read_size = std::fread(*node + sizeof(int), _size % buf_size, 1, hfile);
         else
            read_size = std::fread(*node + sizeof(int), buf_size, 1, hfile);
-#ifndef AUTOBOOST_NO_EXCEPTIONS 
         if((read_size == 0) || (std::ferror(hfile)))
-        { 
-           throw std::runtime_error("Unable to read file."); 
-        } 
-#else 
-        AUTOBOOST_REGEX_NOEH_ASSERT((0 == std::ferror(hfile)) && (read_size != 0)); 
-#endif 
+        {
+#ifndef AUTOBOOST_NO_EXCEPTIONS
+           unlock(node);
+           throw std::runtime_error("Unable to read file.");
+#else
+           AUTOBOOST_REGEX_NOEH_ASSERT((0 == std::ferror(hfile)) && (read_size != 0));
+#endif
+        }
       }
       else
       {
@@ -391,14 +392,14 @@ inline bool find_next_file(_fi_find_handle hf,  _fi_find_data& data)
    return FindNextFileA(hf, &data);
 #endif
 }
-   
+
 inline void copy_find_file_result_with_overflow_check(const _fi_find_data& data,  char* path, size_t max_size)
 {
 #ifdef AUTOBOOST_NO_ANSI_APIS
    if (::WideCharToMultiByte(CP_ACP, 0,  data.cFileName, -1,  path, max_size,  NULL, NULL) == 0)
-      re_detail::overflow_error_if_not_zero(1);
+      AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(1);
 #else
-   re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(path, max_size,  data.cFileName));
+   AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(path, max_size,  data.cFileName));
 #endif
 }
 
@@ -453,22 +454,22 @@ file_iterator::file_iterator(const char* wild)
    AUTOBOOST_REGEX_NOEH_ASSERT(_root)
    _path = new char[MAX_PATH];
    AUTOBOOST_REGEX_NOEH_ASSERT(_path)
-   re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_root, MAX_PATH, wild));
+   AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_root, MAX_PATH, wild));
    ptr = _root;
    while(*ptr)++ptr;
    while((ptr > _root) && (*ptr != *_fi_sep) && (*ptr != *_fi_sep_alt))--ptr;
    if((ptr == _root) && ( (*ptr== *_fi_sep) || (*ptr==*_fi_sep_alt) ) )
    {
      _root[1]='\0';
-     re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_path, MAX_PATH, _root));
+     AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_path, MAX_PATH, _root));
    }
    else
    {
      *ptr = 0;
-     re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_path, MAX_PATH, _root));
+     AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_path, MAX_PATH, _root));
      if(*_path == 0)
-       re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_path, MAX_PATH, "."));
-     re_detail::overflow_error_if_not_zero(re_detail::strcat_s(_path, MAX_PATH, _fi_sep));
+       AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_path, MAX_PATH, "."));
+     AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcat_s(_path, MAX_PATH, _fi_sep));
    }
    ptr = _path + std::strlen(_path);
 
@@ -511,8 +512,8 @@ file_iterator::file_iterator(const file_iterator& other)
    AUTOBOOST_REGEX_NOEH_ASSERT(_root)
    _path = new char[MAX_PATH];
    AUTOBOOST_REGEX_NOEH_ASSERT(_path)
-   re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_root, MAX_PATH, other._root));
-   re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_path, MAX_PATH, other._path));
+   AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_root, MAX_PATH, other._root));
+   AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_path, MAX_PATH, other._path));
    ptr = _path + (other.ptr - other._path);
    ref = other.ref;
 #ifndef AUTOBOOST_NO_EXCEPTIONS
@@ -529,8 +530,8 @@ file_iterator::file_iterator(const file_iterator& other)
 
 file_iterator& file_iterator::operator=(const file_iterator& other)
 {
-   re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_root, MAX_PATH, other._root));
-   re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_path, MAX_PATH, other._path));
+   AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_root, MAX_PATH, other._root));
+   AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_path, MAX_PATH, other._path));
    ptr = _path + (other.ptr - other._path);
    if(--(ref->count) == 0)
    {
@@ -631,7 +632,7 @@ directory_iterator::directory_iterator(const char* wild)
    AUTOBOOST_REGEX_NOEH_ASSERT(_root)
    _path = new char[MAX_PATH];
    AUTOBOOST_REGEX_NOEH_ASSERT(_path)
-   re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_root, MAX_PATH, wild));
+   AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_root, MAX_PATH, wild));
    ptr = _root;
    while(*ptr)++ptr;
    while((ptr > _root) && (*ptr != *_fi_sep) && (*ptr != *_fi_sep_alt))--ptr;
@@ -639,15 +640,15 @@ directory_iterator::directory_iterator(const char* wild)
    if((ptr == _root) && ( (*ptr== *_fi_sep) || (*ptr==*_fi_sep_alt) ) )
    {
      _root[1]='\0';
-     re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_path, MAX_PATH, _root));
+     AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_path, MAX_PATH, _root));
    }
    else
    {
      *ptr = 0;
-     re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_path, MAX_PATH, _root));
+     AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_path, MAX_PATH, _root));
      if(*_path == 0)
-       re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_path, MAX_PATH, "."));
-     re_detail::overflow_error_if_not_zero(re_detail::strcat_s(_path, MAX_PATH, _fi_sep));
+       AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_path, MAX_PATH, "."));
+     AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcat_s(_path, MAX_PATH, _fi_sep));
    }
    ptr = _path + std::strlen(_path);
 
@@ -701,8 +702,8 @@ directory_iterator::directory_iterator(const directory_iterator& other)
    AUTOBOOST_REGEX_NOEH_ASSERT(_root)
    _path = new char[MAX_PATH];
    AUTOBOOST_REGEX_NOEH_ASSERT(_path)
-   re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_root, MAX_PATH, other._root));
-   re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_path, MAX_PATH, other._path));
+   AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_root, MAX_PATH, other._root));
+   AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_path, MAX_PATH, other._path));
    ptr = _path + (other.ptr - other._path);
    ref = other.ref;
 #ifndef AUTOBOOST_NO_EXCEPTIONS
@@ -719,8 +720,8 @@ directory_iterator::directory_iterator(const directory_iterator& other)
 
 directory_iterator& directory_iterator::operator=(const directory_iterator& other)
 {
-   re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_root, MAX_PATH, other._root));
-   re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_path, MAX_PATH, other._path));
+   AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_root, MAX_PATH, other._root));
+   AUTOBOOST_REGEX_DETAIL_NS::overflow_error_if_not_zero(AUTOBOOST_REGEX_DETAIL_NS::strcpy_s(_path, MAX_PATH, other._path));
    ptr = _path + (other.ptr - other._path);
    if(--(ref->count) == 0)
    {
@@ -909,8 +910,8 @@ bool _fi_FindClose(_fi_find_handle dat)
 
 #endif
 
-} // namespace re_detail
-} // namspace boost
+} // namespace AUTOBOOST_REGEX_DETAIL_NS
+} // namspace autoboost
 
 #endif    // AUTOBOOST_REGEX_NO_FILEITER
 

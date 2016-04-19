@@ -29,7 +29,7 @@ inline void atomic_increment( int * pw )
     // ++*pw;
 
     _Asm_fetchadd(_FASZ_W, _SEM_REL, pw, +1, _LDHINT_NONE);
-} 
+}
 
 inline int atomic_decrement( int * pw )
 {
@@ -40,7 +40,7 @@ inline int atomic_decrement( int * pw )
     {
         _Asm_mf();
     }
-    
+
     return r - 1;
 }
 
@@ -50,14 +50,14 @@ inline int atomic_conditional_increment( int * pw )
     // return *pw;
 
     int v = *pw;
-    
+
     for (;;)
     {
         if (0 == v)
         {
             return 0;
         }
-        
+
         _Asm_mov_to_ar(_AREG_CCV,
                        v,
                        (_UP_CALL_FENCE | _UP_SYS_FENCE | _DOWN_CALL_FENCE | _DOWN_SYS_FENCE));
@@ -66,7 +66,7 @@ inline int atomic_conditional_increment( int * pw )
         {
             return r + 1;
         }
-        
+
         v = r;
     }
 }

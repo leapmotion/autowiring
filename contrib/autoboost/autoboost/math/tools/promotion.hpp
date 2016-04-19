@@ -1,4 +1,4 @@
-// boost\math\tools\promotion.hpp
+// autoboost\math\tools\promotion.hpp
 
 // Copyright John Maddock 2006.
 // Copyright Paul A. Bristow 2006.
@@ -86,13 +86,20 @@ namespace autoboost
 
         typedef typename mpl::if_<
           typename mpl::and_<is_floating_point<T1P>, is_floating_point<T2P> >::type, // both T1P and T2P are floating-point?
-          typename mpl::if_< typename mpl::or_<is_same<long double, T1P>, is_same<long double, T2P> >::type, // either long double?
-            long double, // then result type is long double.
-            typename mpl::if_< typename mpl::or_<is_same<double, T1P>, is_same<double, T2P> >::type, // either double?
-            double, // result type is double.
-          float // else result type is float.
-          >::type
-          >::type,
+#ifdef AUTOBOOST_MATH_USE_FLOAT128
+           typename mpl::if_< typename mpl::or_<is_same<__float128, T1P>, is_same<__float128, T2P> >::type, // either long double?
+            __float128,
+#endif
+             typename mpl::if_< typename mpl::or_<is_same<long double, T1P>, is_same<long double, T2P> >::type, // either long double?
+               long double, // then result type is long double.
+               typename mpl::if_< typename mpl::or_<is_same<double, T1P>, is_same<double, T2P> >::type, // either double?
+                  double, // result type is double.
+                  float // else result type is float.
+             >::type
+#ifdef AUTOBOOST_MATH_USE_FLOAT128
+             >::type
+#endif
+             >::type,
           // else one or the other is a user-defined type:
           typename mpl::if_< typename mpl::and_<mpl::not_<is_floating_point<T2P> >, ::autoboost::is_convertible<T1P, T2P> >, T2P, T1P>::type>::type type;
       }; // promote_arg2

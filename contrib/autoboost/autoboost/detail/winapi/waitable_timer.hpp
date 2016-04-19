@@ -15,91 +15,107 @@
 #pragma once
 #endif
 
-namespace autoboost
-{
-namespace detail
-{
-namespace winapi
-{
-#if defined( AUTOBOOST_USE_WINDOWS_H )
+#if !defined( AUTOBOOST_USE_WINDOWS_H )
+extern "C" {
+typedef autoboost::detail::winapi::VOID_
+(WINAPI *PTIMERAPCROUTINE)(
+    autoboost::detail::winapi::LPVOID_ lpArgToCompletionRoutine,
+    autoboost::detail::winapi::DWORD_ dwTimerLowValue,
+    autoboost::detail::winapi::DWORD_ dwTimerHighValue);
+
+#if !defined( AUTOBOOST_NO_ANSI_APIS )
+AUTOBOOST_SYMBOL_IMPORT autoboost::detail::winapi::HANDLE_ WINAPI
+CreateWaitableTimerA(
+    ::_SECURITY_ATTRIBUTES* lpTimerAttributes,
+    autoboost::detail::winapi::BOOL_ bManualReset,
+    autoboost::detail::winapi::LPCSTR_ lpTimerName);
+
+AUTOBOOST_SYMBOL_IMPORT autoboost::detail::winapi::HANDLE_ WINAPI
+OpenWaitableTimerA(
+    autoboost::detail::winapi::DWORD_ dwDesiredAccess,
+    autoboost::detail::winapi::BOOL_ bInheritHandle,
+    autoboost::detail::winapi::LPCSTR_ lpTimerName);
+#endif
+
+AUTOBOOST_SYMBOL_IMPORT autoboost::detail::winapi::HANDLE_ WINAPI
+CreateWaitableTimerW(
+    ::_SECURITY_ATTRIBUTES* lpTimerAttributes,
+    autoboost::detail::winapi::BOOL_ bManualReset,
+    autoboost::detail::winapi::LPCWSTR_ lpTimerName);
+
+AUTOBOOST_SYMBOL_IMPORT autoboost::detail::winapi::HANDLE_ WINAPI
+OpenWaitableTimerW(
+    autoboost::detail::winapi::DWORD_ dwDesiredAccess,
+    autoboost::detail::winapi::BOOL_ bInheritHandle,
+    autoboost::detail::winapi::LPCWSTR_ lpTimerName);
+
+AUTOBOOST_SYMBOL_IMPORT autoboost::detail::winapi::BOOL_ WINAPI
+SetWaitableTimer(
+    autoboost::detail::winapi::HANDLE_ hTimer,
+    const ::_LARGE_INTEGER* lpDueTime,
+    autoboost::detail::winapi::LONG_ lPeriod,
+    PTIMERAPCROUTINE pfnCompletionRoutine,
+    autoboost::detail::winapi::LPVOID_ lpArgToCompletionRoutine,
+    autoboost::detail::winapi::BOOL_ fResume);
+
+AUTOBOOST_SYMBOL_IMPORT autoboost::detail::winapi::BOOL_ WINAPI
+CancelWaitableTimer(autoboost::detail::winapi::HANDLE_ hTimer);
+}
+#endif
+
+namespace autoboost {
+namespace detail {
+namespace winapi {
 
 typedef ::PTIMERAPCROUTINE PTIMERAPCROUTINE_;
 
-# ifdef AUTOBOOST_NO_ANSI_APIS
-using ::CreateWaitableTimerW;
-using ::OpenWaitableTimerW;
-# else
-using ::CreateWaitableTimerA;
+#if !defined( AUTOBOOST_NO_ANSI_APIS )
 using ::OpenWaitableTimerA;
-# endif
-using ::SetWaitableTimer;
+#endif
+using ::OpenWaitableTimerW;
 using ::CancelWaitableTimer;
 
-#else
+#if !defined( AUTOBOOST_NO_ANSI_APIS )
+AUTOBOOST_FORCEINLINE HANDLE_ CreateWaitableTimerA(PSECURITY_ATTRIBUTES_ lpTimerAttributes, BOOL_ bManualReset, LPCSTR_ lpTimerName)
+{
+    return ::CreateWaitableTimerA(reinterpret_cast< ::_SECURITY_ATTRIBUTES* >(lpTimerAttributes), bManualReset, lpTimerName);
+}
+#endif
 
-extern "C" {
+AUTOBOOST_FORCEINLINE HANDLE_ CreateWaitableTimerW(PSECURITY_ATTRIBUTES_ lpTimerAttributes, BOOL_ bManualReset, LPCWSTR_ lpTimerName)
+{
+    return ::CreateWaitableTimerW(reinterpret_cast< ::_SECURITY_ATTRIBUTES* >(lpTimerAttributes), bManualReset, lpTimerName);
+}
 
-struct _SECURITY_ATTRIBUTES;
-
-typedef void (WINAPI* PTIMERAPCROUTINE_)
-(
-    LPVOID_ lpArgToCompletionRoutine,
-    DWORD_ dwTimerLowValue,
-    DWORD_ dwTimerHighValue
-);
-
-# ifdef AUTOBOOST_NO_ANSI_APIS
-__declspec(dllimport) HANDLE_ WINAPI CreateWaitableTimerW
-(
-    _SECURITY_ATTRIBUTES* lpTimerAttributes,
-    BOOL_ bManualReset,
-    LPCWSTR_ lpTimerName
-);
-
-__declspec(dllimport) HANDLE_ WINAPI OpenWaitableTimerW
-(
-    DWORD_ dwDesiredAccess,
-    BOOL_ bInheritHandle,
-    LPCWSTR_ lpTimerName
-);
-# else
-__declspec(dllimport) HANDLE_ WINAPI CreateWaitableTimerA
-(
-    _SECURITY_ATTRIBUTES* lpTimerAttributes,
-    BOOL_ bManualReset,
-    LPCSTR_ lpTimerName
-);
-
-__declspec(dllimport) HANDLE_ WINAPI OpenWaitableTimerA
-(
-    DWORD_ dwDesiredAccess,
-    BOOL_ bInheritHandle,
-    LPCSTR_ lpTimerName
-);
-# endif
-
-__declspec(dllimport) BOOL_ WINAPI SetWaitableTimer
-(
+AUTOBOOST_FORCEINLINE BOOL_ SetWaitableTimer(
     HANDLE_ hTimer,
-    const LARGE_INTEGER_ *lpDueTime,
+    const LARGE_INTEGER_* lpDueTime,
     LONG_ lPeriod,
     PTIMERAPCROUTINE_ pfnCompletionRoutine,
     LPVOID_ lpArgToCompletionRoutine,
-    BOOL_ fResume
-);
-
-__declspec(dllimport) BOOL_ WINAPI CancelWaitableTimer(HANDLE_ hTimer);
-
+    BOOL_ fResume)
+{
+    return ::SetWaitableTimer(hTimer, reinterpret_cast< const ::_LARGE_INTEGER* >(lpDueTime), lPeriod, pfnCompletionRoutine, lpArgToCompletionRoutine, fResume);
 }
 
+#if !defined( AUTOBOOST_NO_ANSI_APIS )
+AUTOBOOST_FORCEINLINE HANDLE_ create_waitable_timer(PSECURITY_ATTRIBUTES_ lpTimerAttributes, BOOL_ bManualReset, LPCSTR_ lpTimerName)
+{
+    return ::CreateWaitableTimerA(reinterpret_cast< ::_SECURITY_ATTRIBUTES* >(lpTimerAttributes), bManualReset, lpTimerName);
+}
 #endif
 
-AUTOBOOST_FORCEINLINE HANDLE_ create_anonymous_waitable_timer(_SECURITY_ATTRIBUTES* lpTimerAttributes, BOOL_ bManualReset)
+AUTOBOOST_FORCEINLINE HANDLE_ create_waitable_timer(PSECURITY_ATTRIBUTES_ lpTimerAttributes, BOOL_ bManualReset, LPCWSTR_ lpTimerName)
+{
+    return ::CreateWaitableTimerW(reinterpret_cast< ::_SECURITY_ATTRIBUTES* >(lpTimerAttributes), bManualReset, lpTimerName);
+}
+
+AUTOBOOST_FORCEINLINE HANDLE_ create_anonymous_waitable_timer(PSECURITY_ATTRIBUTES_ lpTimerAttributes, BOOL_ bManualReset)
 {
 #ifdef AUTOBOOST_NO_ANSI_APIS
-    return CreateWaitableTimerW(lpTimerAttributes, bManualReset, 0);
+    return ::CreateWaitableTimerW(reinterpret_cast< ::_SECURITY_ATTRIBUTES* >(lpTimerAttributes), bManualReset, 0);
 #else
-    return CreateWaitableTimerA(lpTimerAttributes, bManualReset, 0);
+    return ::CreateWaitableTimerA(reinterpret_cast< ::_SECURITY_ATTRIBUTES* >(lpTimerAttributes), bManualReset, 0);
 #endif
 }
 

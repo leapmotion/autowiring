@@ -121,11 +121,6 @@ namespace autoboost
      */
     bool closed() { return ex->closed(); }
 
-    void submit(AUTOBOOST_THREAD_RV_REF(work) closure)
-    {
-      ex->submit(autoboost::forward<work>(closure));
-    }
-
     /**
      * \par Requires
      * \c Closure is a model of Callable(void()) and a model of CopyConstructible/MoveConstructible.
@@ -142,24 +137,31 @@ namespace autoboost
      * Whatever exception that can be throw while storing the closure.
      */
 
+    void submit(AUTOBOOST_THREAD_RV_REF(work) closure)
+    {
+      ex->submit(autoboost::move(closure));
+    }
+
 #if defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES)
     template <typename Closure>
     void submit(Closure & closure)
     {
-      work w ((closure));
-      submit(autoboost::move(w));
+      //work w ((closure));
+      //submit(autoboost::move(w));
+      submit(work(closure));
     }
 #endif
     void submit(void (*closure)())
     {
       work w ((closure));
       submit(autoboost::move(w));
+      //submit(work(closure));
     }
 
     template <typename Closure>
-    void submit(AUTOBOOST_THREAD_RV_REF(Closure) closure)
+    void submit(AUTOBOOST_THREAD_FWD_REF(Closure) closure)
     {
-      work w = autoboost::move(closure);
+      work w((autoboost::forward<Closure>(closure)));
       submit(autoboost::move(w));
     }
 

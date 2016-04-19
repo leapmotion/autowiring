@@ -5,8 +5,8 @@
 // Copyright Aleksey Gurtovoy 2003-2004
 // Copyright David Abrahams 2003-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -29,14 +29,14 @@
 
 namespace autoboost { namespace mpl {
 
-// default implementation; requires 'Seq' to provide corresponding overloads 
+// default implementation; requires 'Seq' to provide corresponding overloads
 // of AUTOBOOST_MPL_AUX_OVERLOAD_ORDER_BY_KEY
 
 template< typename Seq, typename Key > struct x_order_impl
 #if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, AUTOBOOST_TESTED_AT(1400)) \
     || AUTOBOOST_WORKAROUND(__EDG_VERSION__, <= 245)
 {
-    AUTOBOOST_STATIC_CONSTANT(long, value = 
+    AUTOBOOST_STATIC_CONSTANT(long, value =
           sizeof( AUTOBOOST_MPL_AUX_OVERLOAD_CALL_ORDER_BY_KEY(
               Seq
             , AUTOBOOST_MPL_AUX_STATIC_CAST(aux::type_wrapper<Key>*, 0)
@@ -46,7 +46,7 @@ template< typename Seq, typename Key > struct x_order_impl
     typedef long_<value> type;
 
 #else // ISO98 C++
-    : long_< 
+    : long_<
           sizeof( AUTOBOOST_MPL_AUX_OVERLOAD_CALL_ORDER_BY_KEY(
               Seq
             , AUTOBOOST_MPL_AUX_STATIC_CAST(aux::type_wrapper<Key>*, 0)

@@ -30,8 +30,9 @@
 #include <cstddef>
 #include <string>
 #include <autoboost/limits.hpp>
+#include <autoboost/mpl/bool.hpp>
+#include <autoboost/mpl/identity.hpp>
 #include <autoboost/mpl/if.hpp>
-#include <autoboost/type_traits/ice.hpp>
 #include <autoboost/type_traits/is_integral.hpp>
 #include <autoboost/type_traits/is_float.hpp>
 #include <autoboost/type_traits/has_left_shift.hpp>
@@ -58,7 +59,7 @@ namespace autoboost {
     {
         // Converts signed/unsigned char to char
         template < class Char >
-        struct normalize_single_byte_char 
+        struct normalize_single_byte_char
         {
             typedef Char type;
         };
@@ -78,7 +79,7 @@ namespace autoboost {
 
     namespace detail // deduce_character_type_later<T>
     {
-        // Helper type, meaning that stram character for T must be deduced 
+        // Helper type, meaning that stram character for T must be deduced
         // at Stage 2 (See deduce_source_char<T> and deduce_target_char<T>)
         template < class T > struct deduce_character_type_later {};
     }
@@ -115,7 +116,7 @@ namespace autoboost {
             Char,
             autoboost::detail::deduce_character_type_later< autoboost::iterator_range< Char* > >
         > {};
-    
+
         template < typename Char >
         struct stream_char_common< autoboost::iterator_range< const Char* > >: public autoboost::mpl::if_c<
             autoboost::detail::is_character< Char >::value,
@@ -186,19 +187,19 @@ namespace autoboost {
         // Otherwise supplied type T is a character type, that must be normalized
         // using normalize_single_byte_char<Char>.
         // Executed at Stage 2  (See deduce_source_char<T> and deduce_target_char<T>)
-        template < class Char > 
+        template < class Char >
         struct deduce_source_char_impl
-        { 
-            typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::detail::normalize_single_byte_char< Char >::type type; 
+        {
+            typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::detail::normalize_single_byte_char< Char >::type type;
         };
-        
-        template < class T > 
-        struct deduce_source_char_impl< deduce_character_type_later< T > > 
+
+        template < class T >
+        struct deduce_source_char_impl< deduce_character_type_later< T > >
         {
             typedef autoboost::has_left_shift< std::basic_ostream< char >, T > result_t;
 
 #if defined(AUTOBOOST_LCAST_NO_WCHAR_T)
-            AUTOBOOST_STATIC_ASSERT_MSG((result_t::value), 
+            AUTOBOOST_STATIC_ASSERT_MSG((result_t::value),
                 "Source type is not std::ostream`able and std::wostream`s are not supported by your STL implementation");
             typedef char type;
 #else
@@ -206,7 +207,7 @@ namespace autoboost {
                 result_t::value, char, wchar_t
             >::type type;
 
-            AUTOBOOST_STATIC_ASSERT_MSG((result_t::value || autoboost::has_left_shift< std::basic_ostream< type >, T >::value), 
+            AUTOBOOST_STATIC_ASSERT_MSG((result_t::value || autoboost::has_left_shift< std::basic_ostream< type >, T >::value),
                 "Source type is neither std::ostream`able nor std::wostream`able");
 #endif
         };
@@ -219,47 +220,47 @@ namespace autoboost {
         // Otherwise supplied type T is a character type, that must be normalized
         // using normalize_single_byte_char<Char>.
         // Executed at Stage 2  (See deduce_source_char<T> and deduce_target_char<T>)
-        template < class Char > 
-        struct deduce_target_char_impl 
-        { 
-            typedef AUTOBOOST_DEDUCED_TYPENAME normalize_single_byte_char< Char >::type type; 
+        template < class Char >
+        struct deduce_target_char_impl
+        {
+            typedef AUTOBOOST_DEDUCED_TYPENAME normalize_single_byte_char< Char >::type type;
         };
-        
-        template < class T > 
-        struct deduce_target_char_impl< deduce_character_type_later<T> > 
-        { 
+
+        template < class T >
+        struct deduce_target_char_impl< deduce_character_type_later<T> >
+        {
             typedef autoboost::has_right_shift<std::basic_istream<char>, T > result_t;
 
 #if defined(AUTOBOOST_LCAST_NO_WCHAR_T)
-            AUTOBOOST_STATIC_ASSERT_MSG((result_t::value), 
+            AUTOBOOST_STATIC_ASSERT_MSG((result_t::value),
                 "Target type is not std::istream`able and std::wistream`s are not supported by your STL implementation");
             typedef char type;
 #else
             typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::mpl::if_c<
                 result_t::value, char, wchar_t
             >::type type;
-            
-            AUTOBOOST_STATIC_ASSERT_MSG((result_t::value || autoboost::has_right_shift<std::basic_istream<wchar_t>, T >::value), 
+
+            AUTOBOOST_STATIC_ASSERT_MSG((result_t::value || autoboost::has_right_shift<std::basic_istream<wchar_t>, T >::value),
                 "Target type is neither std::istream`able nor std::wistream`able");
 #endif
         };
-    } 
+    }
 
     namespace detail  // deduce_target_char<T> and deduce_source_char<T>
     {
         // We deduce stream character types in two stages.
         //
-        // Stage 1 is common for Target and Source. At Stage 1 we get 
+        // Stage 1 is common for Target and Source. At Stage 1 we get
         // non normalized character type (may contain unsigned/signed char)
         // or deduce_character_type_later<T> where T is the original type.
         // Stage 1 is executed by stream_char_common<T>
         //
-        // At Stage 2 we normalize character types or try to deduce character 
-        // type using metafunctions. 
-        // Stage 2 is executed by deduce_target_char_impl<T> and 
+        // At Stage 2 we normalize character types or try to deduce character
+        // type using metafunctions.
+        // Stage 2 is executed by deduce_target_char_impl<T> and
         // deduce_source_char_impl<T>
         //
-        // deduce_target_char<T> and deduce_source_char<T> functions combine 
+        // deduce_target_char<T> and deduce_source_char<T> functions combine
         // both stages
 
         template < class T >
@@ -322,30 +323,6 @@ namespace autoboost {
         };
     }
 
-    namespace detail // is_this_float_conversion_optimized<Float, Char>
-    {
-        // this metafunction evaluates to true, if we have optimized comnversion 
-        // from Float type to Char array. 
-        // Must be in sync with lexical_stream_limited_src<Char, ...>::shl_real_type(...)
-        template <typename Float, typename Char>
-        struct is_this_float_conversion_optimized 
-        {
-            typedef autoboost::type_traits::ice_and<
-                autoboost::is_float<Float>::value,
-#if !defined(AUTOBOOST_LCAST_NO_WCHAR_T) && !defined(AUTOBOOST_NO_SWPRINTF) && !defined(__MINGW32__)
-                autoboost::type_traits::ice_or<
-                    autoboost::type_traits::ice_eq<sizeof(Char), sizeof(char) >::value,
-                    autoboost::is_same<Char, wchar_t>::value
-                >::value
-#else
-                autoboost::type_traits::ice_eq<sizeof(Char), sizeof(char) >::value
-#endif
-            > result_type;
-
-            AUTOBOOST_STATIC_CONSTANT(bool, value = (result_type::value) );
-        };
-    }
-    
     namespace detail // lcast_src_length
     {
         // Return max. length of string representation of Source;
@@ -387,12 +364,11 @@ namespace autoboost {
 #endif
         };
 
-#ifndef AUTOBOOST_LCAST_NO_COMPILE_TIME_PRECISION
         // Helper for floating point types.
         // -1.23456789e-123456
         // ^                   sign
         //  ^                  leading digit
-        //   ^                 decimal point 
+        //   ^                 decimal point
         //    ^^^^^^^^         lcast_precision<Source>::value
         //            ^        "e"
         //             ^       exponent sign
@@ -403,6 +379,8 @@ namespace autoboost {
                 Source, AUTOBOOST_DEDUCED_TYPENAME autoboost::enable_if<autoboost::is_float<Source> >::type
             >
         {
+
+#ifndef AUTOBOOST_LCAST_NO_COMPILE_TIME_PRECISION
             AUTOBOOST_STATIC_ASSERT(
                     std::numeric_limits<Source>::max_exponent10 <=  999999L &&
                     std::numeric_limits<Source>::min_exponent10 >= -999999L
@@ -411,8 +389,10 @@ namespace autoboost {
             AUTOBOOST_STATIC_CONSTANT(std::size_t, value =
                     5 + lcast_precision<Source>::value + 6
                 );
-        };
+#else // #ifndef AUTOBOOST_LCAST_NO_COMPILE_TIME_PRECISION
+            AUTOBOOST_STATIC_CONSTANT(std::size_t, value = 156);
 #endif // #ifndef AUTOBOOST_LCAST_NO_COMPILE_TIME_PRECISION
+        };
     }
 
     namespace detail // lexical_cast_stream_traits<Source, Target>
@@ -421,11 +401,11 @@ namespace autoboost {
         struct lexical_cast_stream_traits {
             typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::detail::array_to_pointer_decay<Source>::type src;
             typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::remove_cv<src>::type            no_cv_src;
-                
+
             typedef autoboost::detail::deduce_source_char<no_cv_src>                           deduce_src_char_metafunc;
             typedef AUTOBOOST_DEDUCED_TYPENAME deduce_src_char_metafunc::type           src_char_t;
             typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::detail::deduce_target_char<Target>::type target_char_t;
-                
+
             typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::detail::widest_char<
                 target_char_t, src_char_t
             >::type char_type;
@@ -447,34 +427,32 @@ namespace autoboost {
                 AUTOBOOST_DEDUCED_TYPENAME autoboost::detail::extract_char_traits<char_type, no_cv_src>
             >::type::trait_t traits;
 
-            typedef autoboost::type_traits::ice_and<
-                autoboost::is_same<char, src_char_t>::value,                                  // source is not a wide character based type
-                autoboost::type_traits::ice_ne<sizeof(char), sizeof(target_char_t) >::value,  // target type is based on wide character
-                autoboost::type_traits::ice_not<
-                    autoboost::detail::is_character<no_cv_src>::value                     // single character widening is optimized
-                >::value                                                                  // and does not requires stringbuffer
-            >   is_string_widening_required_t;
+            typedef autoboost::mpl::bool_
+            	<
+                autoboost::is_same<char, src_char_t>::value &&                                 // source is not a wide character based type
+                (sizeof(char) != sizeof(target_char_t)) &&  // target type is based on wide character
+                (!(autoboost::detail::is_character<no_cv_src>::value))
+            	> is_string_widening_required_t;
 
-            typedef autoboost::type_traits::ice_not< autoboost::type_traits::ice_or<
-                autoboost::is_integral<no_cv_src>::value,
-                autoboost::detail::is_this_float_conversion_optimized<no_cv_src, char_type >::value,
-                autoboost::detail::is_character<
+            typedef autoboost::mpl::bool_
+            	<
+            	!(autoboost::is_integral<no_cv_src>::value ||
+                  autoboost::detail::is_character<
                     AUTOBOOST_DEDUCED_TYPENAME deduce_src_char_metafunc::stage1_type          // if we did not get character type at stage1
-                >::value                                                                  // then we have no optimization for that type
-            >::value >   is_source_input_not_optimized_t;
+                  >::value                                                           // then we have no optimization for that type
+            	 )
+            	> is_source_input_not_optimized_t;
 
             // If we have an optimized conversion for
             // Source, we do not need to construct stringbuf.
-            AUTOBOOST_STATIC_CONSTANT(bool, requires_stringbuf = 
-                (autoboost::type_traits::ice_or<
-                    is_string_widening_required_t::value, is_source_input_not_optimized_t::value
-                >::value)
+            AUTOBOOST_STATIC_CONSTANT(bool, requires_stringbuf =
+            	(is_string_widening_required_t::value || is_source_input_not_optimized_t::value)
             );
-            
+
             typedef autoboost::detail::lcast_src_length<no_cv_src> len_t;
         };
     }
- 
+
     namespace detail
     {
         template<typename Target, typename Source>

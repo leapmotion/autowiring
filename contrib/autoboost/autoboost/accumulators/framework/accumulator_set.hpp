@@ -227,7 +227,7 @@ struct accumulator_set
         fusion::filter_view<accumulators_type, FilterPred> filtered_accs(this->accumulators);
         fusion::for_each(filtered_accs, func);
     }
-    
+
     ///////////////////////////////////////////////////////////////////////////////
     /// The return type of the operator() overloads is void.
     typedef void result_type;

@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // basic_iarchive.hpp:
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -17,10 +17,10 @@
 //  See http://www.boost.org for updates, documentation, and revision history.
 
 // can't use this - much as I'd like to as borland doesn't support it
-// #include <autoboost/scoped_ptr.hpp>
 
 #include <autoboost/config.hpp>
 #include <autoboost/noncopyable.hpp>
+#include <autoboost/scoped_ptr.hpp>
 
 #include <autoboost/serialization/tracking_enum.hpp>
 #include <autoboost/archive/basic_archive.hpp>
@@ -37,19 +37,18 @@ namespace archive {
 namespace detail {
 
 class basic_iarchive_impl;
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_iserializer;
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_pointer_iserializer;
+class basic_iserializer;
+class basic_pointer_iserializer;
+
 //////////////////////////////////////////////////////////////////////
 // class basic_iarchive - read serialized objects from a input stream
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_iarchive :
+class AUTOBOOST_SYMBOL_VISIBLE basic_iarchive :
     private autoboost::noncopyable,
     public autoboost::archive::detail::helper_collection
 {
     friend class basic_iarchive_impl;
     // hide implementation of this class to minimize header conclusion
-    // in client code. I couldn't used scoped pointer with borland
-    // autoboost::scoped_ptr<basic_iarchive_impl> pimpl;
-    basic_iarchive_impl * pimpl;
+    autoboost::scoped_ptr<basic_iarchive_impl> pimpl;
 
     virtual void vload(version_type &t) =  0;
     virtual void vload(object_id_type &t) =  0;
@@ -58,41 +57,42 @@ class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_iarchive :
     virtual void vload(class_name_type &t) = 0;
     virtual void vload(tracking_type &t) = 0;
 protected:
-    basic_iarchive(unsigned int flags);
-    // account for bogus gcc warning
-    #if defined(__GNUC__)
-    virtual
-    #endif
-    ~basic_iarchive();
+    AUTOBOOST_ARCHIVE_DECL basic_iarchive(unsigned int flags);
+    autoboost::archive::detail::helper_collection &
+    get_helper_collection(){
+        return *this;
+    }
 public:
+    // some msvc versions require that the following function be public
+    // otherwise it should really protected.
+    virtual AUTOBOOST_ARCHIVE_DECL ~basic_iarchive();
     // note: NOT part of the public API.
-    void next_object_pointer(void *t);
-    void register_basic_serializer(
+    AUTOBOOST_ARCHIVE_DECL void next_object_pointer(void *t);
+    AUTOBOOST_ARCHIVE_DECL void register_basic_serializer(
         const basic_iserializer & bis
     );
-    void load_object(
-        void *t, 
+    AUTOBOOST_ARCHIVE_DECL void load_object(
+        void *t,
         const basic_iserializer & bis
     );
-    const basic_pointer_iserializer * 
+    AUTOBOOST_ARCHIVE_DECL const basic_pointer_iserializer *
     load_pointer(
-        void * & t, 
+        void * & t,
         const basic_pointer_iserializer * bpis_ptr,
         const basic_pointer_iserializer * (*finder)(
             const autoboost::serialization::extended_type_info & eti
         )
-
     );
     // real public API starts here
-    void 
+    AUTOBOOST_ARCHIVE_DECL void
     set_library_version(library_version_type archive_library_version);
-    library_version_type 
+    AUTOBOOST_ARCHIVE_DECL library_version_type
     get_library_version() const;
-    unsigned int
+    AUTOBOOST_ARCHIVE_DECL unsigned int
     get_flags() const;
-    void 
+    AUTOBOOST_ARCHIVE_DECL void
     reset_object_address(const void * new_address, const void * old_address);
-    void 
+    AUTOBOOST_ARCHIVE_DECL void
     delete_created_pointers();
 };
 

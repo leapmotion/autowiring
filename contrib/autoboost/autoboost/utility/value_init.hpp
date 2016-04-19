@@ -36,14 +36,14 @@
 // It is safe to ignore the following warning from MSVC 7.1 or higher:
 // "warning C4351: new behavior: elements of array will be default initialized"
 #pragma warning(disable: 4351)
-// It is safe to ignore the following MSVC warning, which may pop up when T is 
+// It is safe to ignore the following MSVC warning, which may pop up when T is
 // a const type: "warning C4512: assignment operator could not be generated".
 #pragma warning(disable: 4512)
 #endif
 
 #ifdef AUTOBOOST_NO_COMPLETE_VALUE_INITIALIZATION
-  // Implementation detail: The macro AUTOBOOST_DETAIL_VALUE_INIT_WORKAROUND_SUGGESTED 
-  // suggests that a workaround should be applied, because of compiler issues 
+  // Implementation detail: The macro AUTOBOOST_DETAIL_VALUE_INIT_WORKAROUND_SUGGESTED
+  // suggests that a workaround should be applied, because of compiler issues
   // regarding value-initialization.
   #define AUTOBOOST_DETAIL_VALUE_INIT_WORKAROUND_SUGGESTED
 #endif
@@ -68,7 +68,7 @@ class initialized
     {
 #if !AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x592))
       typename
-#endif 
+#endif
       remove_const<T>::type data;
 
       AUTOBOOST_GPU_ENABLED
@@ -89,7 +89,7 @@ class initialized
     mutable
 #if !AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x592))
       typename
-#endif 
+#endif
       aligned_storage<sizeof(wrapper), alignment_of<wrapper>::value>::type x;
 
     AUTOBOOST_GPU_ENABLED
@@ -198,13 +198,13 @@ class value_initialized
     initialized<T> m_data;
 
   public :
-    
+
     AUTOBOOST_GPU_ENABLED
     value_initialized()
     :
     m_data()
     { }
-    
+
     AUTOBOOST_GPU_ENABLED
     T const & data() const
     {
@@ -262,7 +262,7 @@ void swap ( value_initialized<T> & lhs, value_initialized<T> & rhs )
 class initialized_value_t
 {
   public :
-    
+
     template <class T> AUTOBOOST_GPU_ENABLED operator T() const
     {
       return initialized<T>().data();

@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -68,10 +68,10 @@ template<> struct lambda_impl< int_<2> >
     {
         typedef lambda< typename F::arg1, Tag, false_ > l1;
         typedef lambda< typename F::arg2, Tag, false_ > l2;
-        
+
         typedef typename l1::is_le is_le1;
         typedef typename l2::is_le is_le2;
-        
+
 
         typedef aux::lambda_or<
               AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le1)::value, AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le2)::value
@@ -99,11 +99,11 @@ template<> struct lambda_impl< int_<3> >
         typedef lambda< typename F::arg1, Tag, false_ > l1;
         typedef lambda< typename F::arg2, Tag, false_ > l2;
         typedef lambda< typename F::arg3, Tag, false_ > l3;
-        
+
         typedef typename l1::is_le is_le1;
         typedef typename l2::is_le is_le2;
         typedef typename l3::is_le is_le3;
-        
+
 
         typedef aux::lambda_or<
               AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le1)::value, AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le2)::value, AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le3)::value
@@ -132,12 +132,12 @@ template<> struct lambda_impl< int_<4> >
         typedef lambda< typename F::arg2, Tag, false_ > l2;
         typedef lambda< typename F::arg3, Tag, false_ > l3;
         typedef lambda< typename F::arg4, Tag, false_ > l4;
-        
+
         typedef typename l1::is_le is_le1;
         typedef typename l2::is_le is_le2;
         typedef typename l3::is_le is_le3;
         typedef typename l4::is_le is_le4;
-        
+
 
         typedef aux::lambda_or<
               AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le1)::value, AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le2)::value, AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le3)::value, AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le4)::value
@@ -168,13 +168,13 @@ template<> struct lambda_impl< int_<5> >
         typedef lambda< typename F::arg3, Tag, false_ > l3;
         typedef lambda< typename F::arg4, Tag, false_ > l4;
         typedef lambda< typename F::arg5, Tag, false_ > l5;
-        
+
         typedef typename l1::is_le is_le1;
         typedef typename l2::is_le is_le2;
         typedef typename l3::is_le is_le3;
         typedef typename l4::is_le is_le4;
         typedef typename l5::is_le is_le5;
-        
+
 
         typedef aux::lambda_or<
               AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le1)::value, AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le2)::value, AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le3)::value, AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le4)::value, AUTOBOOST_MPL_AUX_MSVC_VALUE_WKND(is_le5)::value

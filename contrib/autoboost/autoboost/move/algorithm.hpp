@@ -14,6 +14,14 @@
 #ifndef AUTOBOOST_MOVE_ALGORITHM_HPP
 #define AUTOBOOST_MOVE_ALGORITHM_HPP
 
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <autoboost/move/detail/config_begin.hpp>
 
 #include <autoboost/move/utility_core.hpp>

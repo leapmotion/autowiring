@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // archive_exception.cpp:
 
-// (C) Copyright 2009 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2009 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -13,8 +13,8 @@
 #endif
 
 #include <exception>
-//#include <autoboost/assert.hpp>
 #include <string>
+#include <cstring>
 
 #define AUTOBOOST_ARCHIVE_SOURCE
 #include <autoboost/archive/archive_exception.hpp>
@@ -22,6 +22,7 @@
 namespace autoboost {
 namespace archive {
 
+AUTOBOOST_ARCHIVE_DECL
 unsigned int
 archive_exception::append(unsigned int l, const char * a){
     while(l < (sizeof(m_buffer) - 1)){
@@ -34,12 +35,12 @@ archive_exception::append(unsigned int l, const char * a){
     return l;
 }
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 archive_exception::archive_exception(
-    exception_code c, 
+    exception_code c,
     const char * e1,
     const char * e2
-) : 
+) AUTOBOOST_NOEXCEPT :
     code(c)
 {
     unsigned int length = 0;
@@ -52,7 +53,7 @@ archive_exception::archive_exception(
         if(NULL != e1){
             length = append(length, " - ");
             length = append(length, e1);
-        }    
+        }
         break;
     case invalid_signature:
         length = append(length, "invalid signature");
@@ -68,7 +69,7 @@ archive_exception::archive_exception(
         if(NULL != e1){
             length = append(length, " - ");
             length = append(length, e1);
-        }    
+        }
         break;
     case array_size_too_short:
         length = append(length, "array size too short");
@@ -90,7 +91,7 @@ archive_exception::archive_exception(
         length = append(length, (NULL != e1) ? e1 : "<unknown class>");
         break;
     case other_exception:
-        // if get here - it indicates a derived exception 
+        // if get here - it indicates a derived exception
         // was sliced by passing by value in catch
         length = append(length, "unknown derived exception");
         break;
@@ -99,7 +100,7 @@ archive_exception::archive_exception(
         if(NULL != e1){
             length = append(length, " - ");
             length = append(length, e1);
-        }    
+        }
         break;
     case output_stream_error:
         length = append(length, "output stream error");
@@ -110,18 +111,27 @@ archive_exception::archive_exception(
         break;
     }
 }
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
-archive_exception::~archive_exception() throw() {}
 
-AUTOBOOST_ARCHIVE_DECL(const char *)
-archive_exception::what( ) const throw()
+AUTOBOOST_ARCHIVE_DECL
+archive_exception::archive_exception(archive_exception const & oth) AUTOBOOST_NOEXCEPT :
+	std::exception(oth),
+	code(oth.code)
 {
+	std::memcpy(m_buffer,oth.m_buffer,sizeof m_buffer);
+}
+
+AUTOBOOST_ARCHIVE_DECL
+archive_exception::~archive_exception() AUTOBOOST_NOEXCEPT_OR_NOTHROW {}
+
+AUTOBOOST_ARCHIVE_DECL const char *
+archive_exception::what() const AUTOBOOST_NOEXCEPT_OR_NOTHROW {
     return m_buffer;
 }
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
-archive_exception::archive_exception() : 
-        code(no_exception)
+
+AUTOBOOST_ARCHIVE_DECL
+archive_exception::archive_exception() AUTOBOOST_NOEXCEPT :
+    code(no_exception)
 {}
 
 } // archive
-} // boost
+} // autoboost

@@ -10,8 +10,8 @@
 //            specialization to unspecialized template (David Abrahams)
 // 06 Feb 01  Created (David Abrahams)
 
-#ifndef AB_SELECT_TYPE_DWA20010206_HPP
-# define AB_SELECT_TYPE_DWA20010206_HPP
+#ifndef SELECT_TYPE_DWA20010206_HPP
+# define SELECT_TYPE_DWA20010206_HPP
 
 namespace autoboost { namespace detail {
 

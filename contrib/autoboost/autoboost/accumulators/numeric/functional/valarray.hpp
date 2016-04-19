@@ -9,7 +9,7 @@
 #define AUTOBOOST_NUMERIC_FUNCTIONAL_VALARRAY_HPP_EAN_12_12_2005
 
 #ifdef AUTOBOOST_NUMERIC_FUNCTIONAL_HPP_INCLUDED
-# error Include this file before boost/accumulators/numeric/functional.hpp
+# error Include this file before autoboost/accumulators/numeric/functional.hpp
 #endif
 
 #include <valarray>

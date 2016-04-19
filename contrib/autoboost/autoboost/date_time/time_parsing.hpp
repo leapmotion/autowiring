@@ -1,8 +1,8 @@
-#ifndef AB__DATE_TIME_TIME_PARSING_HPP___
-#define AB__DATE_TIME_TIME_PARSING_HPP___
+#ifndef _DATE_TIME_TIME_PARSING_HPP___
+#define _DATE_TIME_TIME_PARSING_HPP___
 
 /* Copyright (c) 2002,2003,2005 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
@@ -19,7 +19,7 @@ namespace autoboost {
 namespace date_time {
 
   //! computes exponential math like 2^8 => 256, only works with positive integers
-  //Not general purpose, but needed b/c std::pow is not available 
+  //Not general purpose, but needed b/c std::pow is not available
   //everywehere. Hasn't been tested with negatives and zeros
   template<class int_type>
   inline
@@ -31,16 +31,16 @@ namespace date_time {
     }
     return result;
   }
-  
+
   //! Creates a time_duration object from a delimited string
   /*! Expected format for string is "[-]h[h][:mm][:ss][.fff]".
-   * If the number of fractional digits provided is greater than the 
-   * precision of the time duration type then the extra digits are 
+   * If the number of fractional digits provided is greater than the
+   * precision of the time duration type then the extra digits are
    * truncated.
    *
    * A negative duration will be created if the first character in
    * string is a '-', all other '-' will be treated as delimiters.
-   * Accepted delimiters are "-:,.". 
+   * Accepted delimiters are "-:,.".
    */
   template<class time_duration, class char_type>
   inline
@@ -48,11 +48,11 @@ namespace date_time {
   str_from_delimited_time_duration(const std::basic_string<char_type>& s)
   {
     unsigned short min=0, sec =0;
-    int hour =0; 
+    int hour =0;
     bool is_neg = (s.at(0) == '-');
     autoboost::int64_t fs=0;
     int pos = 0;
-      
+
     typedef typename std::basic_string<char_type>::traits_type traits_type;
     typedef autoboost::char_separator<char_type, traits_type> char_separator_type;
     typedef autoboost::tokenizer<char_separator_type,
@@ -61,7 +61,7 @@ namespace date_time {
     typedef typename autoboost::tokenizer<char_separator_type,
                              typename std::basic_string<char_type>::const_iterator,
                              typename std::basic_string<char_type> >::iterator tokenizer_iterator;
-   
+
     char_type sep_chars[5] = {'-',':',',','.'};
     char_separator_type sep(sep_chars);
     tokenizer tok(s,sep);
@@ -84,8 +84,8 @@ namespace date_time {
         //Works around a bug in MSVC 6 library that does not support
         //operator>> thus meaning lexical_cast will fail to compile.
 #if (defined(AUTOBOOST_MSVC) && (_MSC_VER < 1300))
-        // msvc wouldn't compile 'time_duration::num_fractional_digits()' 
-        // (required template argument list) as a workaround a temp 
+        // msvc wouldn't compile 'time_duration::num_fractional_digits()'
+        // (required template argument list) as a workaround a temp
         // time_duration object was used
         time_duration td(hour,min,sec,fs);
         int precision = td.num_fractional_digits();
@@ -108,12 +108,12 @@ namespace date_time {
         }
 #endif
         if(digits < precision){
-          // trailing zeros get dropped from the string, 
+          // trailing zeros get dropped from the string,
           // "1:01:01.1" would yield .000001 instead of .100000
           // the power() compensates for the missing decimal places
-          fs *= power(10, precision - digits); 
+          fs *= power(10, precision - digits);
         }
-        
+
         break;
       }
       default: break;
@@ -127,16 +127,16 @@ namespace date_time {
       return time_duration(hour, min, sec, fs);
     }
   }
-  
+
   //! Creates a time_duration object from a delimited string
   /*! Expected format for string is "[-]h[h][:mm][:ss][.fff]".
-   * If the number of fractional digits provided is greater than the 
-   * precision of the time duration type then the extra digits are 
+   * If the number of fractional digits provided is greater than the
+   * precision of the time duration type then the extra digits are
    * truncated.
    *
    * A negative duration will be created if the first character in
    * string is a '-', all other '-' will be treated as delimiters.
-   * Accepted delimiters are "-:,.". 
+   * Accepted delimiters are "-:,.".
    */
   template<class time_duration>
   inline
@@ -148,7 +148,7 @@ namespace date_time {
 
   //! Utility function to split appart string
   inline
-  bool 
+  bool
   split(const std::string& s,
         char sep,
         std::string& first,
@@ -190,8 +190,8 @@ namespace date_time {
   {
     int precision = 0;
     {
-      // msvc wouldn't compile 'time_duration::num_fractional_digits()' 
-      // (required template argument list) as a workaround, a temp 
+      // msvc wouldn't compile 'time_duration::num_fractional_digits()'
+      // (required template argument list) as a workaround, a temp
       // time_duration object was used
       time_duration tmp(0,0,0,1);
       precision = tmp.num_fractional_digits();
@@ -210,14 +210,14 @@ namespace date_time {
     // stlport choked when passing s.substr() to tokenizer
     // using a new string fixed the error
     std::string remain = s.substr(sign);
-    /* We do not want the offset_separator to wrap the offsets, we 
-     * will never want to  process more than: 
+    /* We do not want the offset_separator to wrap the offsets, we
+     * will never want to  process more than:
      * 2 char, 2 char, 2 char, frac_sec length.
      * We *do* want the offset_separator to give us a partial for the
      * last characters if there were not enough provided in the input string. */
     bool wrap_off = false;
     bool ret_part = true;
-    autoboost::offset_separator osf(offsets, offsets+4, wrap_off, ret_part); 
+    autoboost::offset_separator osf(offsets, offsets+4, wrap_off, ret_part);
     typedef autoboost::tokenizer<autoboost::offset_separator,
                              std::basic_string<char>::const_iterator,
                              std::basic_string<char> > tokenizer;
@@ -227,26 +227,26 @@ namespace date_time {
     tokenizer tok(remain, osf);
     for(tokenizer_iterator ti=tok.begin(); ti!=tok.end();++ti){
       switch(pos) {
-        case 0: 
+        case 0:
           {
-            hours = autoboost::lexical_cast<int>(*ti); 
+            hours = autoboost::lexical_cast<int>(*ti);
             break;
           }
-        case 1: 
+        case 1:
           {
-            min = autoboost::lexical_cast<short>(*ti); 
+            min = autoboost::lexical_cast<short>(*ti);
             break;
           }
-        case 2: 
+        case 2:
           {
-            sec = autoboost::lexical_cast<short>(*ti); 
+            sec = autoboost::lexical_cast<short>(*ti);
             break;
           }
         case 3:
           {
             std::string char_digits(ti->substr(1)); // digits w/no decimal
             int digits = static_cast<int>(char_digits.length());
-            
+
             //Works around a bug in MSVC 6 library that does not support
             //operator>> thus meaning lexical_cast will fail to compile.
 #if (defined(AUTOBOOST_MSVC) && (_MSC_VER <= 1200))  // 1200 == VC++ 6.0
@@ -274,12 +274,12 @@ namespace date_time {
             }
 #endif
             if(digits < precision){
-              // trailing zeros get dropped from the string, 
+              // trailing zeros get dropped from the string,
               // "1:01:01.1" would yield .000001 instead of .100000
               // the power() compensates for the missing decimal places
-              fs *= power(10, precision - digits); 
+              fs *= power(10, precision - digits);
             }
-            
+
             break;
           }
           default: break;

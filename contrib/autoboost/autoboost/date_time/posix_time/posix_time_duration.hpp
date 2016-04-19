@@ -1,8 +1,8 @@
-#ifndef AB_POSIX_TIME_DURATION_HPP___
-#define AB_POSIX_TIME_DURATION_HPP___
+#ifndef POSIX_TIME_DURATION_HPP___
+#define POSIX_TIME_DURATION_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland
@@ -21,7 +21,7 @@ namespace posix_time {
   {
   public:
     explicit hours(long h) :
-      time_duration(h,0,0)
+      time_duration(static_cast<hour_type>(h),0,0)
     {}
   };
 
@@ -32,7 +32,7 @@ namespace posix_time {
   {
   public:
     explicit minutes(long m) :
-      time_duration(0,m,0)
+      time_duration(0,static_cast<min_type>(m),0)
     {}
   };
 
@@ -43,7 +43,7 @@ namespace posix_time {
   {
   public:
     explicit seconds(long s) :
-      time_duration(0,0,s)
+      time_duration(0,0,static_cast<sec_type>(s))
     {}
   };
 

@@ -2,7 +2,7 @@
 #define AUTOBOOST_SMART_PTR_DETAIL_ATOMIC_COUNT_GCC_HPP_INCLUDED
 
 //
-//  boost/detail/atomic_count_gcc.hpp
+//  autoboost/detail/atomic_count_gcc.hpp
 //
 //  atomic_count for GNU libstdc++ v3
 //
@@ -18,8 +18,8 @@
 //
 
 #if __GNUC__ * 100 + __GNUC_MINOR__ >= 402
-# include <ext/atomicity.h> 
-#else 
+# include <ext/atomicity.h>
+#else
 # include <bits/atomicity.h>
 #endif
 

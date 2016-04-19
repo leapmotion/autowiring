@@ -11,6 +11,7 @@
 #endif
 
 #include <autoboost/config.hpp>
+#include <autoboost/predef.h>
 #include <autoboost/cstdint.hpp> // for autoboost::uintmax_t
 #include <autoboost/detail/workaround.hpp>
 #include <autoboost/type_traits/is_integral.hpp>
@@ -50,6 +51,18 @@
 // are disabled for now.  (JM 2012).
 #  define AUTOBOOST_MATH_NO_REAL_CONCEPT_TESTS
 #endif
+#ifdef sun
+// Any use of __float128 in program startup code causes a segfault  (tested JM 2015, Solaris 11).
+#  define AUTOBOOST_MATH_DISABLE_FLOAT128
+#endif
+#ifdef __HAIKU__
+//
+// Not sure what's up with the math detection on Haiku, but linking fails with
+// float128 code enabled, and we don't have an implementation of __expl, so
+// disabling long double functions for now as well.
+#  define AUTOBOOST_MATH_DISABLE_FLOAT128
+#  define AUTOBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
+#endif
 #if (defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)) && ((LDBL_MANT_DIG == 106) || (__LDBL_MANT_DIG__ == 106)) && !defined(AUTOBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
 //
 // Darwin's rather strange "double double" is rather hard to
@@ -61,8 +74,8 @@
 //
 // Intel compiler prior to version 10 has sporadic problems
 // calling the long double overloads of the std lib math functions:
-// calling ::powl is OK, but std::pow(long double, long double) 
-// may segfault depending upon the value of the arguments passed 
+// calling ::powl is OK, but std::pow(long double, long double)
+// may segfault depending upon the value of the arguments passed
 // and the specific Linux distribution.
 //
 // We'll be conservative and disable long double support for this compiler.
@@ -171,14 +184,20 @@
 //
 #ifdef AUTOBOOST_MSVC
 #  define AUTOBOOST_MATH_POLY_METHOD 2
+#  define AUTOBOOST_MATH_RATIONAL_METHOD 1
 #elif defined(AUTOBOOST_INTEL)
 #  define AUTOBOOST_MATH_POLY_METHOD 2
-#  define AUTOBOOST_MATH_RATIONAL_METHOD 2
+#  define AUTOBOOST_MATH_RATIONAL_METHOD 1
 #elif defined(__GNUC__)
+#if __GNUC__ < 4
 #  define AUTOBOOST_MATH_POLY_METHOD 3
 #  define AUTOBOOST_MATH_RATIONAL_METHOD 3
 #  define AUTOBOOST_MATH_INT_TABLE_TYPE(RT, IT) RT
 #  define AUTOBOOST_MATH_INT_VALUE_SUFFIX(RV, SUF) RV##.0L
+#else
+#  define AUTOBOOST_MATH_POLY_METHOD 3
+#  define AUTOBOOST_MATH_RATIONAL_METHOD 1
+#endif
 #endif
 
 #if defined(AUTOBOOST_NO_LONG_LONG) && !defined(AUTOBOOST_MATH_INT_TABLE_TYPE)
@@ -187,21 +206,55 @@
 #endif
 
 //
-// The maximum order of polynomial that will be evaluated 
+// constexpr support, early GCC implementations can't cope so disable
+// constexpr for them:
+//
+#if !defined(__clang) && defined(__GNUC__)
+#if (__GNUC__ * 100 + __GNUC_MINOR__) < 490
+#  define AUTOBOOST_MATH_DISABLE_CONSTEXPR
+#endif
+#endif
+
+#ifdef AUTOBOOST_MATH_DISABLE_CONSTEXPR
+#  define AUTOBOOST_MATH_CONSTEXPR
+#else
+#  define AUTOBOOST_MATH_CONSTEXPR AUTOBOOST_CONSTEXPR
+#endif
+
+//
+// noexcept support:
+//
+#ifndef AUTOBOOST_NO_CXX11_NOEXCEPT
+#ifndef AUTOBOOST_NO_CXX11_HDR_TYPE_TRAITS
+#include <type_traits>
+#  define AUTOBOOST_MATH_NOEXCEPT(T) noexcept(std::is_floating_point<T>::value)
+#  define AUTOBOOST_MATH_IS_FLOAT(T) (std::is_floating_point<T>::value)
+#else
+#include <autoboost/type_traits/is_floating_point.hpp>
+#  define AUTOBOOST_MATH_NOEXCEPT(T) noexcept(autoboost::is_floating_point<T>::value)
+#  define AUTOBOOST_MATH_IS_FLOAT(T) (autoboost::is_floating_point<T>::value)
+#endif
+#else
+#  define AUTOBOOST_MATH_NOEXCEPT(T)
+#  define AUTOBOOST_MATH_IS_FLOAT(T) false
+#endif
+
+//
+// The maximum order of polynomial that will be evaluated
 // via an unrolled specialisation:
 //
 #ifndef AUTOBOOST_MATH_MAX_POLY_ORDER
-#  define AUTOBOOST_MATH_MAX_POLY_ORDER 17
-#endif 
+#  define AUTOBOOST_MATH_MAX_POLY_ORDER 20
+#endif
 //
 // Set the method used to evaluate polynomials and rationals:
 //
 #ifndef AUTOBOOST_MATH_POLY_METHOD
-#  define AUTOBOOST_MATH_POLY_METHOD 1
-#endif 
+#  define AUTOBOOST_MATH_POLY_METHOD 2
+#endif
 #ifndef AUTOBOOST_MATH_RATIONAL_METHOD
-#  define AUTOBOOST_MATH_RATIONAL_METHOD 0
-#endif 
+#  define AUTOBOOST_MATH_RATIONAL_METHOD 1
+#endif
 //
 // decide whether to store constants as integers or reals:
 //
@@ -212,12 +265,24 @@
 #  define AUTOBOOST_MATH_INT_VALUE_SUFFIX(RV, SUF) RV##SUF
 #endif
 //
-// Test whether to support __float128:
+// Test whether to support __float128, if we don't have quadmath.h then this can't currently work:
+//
+#ifndef AUTOBOOST_MATH_USE_FLOAT128
+#ifdef __has_include
+#if ! __has_include("quadmath.h")
+#define AUTOBOOST_MATH_DISABLE_FLOAT128
+#endif
+#elif !defined(AUTOBOOST_ARCH_X86)
+#define AUTOBOOST_MATH_DISABLE_FLOAT128
+#endif
+#endif
+//
+// And then the actual configuration:
 //
 #if defined(_GLIBCXX_USE_FLOAT128) && defined(AUTOBOOST_GCC) && !defined(__STRICT_ANSI__) \
    && !defined(AUTOBOOST_MATH_DISABLE_FLOAT128) || defined(AUTOBOOST_MATH_USE_FLOAT128)
 //
-// Only enable this when the compiler really is GCC as clang and probably 
+// Only enable this when the compiler really is GCC as clang and probably
 // intel too don't support __float128 yet :-(
 //
 #ifndef AUTOBOOST_MATH_USE_FLOAT128
@@ -284,13 +349,13 @@ namespace tools
 {
 
 template <class T>
-inline T max AUTOBOOST_PREVENT_MACRO_SUBSTITUTION(T a, T b, T c)
+inline T max AUTOBOOST_PREVENT_MACRO_SUBSTITUTION(T a, T b, T c) AUTOBOOST_MATH_NOEXCEPT(T)
 {
    return (std::max)((std::max)(a, b), c);
 }
 
 template <class T>
-inline T max AUTOBOOST_PREVENT_MACRO_SUBSTITUTION(T a, T b, T c, T d)
+inline T max AUTOBOOST_PREVENT_MACRO_SUBSTITUTION(T a, T b, T c, T d) AUTOBOOST_MATH_NOEXCEPT(T)
 {
    return (std::max)((std::max)(a, b), (std::max)(c, d));
 }
@@ -298,7 +363,7 @@ inline T max AUTOBOOST_PREVENT_MACRO_SUBSTITUTION(T a, T b, T c, T d)
 } // namespace tools
 
 template <class T>
-void suppress_unused_variable_warning(const T&)
+void suppress_unused_variable_warning(const T&) AUTOBOOST_MATH_NOEXCEPT(T)
 {
 }
 
@@ -329,7 +394,7 @@ struct is_integer_for_rounding
 // This code was introduced in response to this glibc bug: http://sourceware.org/bugzilla/show_bug.cgi?id=2445
 // Basically powl and expl can return garbage when the result is small and certain exception flags are set
 // on entrance to these functions.  This appears to have been fixed in Glibc 2.14 (May 2011).
-// Much more information in this message thread: https://groups.google.com/forum/#!topic/boost-list/ZT99wtIFlb4
+// Much more information in this message thread: https://groups.google.com/forum/#!topic/autoboost-list/ZT99wtIFlb4
 //
 
    #include <autoboost/detail/fenv.hpp>
@@ -358,7 +423,7 @@ namespace autoboost{ namespace math{
    }} // namespaces
 
 #    define AUTOBOOST_FPU_EXCEPTION_GUARD autoboost::math::detail::fpu_guard local_guard_object;
-#    define AUTOBOOST_MATH_INSTRUMENT_FPU do{ fexcept_t cpu_flags; fegetexceptflag(&cpu_flags, FE_ALL_EXCEPT); AUTOBOOST_MATH_INSTRUMENT_VARIABLE(cpu_flags); } while(0); 
+#    define AUTOBOOST_MATH_INSTRUMENT_FPU do{ fexcept_t cpu_flags; fegetexceptflag(&cpu_flags, FE_ALL_EXCEPT); AUTOBOOST_MATH_INSTRUMENT_VARIABLE(cpu_flags); } while(0);
 
 #  else
 

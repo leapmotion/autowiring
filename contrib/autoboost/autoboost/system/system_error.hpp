@@ -21,7 +21,7 @@ namespace autoboost
 
     class AUTOBOOST_SYMBOL_VISIBLE system_error : public std::runtime_error
     // AUTOBOOST_SYMBOL_VISIBLE is needed by GCC to ensure system_error thrown from a shared
-    // library can be caught. See svn.boost.org/trac/boost/ticket/3697
+    // library can be caught. See svn.boost.org/trac/autoboost/ticket/3697
     {
     public:
       system_error( error_code ec )

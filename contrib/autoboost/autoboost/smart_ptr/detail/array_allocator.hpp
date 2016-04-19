@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2012-2014 Glen Joseph Fernandes 
+ * Copyright (c) 2012-2014 Glen Joseph Fernandes
  * glenfe at live dot com
  *
- * Distributed under the Boost Software License, 
- * Version 1.0. (See accompanying file LICENSE_1_0.txt 
- * or copy at http://boost.org/LICENSE_1_0.txt)
+ * Distributed under the Boost Software License,
+ * Version 1.0. (See accompanying file LICENSE_1_0.txt
+ * or copy at http://autoboost.org/LICENSE_1_0.txt)
  */
 #ifndef AUTOBOOST_SMART_PTR_DETAIL_ARRAY_ALLOCATOR_HPP
 #define AUTOBOOST_SMART_PTR_DETAIL_ARRAY_ALLOCATOR_HPP
@@ -213,7 +213,7 @@ namespace autoboost {
             typedef Y* pointer;
             typedef const Y* const_pointer;
             typedef std::size_t size_type;
-            typedef ptrdiff_t difference_type;
+            typedef std::ptrdiff_t difference_type;
             typedef Y& reference;
             typedef const Y& const_reference;
 

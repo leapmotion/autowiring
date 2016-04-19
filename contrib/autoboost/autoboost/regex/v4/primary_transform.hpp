@@ -3,12 +3,12 @@
  * Copyright (c) 1998-2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
- 
+
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE:        primary_transform.hpp
@@ -32,7 +32,7 @@
 #endif
 
 namespace autoboost{
-   namespace re_detail{
+   namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 
 enum{
@@ -122,7 +122,7 @@ unsigned find_sort_syntax(const traits* pt, charT* delim)
 }
 
 
-   } // namespace re_detail
+   } // namespace AUTOBOOST_REGEX_DETAIL_NS
 } // namespace autoboost
 
 #ifdef AUTOBOOST_MSVC

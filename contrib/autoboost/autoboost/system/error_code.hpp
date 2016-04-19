@@ -1,4 +1,4 @@
-//  boost/system/error_code.hpp  ---------------------------------------------//
+//  autoboost/system/error_code.hpp  ---------------------------------------------//
 
 //  Copyright Beman Dawes 2006, 2007
 //  Copyright Christoper Kohlhoff 2007

@@ -3,12 +3,12 @@
  * Copyright (c) 2004
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
- 
+
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         c_regex_traits.hpp
@@ -60,18 +60,18 @@ struct AUTOBOOST_REGEX_DECL c_regex_traits<char>
    struct locale_type{};
    typedef autoboost::uint32_t char_class_type;
 
-   static size_type length(const char_type* p) 
-   { 
-      return (std::strlen)(p); 
+   static size_type length(const char_type* p)
+   {
+      return (std::strlen)(p);
    }
 
-   char translate(char c) const 
-   { 
-      return c; 
+   char translate(char c) const
+   {
+      return c;
    }
-   char translate_nocase(char c) const 
-   { 
-      return static_cast<char>((std::tolower)(static_cast<unsigned char>(c))); 
+   char translate_nocase(char c) const
+   {
+      return static_cast<char>((std::tolower)(static_cast<unsigned char>(c)));
    }
 
    static string_type AUTOBOOST_REGEX_CALL transform(const char* p1, const char* p2);
@@ -105,18 +105,18 @@ struct AUTOBOOST_REGEX_DECL c_regex_traits<wchar_t>
    struct locale_type{};
    typedef autoboost::uint32_t char_class_type;
 
-   static size_type length(const char_type* p) 
-   { 
-      return (std::wcslen)(p); 
+   static size_type length(const char_type* p)
+   {
+      return (std::wcslen)(p);
    }
 
-   wchar_t translate(wchar_t c) const 
-   { 
-      return c; 
+   wchar_t translate(wchar_t c) const
+   {
+      return c;
    }
-   wchar_t translate_nocase(wchar_t c) const 
-   { 
-      return (std::towlower)(c); 
+   wchar_t translate_nocase(wchar_t c) const
+   {
+      return (std::towlower)(c);
    }
 
    static string_type AUTOBOOST_REGEX_CALL transform(const wchar_t* p1, const wchar_t* p2);
@@ -154,18 +154,18 @@ struct AUTOBOOST_REGEX_DECL c_regex_traits<unsigned short>
    struct locale_type{};
    typedef autoboost::uint32_t char_class_type;
 
-   static size_type length(const char_type* p) 
-   { 
-      return (std::wcslen)((const wchar_t*)p); 
+   static size_type length(const char_type* p)
+   {
+      return (std::wcslen)((const wchar_t*)p);
    }
 
-   unsigned short translate(unsigned short c) const 
-   { 
-      return c; 
+   unsigned short translate(unsigned short c) const
+   {
+      return c;
    }
-   unsigned short translate_nocase(unsigned short c) const 
-   { 
-      return (std::towlower)((wchar_t)c); 
+   unsigned short translate_nocase(unsigned short c) const
+   {
+      return (std::towlower)((wchar_t)c);
    }
 
    static string_type AUTOBOOST_REGEX_CALL transform(const unsigned short* p1, const unsigned short* p2);

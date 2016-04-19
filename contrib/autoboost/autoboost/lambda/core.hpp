@@ -8,12 +8,12 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // For more information, see www.boost.org
-// 
+//
 // Includes the core of LL, without any real features for client:
-// 
+//
 // tuples, lambda functors, return type deduction templates,
 // argument substitution mechanism (select functions)
-// 
+//
 // Some functionality comes as well:
 // Assignment and subscript operators, as well as function
 // call operator for placeholder variables.
@@ -27,7 +27,7 @@
 
 #include "autoboost/tuple/tuple.hpp"
 
-// inject some of the tuple names into lambda 
+// inject some of the tuple names into lambda
 namespace autoboost {
 namespace lambda {
 
@@ -35,7 +35,7 @@ using ::autoboost::tuples::tuple;
 using ::autoboost::tuples::null_type;
 
 } // lambda
-} // boost
+} // autoboost
 
 #include "autoboost/lambda/detail/lambda_config.hpp"
 #include "autoboost/lambda/detail/lambda_fwd.hpp"
@@ -71,9 +71,9 @@ namespace {
   autoboost::lambda::placeholder3_type& _3 = free3;
   // _1, _2, ... naming scheme by Peter Dimov
 } // unnamed
-   
+
 } // lambda
-} // boost
-   
-   
+} // autoboost
+
+
 #endif //AUTOBOOST_LAMBDA_CORE_HPP

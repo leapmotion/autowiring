@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -43,12 +43,12 @@ struct v_iter
     typedef mpl::long_<n_> pos;
 
 #if defined(AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
-    enum { 
+    enum {
           next_ = n_ + 1
         , prior_ = n_ - 1
         , pos_ = n_
     };
-    
+
     typedef v_iter<Vector,next_> next;
     typedef v_iter<Vector,prior_> prior;
 #endif
@@ -89,11 +89,11 @@ struct advance< v_iter<Vector,n_>,Distance>
         > type;
 };
 
-template< 
+template<
       typename Vector
     , AUTOBOOST_MPL_AUX_NTTP_DECL(long, n_)
     , AUTOBOOST_MPL_AUX_NTTP_DECL(long, m_)
-    > 
+    >
 struct distance< v_iter<Vector,n_>, v_iter<Vector,m_> >
     : mpl::long_<(m_ - n_)>
 {

@@ -1,6 +1,6 @@
 
 //  (C) Copyright Dave Abrahams, Steve Cleary, Beman Dawes, Howard
-//  Hinnant & John Maddock 2000.  
+//  Hinnant & John Maddock 2000.
 //  Use, modification and distribution are subject to the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt).
@@ -12,9 +12,6 @@
 #define AUTOBOOST_TT_ADD_CV_HPP_INCLUDED
 
 #include <autoboost/config.hpp>
-
-// should be the last #include
-#include <autoboost/type_traits/detail/type_trait_def.hpp>
 
 namespace autoboost {
 
@@ -29,18 +26,16 @@ namespace autoboost {
 // references with MSVC6.
 #   pragma warning(push)
 #   pragma warning(disable:4181) // warning C4181: qualifier applied to reference type ignored
-#endif 
+#endif
 
-AUTOBOOST_TT_AUX_TYPE_TRAIT_DEF1(add_cv,T,T const volatile)
+template <class T> struct add_cv{ typedef T const volatile type; };
 
 #if defined(AUTOBOOST_MSVC)
 #   pragma warning(pop)
-#endif 
+#endif
 
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_1(typename T,add_cv,T&,T&)
+template <class T> struct add_cv<T&>{ typedef T& type; };
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/type_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_ADD_CV_HPP_INCLUDED

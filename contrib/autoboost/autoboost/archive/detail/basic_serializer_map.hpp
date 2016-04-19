@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // basic_serializer_map.hpp: extenstion of type_info required for serialization.
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -24,7 +24,7 @@
 
 #include <autoboost/archive/detail/abi_prefix.hpp> // must be the last header
 
-namespace autoboost { 
+namespace autoboost {
 namespace serialization {
     class extended_type_info;
 }
@@ -34,7 +34,7 @@ namespace detail {
 
 class basic_serializer;
 
-class AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+class AUTOBOOST_SYMBOL_VISIBLE
 basic_serializer_map : public
     autoboost::noncopyable
 {
@@ -45,14 +45,14 @@ basic_serializer_map : public
         ) const ;
     };
     typedef std::set<
-        const basic_serializer *, 
+        const basic_serializer *,
         type_info_pointer_compare
     > map_type;
     map_type m_map;
 public:
-    bool insert(const basic_serializer * bs);
-    void erase(const basic_serializer * bs);
-    const basic_serializer * find(
+    AUTOBOOST_ARCHIVE_DECL bool insert(const basic_serializer * bs);
+    AUTOBOOST_ARCHIVE_DECL void erase(const basic_serializer * bs);
+    AUTOBOOST_ARCHIVE_DECL const basic_serializer * find(
         const autoboost::serialization::extended_type_info & type_
     ) const;
 private:

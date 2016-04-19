@@ -14,7 +14,7 @@
 namespace autoboost {
     namespace algorithm {
 
-    //! Token compression mode 
+    //! Token compression mode
     /*!
         Specifies token compression mode for the token_finder.
     */
@@ -23,10 +23,10 @@ namespace autoboost {
         token_compress_on,    //!< Compress adjacent tokens
         token_compress_off  //!< Do not compress adjacent tokens
     };
-    
+
     } // namespace algorithm
 
-    // pull the names to the boost namespace
+    // pull the names to the autoboost namespace
     using algorithm::token_compress_on;
     using algorithm::token_compress_off;
 

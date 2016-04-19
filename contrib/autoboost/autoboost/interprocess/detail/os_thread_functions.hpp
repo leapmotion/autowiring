@@ -8,9 +8,9 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-//Thread launching functions are adapted from boost/detail/lightweight_thread.hpp
+//Thread launching functions are adapted from autoboost/detail/lightweight_thread.hpp
 //
-//  boost/detail/lightweight_thread.hpp
+//  autoboost/detail/lightweight_thread.hpp
 //
 //  Copyright (c) 2002 Peter Dimov and Multi Media Ltd.
 //  Copyright (c) 2008 Peter Dimov
@@ -22,7 +22,11 @@
 #ifndef AUTOBOOST_INTERPROCESS_DETAIL_OS_THREAD_FUNCTIONS_HPP
 #define AUTOBOOST_INTERPROCESS_DETAIL_OS_THREAD_FUNCTIONS_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -31,7 +35,7 @@
 #include <autoboost/interprocess/streams/bufferstream.hpp>
 #include <autoboost/interprocess/detail/posix_time_types_wrk.hpp>
 #include <cstddef>
-#include <memory>
+#include <ostream>
 
 #if defined(AUTOBOOST_INTERPROCESS_WINDOWS)
 #  include <autoboost/interprocess/detail/win32_api.hpp>
@@ -73,7 +77,19 @@ namespace ipcdetail{
 
 typedef unsigned long OS_process_id_t;
 typedef unsigned long OS_thread_id_t;
-typedef void*         OS_thread_t;
+struct OS_thread_t
+{
+   OS_thread_t()
+      : m_handle()
+   {}
+
+
+   void* handle() const
+   {  return m_handle;  }
+
+   void* m_handle;
+};
+
 typedef OS_thread_id_t OS_systemwide_thread_id_t;
 
 //process
@@ -491,18 +507,21 @@ inline int thread_create( OS_thread_t * thread, unsigned (__stdcall * start_rout
    void* h = (void*)_beginthreadex( 0, 0, start_routine, arg, 0, 0 );
 
    if( h != 0 ){
-      *thread = h;
+      thread->m_handle = h;
       return 0;
    }
    else{
       return 1;
    }
+
+   thread->m_handle = (void*)_beginthreadex( 0, 0, start_routine, arg, 0, 0 );
+   return thread->m_handle != 0;
 }
 
 inline void thread_join( OS_thread_t thread)
 {
-   winapi::wait_for_single_object( thread, winapi::infinite_time );
-   winapi::close_handle( thread );
+   winapi::wait_for_single_object( thread.handle(), winapi::infinite_time );
+   winapi::close_handle( thread.handle() );
 }
 
 #endif

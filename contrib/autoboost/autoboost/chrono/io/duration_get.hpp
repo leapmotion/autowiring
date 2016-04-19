@@ -14,7 +14,7 @@
 #include <autoboost/utility/enable_if.hpp>
 #include <autoboost/type_traits/is_signed.hpp>
 #include <autoboost/mpl/if.hpp>
-#include <autoboost/math/common_factor_rt.hpp>
+#include <autoboost/integer/common_factor_rt.hpp>
 #include <autoboost/chrono/detail/scan_keyword.hpp>
 #include <autoboost/chrono/detail/no_warning/signed_unsigned_cmp.hpp>
 #include <autoboost/chrono/process_cpu_clocks.hpp>
@@ -58,7 +58,7 @@ namespace autoboost
         typedef typename common_type<intermediate_type, unsigned long long>::type common_type_t;
 
         // Reduce r * num / den
-        common_type_t t = math::gcd<common_type_t>(common_type_t(r), common_type_t(den));
+        common_type_t t = integer::gcd<common_type_t>(common_type_t(r), common_type_t(den));
         r /= t;
         den /= t;
         if (den != 1)
@@ -278,8 +278,8 @@ namespace autoboost
 
         // r should be multiplied by (num/den) / Period
         // Reduce (num/den) / Period to lowest terms
-        unsigned long long gcd_n1_n2 = math::gcd<unsigned long long>(num, Period::num);
-        unsigned long long gcd_d1_d2 = math::gcd<unsigned long long>(den, Period::den);
+        unsigned long long gcd_n1_n2 = integer::gcd<unsigned long long>(num, Period::num);
+        unsigned long long gcd_d1_d2 = integer::gcd<unsigned long long>(den, Period::den);
         num /= gcd_n1_n2;
         den /= gcd_d1_d2;
         unsigned long long n2 = Period::num / gcd_n1_n2;
@@ -588,6 +588,6 @@ namespace autoboost
 
   } // chrono
 }
-// boost
+// autoboost
 
 #endif  // header

@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2003-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -27,11 +27,11 @@ struct at_impl< aux::set_tag >
 {
     template< typename Set, typename T > struct apply
     {
-        typedef typename if_< 
+        typedef typename if_<
               has_key_impl<aux::set_tag>::apply<Set,T>
             , T
             , void_
-            >::type type;            
+            >::type type;
     };
 };
 

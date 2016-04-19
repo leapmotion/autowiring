@@ -10,15 +10,11 @@
 #define AUTOBOOST_TT_REMOVE_POINTER_HPP_INCLUDED
 
 #include <autoboost/config.hpp>
-#include <autoboost/detail/workaround.hpp>
 
 #if defined(AUTOBOOST_MSVC)
 #include <autoboost/type_traits/remove_cv.hpp>
 #include <autoboost/type_traits/is_pointer.hpp>
 #endif
-
-// should be the last #include
-#include <autoboost/type_traits/detail/type_trait_def.hpp>
 
 namespace autoboost {
 
@@ -33,51 +29,49 @@ namespace detail{
    //
    // Does not bind to a <T*> or <T*const> partial specialization with VC10 and earlier
    //
-   template <class T> 
+   template <class T>
    struct remove_pointer_imp
    {
       typedef T type;
    };
 
-   template <class T> 
+   template <class T>
    struct remove_pointer_imp<T*>
    {
       typedef T type;
    };
 
-   template <class T, bool b> 
+   template <class T, bool b>
    struct remove_pointer_imp3
    {
       typedef typename remove_pointer_imp<typename autoboost::remove_cv<T>::type>::type type;
    };
 
-   template <class T> 
+   template <class T>
    struct remove_pointer_imp3<T, false>
    {
       typedef T type;
    };
 
-   template <class T> 
+   template <class T>
    struct remove_pointer_imp2
    {
       typedef typename remove_pointer_imp3<T, ::autoboost::is_pointer<T>::value>::type type;
    };
 }
 
-AUTOBOOST_TT_AUX_TYPE_TRAIT_DEF1(remove_pointer,T,typename autoboost::detail::remove_pointer_imp2<T>::type)
+template <class T> struct remove_pointer{ typedef typename autoboost::detail::remove_pointer_imp2<T>::type type; };
 
 #else
 
-AUTOBOOST_TT_AUX_TYPE_TRAIT_DEF1(remove_pointer,T,T)
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_1(typename T,remove_pointer,T*,T)
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_1(typename T,remove_pointer,T* const,T)
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_1(typename T,remove_pointer,T* volatile,T)
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_1(typename T,remove_pointer,T* const volatile,T)
+template <class T> struct remove_pointer{ typedef T type; };
+template <class T> struct remove_pointer<T*>{ typedef T type; };
+template <class T> struct remove_pointer<T*const>{ typedef T type; };
+template <class T> struct remove_pointer<T*volatile>{ typedef T type; };
+template <class T> struct remove_pointer<T*const volatile>{ typedef T type; };
 
 #endif
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/type_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_REMOVE_POINTER_HPP_INCLUDED

@@ -1,8 +1,8 @@
-#ifndef AB_DATE_TIME_TIME_ZONE_NAMES_HPP__
-#define AB_DATE_TIME_TIME_ZONE_NAMES_HPP__
+#ifndef DATE_TIME_TIME_ZONE_NAMES_HPP__
+#define DATE_TIME_TIME_ZONE_NAMES_HPP__
 
 /* Copyright (c) 2002-2003,2005 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland
@@ -24,25 +24,25 @@ namespace date_time {
   };
   template <class CharT>
   const typename default_zone_names<CharT>::char_type
-  default_zone_names<CharT>::standard_name[9] = 
+  default_zone_names<CharT>::standard_name[9] =
     {'s','t','d','_','n','a','m','e'};
 
   template <class CharT>
   const typename default_zone_names<CharT>::char_type
-  default_zone_names<CharT>::standard_abbrev[11] = 
+  default_zone_names<CharT>::standard_abbrev[11] =
     {'s','t','d','_','a','b','b','r','e','v'};
 
   template <class CharT>
   const typename default_zone_names<CharT>::char_type
-  default_zone_names<CharT>::non_dst_identifier[7] = 
+  default_zone_names<CharT>::non_dst_identifier[7] =
     {'n','o','-','d','s','t'};
 
   //! Base type that holds various string names for timezone output.
   /*! Class that holds various types of strings used for timezones.
-   *  For example, for the western United States there is the full 
+   *  For example, for the western United States there is the full
    *  name: Pacific Standard Time and the abbreviated name: PST.
    *  During daylight savings there are additional names:
-   *  Pacific Daylight Time and PDT. 
+   *  Pacific Daylight Time and PDT.
    *@parm CharT Allows class to support different character types
    */
   template<class CharT>
@@ -86,9 +86,9 @@ namespace date_time {
     string_type std_zone_abbrev_;
     string_type dst_zone_name_;
     string_type dst_zone_abbrev_;
-    
+
   };
-  
+
   //! Specialization of timezone names for standard char.
   //typedef time_zone_names_base<char> time_zone_names;
 

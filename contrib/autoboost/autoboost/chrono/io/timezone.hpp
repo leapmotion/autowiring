@@ -25,6 +25,6 @@ namespace autoboost
     AUTOBOOST_SCOPED_ENUM_DECLARE_END(timezone)
 
   } // chrono
-} // boost
+} // autoboost
 
 #endif  // header

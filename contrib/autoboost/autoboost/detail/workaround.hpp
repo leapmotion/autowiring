@@ -2,8 +2,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-#ifndef AB_WORKAROUND_DWA2002126_HPP
-# define AB_WORKAROUND_DWA2002126_HPP
+#ifndef WORKAROUND_DWA2002126_HPP
+# define WORKAROUND_DWA2002126_HPP
 
 // Compiler/library version workaround macro
 //
@@ -20,8 +20,8 @@
 //
 //     (AUTOBOOST_MSVC) != 0 && (AUTOBOOST_MSVC) < 1300
 //
-// When used for workarounds that apply to the latest known version 
-// and all earlier versions of a compiler, the following convention 
+// When used for workarounds that apply to the latest known version
+// and all earlier versions of a compiler, the following convention
 // should be observed:
 //
 //     #if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, AUTOBOOST_TESTED_AT(1301))
@@ -262,6 +262,6 @@
 
 #  define AUTOBOOST_WORKAROUND(symbol, test) 0
 
-# endif 
+# endif
 
 #endif // WORKAROUND_DWA2002126_HPP

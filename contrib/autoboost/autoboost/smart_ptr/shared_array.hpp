@@ -199,7 +199,7 @@ public:
         AUTOBOOST_ASSERT(i >= 0);
         return px[i];
     }
-    
+
     T * get() const AUTOBOOST_NOEXCEPT
     {
         return px;

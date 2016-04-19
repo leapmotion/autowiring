@@ -3,8 +3,8 @@
  * Copyright (c) 1998-2009
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -39,8 +39,8 @@ template <class OutputIterator, class BidirectionalIterator, class traits, class
 OutputIterator regex_replace(OutputIterator out,
                          BidirectionalIterator first,
                          BidirectionalIterator last,
-                         const basic_regex<charT, traits>& e, 
-                         Formatter fmt, 
+                         const basic_regex<charT, traits>& e,
+                         Formatter fmt,
                          match_flag_type flags = match_default)
 {
    regex_iterator<BidirectionalIterator, charT, traits> i(first, last, e, flags);
@@ -48,7 +48,7 @@ OutputIterator regex_replace(OutputIterator out,
    if(i == j)
    {
       if(!(flags & regex_constants::format_no_copy))
-         out = re_detail::copy(first, last, out);
+         out = AUTOBOOST_REGEX_DETAIL_NS::copy(first, last, out);
    }
    else
    {
@@ -56,7 +56,7 @@ OutputIterator regex_replace(OutputIterator out,
       while(i != j)
       {
          if(!(flags & regex_constants::format_no_copy))
-            out = re_detail::copy(i->prefix().first, i->prefix().second, out); 
+            out = AUTOBOOST_REGEX_DETAIL_NS::copy(i->prefix().first, i->prefix().second, out);
          out = i->format(out, fmt, flags, e);
          last_m = (*i)[0].second;
          if(flags & regex_constants::format_first_only)
@@ -64,19 +64,19 @@ OutputIterator regex_replace(OutputIterator out,
          ++i;
       }
       if(!(flags & regex_constants::format_no_copy))
-         out = re_detail::copy(last_m, last, out);
+         out = AUTOBOOST_REGEX_DETAIL_NS::copy(last_m, last, out);
    }
    return out;
 }
 
 template <class traits, class charT, class Formatter>
 std::basic_string<charT> regex_replace(const std::basic_string<charT>& s,
-                         const basic_regex<charT, traits>& e, 
+                         const basic_regex<charT, traits>& e,
                          Formatter fmt,
                          match_flag_type flags = match_default)
 {
    std::basic_string<charT> result;
-   re_detail::string_out_iterator<std::basic_string<charT> > i(result);
+   AUTOBOOST_REGEX_DETAIL_NS::string_out_iterator<std::basic_string<charT> > i(result);
    regex_replace(i, s.begin(), s.end(), e, fmt, flags);
    return result;
 }

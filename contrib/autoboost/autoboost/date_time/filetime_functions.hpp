@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_FILETIME_FUNCTIONS_HPP__
-#define AB_DATE_TIME_FILETIME_FUNCTIONS_HPP__
+#ifndef DATE_TIME_FILETIME_FUNCTIONS_HPP__
+#define DATE_TIME_FILETIME_FUNCTIONS_HPP__
 
 /* Copyright (c) 2004 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -129,7 +129,7 @@ TimeT time_from_ftime(const FileTimeT& ft)
     typedef typename TimeT::date_duration_type date_duration_type;
     typedef typename TimeT::time_duration_type time_duration_type;
 
-    // https://svn.boost.org/trac/boost/ticket/2523
+    // https://svn.boost.org/trac/autoboost/ticket/2523
     // Since this function can be called with arbitrary times, including ones that
     // are before 1970-Jan-01, we'll have to cast the time a bit differently,
     // than it is done in the file_time_to_microseconds function. This allows to

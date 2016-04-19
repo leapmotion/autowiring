@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -29,7 +29,7 @@ struct pop_front_impl
     template< typename Sequence > struct apply
     // conservatively placed, but maybe should go outside surrounding
     // braces.
-#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, <= 1300) 
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, <= 1300)
     {
         typedef int type;
     }

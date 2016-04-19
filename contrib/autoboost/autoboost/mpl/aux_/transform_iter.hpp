@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -22,7 +22,7 @@
 #include <autoboost/mpl/aux_/config/ctps.hpp>
 #include <autoboost/type_traits/is_same.hpp>
 
-namespace autoboost { namespace mpl { 
+namespace autoboost { namespace mpl {
 
 namespace aux {
 
@@ -38,7 +38,7 @@ struct transform_iter
     typedef Iterator base;
     typedef forward_iterator_tag category;
     typedef transform_iter< typename mpl::next<base>::type,LastIterator,F > next;
-    
+
     typedef typename apply1<
           F
         , typename deref<base>::type
@@ -65,7 +65,7 @@ template<
 struct transform_iter;
 
 template< bool >
-struct transform_iter_impl 
+struct transform_iter_impl
 {
     template<
           typename Iterator
@@ -77,7 +77,7 @@ struct transform_iter_impl
         typedef Iterator base;
         typedef forward_iterator_tag category;
         typedef transform_iter< typename mpl::next<Iterator>::type,LastIterator,F > next;
-        
+
         typedef typename apply1<
               F
             , typename deref<Iterator>::type

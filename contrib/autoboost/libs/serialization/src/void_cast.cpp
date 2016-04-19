@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // void_cast.cpp: implementation of run-time casting of void pointers
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -27,11 +27,12 @@
 
 // AUTOBOOST
 #define AUTOBOOST_SERIALIZATION_SOURCE
+#include <autoboost/serialization/config.hpp>
 #include <autoboost/serialization/singleton.hpp>
 #include <autoboost/serialization/extended_type_info.hpp>
 #include <autoboost/serialization/void_cast.hpp>
 
-namespace autoboost { 
+namespace autoboost {
 namespace serialization {
 namespace void_cast_detail {
 
@@ -75,7 +76,7 @@ class void_caster_shortcut : public void_caster
 {
     bool m_includes_virtual_base;
 
-    void const * 
+    void const *
     vbc_upcast(
         void const * const t
     ) const;
@@ -123,7 +124,7 @@ public:
 #  pragma warning(pop)
 #endif
 
-void const * 
+void const *
 void_caster_shortcut::vbc_downcast(
     void const * const t
 ) const {
@@ -151,7 +152,7 @@ void_caster_shortcut::vbc_downcast(
     return NULL;
 }
 
-void const * 
+void const *
 void_caster_shortcut::vbc_upcast(
     void const * const t
 ) const {
@@ -212,7 +213,7 @@ public:
 #endif
 
 // implementation of void caster base class
-AUTOBOOST_SERIALIZATION_DECL(void)
+AUTOBOOST_SERIALIZATION_DECL void
 void_caster::recursive_register(bool includes_virtual_base) const {
     void_cast_detail::set_type & s
         = void_cast_detail::void_caster_registry::get_mutable_instance();
@@ -226,7 +227,7 @@ void_caster::recursive_register(bool includes_virtual_base) const {
     #endif
 
     std::pair<void_cast_detail::set_type::const_iterator, bool> result;
-    // comment this out for now.  
+    // comment this out for now.
     result = s.insert(this);
     //assert(result.second);
 
@@ -235,14 +236,14 @@ void_caster::recursive_register(bool includes_virtual_base) const {
     for(it = s.begin(); it != s.end(); ++it){
         if(* m_derived == * (*it)->m_base){
             const void_caster_argument vca(
-                (*it)->m_derived, 
+                (*it)->m_derived,
                 m_base
             );
             void_cast_detail::set_type::const_iterator i;
             i = s.find(& vca);
             if(i == s.end()){
                 new void_caster_shortcut(
-                    (*it)->m_derived, 
+                    (*it)->m_derived,
                     m_base,
                     m_difference + (*it)->m_difference,
                     (*it)->has_virtual_base() || includes_virtual_base,
@@ -252,15 +253,15 @@ void_caster::recursive_register(bool includes_virtual_base) const {
         }
         if(* (*it)->m_derived == * m_base){
             const void_caster_argument vca(
-                m_derived, 
+                m_derived,
                 (*it)->m_base
             );
             void_cast_detail::set_type::const_iterator i;
             i = s.find(& vca);
             if(i == s.end()){
                 new void_caster_shortcut(
-                    m_derived, 
-                    (*it)->m_base, 
+                    m_derived,
+                    (*it)->m_base,
                     m_difference + (*it)->m_difference,
                     (*it)->has_virtual_base() || includes_virtual_base,
                     this
@@ -270,7 +271,7 @@ void_caster::recursive_register(bool includes_virtual_base) const {
     }
 }
 
-AUTOBOOST_SERIALIZATION_DECL(void)
+AUTOBOOST_SERIALIZATION_DECL void
 void_caster::recursive_unregister() const {
     if(void_caster_registry::is_destroyed())
         return;
@@ -283,7 +284,7 @@ void_caster::recursive_unregister() const {
     std::clog << "\n";
     #endif
 
-    void_cast_detail::set_type & s 
+    void_cast_detail::set_type & s
         = void_caster_registry::get_mutable_instance();
 
     // delete all shortcuts which use this primitive
@@ -306,11 +307,18 @@ void_caster::recursive_unregister() const {
 
 } // namespace void_cast_detail
 
+AUTOBOOST_SYMBOL_VISIBLE void const *
+void_upcast(
+    extended_type_info const & derived,
+    extended_type_info const & base,
+    void const * const t
+);
+
 // Given a void *, assume that it really points to an instance of one type
 // and alter it so that it would point to an instance of a related type.
 // Return the altered pointer. If there exists no sequence of casts that
-// can transform from_type to to_type, return a NULL.  
-AUTOBOOST_SERIALIZATION_DECL(void const *)  
+// can transform from_type to to_type, return a NULL.
+AUTOBOOST_SERIALIZATION_DECL void const *
 void_upcast(
     extended_type_info const & derived,
     extended_type_info const & base,
@@ -333,7 +341,14 @@ void_upcast(
     return NULL;
 }
 
-AUTOBOOST_SERIALIZATION_DECL(void const *)  
+AUTOBOOST_SYMBOL_VISIBLE void const *
+void_downcast(
+    extended_type_info const & derived,
+    extended_type_info const & base,
+    void const * const t
+);
+
+AUTOBOOST_SERIALIZATION_DECL void const *
 void_downcast(
     extended_type_info const & derived,
     extended_type_info const & base,

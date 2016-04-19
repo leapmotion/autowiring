@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_C_TIME_HPP___
-#define AB_DATE_TIME_C_TIME_HPP___
+#ifndef DATE_TIME_C_TIME_HPP___
+#define DATE_TIME_C_TIME_HPP___
 
 /* Copyright (c) 2002,2003,2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -62,7 +62,7 @@ namespace date_time {
  	if(!localtime_r(t,&tmp))
             result = 0;
 	else
-            *result = tmp;	
+            *result = tmp;
  	#else
         result = localtime_r(t, result);
 	#endif
@@ -80,7 +80,7 @@ namespace date_time {
  	if(!gmtime_r(t,&tmp))
           result = 0;
         else
-          *result = tmp;	
+          *result = tmp;
 	#else
         result = gmtime_r(t, result);
 	#endif

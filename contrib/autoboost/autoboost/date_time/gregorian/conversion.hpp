@@ -1,5 +1,5 @@
-#ifndef AB__GREGORIAN__CONVERSION_HPP___
-#define AB__GREGORIAN__CONVERSION_HPP___
+#ifndef _GREGORIAN__CONVERSION_HPP___
+#define _GREGORIAN__CONVERSION_HPP___
 
 /* Copyright (c) 2004-2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

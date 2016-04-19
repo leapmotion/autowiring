@@ -8,7 +8,7 @@
 
 // For more information, see http://www.boost.org
 
-// ----------------------------------------------------------------- 
+// -----------------------------------------------------------------
 
 #ifndef AUTOBOOST_TUPLE_HPP
 #define AUTOBOOST_TUPLE_HPP
@@ -28,7 +28,7 @@ namespace autoboost { namespace python { class tuple; }}
 #include "autoboost/tuple/detail/tuple_basic.hpp"
 
 
-namespace autoboost {    
+namespace autoboost {
 
 using tuples::tuple;
 using tuples::make_tuple;
@@ -47,7 +47,7 @@ inline typename tuples::access_traits<
                 >::non_const_type
 get(tuples::cons<HT, TT>& c) {
   return tuples::get<N,HT,TT>(c);
-} 
+}
 // get function for const cons-lists, returns a const reference to
 // the element. If the element is a reference, returns the reference
 // as such (that is, can return a non-const reference)
@@ -60,7 +60,7 @@ get(const tuples::cons<HT, TT>& c) {
 }
 
 #endif // AUTOBOOST_NO_USING_TEMPLATE
-   
+
 } // end namespace autoboost
 
 

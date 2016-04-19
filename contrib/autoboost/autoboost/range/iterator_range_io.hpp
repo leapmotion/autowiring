@@ -18,8 +18,8 @@
     #pragma warning( disable : 4996 )
 #endif
 
-// From boost/dynamic_bitset.hpp; thanks to Matthias Troyer for Cray X1 patch.
-#ifndef AUTOBOOST_OLD_IOSTREAMS 
+// From autoboost/dynamic_bitset.hpp; thanks to Matthias Troyer for Cray X1 patch.
+#ifndef AUTOBOOST_OLD_IOSTREAMS
 # if defined(__STL_CONFIG_H) && \
     !defined (__STL_USE_NEW_IOSTREAMS) && !defined(__crayx1) \
     /**/
@@ -44,7 +44,7 @@ namespace autoboost
 {
 
 #ifndef _STLP_NO_IOSTREAMS
-# ifndef AUTOBOOST_OLD_IOSTREAMS   
+# ifndef AUTOBOOST_OLD_IOSTREAMS
 
         //! iterator_range output operator
         /*!
@@ -52,13 +52,13 @@ namespace autoboost
             in a sequence without separators.
         */
         template< typename IteratorT, typename Elem, typename Traits >
-        inline std::basic_ostream<Elem,Traits>& operator<<( 
+        inline std::basic_ostream<Elem,Traits>& operator<<(
                     std::basic_ostream<Elem, Traits>& Os,
                     const iterator_range<IteratorT>& r )
         {
-            std::copy( r.begin(), r.end(), 
-                       std::ostream_iterator< AUTOBOOST_DEDUCED_TYPENAME 
-                                              iterator_value<IteratorT>::type, 
+            std::copy( r.begin(), r.end(),
+                       std::ostream_iterator< AUTOBOOST_DEDUCED_TYPENAME
+                                              iterator_value<IteratorT>::type,
                                               Elem, Traits>(Os) );
             return Os;
         }
@@ -71,7 +71,7 @@ namespace autoboost
             in a sequence without separators.
         */
         template< typename IteratorT >
-        inline std::ostream& operator<<( 
+        inline std::ostream& operator<<(
                     std::ostream& Os,
                     const iterator_range<IteratorT>& r )
         {

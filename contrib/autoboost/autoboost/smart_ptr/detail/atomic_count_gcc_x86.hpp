@@ -2,7 +2,7 @@
 #define AUTOBOOST_SMART_PTR_DETAIL_ATOMIC_COUNT_GCC_X86_HPP_INCLUDED
 
 //
-//  boost/detail/atomic_count_gcc_x86.hpp
+//  autoboost/detail/atomic_count_gcc_x86.hpp
 //
 //  atomic_count for g++ on 486+/AMD64
 //

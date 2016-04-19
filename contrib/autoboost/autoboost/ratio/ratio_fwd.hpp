@@ -34,6 +34,10 @@ time2_demo contained this comment:
 
 #include <autoboost/ratio/config.hpp>
 
+#if defined(__GNUC__) && (__GNUC__ >= 4)
+#pragma GCC system_header
+#endif
+
 namespace autoboost
 {
 

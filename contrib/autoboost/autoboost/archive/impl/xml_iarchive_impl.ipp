@@ -12,16 +12,17 @@
 #include <cstring> // memcpy
 #include <cstddef> // NULL
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
+namespace std{
     using ::memcpy;
 } // namespace std
 #endif
 
 #ifndef AUTOBOOST_NO_CWCHAR
-#include <cstdlib> // mbtowc
+#include <cwchar> // mbstate_t and mbrtowc
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
-    using ::mbtowc;
+namespace std{
+    using ::mbstate_t;
+    using ::mbrtowc;
  } // namespace std
 #endif
 #endif // AUTOBOOST_NO_CWCHAR
@@ -31,7 +32,7 @@ namespace std{
 #include <autoboost/archive/dinkumware.hpp>
 #endif
 
-#include <autoboost/detail/no_exceptions_support.hpp>
+#include <autoboost/core/no_exceptions_support.hpp>
 
 #include <autoboost/archive/xml_archive_exception.hpp>
 #include <autoboost/archive/iterators/dataflow_exception.hpp>
@@ -51,7 +52,7 @@ namespace archive {
 #ifndef AUTOBOOST_NO_CWCHAR
 #ifndef AUTOBOOST_NO_STD_WSTRING
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 xml_iarchive_impl<Archive>::load(std::wstring &ws){
     std::string s;
     bool result = gimpl->parse_string(is, s);
@@ -59,56 +60,61 @@ xml_iarchive_impl<Archive>::load(std::wstring &ws){
         autoboost::serialization::throw_exception(
             xml_archive_exception(xml_archive_exception::xml_archive_parsing_error)
         );
-    
+
     #if AUTOBOOST_WORKAROUND(_RWSTD_VER, AUTOBOOST_TESTED_AT(20101))
     if(NULL != ws.data())
     #endif
         ws.resize(0);
+    std::mbstate_t mbs;
     const char * start = s.data();
     const char * end = start + s.size();
     while(start < end){
         wchar_t wc;
-        int resultx = std::mbtowc(&wc, start, end - start);
-        if(0 < resultx){
-            start += resultx;
-            ws += wc;
+        std::size_t result = std::mbrtowc(&wc, start, end - start, &mbs);
+        if(result == static_cast<std::size_t>(-1))
+            autoboost::serialization::throw_exception(
+                iterators::dataflow_exception(
+                    iterators::dataflow_exception::invalid_conversion
+                )
+            );
+        if(result == static_cast<std::size_t>(-2))
             continue;
-        }
-        autoboost::serialization::throw_exception(
-            iterators::dataflow_exception(
-                iterators::dataflow_exception::invalid_conversion
-            )
-        );
+        start += result;
+        ws += wc;
     }
 }
 #endif // AUTOBOOST_NO_STD_WSTRING
 
 #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 xml_iarchive_impl<Archive>::load(wchar_t * ws){
     std::string s;
     bool result = gimpl->parse_string(is, s);
     if(! result)
         autoboost::serialization::throw_exception(
-            xml_archive_exception(xml_archive_exception::xml_archive_parsing_error)
+            xml_archive_exception(
+                xml_archive_exception::xml_archive_parsing_error
+            )
         );
-        
+
+    std::mbstate_t mbs;
     const char * start = s.data();
     const char * end = start + s.size();
     while(start < end){
         wchar_t wc;
-        int length = std::mbtowc(&wc, start, end - start);
-        if(0 < length){
-            start += length;
-            *ws++ = wc;
+        std::size_t length = std::mbrtowc(&wc, start, end - start, &mbs);
+        if(static_cast<std::size_t>(-1) == length)
+            autoboost::serialization::throw_exception(
+                iterators::dataflow_exception(
+                    iterators::dataflow_exception::invalid_conversion
+                )
+            );
+        if(static_cast<std::size_t>(-2) == length)
             continue;
-        }
-        autoboost::serialization::throw_exception(
-            iterators::dataflow_exception(
-                iterators::dataflow_exception::invalid_conversion
-            )
-        );
+
+        start += length;
+        *ws++ = wc;
     }
     *ws = L'\0';
 }
@@ -117,7 +123,7 @@ xml_iarchive_impl<Archive>::load(wchar_t * ws){
 #endif // AUTOBOOST_NO_CWCHAR
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 xml_iarchive_impl<Archive>::load(std::string &s){
     bool result = gimpl->parse_string(is, s);
     if(! result)
@@ -127,7 +133,7 @@ xml_iarchive_impl<Archive>::load(std::string &s){
 }
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 xml_iarchive_impl<Archive>::load(char * s){
     std::string tstring;
     bool result = gimpl->parse_string(is, tstring);
@@ -140,8 +146,8 @@ xml_iarchive_impl<Archive>::load(char * s){
 }
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
-xml_iarchive_impl<Archive>::load_override(class_name_type & t, int){
+AUTOBOOST_ARCHIVE_DECL void
+xml_iarchive_impl<Archive>::load_override(class_name_type & t){
     const std::string & s = gimpl->rv.class_name;
     if(s.size() > AUTOBOOST_SERIALIZATION_MAX_KEY_SIZE - 1)
         autoboost::serialization::throw_exception(
@@ -153,7 +159,7 @@ xml_iarchive_impl<Archive>::load_override(class_name_type & t, int){
 }
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 xml_iarchive_impl<Archive>::init(){
     gimpl->init(is);
     this->set_library_version(
@@ -162,34 +168,24 @@ xml_iarchive_impl<Archive>::init(){
 }
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 xml_iarchive_impl<Archive>::xml_iarchive_impl(
     std::istream &is_,
     unsigned int flags
 ) :
     basic_text_iprimitive<std::istream>(
-        is_, 
+        is_,
         0 != (flags & no_codecvt)
     ),
     basic_xml_iarchive<Archive>(flags),
     gimpl(new xml_grammar())
 {
-    if(0 == (flags & no_header)){
-        AUTOBOOST_TRY{
-            init();
-        }
-        AUTOBOOST_CATCH(...){
-            delete gimpl;
-            #ifndef AUTOBOOST_NO_EXCEPTIONS
-                throw; // re-throw
-            #endif
-        }
-        AUTOBOOST_CATCH_END
-    }
+    if(0 == (flags & no_header))
+        init();
 }
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 xml_iarchive_impl<Archive>::~xml_iarchive_impl(){
     if(0 == (this->get_flags() & no_header)){
         AUTOBOOST_TRY{
@@ -198,7 +194,6 @@ xml_iarchive_impl<Archive>::~xml_iarchive_impl(){
         AUTOBOOST_CATCH(...){}
         AUTOBOOST_CATCH_END
     }
-    delete gimpl;
 }
 } // namespace archive
 } // namespace autoboost

@@ -13,28 +13,23 @@
 #include <cstddef>
 #include <autoboost/detail/workaround.hpp>
 
-// should be the last #include
-#include <autoboost/type_traits/detail/type_trait_def.hpp>
-
 namespace autoboost {
 
-AUTOBOOST_TT_AUX_TYPE_TRAIT_DEF1(remove_all_extents,T,T)
+template <class T> struct remove_all_extents{ typedef T type; };
 
 #if !defined(AUTOBOOST_NO_ARRAY_TYPE_SPECIALIZATIONS)
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_2(typename T,std::size_t N,remove_all_extents,T[N],typename autoboost::remove_all_extents<T>::type type)
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_2(typename T,std::size_t N,remove_all_extents,T const[N],typename autoboost::remove_all_extents<T const>::type type)
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_2(typename T,std::size_t N,remove_all_extents,T volatile[N],typename autoboost::remove_all_extents<T volatile>::type type)
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_2(typename T,std::size_t N,remove_all_extents,T const volatile[N],typename autoboost::remove_all_extents<T const volatile>::type type)
+template <class T, std::size_t N> struct remove_all_extents<T[N]> : public remove_all_extents<T>{};
+template <class T, std::size_t N> struct remove_all_extents<T const[N]> : public remove_all_extents<T const>{};
+template <class T, std::size_t N> struct remove_all_extents<T volatile[N]> : public remove_all_extents<T volatile>{};
+template <class T, std::size_t N> struct remove_all_extents<T const volatile[N]> : public remove_all_extents<T const volatile>{};
 #if !AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x610)) && !defined(__IBMCPP__) &&  !AUTOBOOST_WORKAROUND(__DMC__, AUTOBOOST_TESTED_AT(0x840))
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_1(typename T,remove_all_extents,T[],typename autoboost::remove_all_extents<T>::type)
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_1(typename T,remove_all_extents,T const[],typename autoboost::remove_all_extents<T const>::type)
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_1(typename T,remove_all_extents,T volatile[],typename autoboost::remove_all_extents<T volatile>::type)
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_1(typename T,remove_all_extents,T const volatile[],typename autoboost::remove_all_extents<T const volatile>::type)
+template <class T> struct remove_all_extents<T[]> : public remove_all_extents<T>{};
+template <class T> struct remove_all_extents<T const[]> : public remove_all_extents<T const>{};
+template <class T> struct remove_all_extents<T volatile[]> : public remove_all_extents<T volatile>{};
+template <class T> struct remove_all_extents<T const volatile[]> : public remove_all_extents<T const volatile>{};
 #endif
 #endif
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/type_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_REMOVE_BOUNDS_HPP_INCLUDED

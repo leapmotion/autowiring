@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2013
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -79,9 +79,9 @@ If available versions \[3-6\] are specifically detected.
 
 #define AUTOBOOST_ARCH_X86_32_NAME "Intel x86-32"
 
-#include <autoboost/predef/detail/test.h>
-AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_ARCH_X86_32,AUTOBOOST_ARCH_X86_32_NAME)
-
 #include <autoboost/predef/architecture/x86.h>
 
 #endif
+
+#include <autoboost/predef/detail/test.h>
+AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_ARCH_X86_32,AUTOBOOST_ARCH_X86_32_NAME)

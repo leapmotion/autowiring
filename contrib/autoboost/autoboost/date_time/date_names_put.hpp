@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_DATE_NAMES_PUT_HPP___
-#define AB_DATE_TIME_DATE_NAMES_PUT_HPP___
+#ifndef DATE_TIME_DATE_NAMES_PUT_HPP___
+#define DATE_TIME_DATE_NAMES_PUT_HPP___
 
 /* Copyright (c) 2002-2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

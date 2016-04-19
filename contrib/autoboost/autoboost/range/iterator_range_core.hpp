@@ -66,13 +66,13 @@ namespace autoboost
             template< class ForwardRange >
             static IteratorT adl_begin( ForwardRange& r )
             {
-                return static_cast<IteratorT>( autoboost::begin( r ) );
+                return IteratorT( autoboost::begin( r ) );
             }
 
             template< class ForwardRange >
             static IteratorT adl_end( ForwardRange& r )
             {
-                return static_cast<IteratorT>( autoboost::end( r ) );
+                return IteratorT( autoboost::end( r ) );
             }
         };
 
@@ -84,26 +84,26 @@ namespace autoboost
                                                  autoboost::begin(r),
                                                  autoboost::end(r) );
         }
-        
+
         template< class Left, class Right >
         inline bool greater_than( const Left& l, const Right& r )
         {
             return iterator_range_detail::less_than(r,l);
         }
-        
+
         template< class Left, class Right >
         inline bool less_or_equal_than( const Left& l, const Right& r )
         {
             return !iterator_range_detail::less_than(r,l);
         }
-        
+
         template< class Left, class Right >
         inline bool greater_or_equal_than( const Left& l, const Right& r )
         {
             return !iterator_range_detail::less_than(l,r);
         }
 
-        // This version is maintained since it is used in other boost libraries
+        // This version is maintained since it is used in other autoboost libraries
         // such as Boost.Assign
         template< class Left, class Right >
         inline bool equal(const Left& l, const Right& r)
@@ -266,7 +266,7 @@ public:
        AUTOBOOST_ASSERT(n >= difference_type());
        std::advance(this->m_Begin, n);
    }
-   
+
    // Deprecated
    void pop_front() { drop_front(); }
 
@@ -334,7 +334,7 @@ public:
         AUTOBOOST_ASSERT(n >= difference_type());
         std::advance(this->m_End, -n);
     }
-    
+
     // Deprecated
     void pop_back() { drop_back(); }
 };
@@ -442,14 +442,28 @@ public:
             > base_type;
 
             template<class Source>
-            struct is_compatible_range
-                : is_convertible<
+            struct is_compatible_range_
+              : is_convertible<
                     AUTOBOOST_DEDUCED_TYPENAME mpl::eval_if<
                         has_range_iterator<Source>,
                         range_iterator<Source>,
                         mpl::identity<void>
                     >::type,
                     AUTOBOOST_DEDUCED_TYPENAME base_type::iterator
+                >
+            {
+            };
+
+            template<class Source>
+            struct is_compatible_range
+                : mpl::and_<
+                    mpl::not_<
+                        is_convertible<
+                            Source,
+                            AUTOBOOST_DEDUCED_TYPENAME base_type::iterator
+                        >
+                    >,
+                    is_compatible_range_<Source>
                 >
             {
             };
@@ -591,7 +605,7 @@ public:
         {
             return iterator_range_detail::less_than( l, r );
         }
-        
+
         template< class IteratorT, class ForwardRange >
         inline AUTOBOOST_DEDUCED_TYPENAME autoboost::enable_if<
             mpl::not_<autoboost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
@@ -601,7 +615,7 @@ public:
         {
             return iterator_range_detail::less_or_equal_than( l, r );
         }
-        
+
         template< class IteratorT, class ForwardRange >
         inline AUTOBOOST_DEDUCED_TYPENAME autoboost::enable_if<
             mpl::not_<autoboost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
@@ -611,7 +625,7 @@ public:
         {
             return iterator_range_detail::greater_than( l, r );
         }
-        
+
         template< class IteratorT, class ForwardRange >
         inline AUTOBOOST_DEDUCED_TYPENAME autoboost::enable_if<
             mpl::not_<autoboost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
@@ -676,14 +690,14 @@ public:
         {
             return iterator_range_detail::less_than( l, r );
         }
-        
+
         template< class Iterator1T, class Iterator2T >
         inline bool
         operator<=( const iterator_range<Iterator1T>& l, const iterator_range<Iterator2T>& r )
         {
             return iterator_range_detail::less_or_equal_than( l, r );
         }
-        
+
         template< class IteratorT, class ForwardRange >
         inline AUTOBOOST_DEDUCED_TYPENAME autoboost::enable_if<
             mpl::not_<autoboost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
@@ -693,14 +707,14 @@ public:
         {
             return iterator_range_detail::less_or_equal_than( l, r );
         }
-        
+
         template< class Iterator1T, class Iterator2T >
         inline bool
         operator>( const iterator_range<Iterator1T>& l, const iterator_range<Iterator2T>& r )
         {
             return iterator_range_detail::greater_than( l, r );
         }
-        
+
         template< class IteratorT, class ForwardRange >
         inline AUTOBOOST_DEDUCED_TYPENAME autoboost::enable_if<
             mpl::not_<autoboost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
@@ -710,14 +724,14 @@ public:
         {
             return iterator_range_detail::greater_than( l, r );
         }
-        
+
         template< class Iterator1T, class Iterator2T >
         inline bool
         operator>=( const iterator_range<Iterator1T>& l, const iterator_range<Iterator2T>& r )
         {
             return iterator_range_detail::greater_or_equal_than( l, r );
         }
-        
+
         template< class IteratorT, class ForwardRange >
         inline AUTOBOOST_DEDUCED_TYPENAME autoboost::enable_if<
             mpl::not_<autoboost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
@@ -859,7 +873,7 @@ public:
             return SeqT( autoboost::begin( r ), autoboost::end( r ) );
         }
 
-} // namespace 'boost'
+} // namespace 'autoboost'
 
 #if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, AUTOBOOST_TESTED_AT(1500))
     #pragma warning( pop )

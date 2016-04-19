@@ -14,6 +14,14 @@
 #ifndef AUTOBOOST_MOVE_UNIQUE_PTR_DETAIL_META_UTILS_HPP
 #define AUTOBOOST_MOVE_UNIQUE_PTR_DETAIL_META_UTILS_HPP
 
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <cstddef>   //for std::size_t
 
 //Small meta-typetraits to support move
@@ -179,13 +187,13 @@ struct remove_extent
 {
    typedef T type;
 };
- 
+
 template<class T>
 struct remove_extent<T[]>
 {
    typedef T type;
 };
- 
+
 template<class T, std::size_t N>
 struct remove_extent<T[N]>
 {
@@ -201,9 +209,9 @@ struct extent
 {
    static const std::size_t value = 0;
 };
- 
+
 template<class T>
-struct extent<T[], 0> 
+struct extent<T[], 0>
 {
    static const std::size_t value = 0;
 };
@@ -215,11 +223,11 @@ struct extent<T[], N>
 };
 
 template<class T, std::size_t N>
-struct extent<T[N], 0> 
+struct extent<T[N], 0>
 {
    static const std::size_t value = N;
 };
- 
+
 template<class T, std::size_t I, unsigned N>
 struct extent<T[I], N>
 {
@@ -282,7 +290,7 @@ struct is_same
 {
    static const bool value = false;
 };
- 
+
 template<class T>
 struct is_same<T, T>
 {
@@ -352,13 +360,13 @@ struct is_array
 {
    static const bool value = false;
 };
- 
+
 template<class T>
 struct is_array<T[]>
 {
    static const bool value = true;
 };
- 
+
 template<class T, std::size_t N>
 struct is_array<T[N]>
 {

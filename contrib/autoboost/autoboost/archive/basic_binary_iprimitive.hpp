@@ -20,7 +20,7 @@
 // IN GENERAL, ARCHIVES CREATED WITH THIS CLASS WILL NOT BE READABLE
 // ON PLATFORM APART FROM THE ONE THEY ARE CREATED ON
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -37,8 +37,8 @@
 
 #include <autoboost/config.hpp>
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
-    using ::memcpy; 
+namespace std{
+    using ::memcpy;
     using ::size_t;
 } // namespace std
 #endif
@@ -49,22 +49,25 @@ namespace std{
 #include <autoboost/integer.hpp>
 #include <autoboost/integer_traits.hpp>
 
-#include <autoboost/archive/basic_streambuf_locale_saver.hpp>
-#include <autoboost/archive/archive_exception.hpp>
 #include <autoboost/mpl/placeholders.hpp>
 #include <autoboost/serialization/is_bitwise_serializable.hpp>
 #include <autoboost/serialization/array.hpp>
+
+#include <autoboost/archive/basic_streambuf_locale_saver.hpp>
+#include <autoboost/archive/archive_exception.hpp>
 #include <autoboost/archive/detail/auto_link_archive.hpp>
 #include <autoboost/archive/detail/abi_prefix.hpp> // must be the last header
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
+
+template<class Ch>
+class codecvt_null;
 
 /////////////////////////////////////////////////////////////////////////////
 // class binary_iarchive - read serialized objects from a input binary stream
 template<class Archive, class Elem, class Tr>
-class basic_binary_iprimitive
-{
+class AUTOBOOST_SYMBOL_VISIBLE basic_binary_iprimitive {
 #ifndef AUTOBOOST_NO_MEMBER_TEMPLATE_FRIENDS
     friend class load_access;
 protected:
@@ -78,6 +81,7 @@ public:
     }
 
     #ifndef AUTOBOOST_NO_STD_LOCALE
+    autoboost::scoped_ptr<codecvt_null<Elem> > codecvt_facet;
     autoboost::scoped_ptr<std::locale> archive_locale;
     basic_streambuf_locale_saver<Elem, Tr> locale_saver;
     #endif
@@ -90,50 +94,50 @@ public:
 
     /////////////////////////////////////////////////////////
     // fundamental types that need special treatment
-    
-    // trap usage of invalid uninitialized boolean 
+
+    // trap usage of invalid uninitialized boolean
     void load(bool & t){
         load_binary(& t, sizeof(t));
         int i = t;
         AUTOBOOST_ASSERT(0 == i || 1 == i);
         (void)i; // warning suppression for release builds.
     }
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     load(std::string &s);
     #ifndef AUTOBOOST_NO_STD_WSTRING
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     load(std::wstring &ws);
     #endif
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     load(char * t);
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     load(wchar_t * t);
 
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     init();
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     basic_binary_iprimitive(
-        std::basic_streambuf<Elem, Tr> & sb, 
+        std::basic_streambuf<Elem, Tr> & sb,
         bool no_codecvt
     );
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     ~basic_binary_iprimitive();
 public:
     // we provide an optimized load for all fundamental types
-    // typedef serialization::is_bitwise_serializable<mpl::_1> 
+    // typedef serialization::is_bitwise_serializable<mpl::_1>
     // use_array_optimization;
-    struct use_array_optimization {  
-        template <class T>  
-        #if defined(AUTOBOOST_NO_DEPENDENT_NESTED_DERIVATIONS)  
-            struct apply {  
-                typedef typename autoboost::serialization::is_bitwise_serializable< T >::type type;  
+    struct use_array_optimization {
+        template <class T>
+        #if defined(AUTOBOOST_NO_DEPENDENT_NESTED_DERIVATIONS)
+            struct apply {
+                typedef typename autoboost::serialization::is_bitwise_serializable< T >::type type;
             };
         #else
-            struct apply : public autoboost::serialization::is_bitwise_serializable< T > {};  
+            struct apply : public autoboost::serialization::is_bitwise_serializable< T > {};
         #endif
     };
 
-    // the optimized load_array dispatches to load_binary 
+    // the optimized load_array dispatches to load_binary
     template <class ValueType>
     void load_array(serialization::array<ValueType>& a, unsigned int)
     {
@@ -147,17 +151,17 @@ public:
 template<class Archive, class Elem, class Tr>
 inline void
 basic_binary_iprimitive<Archive, Elem, Tr>::load_binary(
-    void *address, 
+    void *address,
     std::size_t count
 ){
     // note: an optimizer should eliminate the following for char files
     AUTOBOOST_ASSERT(
-        static_cast<std::streamsize>(count / sizeof(Elem)) 
+        static_cast<std::streamsize>(count / sizeof(Elem))
         <= autoboost::integer_traits<std::streamsize>::const_max
     );
     std::streamsize s = static_cast<std::streamsize>(count / sizeof(Elem));
     std::streamsize scount = m_sb.sgetn(
-        static_cast<Elem *>(address), 
+        static_cast<Elem *>(address),
         s
     );
     if(scount != s)

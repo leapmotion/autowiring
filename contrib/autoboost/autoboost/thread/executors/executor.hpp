@@ -4,7 +4,7 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 // 2013/09 Vicente J. Botet Escriba
-//    Adapt to boost from CCIA C++11 implementation
+//    Adapt to autoboost from CCIA C++11 implementation
 
 #ifndef AUTOBOOST_THREAD_EXECUTORS_EXECUTOR_HPP
 #define AUTOBOOST_THREAD_EXECUTORS_EXECUTOR_HPP
@@ -99,9 +99,10 @@ namespace autoboost
     }
 
     template <typename Closure>
-    void submit(AUTOBOOST_THREAD_RV_REF(Closure) closure)
+    void submit(AUTOBOOST_THREAD_FWD_REF(Closure) closure)
     {
-      work w = autoboost::move(closure);
+      //submit(work(autoboost::forward<Closure>(closure)));
+      work w((autoboost::forward<Closure>(closure)));
       submit(autoboost::move(w));
     }
 

@@ -6,7 +6,7 @@
 
 // member functions
 
-template<class V, class T, class R AUTOBOOST_PP_ENUM_TRAILING_PARAMS(n, class P)> 
+template<class V, class T, class R AUTOBOOST_PP_ENUM_TRAILING_PARAMS(n, class P)>
 struct encode_type_impl<V, R(T::*)(AUTOBOOST_PP_ENUM_PARAMS(n, P)) AUTOBOOST_TYPEOF_qualifier>
 {
     typedef R AUTOBOOST_PP_CAT(P, n);

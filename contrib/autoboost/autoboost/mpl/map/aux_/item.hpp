@@ -5,8 +5,8 @@
 // Copyright Aleksey Gurtovoy 2003-2004
 // Copyright David Abrahams 2003-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -40,7 +40,8 @@ struct m_item
     typedef Key         key_;
     typedef pair<Key,T> item;
     typedef Base        base;
-    
+    typedef m_item      type;
+
     typedef typename next< typename Base::size >::type  size;
     typedef typename next< typename Base::order >::type order;
 
@@ -62,10 +63,11 @@ struct m_mask
 {
     typedef void_   key_;
     typedef Base    base;
+    typedef m_mask  type;
 
     typedef typename prior< typename Base::size >::type  size;
     typedef typename x_order_impl<Base,Key>::type key_order_;
-    
+
     AUTOBOOST_MPL_AUX_MAP_OVERLOAD( aux::type_wrapper<void_>, VALUE_BY_KEY, m_mask, aux::type_wrapper<Key>* );
     AUTOBOOST_MPL_AUX_MAP_OVERLOAD( aux::type_wrapper<void_>, ITEM_BY_ORDER, m_mask, key_order_* );
 };
@@ -104,7 +106,7 @@ struct m_item_
     typedef Key     key_;
     typedef Base    base;
     typedef m_item_ type;
-    
+
     typedef typename next< typename Base::size >::type  size;
     typedef typename next< typename Base::order >::type order;
 
@@ -123,10 +125,11 @@ struct m_mask
 {
     typedef void_   key_;
     typedef Base    base;
+    typedef m_mask  type;
 
     typedef typename prior< typename Base::size >::type  size;
     typedef typename x_order_impl<Base,Key>::type key_order_;
-    
+
     AUTOBOOST_MPL_AUX_MAP_OVERLOAD( aux::no_tag, ORDER_BY_KEY, m_mask, aux::type_wrapper<Key>* );
     AUTOBOOST_MPL_AUX_MAP_OVERLOAD( aux::yes_tag, IS_MASKED, m_mask, key_order_* );
 };

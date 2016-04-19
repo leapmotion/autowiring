@@ -17,7 +17,7 @@
 //      Converted into "fast" functions that avoid using += when
 //      the supplied iterator isn't an input_iterator; based on
 //      some work done at Archelon and a version that was checked into
-//      the boost CVS for a short period of time.
+//      the autoboost CVS for a short period of time.
 // 20 Feb 2002   John Maddock
 //      Removed using namespace std declarations and added
 //      workaround for AUTOBOOST_NO_STDC_NAMESPACE (the library
@@ -40,6 +40,7 @@
 #include <autoboost/assert.hpp>
 #include <autoboost/detail/workaround.hpp>
 #include <autoboost/mpl/if.hpp>
+#include <autoboost/throw_exception.hpp>
 #if !defined(AUTOBOOST_NO_CWCTYPE)
 #include <cwctype>
 #endif
@@ -125,7 +126,7 @@ namespace autoboost{
     template <typename iterator, typename Token>
     void do_escape(iterator& next,iterator end,Token& tok) {
       if (++next == end)
-        throw escaped_list_error(std::string("cannot end with escape"));
+        AUTOBOOST_THROW_EXCEPTION(escaped_list_error(std::string("cannot end with escape")));
       if (Traits::eq(*next,'n')) {
         tok+='\n';
         return;
@@ -143,7 +144,7 @@ namespace autoboost{
         return;
       }
       else
-        throw escaped_list_error(std::string("unknown escape sequence"));
+        AUTOBOOST_THROW_EXCEPTION(escaped_list_error(std::string("unknown escape sequence")));
     }
 
     public:

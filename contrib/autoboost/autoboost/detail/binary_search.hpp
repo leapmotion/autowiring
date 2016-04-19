@@ -1,11 +1,11 @@
-// Copyright (c)  2000 David Abrahams. 
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Copyright (c)  2000 David Abrahams.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-// 
+//
 // Copyright (c) 1994
 // Hewlett-Packard Company
-// 
+//
 // Permission to use, copy, modify, distribute and sell this software
 // and its documentation for any purpose is hereby granted without fee,
 // provided that the above copyright notice appear in all copies and
@@ -13,10 +13,10 @@
 // in supporting documentation.  Hewlett-Packard Company makes no
 // representations about the suitability of this software for any
 // purpose.  It is provided "as is" without express or implied warranty.
-// 
+//
 // Copyright (c) 1996
 // Silicon Graphics Computer Systems, Inc.
-// 
+//
 // Permission to use, copy, modify, distribute and sell this software
 // and its documentation for any purpose is hereby granted without fee,
 // provided that the above copyright notice appear in all copies and
@@ -24,9 +24,9 @@
 // in supporting documentation.  Silicon Graphics makes no
 // representations about the suitability of this software for any
 // purpose.  It is provided "as is" without express or implied warranty.
-// 
-#ifndef AB_BINARY_SEARCH_DWA_122600_H_
-# define AB_BINARY_SEARCH_DWA_122600_H_
+//
+#ifndef BINARY_SEARCH_DWA_122600_H_
+# define BINARY_SEARCH_DWA_122600_H_
 
 # include <autoboost/detail/iterator.hpp>
 # include <utility>
@@ -35,10 +35,10 @@ namespace autoboost { namespace detail {
 
 template <class ForwardIter, class Tp>
 ForwardIter lower_bound(ForwardIter first, ForwardIter last,
-                             const Tp& val) 
+                             const Tp& val)
 {
     typedef detail::iterator_traits<ForwardIter> traits;
-    
+
     typename traits::difference_type len = autoboost::detail::distance(first, last);
     typename traits::difference_type half;
     ForwardIter middle;
@@ -194,7 +194,7 @@ equal_range(ForwardIter first, ForwardIter last, const Tp& val,
     }
   }
   return std::pair<ForwardIter, ForwardIter>(first, first);
-}           
+}
 
 template <class ForwardIter, class Tp>
 bool binary_search(ForwardIter first, ForwardIter last,

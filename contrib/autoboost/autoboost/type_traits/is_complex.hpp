@@ -1,4 +1,4 @@
-//  (C) Copyright John Maddock 2007. 
+//  (C) Copyright John Maddock 2007.
 //  Use, modification and distribution are subject to the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt).
@@ -8,27 +8,17 @@
 #ifndef AUTOBOOST_TT_IS_COMPLEX_HPP
 #define AUTOBOOST_TT_IS_COMPLEX_HPP
 
-#include <autoboost/type_traits/is_convertible.hpp>
 #include <complex>
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
-
+#include <autoboost/type_traits/integral_constant.hpp>
 
 namespace autoboost {
-namespace detail{
 
-struct is_convertible_from_tester
-{
-   template <class T>
-   is_convertible_from_tester(const std::complex<T>&);
-};
-
-}
-
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_complex,T,(::autoboost::is_convertible<T, autoboost::detail::is_convertible_from_tester>::value))
+   template <class T> struct is_complex : public false_type {};
+   template <class T> struct is_complex<const T > : public is_complex<T>{};
+   template <class T> struct is_complex<volatile const T > : public is_complex<T>{};
+   template <class T> struct is_complex<volatile T > : public is_complex<T>{};
+   template <class T> struct is_complex<std::complex<T> > : public true_type{};
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif //AUTOBOOST_TT_IS_COMPLEX_HPP

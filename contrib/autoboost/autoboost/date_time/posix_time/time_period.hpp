@@ -1,11 +1,11 @@
-#ifndef AB_POSIX_TIME_PERIOD_HPP___
-#define AB_POSIX_TIME_PERIOD_HPP___
+#ifndef POSIX_TIME_PERIOD_HPP___
+#define POSIX_TIME_PERIOD_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
- * Author: Jeff Garland 
+ * Author: Jeff Garland
  * $Date$
  */
 

@@ -5,8 +5,8 @@
 // Copyright Aleksey Gurtovoy 2004
 // Copyright Alexander Nasonov 2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -23,8 +23,9 @@ namespace autoboost { namespace mpl {
 
 struct empty_sequence
 {
-    struct tag; 
-    struct begin { typedef random_access_iterator_tag category; };    
+    struct tag;
+    typedef empty_sequence type;
+    struct begin { typedef random_access_iterator_tag category; };
     typedef begin end;
 };
 

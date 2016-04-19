@@ -12,19 +12,19 @@
 #ifndef AUTOBOOST_LAMBDA_RET_HPP
 #define AUTOBOOST_LAMBDA_RET_HPP
 
-namespace autoboost { 
+namespace autoboost {
 namespace lambda {
 
   // TODO:
 
 //  Add specializations for function references for ret, protect and unlambda
 //  e.g void foo(); unlambda(foo); fails, as it would add a const qualifier
-  // for a function type. 
+  // for a function type.
   // on the other hand unlambda(*foo) does work
 
 
 // -- ret -------------------------
-// the explicit return type template 
+// the explicit return type template
 
   // TODO: It'd be nice to make ret a nop for other than lambda functors
   // but causes an ambiguiyty with gcc (not with KCC), check what is the
@@ -36,20 +36,20 @@ namespace lambda {
 
 
 template<class RET, class Arg>
-inline const 
+inline const
 lambda_functor<
   lambda_functor_base<
-    explicit_return_type_action<RET>, 
+    explicit_return_type_action<RET>,
     tuple<lambda_functor<Arg> >
-  > 
+  >
 >
 ret(const lambda_functor<Arg>& a1)
 {
-  return  
+  return
     lambda_functor_base<
-      explicit_return_type_action<RET>, 
+      explicit_return_type_action<RET>,
       tuple<lambda_functor<Arg> >
-    > 
+    >
     (tuple<lambda_functor<Arg> >(a1));
 }
 
@@ -60,28 +60,28 @@ template <class T>
 inline const T& protect(const T& t) { return t; }
 
 template<class Arg>
-inline const 
+inline const
 lambda_functor<
   lambda_functor_base<
-    protect_action, 
+    protect_action,
     tuple<lambda_functor<Arg> >
-  > 
+  >
 >
 protect(const lambda_functor<Arg>& a1)
 {
-  return 
+  return
       lambda_functor_base<
-        protect_action, 
+        protect_action,
         tuple<lambda_functor<Arg> >
-      > 
+      >
     (tuple<lambda_functor<Arg> >(a1));
 }
-   
+
 // -------------------------------------------------------------------
 
-// Hides the lambda functorness of a lambda functor. 
+// Hides the lambda functorness of a lambda functor.
 // After this, the functor is immune to argument substitution, etc.
-// This can be used, e.g. to make it safe to pass lambda functors as 
+// This can be used, e.g. to make it safe to pass lambda functors as
 // arguments to functions, which might use them as target functions
 
 // note, unlambda and protect are different things. Protect hides the lambda
@@ -92,41 +92,41 @@ class non_lambda_functor
 {
   LambdaFunctor lf;
 public:
-  
+
   // This functor defines the result_type typedef.
   // The result type must be deducible without knowing the arguments
 
   template <class SigArgs> struct sig {
-    typedef typename 
-      LambdaFunctor::inherited:: 
+    typedef typename
+      LambdaFunctor::inherited::
         template sig<typename SigArgs::tail_type>::type type;
   };
 
   explicit non_lambda_functor(const LambdaFunctor& a) : lf(a) {}
 
-  typename LambdaFunctor::nullary_return_type  
+  typename LambdaFunctor::nullary_return_type
   operator()() const {
-    return lf.template 
+    return lf.template
       call<typename LambdaFunctor::nullary_return_type>
-        (cnull_type(), cnull_type(), cnull_type(), cnull_type()); 
+        (cnull_type(), cnull_type(), cnull_type(), cnull_type());
   }
 
   template<class A>
-  typename sig<tuple<const non_lambda_functor, A&> >::type 
+  typename sig<tuple<const non_lambda_functor, A&> >::type
   operator()(A& a) const {
-    return lf.template call<typename sig<tuple<const non_lambda_functor, A&> >::type >(a, cnull_type(), cnull_type(), cnull_type()); 
+    return lf.template call<typename sig<tuple<const non_lambda_functor, A&> >::type >(a, cnull_type(), cnull_type(), cnull_type());
   }
 
   template<class A, class B>
-  typename sig<tuple<const non_lambda_functor, A&, B&> >::type 
+  typename sig<tuple<const non_lambda_functor, A&, B&> >::type
   operator()(A& a, B& b) const {
-    return lf.template call<typename sig<tuple<const non_lambda_functor, A&, B&> >::type >(a, b, cnull_type(), cnull_type()); 
+    return lf.template call<typename sig<tuple<const non_lambda_functor, A&, B&> >::type >(a, b, cnull_type(), cnull_type());
   }
 
   template<class A, class B, class C>
-  typename sig<tuple<const non_lambda_functor, A&, B&, C&> >::type 
+  typename sig<tuple<const non_lambda_functor, A&, B&, C&> >::type
   operator()(A& a, B& b, C& c) const {
-    return lf.template call<typename sig<tuple<const non_lambda_functor, A&, B&, C&> >::type>(a, b, c, cnull_type()); 
+    return lf.template call<typename sig<tuple<const non_lambda_functor, A&, B&, C&> >::type>(a, b, c, cnull_type());
   }
 };
 
@@ -134,14 +134,14 @@ template <class Arg>
 inline const Arg& unlambda(const Arg& a) { return a; }
 
 template <class Arg>
-inline const non_lambda_functor<lambda_functor<Arg> > 
+inline const non_lambda_functor<lambda_functor<Arg> >
 unlambda(const lambda_functor<Arg>& a)
 {
   return non_lambda_functor<lambda_functor<Arg> >(a);
 }
 
   // Due to a language restriction, lambda functors cannot be made to
-  // accept non-const rvalue arguments. Usually iterators do not return 
+  // accept non-const rvalue arguments. Usually iterators do not return
   // temporaries, but sometimes they do. That's why a workaround is provided.
   // Note, that this potentially breaks const correctness, so be careful!
 
@@ -161,7 +161,7 @@ public:
 
   template <class SigArgs> struct sig {
     typedef typename
-      LambdaFunctor::inherited::template 
+      LambdaFunctor::inherited::template
         sig<typename SigArgs::tail_type>::type type;
   };
 
@@ -202,7 +202,7 @@ public:
 
   template <class SigArgs> struct sig {
     typedef typename
-      LambdaFunctor::inherited::template 
+      LambdaFunctor::inherited::template
         sig<typename SigArgs::tail_type>::type type;
   };
 
@@ -260,45 +260,45 @@ template<class Args> struct return_type_N<voidifier_action, Args> {
 };
 
 template<class Arg1>
-inline const 
+inline const
 lambda_functor<
   lambda_functor_base<
     action<1, voidifier_action>,
     tuple<lambda_functor<Arg1> >
-  > 
-> 
-make_void(const lambda_functor<Arg1>& a1) { 
-return 
+  >
+>
+make_void(const lambda_functor<Arg1>& a1) {
+return
     lambda_functor_base<
       action<1, voidifier_action>,
       tuple<lambda_functor<Arg1> >
-    > 
+    >
   (tuple<lambda_functor<Arg1> > (a1));
 }
 
-// for non-lambda functors, make_void does nothing 
+// for non-lambda functors, make_void does nothing
 // (the argument gets evaluated immediately)
 
 template<class Arg1>
-inline const 
+inline const
 lambda_functor<
-  lambda_functor_base<do_nothing_action, null_type> 
-> 
-make_void(const Arg1&) { 
-return 
+  lambda_functor_base<do_nothing_action, null_type>
+>
+make_void(const Arg1&) {
+return
     lambda_functor_base<do_nothing_action, null_type>();
 }
 
 // std_functor -----------------------------------------------------
 
 //  The STL uses the result_type typedef as the convention to let binders know
-//  the return type of a function object. 
+//  the return type of a function object.
 //  LL uses the sig template.
-//  To let LL know that the function object has the result_type typedef 
+//  To let LL know that the function object has the result_type typedef
 //  defined, it can be wrapped with the std_functor function.
 
 
-// Just inherit form the template parameter (the standard functor), 
+// Just inherit form the template parameter (the standard functor),
 // and provide a sig template. So we have a class which is still the
 // same functor + the sig template.
 
@@ -312,7 +312,7 @@ template<class F>
 inline result_type_to_sig<F> std_functor(const F& f) { return f; }
 
 
-} // namespace lambda 
+} // namespace lambda
 } // namespace autoboost
 
 #endif

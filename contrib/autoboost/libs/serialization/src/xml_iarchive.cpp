@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // xml_iarchive.cpp:
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -14,14 +14,8 @@
 
 #define AUTOBOOST_ARCHIVE_SOURCE
 
-// the following works around an issue between spirit 1.61 and borland.
-// it turns out the the certain spirit stuff must be defined before
-// certain parts of mpl.  including this here makes sure that happens
 #include <autoboost/config.hpp>
 #include <autoboost/detail/workaround.hpp>
-#if AUTOBOOST_WORKAROUND(__BORLANDC__, <= 0x560 )
-#include <autoboost/archive/impl/basic_xml_grammar.hpp>
-#endif
 
 #include <autoboost/archive/xml_iarchive.hpp>
 #include <autoboost/archive/detail/archive_serializer_map.hpp>

@@ -2,8 +2,8 @@
 // Copyright Peter Dimov 2001
 // Copyright Aleksey Gurtovoy 2001-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -557,8 +557,8 @@ template<
 struct bind_count_args
 {
     AUTOBOOST_STATIC_CONSTANT(int, value =
-          is_bind_arg<T1>::value + is_bind_arg<T2>::value 
-        + is_bind_arg<T3>::value + is_bind_arg<T4>::value 
+          is_bind_arg<T1>::value + is_bind_arg<T2>::value
+        + is_bind_arg<T3>::value + is_bind_arg<T4>::value
         + is_bind_arg<T5>::value
         );
 

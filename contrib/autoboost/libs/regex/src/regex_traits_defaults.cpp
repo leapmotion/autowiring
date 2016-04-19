@@ -3,12 +3,12 @@
  * Copyright (c) 2004
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
- 
+
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         regex_traits_defaults.cpp
@@ -36,7 +36,7 @@ namespace std{
 #endif
 
 
-namespace autoboost{ namespace re_detail{
+namespace autoboost{ namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 AUTOBOOST_REGEX_DECL const char* AUTOBOOST_REGEX_CALL get_default_syntax(regex_constants::syntax_type n)
 {
@@ -143,10 +143,10 @@ AUTOBOOST_REGEX_DECL const char* AUTOBOOST_REGEX_CALL get_default_error_string(r
 
 AUTOBOOST_REGEX_DECL bool AUTOBOOST_REGEX_CALL is_combining_implementation(autoboost::uint_least16_t c)
 {
-   const autoboost::uint_least16_t combining_ranges[] = { 0x0300, 0x0361, 
-                           0x0483, 0x0486, 
-                           0x0903, 0x0903, 
-                           0x093E, 0x0940, 
+   const autoboost::uint_least16_t combining_ranges[] = { 0x0300, 0x0361,
+                           0x0483, 0x0486,
+                           0x0903, 0x0903,
+                           0x093E, 0x0940,
                            0x0949, 0x094C,
                            0x0982, 0x0983,
                            0x09BE, 0x09C0,
@@ -177,9 +177,9 @@ AUTOBOOST_REGEX_DECL bool AUTOBOOST_REGEX_CALL is_combining_implementation(autob
                            0x0D46, 0x0D4C,
                            0x0D57, 0x0D57,
                            0x0F7F, 0x0F7F,
-                           0x20D0, 0x20E1, 
+                           0x20D0, 0x20E1,
                            0x3099, 0x309A,
-                           0xFE20, 0xFE23, 
+                           0xFE20, 0xFE23,
                            0xffff, 0xffff, };
 
       const autoboost::uint_least16_t* p = combining_ranges + 1;
@@ -194,18 +194,18 @@ AUTOBOOST_REGEX_DECL bool AUTOBOOST_REGEX_CALL is_combining_implementation(autob
 // these are the POSIX collating names:
 //
 AUTOBOOST_REGEX_DECL const char* def_coll_names[] = {
-"NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "alert", "backspace", "tab", "newline", 
-"vertical-tab", "form-feed", "carriage-return", "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", 
-"SYN", "ETB", "CAN", "EM", "SUB", "ESC", "IS4", "IS3", "IS2", "IS1", "space", "exclamation-mark", 
-"quotation-mark", "number-sign", "dollar-sign", "percent-sign", "ampersand", "apostrophe", 
-"left-parenthesis", "right-parenthesis", "asterisk", "plus-sign", "comma", "hyphen", 
-"period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", 
-"colon", "semicolon", "less-than-sign", "equals-sign", "greater-than-sign", 
-"question-mark", "commercial-at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", 
-"Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "left-square-bracket", "backslash", 
-"right-square-bracket", "circumflex", "underscore", "grave-accent", "a", "b", "c", "d", "e", "f", 
-"g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "left-curly-bracket", 
-"vertical-line", "right-curly-bracket", "tilde", "DEL", "", 
+"NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "alert", "backspace", "tab", "newline",
+"vertical-tab", "form-feed", "carriage-return", "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK",
+"SYN", "ETB", "CAN", "EM", "SUB", "ESC", "IS4", "IS3", "IS2", "IS1", "space", "exclamation-mark",
+"quotation-mark", "number-sign", "dollar-sign", "percent-sign", "ampersand", "apostrophe",
+"left-parenthesis", "right-parenthesis", "asterisk", "plus-sign", "comma", "hyphen",
+"period", "slash", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+"colon", "semicolon", "less-than-sign", "equals-sign", "greater-than-sign",
+"question-mark", "commercial-at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P",
+"Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "left-square-bracket", "backslash",
+"right-square-bracket", "circumflex", "underscore", "grave-accent", "a", "b", "c", "d", "e", "f",
+"g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "left-curly-bracket",
+"vertical-line", "right-curly-bracket", "tilde", "DEL", "",
 };
 
 // these multi-character collating elements
@@ -688,5 +688,5 @@ AUTOBOOST_REGEX_DECL regex_constants::syntax_type AUTOBOOST_REGEX_CALL get_defau
 }
 
 
-} // re_detail
-} // boost
+} // AUTOBOOST_REGEX_DETAIL_NS
+} // autoboost

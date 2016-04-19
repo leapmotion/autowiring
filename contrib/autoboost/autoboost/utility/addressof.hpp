@@ -10,7 +10,7 @@
 #define AUTOBOOST_UTILITY_ADDRESSOF_HPP
 
 // The header file at this path is deprecated;
-// use boost/core/addressof.hpp instead.
+// use autoboost/core/addressof.hpp instead.
 
 #include <autoboost/core/addressof.hpp>
 

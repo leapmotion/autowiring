@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_STRINGS_FROM_FACET__HPP___
-#define AB_DATE_TIME_STRINGS_FROM_FACET__HPP___
+#ifndef DATE_TIME_STRINGS_FROM_FACET__HPP___
+#define DATE_TIME_STRINGS_FROM_FACET__HPP___
 
 /* Copyright (c) 2004 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

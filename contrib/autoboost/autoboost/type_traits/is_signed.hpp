@@ -1,5 +1,5 @@
 
-//  (C) Copyright John Maddock 2005.  
+//  (C) Copyright John Maddock 2005.
 //  Use, modification and distribution are subject to the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt).
@@ -13,18 +13,17 @@
 #include <autoboost/type_traits/is_integral.hpp>
 #include <autoboost/type_traits/remove_cv.hpp>
 #include <autoboost/type_traits/is_enum.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
-
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#include <climits>
 
 namespace autoboost {
 
 #if !defined( __CODEGEARC__ )
 
-namespace detail{
+#if !(defined(AUTOBOOST_MSVC) && AUTOBOOST_MSVC <= 1310) && \
+    !(defined(__EDG_VERSION__) && __EDG_VERSION__ <= 238) &&\
+    !defined(AUTOBOOST_NO_INCLASS_MEMBER_INITIALIZATION)
 
-#if !(defined(__EDG_VERSION__) && __EDG_VERSION__ <= 238) && !defined(AUTOBOOST_NO_INCLASS_MEMBER_INITIALIZATION)
+namespace detail{
 
 template <class T>
 struct is_signed_values
@@ -67,70 +66,98 @@ struct is_signed_select_helper<false>
 };
 
 template <class T>
-struct is_signed_imp
+struct is_signed_impl
 {
-   typedef is_signed_select_helper< 
-      ::autoboost::type_traits::ice_or<
-         ::autoboost::is_integral<T>::value,
-         ::autoboost::is_enum<T>::value>::value 
-   > selector;
+   typedef ::autoboost::detail::is_signed_select_helper< ::autoboost::is_integral<T>::value || ::autoboost::is_enum<T>::value> selector;
    typedef typename selector::template rebind<T> binder;
    typedef typename binder::type type;
    AUTOBOOST_STATIC_CONSTANT(bool, value = type::value);
 };
 
-#else
-
-template <class T> struct is_signed_imp : public false_type{};
-template <> struct is_signed_imp<signed char> : public true_type{};
-template <> struct is_signed_imp<const signed char> : public true_type{};
-template <> struct is_signed_imp<volatile signed char> : public true_type{};
-template <> struct is_signed_imp<const volatile signed char> : public true_type{};
-template <> struct is_signed_imp<short> : public true_type{};
-template <> struct is_signed_imp<const short> : public true_type{};
-template <> struct is_signed_imp<volatile short> : public true_type{};
-template <> struct is_signed_imp<const volatile short> : public true_type{};
-template <> struct is_signed_imp<int> : public true_type{};
-template <> struct is_signed_imp<const int> : public true_type{};
-template <> struct is_signed_imp<volatile int> : public true_type{};
-template <> struct is_signed_imp<const volatile int> : public true_type{};
-template <> struct is_signed_imp<long> : public true_type{};
-template <> struct is_signed_imp<const long> : public true_type{};
-template <> struct is_signed_imp<volatile long> : public true_type{};
-template <> struct is_signed_imp<const volatile long> : public true_type{};
-#ifdef AUTOBOOST_HAS_LONG_LONG
-template <> struct is_signed_imp<long long> : public true_type{};
-template <> struct is_signed_imp<const long long> : public true_type{};
-template <> struct is_signed_imp<volatile long long> : public true_type{};
-template <> struct is_signed_imp<const volatile long long> : public true_type{};
-#endif
-#if defined(CHAR_MIN) && (CHAR_MIN != 0)
-template <> struct is_signed_imp<char> : public true_type{};
-template <> struct is_signed_imp<const char> : public true_type{};
-template <> struct is_signed_imp<volatile char> : public true_type{};
-template <> struct is_signed_imp<const volatile char> : public true_type{};
-#endif
-#if defined(WCHAR_MIN) && (WCHAR_MIN != 0)
-template <> struct is_signed_imp<wchar_t> : public true_type{};
-template <> struct is_signed_imp<const wchar_t> : public true_type{};
-template <> struct is_signed_imp<volatile wchar_t> : public true_type{};
-template <> struct is_signed_imp<const volatile wchar_t> : public true_type{};
-#endif
-
-#endif
-
 }
 
-#endif // !defined( __CODEGEARC__ )
+template <class T> struct is_signed : public integral_constant<bool, autoboost::detail::is_signed_impl<T>::value> {};
 
-#if defined( __CODEGEARC__ )
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_signed,T,__is_signed(T))
 #else
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_signed,T,::autoboost::detail::is_signed_imp<T>::value)
+
+template <class T> struct is_signed : public false_type{};
+
 #endif
 
-} // namespace autoboost
+#else //defined( __CODEGEARC__ )
+   template <class T> struct is_signed : public integral_constant<bool, __is_signed(T)>{};
+#endif
 
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
+template <> struct is_signed<signed char> : public true_type{};
+template <> struct is_signed<const signed char> : public true_type{};
+template <> struct is_signed<volatile signed char> : public true_type{};
+template <> struct is_signed<const volatile signed char> : public true_type{};
+template <> struct is_signed<short> : public true_type{};
+template <> struct is_signed<const short> : public true_type{};
+template <> struct is_signed<volatile short> : public true_type{};
+template <> struct is_signed<const volatile short> : public true_type{};
+template <> struct is_signed<int> : public true_type{};
+template <> struct is_signed<const int> : public true_type{};
+template <> struct is_signed<volatile int> : public true_type{};
+template <> struct is_signed<const volatile int> : public true_type{};
+template <> struct is_signed<long> : public true_type{};
+template <> struct is_signed<const long> : public true_type{};
+template <> struct is_signed<volatile long> : public true_type{};
+template <> struct is_signed<const volatile long> : public true_type{};
+
+template <> struct is_signed<unsigned char> : public false_type{};
+template <> struct is_signed<const unsigned char> : public false_type{};
+template <> struct is_signed<volatile unsigned char> : public false_type{};
+template <> struct is_signed<const volatile unsigned char> : public false_type{};
+template <> struct is_signed<unsigned short> : public false_type{};
+template <> struct is_signed<const unsigned short> : public false_type{};
+template <> struct is_signed<volatile unsigned short> : public false_type{};
+template <> struct is_signed<const volatile unsigned short> : public false_type{};
+template <> struct is_signed<unsigned int> : public false_type{};
+template <> struct is_signed<const unsigned int> : public false_type{};
+template <> struct is_signed<volatile unsigned int> : public false_type{};
+template <> struct is_signed<const volatile unsigned int> : public false_type{};
+template <> struct is_signed<unsigned long> : public false_type{};
+template <> struct is_signed<const unsigned long> : public false_type{};
+template <> struct is_signed<volatile unsigned long> : public false_type{};
+template <> struct is_signed<const volatile unsigned long> : public false_type{};
+#ifdef AUTOBOOST_HAS_LONG_LONG
+template <> struct is_signed< ::autoboost::long_long_type> : public true_type{};
+template <> struct is_signed<const ::autoboost::long_long_type> : public true_type{};
+template <> struct is_signed<volatile ::autoboost::long_long_type> : public true_type{};
+template <> struct is_signed<const volatile ::autoboost::long_long_type> : public true_type{};
+
+template <> struct is_signed< ::autoboost::ulong_long_type> : public false_type{};
+template <> struct is_signed<const ::autoboost::ulong_long_type> : public false_type{};
+template <> struct is_signed<volatile ::autoboost::ulong_long_type> : public false_type{};
+template <> struct is_signed<const volatile ::autoboost::ulong_long_type> : public false_type{};
+#endif
+#if defined(CHAR_MIN)
+#if CHAR_MIN != 0
+template <> struct is_signed<char> : public true_type{};
+template <> struct is_signed<const char> : public true_type{};
+template <> struct is_signed<volatile char> : public true_type{};
+template <> struct is_signed<const volatile char> : public true_type{};
+#else
+template <> struct is_signed<char> : public false_type{};
+template <> struct is_signed<const char> : public false_type{};
+template <> struct is_signed<volatile char> : public false_type{};
+template <> struct is_signed<const volatile char> : public false_type{};
+#endif
+#endif
+#if defined(WCHAR_MIN) && !defined(AUTOBOOST_NO_INTRINSIC_WCHAR_T)
+#if WCHAR_MIN != 0
+template <> struct is_signed<wchar_t> : public true_type{};
+template <> struct is_signed<const wchar_t> : public true_type{};
+template <> struct is_signed<volatile wchar_t> : public true_type{};
+template <> struct is_signed<const volatile wchar_t> : public true_type{};
+#else
+template <> struct is_signed<wchar_t> : public false_type{};
+template <> struct is_signed<const wchar_t> : public false_type{};
+template <> struct is_signed<volatile wchar_t> : public false_type{};
+template <> struct is_signed<const volatile wchar_t> : public false_type{};
+#endif
+#endif
+} // namespace autoboost
 
 #endif // AUTOBOOST_TT_IS_MEMBER_FUNCTION_POINTER_HPP_INCLUDED

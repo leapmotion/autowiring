@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // binary_iarchive_impl.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,6 @@
 //  See http://www.boost.org for updates, documentation, and revision history.
 
 #include <istream>
-#include <autoboost/serialization/pfto.hpp>
 #include <autoboost/archive/basic_binary_iprimitive.hpp>
 #include <autoboost/archive/basic_binary_iarchive.hpp>
 
@@ -26,7 +25,7 @@
 #  pragma warning(disable : 4511 4512)
 #endif
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 
 namespace detail {
@@ -34,7 +33,7 @@ namespace detail {
 } // namespace detail
 
 template<class Archive, class Elem, class Tr>
-class binary_iarchive_impl : 
+class binary_iarchive_impl :
     public basic_binary_iprimitive<Archive, Elem, Tr>,
     public basic_binary_iarchive<Archive>
 {
@@ -54,12 +53,9 @@ protected:
         friend class load_access;
     #endif
 #endif
-    // note: the following should not needed - but one compiler (vc 7.1)
-    // fails to compile one test (test_shared_ptr) without it !!!
-    // make this protected so it can be called from a derived archive
     template<class T>
-    void load_override(T & t, AUTOBOOST_PFTO int){
-        this->basic_binary_iarchive<Archive>::load_override(t, 0L);
+    void load_override(T & t){
+        this->basic_binary_iarchive<Archive>::load_override(t);
     }
     void init(unsigned int flags){
         if(0 != (flags & no_header))
@@ -73,11 +69,11 @@ protected:
         #endif
     }
     binary_iarchive_impl(
-        std::basic_streambuf<Elem, Tr> & bsb, 
+        std::basic_streambuf<Elem, Tr> & bsb,
         unsigned int flags
     ) :
         basic_binary_iprimitive<Archive, Elem, Tr>(
-            bsb, 
+            bsb,
             0 != (flags & no_codecvt)
         ),
         basic_binary_iarchive<Archive>(flags)
@@ -85,11 +81,11 @@ protected:
         init(flags);
     }
     binary_iarchive_impl(
-        std::basic_istream<Elem, Tr> & is, 
+        std::basic_istream<Elem, Tr> & is,
         unsigned int flags
     ) :
         basic_binary_iprimitive<Archive, Elem, Tr>(
-            * is.rdbuf(), 
+            * is.rdbuf(),
             0 != (flags & no_codecvt)
         ),
         basic_binary_iarchive<Archive>(flags)

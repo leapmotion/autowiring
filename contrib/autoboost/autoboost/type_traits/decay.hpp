@@ -9,35 +9,34 @@
 #ifndef AUTOBOOST_TT_DECAY_HPP_INCLUDED
 #define AUTOBOOST_TT_DECAY_HPP_INCLUDED
 
-#include <autoboost/type_traits/config.hpp>
 #include <autoboost/type_traits/is_array.hpp>
 #include <autoboost/type_traits/is_function.hpp>
 #include <autoboost/type_traits/remove_bounds.hpp>
 #include <autoboost/type_traits/add_pointer.hpp>
 #include <autoboost/type_traits/remove_reference.hpp>
-#include <autoboost/mpl/eval_if.hpp>
-#include <autoboost/mpl/identity.hpp>
+#include <autoboost/type_traits/remove_cv.hpp>
 
-namespace autoboost 
+namespace autoboost
 {
+
+   namespace detail
+   {
+
+      template <class T, bool Array, bool Function> struct decay_imp { typedef typename remove_cv<T>::type type; };
+      template <class T> struct decay_imp<T, true, false> { typedef typename remove_bounds<T>::type* type; };
+      template <class T> struct decay_imp<T, false, true> { typedef T* type; };
+
+   }
 
     template< class T >
     struct decay
     {
     private:
-        typedef AUTOBOOST_DEDUCED_TYPENAME remove_reference<T>::type Ty;
+        typedef typename remove_reference<T>::type Ty;
     public:
-        typedef AUTOBOOST_DEDUCED_TYPENAME mpl::eval_if< 
-            is_array<Ty>,
-            mpl::identity<AUTOBOOST_DEDUCED_TYPENAME remove_bounds<Ty>::type*>,
-            AUTOBOOST_DEDUCED_TYPENAME mpl::eval_if< 
-                is_function<Ty>,
-                add_pointer<Ty>,
-                mpl::identity<Ty>
-            >
-        >::type type;
+       typedef typename autoboost::detail::decay_imp<Ty, autoboost::is_array<Ty>::value, autoboost::is_function<Ty>::value>::type type;
     };
-    
+
 } // namespace autoboost
 
 

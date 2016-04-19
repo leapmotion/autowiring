@@ -1,10 +1,10 @@
 /*
  *
  * Copyright (c) 1998-2009 John Maddock
- * Copyright 2008 Eric Niebler. 
+ * Copyright 2008 Eric Niebler.
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -55,7 +55,7 @@ namespace autoboost{
    template <class BidiIterator, class Allocator = AUTOBOOST_DEDUCED_TYPENAME std::vector<sub_match<BidiIterator> >::allocator_type >
 class match_results;
 
-namespace re_detail{
+namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 //
 // struct trivial_format_traits:
@@ -73,11 +73,11 @@ struct trivial_format_traits
    }
    static charT tolower(charT c)
    {
-      return ::autoboost::re_detail::global_lower(c);
+      return ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::global_lower(c);
    }
    static charT toupper(charT c)
    {
-      return ::autoboost::re_detail::global_upper(c);
+      return ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::global_upper(c);
    }
    static int value(const charT c, int radix)
    {
@@ -96,7 +96,7 @@ class basic_regex_formatter
 public:
    typedef typename traits::char_type char_type;
    basic_regex_formatter(OutputIterator o, const Results& r, const traits& t)
-      : m_traits(t), m_results(r), m_out(o), m_state(output_copy), m_restore_state(output_copy), m_have_conditional(false) {}
+      : m_traits(t), m_results(r), m_out(o), m_position(), m_end(), m_flags(), m_state(output_copy), m_restore_state(output_copy), m_have_conditional(false) {}
    OutputIterator format(ForwardIter p1, ForwardIter p2, match_flag_type f);
    OutputIterator format(ForwardIter p1, match_flag_type f)
    {
@@ -182,7 +182,7 @@ private:
    {
 #if defined(_MSC_VER) && defined(__INTEL_COMPILER) && ((__INTEL_COMPILER == 9999) || (__INTEL_COMPILER == 1210))
       // Workaround for Intel support issue #656654.
-      // See also https://svn.boost.org/trac/boost/ticket/6359
+      // See also https://svn.boost.org/trac/autoboost/ticket/6359
       return toi(i, j, base, mpl::false_());
 #else
       typedef typename autoboost::is_convertible<ForwardIter, const char_type*&>::type tag_type;
@@ -359,7 +359,7 @@ void basic_regex_formatter<OutputIterator, Results, traits, ForwardIter>::format
    default:
       // see if we have a number:
       {
-         std::ptrdiff_t len = ::autoboost::re_detail::distance(m_position, m_end);
+         std::ptrdiff_t len = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::distance(m_position, m_end);
          //len = (std::min)(static_cast<std::ptrdiff_t>(2), len);
          int v = this->toi(m_position, m_position + len, 10);
          if((v < 0) || (have_brace && ((m_position == m_end) || (*m_position != '}'))))
@@ -385,7 +385,7 @@ void basic_regex_formatter<OutputIterator, Results, traits, ForwardIter>::format
 template <class OutputIterator, class Results, class traits, class ForwardIter>
 bool basic_regex_formatter<OutputIterator, Results, traits, ForwardIter>::handle_perl_verb(bool have_brace)
 {
-   // 
+   //
    // We may have a capitalised string containing a Perl action:
    //
    static const char_type MATCH[] = { 'M', 'A', 'T', 'C', 'H' };
@@ -570,7 +570,7 @@ void basic_regex_formatter<OutputIterator, Results, traits, ForwardIter>::format
       }
       else
       {
-         std::ptrdiff_t len = ::autoboost::re_detail::distance(m_position, m_end);
+         std::ptrdiff_t len = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::distance(m_position, m_end);
          len = (std::min)(static_cast<std::ptrdiff_t>(2), len);
          int val = this->toi(m_position, m_position + len, 16);
          if(val < 0)
@@ -634,7 +634,7 @@ void basic_regex_formatter<OutputIterator, Results, traits, ForwardIter>::format
             break;
       }
       // see if we have a \n sed style backreference:
-      std::ptrdiff_t len = ::autoboost::re_detail::distance(m_position, m_end);
+      std::ptrdiff_t len = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::distance(m_position, m_end);
       len = (std::min)(static_cast<std::ptrdiff_t>(1), len);
       int v = this->toi(m_position, m_position+len, 10);
       if((v > 0) || ((v == 0) && (m_flags & ::autoboost::regex_constants::format_sed)))
@@ -646,7 +646,7 @@ void basic_regex_formatter<OutputIterator, Results, traits, ForwardIter>::format
       {
          // octal ecape sequence:
          --m_position;
-         len = ::autoboost::re_detail::distance(m_position, m_end);
+         len = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::distance(m_position, m_end);
          len = (std::min)(static_cast<std::ptrdiff_t>(4), len);
          v = this->toi(m_position, m_position + len, 8);
          AUTOBOOST_ASSERT(v >= 0);
@@ -693,7 +693,7 @@ void basic_regex_formatter<OutputIterator, Results, traits, ForwardIter>::format
    }
    else
    {
-      std::ptrdiff_t len = ::autoboost::re_detail::distance(m_position, m_end);
+      std::ptrdiff_t len = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::distance(m_position, m_end);
       len = (std::min)(static_cast<std::ptrdiff_t>(2), len);
       v = this->toi(m_position, m_position + len, 10);
    }
@@ -810,10 +810,10 @@ public:
    string_out_iterator& operator++() { return *this; }
    string_out_iterator& operator++(int) { return *this; }
    string_out_iterator& operator*() { return *this; }
-   string_out_iterator& operator=(typename S::value_type v) 
-   { 
-      out->append(1, v); 
-      return *this; 
+   string_out_iterator& operator=(typename S::value_type v)
+   {
+      out->append(1, v);
+      return *this;
    }
 
 #ifdef AUTOBOOST_NO_STD_ITERATOR
@@ -835,12 +835,12 @@ OutputIterator regex_format_imp(OutputIterator out,
 {
    if(flags & regex_constants::format_literal)
    {
-      return re_detail::copy(p1, p2, out);
+      return AUTOBOOST_REGEX_DETAIL_NS::copy(p1, p2, out);
    }
 
-   re_detail::basic_regex_formatter<
-      OutputIterator, 
-      match_results<Iterator, Alloc>, 
+   AUTOBOOST_REGEX_DETAIL_NS::basic_regex_formatter<
+      OutputIterator,
+      match_results<Iterator, Alloc>,
       traits, ForwardIter> f(out, m, t);
    return f.format(p1, p2, flags);
 }
@@ -849,14 +849,14 @@ OutputIterator regex_format_imp(OutputIterator out,
 
 AUTOBOOST_MPL_HAS_XXX_TRAIT_DEF(const_iterator)
 
-struct any_type 
+struct any_type
 {
    template <class T>
-   any_type(const T&); 
+   any_type(const T&);
    template <class T, class U>
-   any_type(const T&, const U&); 
+   any_type(const T&, const U&);
    template <class T, class U, class V>
-   any_type(const T&, const U&, const V&); 
+   any_type(const T&, const U&, const V&);
 };
 typedef char no_type;
 typedef char (&unary_type)[2];
@@ -931,7 +931,7 @@ template <class F, class M, class O>
 struct format_traits
 {
 public:
-   // 
+   //
    // Type is mpl::int_<N> where N is one of:
    //
    // 0 : F is a pointer to a presumably null-terminated string.
@@ -962,7 +962,7 @@ template <class F, class M, class O>
 struct format_traits
 {
 public:
-   // 
+   //
    // Type is mpl::int_<N> where N is one of:
    //
    // 0 : F is a pointer to a presumably null-terminated string.
@@ -1028,7 +1028,7 @@ struct format_functor1
    template <class S, class OutputIter>
    OutputIter do_format_string(const S& s, OutputIter i)
    {
-      return re_detail::copy(s.begin(), s.end(), i);
+      return AUTOBOOST_REGEX_DETAIL_NS::copy(s.begin(), s.end(), i);
    }
    template <class S, class OutputIter>
    inline OutputIter do_format_string(const S* s, OutputIter i)
@@ -1085,7 +1085,7 @@ struct format_functor_container
    OutputIter operator()(const Match& m, OutputIter i, autoboost::regex_constants::match_flag_type f, const Traits& t = Traits())
    {
       //typedef typename Match::char_type char_type;
-      return re_detail::regex_format_imp(i, m, func.begin(), func.end(), f, t);
+      return AUTOBOOST_REGEX_DETAIL_NS::regex_format_imp(i, m, func.begin(), func.end(), f, t);
    }
 private:
    const Container& func;
@@ -1093,7 +1093,7 @@ private:
    format_functor_container& operator=(const format_functor_container&);
 };
 
-template <class Func, class Match, class OutputIterator, class Traits = re_detail::trivial_format_traits<typename Match::char_type> >
+template <class Func, class Match, class OutputIterator, class Traits = AUTOBOOST_REGEX_DETAIL_NS::trivial_format_traits<typename Match::char_type> >
 struct compute_functor_type
 {
    typedef typename format_traits<Func, Match, OutputIterator>::type tag;
@@ -1106,7 +1106,7 @@ struct compute_functor_type
          typename mpl::if_<
             ::autoboost::is_same<tag, mpl::int_<2> >, format_functor1<Func, Match>,
             typename mpl::if_<
-               ::autoboost::is_same<tag, mpl::int_<3> >, format_functor2<Func, Match>, 
+               ::autoboost::is_same<tag, mpl::int_<3> >, format_functor2<Func, Match>,
                format_functor3<Func, Match>
             >::type
          >::type
@@ -1114,7 +1114,7 @@ struct compute_functor_type
    >::type type;
 };
 
-} // namespace re_detail
+} // namespace AUTOBOOST_REGEX_DETAIL_NS
 
 template <class OutputIterator, class Iterator, class Allocator, class Functor>
 inline OutputIterator regex_format(OutputIterator out,
@@ -1127,8 +1127,8 @@ inline OutputIterator regex_format(OutputIterator out,
 }
 
 template <class Iterator, class Allocator, class Functor>
-inline std::basic_string<typename match_results<Iterator, Allocator>::char_type> regex_format(const match_results<Iterator, Allocator>& m, 
-                                      Functor fmt, 
+inline std::basic_string<typename match_results<Iterator, Allocator>::char_type> regex_format(const match_results<Iterator, Allocator>& m,
+                                      Functor fmt,
                                       match_flag_type flags = format_all)
 {
    return m.format(fmt, flags);

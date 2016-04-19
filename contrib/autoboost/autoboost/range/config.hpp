@@ -38,10 +38,10 @@
 #endif
 
 #ifdef AUTOBOOST_RANGE_NO_ARRAY_SUPPORT
-#define AUTOBOOST_RANGE_ARRAY_REF() (boost_range_array)
+#define AUTOBOOST_RANGE_ARRAY_REF() (autoboost_range_array)
 #define AUTOBOOST_RANGE_NO_STATIC_ASSERT
 #else
-#define AUTOBOOST_RANGE_ARRAY_REF() (&boost_range_array)
+#define AUTOBOOST_RANGE_ARRAY_REF() (&autoboost_range_array)
 #endif
 
 #if defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 7)))

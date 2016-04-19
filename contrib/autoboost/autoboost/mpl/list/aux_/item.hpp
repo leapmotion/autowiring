@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -28,7 +28,7 @@ template<
     >
 struct l_item
 {
-// agurt, 17/jul/03: to facilitate the deficient 'is_sequence' implementation 
+// agurt, 17/jul/03: to facilitate the deficient 'is_sequence' implementation
 #if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, <= 1300)
     typedef int begin;
 #endif

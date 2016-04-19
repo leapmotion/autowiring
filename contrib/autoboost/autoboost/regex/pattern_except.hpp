@@ -3,12 +3,12 @@
  * Copyright (c) 1998-2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
- 
+
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         pattern_except.hpp
@@ -63,7 +63,7 @@ private:
 typedef regex_error bad_pattern;
 typedef regex_error bad_expression;
 
-namespace re_detail{
+namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL raise_runtime_error(const std::runtime_error& ex);
 
@@ -72,7 +72,7 @@ void raise_error(const traits& t, regex_constants::error_type code)
 {
    (void)t;  // warning suppression
    std::runtime_error e(t.error_string(code));
-   ::autoboost::re_detail::raise_runtime_error(e);
+   ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::raise_runtime_error(e);
 }
 
 }

@@ -10,7 +10,7 @@
 #define AUTOBOOST_NONCOPYABLE_HPP
 
 // The header file at this path is deprecated;
-// use boost/core/noncopyable.hpp instead.
+// use autoboost/core/noncopyable.hpp instead.
 
 #include <autoboost/core/noncopyable.hpp>
 

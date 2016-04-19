@@ -1,14 +1,14 @@
-#ifndef AB_POSIX_TIME_HPP___
-#define AB_POSIX_TIME_HPP___
+#ifndef POSIX_TIME_HPP___
+#define POSIX_TIME_HPP___
 
 /* Copyright (c) 2002-2005 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
- * Author: Jeff Garland, Bart Garst 
+ * Author: Jeff Garland, Bart Garst
  * $Date$
  */
-/*!@file posix_time.hpp Global header file to get all of posix time types 
+/*!@file posix_time.hpp Global header file to get all of posix time types
  */
 
 #include "autoboost/date_time/compiler_config.hpp"

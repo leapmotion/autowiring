@@ -42,7 +42,7 @@ namespace autoboost{
 #endif
 #endif
 
-namespace re_detail{
+namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 //
 // forward declaration, we will need this one later:
@@ -80,13 +80,13 @@ public:
    {
       template <class charT>
       name(const charT* i, const charT* j, int idx)
-         : index(idx) 
-      { 
-         hash = hash_value_from_capture_name(i, j); 
+         : index(idx)
+      {
+         hash = hash_value_from_capture_name(i, j);
       }
       name(int h, int idx)
          : index(idx), hash(h)
-      { 
+      {
       }
       int index;
       int hash;
@@ -96,7 +96,7 @@ public:
       }
       bool operator == (const name& other)const
       {
-         return hash == other.hash; 
+         return hash == other.hash;
       }
       void swap(name& other)
       {
@@ -160,13 +160,13 @@ template <class charT, class traits>
 struct regex_data : public named_subexpressions
 {
    typedef regex_constants::syntax_option_type   flag_type;
-   typedef std::size_t                           size_type;  
+   typedef std::size_t                           size_type;
 
    regex_data(const ::autoboost::shared_ptr<
-      ::autoboost::regex_traits_wrapper<traits> >& t) 
-      : m_ptraits(t), m_expression(0), m_expression_len(0) {}
-   regex_data() 
-      : m_ptraits(new ::autoboost::regex_traits_wrapper<traits>()), m_expression(0), m_expression_len(0) {}
+      ::autoboost::regex_traits_wrapper<traits> >& t)
+      : m_ptraits(t), m_expression(0), m_expression_len(0), m_disable_match_any(false) {}
+   regex_data()
+      : m_ptraits(new ::autoboost::regex_traits_wrapper<traits>()), m_expression(0), m_expression_len(0), m_disable_match_any(false) {}
 
    ::autoboost::shared_ptr<
       ::autoboost::regex_traits_wrapper<traits>
@@ -176,16 +176,17 @@ struct regex_data : public named_subexpressions
    const charT*                m_expression;              // the original expression
    std::ptrdiff_t              m_expression_len;          // the length of the original expression
    size_type                   m_mark_count;              // the number of marked sub-expressions
-   re_detail::re_syntax_base*  m_first_state;             // the first state of the machine
+   AUTOBOOST_REGEX_DETAIL_NS::re_syntax_base*  m_first_state;             // the first state of the machine
    unsigned                    m_restart_type;            // search optimisation type
    unsigned char               m_startmap[1 << CHAR_BIT]; // which characters can start a match
    unsigned int                m_can_be_null;             // whether we can match a null string
-   re_detail::raw_storage      m_data;                    // the buffer in which our states are constructed
+   AUTOBOOST_REGEX_DETAIL_NS::raw_storage      m_data;                    // the buffer in which our states are constructed
    typename traits::char_class_type    m_word_mask;       // mask used to determine if a character is a word character
    std::vector<
       std::pair<
       std::size_t, std::size_t> > m_subs;                 // Position of sub-expressions within the *string*.
    bool                        m_has_recursions;          // whether we have recursive expressions;
+   bool                        m_disable_match_any;       // when set we need to disable the match_any flag as it causes different/buggy behaviour.
 };
 //
 // class basic_regex_implementation
@@ -198,7 +199,7 @@ class basic_regex_implementation
 public:
    typedef regex_constants::syntax_option_type   flag_type;
    typedef std::ptrdiff_t                        difference_type;
-   typedef std::size_t                           size_type; 
+   typedef std::size_t                           size_type;
    typedef typename traits::locale_type          locale_type;
    typedef const charT*                          const_iterator;
 
@@ -216,12 +217,12 @@ public:
    }
 
    locale_type AUTOBOOST_REGEX_CALL imbue(locale_type l)
-   { 
-      return this->m_ptraits->imbue(l); 
+   {
+      return this->m_ptraits->imbue(l);
    }
    locale_type AUTOBOOST_REGEX_CALL getloc()const
-   { 
-      return this->m_ptraits->getloc(); 
+   {
+      return this->m_ptraits->getloc();
    }
    std::basic_string<charT> AUTOBOOST_REGEX_CALL str()const
    {
@@ -243,12 +244,12 @@ public:
    //
    // begin, end:
    const_iterator AUTOBOOST_REGEX_CALL begin()const
-   { 
-      return (this->m_status ? 0 : this->m_expression); 
+   {
+      return (this->m_status ? 0 : this->m_expression);
    }
    const_iterator AUTOBOOST_REGEX_CALL end()const
-   { 
-      return (this->m_status ? 0 : this->m_expression + this->m_expression_len); 
+   {
+      return (this->m_status ? 0 : this->m_expression + this->m_expression_len);
    }
    flag_type AUTOBOOST_REGEX_CALL flags()const
    {
@@ -266,7 +267,7 @@ public:
    {
       return this->m_mark_count - 1;
    }
-   const re_detail::re_syntax_base* get_first_state()const
+   const AUTOBOOST_REGEX_DETAIL_NS::re_syntax_base* get_first_state()const
    {
       return this->m_first_state;
    }
@@ -293,7 +294,7 @@ public:
    }
 };
 
-} // namespace re_detail
+} // namespace AUTOBOOST_REGEX_DETAIL_NS
 //
 // class basic_regex:
 // represents the compiled
@@ -320,13 +321,13 @@ public:
    typedef const charT*                          const_iterator;
    typedef const_iterator                        iterator;
    typedef std::ptrdiff_t                        difference_type;
-   typedef std::size_t                           size_type;   
+   typedef std::size_t                           size_type;
    typedef regex_constants::syntax_option_type   flag_type;
    // locale_type
    // placeholder for actual locale type used by the
    // traits class to localise *this.
    typedef typename traits::locale_type          locale_type;
-   
+
 public:
    explicit basic_regex(){}
    explicit basic_regex(const charT* p, flag_type f = regex_constants::normal)
@@ -356,9 +357,9 @@ public:
    //
    // assign:
    basic_regex& assign(const basic_regex& that)
-   { 
+   {
       m_pimpl = that.m_pimpl;
-      return *this; 
+      return *this;
    }
    basic_regex& assign(const charT* p, flag_type f = regex_constants::normal)
    {
@@ -383,14 +384,14 @@ public:
 
    template <class ST, class SA>
    unsigned int AUTOBOOST_REGEX_CALL set_expression(const std::basic_string<charT, ST, SA>& p, flag_type f = regex_constants::normal)
-   { 
-      return set_expression(p.data(), p.data() + p.size(), f); 
+   {
+      return set_expression(p.data(), p.data() + p.size(), f);
    }
 
    template <class ST, class SA>
    explicit basic_regex(const std::basic_string<charT, ST, SA>& p, flag_type f = regex_constants::normal)
-   { 
-      assign(p, f); 
+   {
+      assign(p, f);
    }
 
    template <class InputIterator>
@@ -435,13 +436,13 @@ public:
    }
 #else
    unsigned int AUTOBOOST_REGEX_CALL set_expression(const std::basic_string<charT>& p, flag_type f = regex_constants::normal)
-   { 
-      return set_expression(p.data(), p.data() + p.size(), f); 
+   {
+      return set_expression(p.data(), p.data() + p.size(), f);
    }
 
    basic_regex(const std::basic_string<charT>& p, flag_type f = regex_constants::normal)
-   { 
-      assign(p, f); 
+   {
+      assign(p, f);
    }
 
    basic_regex& AUTOBOOST_REGEX_CALL operator=(const std::basic_string<charT>& p)
@@ -462,19 +463,19 @@ public:
    // locale:
    locale_type AUTOBOOST_REGEX_CALL imbue(locale_type l);
    locale_type AUTOBOOST_REGEX_CALL getloc()const
-   { 
-      return m_pimpl.get() ? m_pimpl->getloc() : locale_type(); 
+   {
+      return m_pimpl.get() ? m_pimpl->getloc() : locale_type();
    }
    //
    // getflags:
    // retained for backwards compatibility only, "flags"
    // is now the preferred name:
    flag_type AUTOBOOST_REGEX_CALL getflags()const
-   { 
+   {
       return flags();
    }
    flag_type AUTOBOOST_REGEX_CALL flags()const
-   { 
+   {
       return m_pimpl.get() ? m_pimpl->flags() : 0;
    }
    //
@@ -492,12 +493,12 @@ public:
       return m_pimpl->subexpression(n);
    }
    const_iterator AUTOBOOST_REGEX_CALL begin()const
-   { 
-      return (m_pimpl.get() ? m_pimpl->begin() : 0); 
+   {
+      return (m_pimpl.get() ? m_pimpl->begin() : 0);
    }
    const_iterator AUTOBOOST_REGEX_CALL end()const
-   { 
-      return (m_pimpl.get() ? m_pimpl->end() : 0); 
+   {
+      return (m_pimpl.get() ? m_pimpl->end() : 0);
    }
    //
    // swap:
@@ -508,25 +509,25 @@ public:
    //
    // size:
    size_type AUTOBOOST_REGEX_CALL size()const
-   { 
-      return (m_pimpl.get() ? m_pimpl->size() : 0); 
+   {
+      return (m_pimpl.get() ? m_pimpl->size() : 0);
    }
    //
    // max_size:
    size_type AUTOBOOST_REGEX_CALL max_size()const
-   { 
-      return UINT_MAX; 
+   {
+      return UINT_MAX;
    }
    //
    // empty:
    bool AUTOBOOST_REGEX_CALL empty()const
-   { 
-      return (m_pimpl.get() ? 0 != m_pimpl->status() : true); 
+   {
+      return (m_pimpl.get() ? 0 != m_pimpl->status() : true);
    }
 
-   size_type AUTOBOOST_REGEX_CALL mark_count()const 
-   { 
-      return (m_pimpl.get() ? m_pimpl->mark_count() : 0); 
+   size_type AUTOBOOST_REGEX_CALL mark_count()const
+   {
+      return (m_pimpl.get() ? m_pimpl->mark_count() : 0);
    }
 
    int status()const
@@ -549,45 +550,45 @@ public:
       return str().compare(that.str());
    }
    bool AUTOBOOST_REGEX_CALL operator==(const basic_regex& e)const
-   { 
-      return compare(e) == 0; 
+   {
+      return compare(e) == 0;
    }
    bool AUTOBOOST_REGEX_CALL operator != (const basic_regex& e)const
-   { 
-      return compare(e) != 0; 
+   {
+      return compare(e) != 0;
    }
    bool AUTOBOOST_REGEX_CALL operator<(const basic_regex& e)const
-   { 
-      return compare(e) < 0; 
+   {
+      return compare(e) < 0;
    }
    bool AUTOBOOST_REGEX_CALL operator>(const basic_regex& e)const
-   { 
-      return compare(e) > 0; 
+   {
+      return compare(e) > 0;
    }
    bool AUTOBOOST_REGEX_CALL operator<=(const basic_regex& e)const
-   { 
-      return compare(e) <= 0; 
+   {
+      return compare(e) <= 0;
    }
    bool AUTOBOOST_REGEX_CALL operator>=(const basic_regex& e)const
-   { 
-      return compare(e) >= 0; 
+   {
+      return compare(e) >= 0;
    }
 
    //
    // The following are deprecated as public interfaces
    // but are available for compatibility with earlier versions.
-   const charT* AUTOBOOST_REGEX_CALL expression()const 
-   { 
-      return (m_pimpl.get() && !m_pimpl->status() ? m_pimpl->expression() : 0); 
+   const charT* AUTOBOOST_REGEX_CALL expression()const
+   {
+      return (m_pimpl.get() && !m_pimpl->status() ? m_pimpl->expression() : 0);
    }
    unsigned int AUTOBOOST_REGEX_CALL set_expression(const charT* p1, const charT* p2, flag_type f = regex_constants::normal)
    {
       assign(p1, p2, f | regex_constants::no_except);
       return status();
    }
-   unsigned int AUTOBOOST_REGEX_CALL set_expression(const charT* p, flag_type f = regex_constants::normal) 
-   { 
-      assign(p, f | regex_constants::no_except); 
+   unsigned int AUTOBOOST_REGEX_CALL set_expression(const charT* p, flag_type f = regex_constants::normal)
+   {
+      assign(p, f | regex_constants::no_except);
       return status();
    }
    unsigned int AUTOBOOST_REGEX_CALL error_code()const
@@ -597,7 +598,7 @@ public:
    //
    // private access methods:
    //
-   const re_detail::re_syntax_base* get_first_state()const
+   const AUTOBOOST_REGEX_DETAIL_NS::re_syntax_base* get_first_state()const
    {
       AUTOBOOST_ASSERT(0 != m_pimpl.get());
       return m_pimpl->get_first_state();
@@ -622,18 +623,18 @@ public:
       AUTOBOOST_ASSERT(0 != m_pimpl.get());
       return m_pimpl->can_be_null();
    }
-   const re_detail::regex_data<charT, traits>& get_data()const
+   const AUTOBOOST_REGEX_DETAIL_NS::regex_data<charT, traits>& get_data()const
    {
       AUTOBOOST_ASSERT(0 != m_pimpl.get());
       return m_pimpl->get_data();
    }
-   autoboost::shared_ptr<re_detail::named_subexpressions > get_named_subs()const
+   autoboost::shared_ptr<AUTOBOOST_REGEX_DETAIL_NS::named_subexpressions > get_named_subs()const
    {
       return m_pimpl;
    }
 
 private:
-   shared_ptr<re_detail::basic_regex_implementation<charT, traits> > m_pimpl;
+   shared_ptr<AUTOBOOST_REGEX_DETAIL_NS::basic_regex_implementation<charT, traits> > m_pimpl;
 };
 
 //
@@ -647,14 +648,14 @@ basic_regex<charT, traits>& basic_regex<charT, traits>::do_assign(const charT* p
                         const charT* p2,
                         flag_type f)
 {
-   shared_ptr<re_detail::basic_regex_implementation<charT, traits> > temp;
+   shared_ptr<AUTOBOOST_REGEX_DETAIL_NS::basic_regex_implementation<charT, traits> > temp;
    if(!m_pimpl.get())
    {
-      temp = shared_ptr<re_detail::basic_regex_implementation<charT, traits> >(new re_detail::basic_regex_implementation<charT, traits>());
+      temp = shared_ptr<AUTOBOOST_REGEX_DETAIL_NS::basic_regex_implementation<charT, traits> >(new AUTOBOOST_REGEX_DETAIL_NS::basic_regex_implementation<charT, traits>());
    }
    else
    {
-      temp = shared_ptr<re_detail::basic_regex_implementation<charT, traits> >(new re_detail::basic_regex_implementation<charT, traits>(m_pimpl->m_ptraits));
+      temp = shared_ptr<AUTOBOOST_REGEX_DETAIL_NS::basic_regex_implementation<charT, traits> >(new AUTOBOOST_REGEX_DETAIL_NS::basic_regex_implementation<charT, traits>(m_pimpl->m_ptraits));
    }
    temp->assign(p1, p2, f);
    temp.swap(m_pimpl);
@@ -663,8 +664,8 @@ basic_regex<charT, traits>& basic_regex<charT, traits>::do_assign(const charT* p
 
 template <class charT, class traits>
 typename basic_regex<charT, traits>::locale_type AUTOBOOST_REGEX_CALL basic_regex<charT, traits>::imbue(locale_type l)
-{ 
-   shared_ptr<re_detail::basic_regex_implementation<charT, traits> > temp(new re_detail::basic_regex_implementation<charT, traits>());
+{
+   shared_ptr<AUTOBOOST_REGEX_DETAIL_NS::basic_regex_implementation<charT, traits> > temp(new AUTOBOOST_REGEX_DETAIL_NS::basic_regex_implementation<charT, traits>());
    locale_type result = temp->imbue(l);
    temp.swap(m_pimpl);
    return result;
@@ -681,8 +682,8 @@ void swap(basic_regex<charT, traits>& e1, basic_regex<charT, traits>& e2)
 
 #ifndef AUTOBOOST_NO_STD_LOCALE
 template <class charT, class traits, class traits2>
-std::basic_ostream<charT, traits>& 
-   operator << (std::basic_ostream<charT, traits>& os, 
+std::basic_ostream<charT, traits>&
+   operator << (std::basic_ostream<charT, traits>& os,
                 const basic_regex<charT, traits2>& e)
 {
    return (os << e.str());
@@ -729,7 +730,7 @@ public:
    template <class ST, class SA>
    explicit reg_expression(const std::basic_string<charT, ST, SA>& p, flag_type f = regex_constants::normal)
    : basic_regex<charT, traits>(p, f)
-   { 
+   {
    }
 
    template <class InputIterator>
@@ -747,7 +748,7 @@ public:
 #else
    explicit reg_expression(const std::basic_string<charT>& p, flag_type f = regex_constants::normal)
    : basic_regex<charT, traits>(p, f)
-   { 
+   {
    }
 
    reg_expression& AUTOBOOST_REGEX_CALL operator=(const std::basic_string<charT>& p)

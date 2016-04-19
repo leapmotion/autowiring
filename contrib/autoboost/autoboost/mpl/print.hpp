@@ -5,8 +5,8 @@
 // Copyright David Abrahams 2003
 // Copyright Aleksey Gurtovoy 2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -19,7 +19,7 @@
 #include <autoboost/mpl/identity.hpp>
 
 namespace autoboost { namespace mpl {
-  
+
 namespace aux {
 #if defined(AUTOBOOST_MSVC)
 # pragma warning(push, 3)
@@ -44,7 +44,7 @@ struct print
     : mpl::identity<T>
 #if defined(__MWERKS__)
     , aux::print_base
-#endif 
+#endif
 {
 #if defined(__clang__)
     const int m_x = 1 / (sizeof(T) - sizeof(T));
@@ -52,16 +52,16 @@ struct print
     enum { n = sizeof(T) + -1 };
 #elif defined(__MWERKS__)
     void f(int);
-#else 
+#else
     enum {
         n =
 # if defined(__EDG_VERSION__)
            aux::dependent_unsigned<T>::value > -1
-# else 
+# else
            sizeof(T) > -1
-# endif 
+# endif
         };
-#endif 
+#endif
 };
 
 #if defined(AUTOBOOST_MSVC)

@@ -32,7 +32,7 @@ namespace autoboost
     struct range_size<T*>
     {
        typedef std::size_t type;
-    };    
+    };
 }
 
 #endif

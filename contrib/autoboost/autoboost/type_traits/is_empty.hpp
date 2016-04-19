@@ -10,16 +10,12 @@
 #define AUTOBOOST_TT_IS_EMPTY_HPP_INCLUDED
 
 #include <autoboost/type_traits/is_convertible.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
-#include <autoboost/type_traits/config.hpp>
+#include <autoboost/type_traits/detail/config.hpp>
 #include <autoboost/type_traits/intrinsics.hpp>
 
-#   include <autoboost/type_traits/remove_cv.hpp>
-#   include <autoboost/type_traits/is_class.hpp>
-#   include <autoboost/type_traits/add_reference.hpp>
-
-// should be always the last #include directive
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#include <autoboost/type_traits/remove_cv.hpp>
+#include <autoboost/type_traits/is_class.hpp>
+#include <autoboost/type_traits/add_reference.hpp>
 
 #ifndef AUTOBOOST_INTERNAL_IS_EMPTY
 #define AUTOBOOST_INTERNAL_IS_EMPTY(T) false
@@ -75,12 +71,8 @@ struct is_empty_impl
 {
     typedef typename remove_cv<T>::type cvt;
     AUTOBOOST_STATIC_CONSTANT(
-        bool, value = (
-            ::autoboost::type_traits::ice_or<
-              ::autoboost::detail::empty_helper<cvt,::autoboost::is_class<T>::value>::value
-              , AUTOBOOST_INTERNAL_IS_EMPTY(cvt)
-            >::value
-            ));
+        bool,
+        value = ( ::autoboost::detail::empty_helper<cvt,::autoboost::is_class<T>::value>::value || AUTOBOOST_INTERNAL_IS_EMPTY(cvt)));
 };
 
 #else // __BORLANDC__
@@ -107,34 +99,20 @@ struct is_empty_impl
 
    AUTOBOOST_STATIC_CONSTANT(
        bool, value = (
-           ::autoboost::type_traits::ice_or<
               ::autoboost::detail::empty_helper<
                   cvt
                 , ::autoboost::is_class<T>::value
                 , ::autoboost::is_convertible< r_type,int>::value
-              >::value
-              , AUTOBOOST_INTERNAL_IS_EMPTY(cvt)
-           >::value));
+              >::value || AUTOBOOST_INTERNAL_IS_EMPTY(cvt));
 };
 
 #endif // __BORLANDC__
 
-
-// these help when the compiler has no partial specialization support:
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_empty,void,false)
-#ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_empty,void const,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_empty,void volatile,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_empty,void const volatile,false)
-#endif
-
 } // namespace detail
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_empty,T,::autoboost::detail::is_empty_impl<T>::value)
+template <class T> struct is_empty : integral_constant<bool, ::autoboost::detail::is_empty_impl<T>::value> {};
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #undef AUTOBOOST_INTERNAL_IS_EMPTY
 

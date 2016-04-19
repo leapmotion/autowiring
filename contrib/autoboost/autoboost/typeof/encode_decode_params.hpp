@@ -18,7 +18,7 @@
 #define AUTOBOOST_TYPEOF_DECODE_PARAMS(n)\
     AUTOBOOST_PP_REPEAT(n, AUTOBOOST_TYPEOF_DECODE_PARAM, ~)
 
-// The P0, P1, ... PN are encoded and added to V 
+// The P0, P1, ... PN are encoded and added to V
 
 #define AUTOBOOST_TYPEOF_ENCODE_PARAMS_BEGIN(z, n, text)\
     typename autoboost::type_of::encode_type<

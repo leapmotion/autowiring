@@ -7,8 +7,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2008
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -154,7 +154,7 @@ template<
 struct AUX778076_SEQUENCE_NAME;
 #else
 namespace aux {
-template< AUTOBOOST_MPL_AUX_NTTP_DECL(int, N) > 
+template< AUTOBOOST_MPL_AUX_NTTP_DECL(int, N) >
 struct AUTOBOOST_PP_CAT(AUX778076_SEQUENCE_NAME,_chooser);
 }
 #endif
@@ -184,7 +184,7 @@ struct AUTOBOOST_PP_CAT(AUX778076_SEQUENCE_NAME,_impl)
     typedef aux::AUTOBOOST_PP_CAT(AUX778076_SEQUENCE_NAME,_count_args)<
           AUTOBOOST_PP_ENUM_PARAMS(AUX778076_SEQUENCE_LIMIT, AUX778076_SEQUENCE_PARAM_NAME)
         > arg_num_;
-    
+
     typedef typename aux::AUTOBOOST_PP_CAT(AUX778076_SEQUENCE_NAME,_chooser)< arg_num_::value >
         ::template result_< AUX778076_SEQUENCE_ARGS() >::type type;
 };

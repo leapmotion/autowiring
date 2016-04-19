@@ -8,7 +8,7 @@
 #endif
 
 //
-//  boost/detail/atomic_count.hpp - thread/SMP safe reference counter
+//  autoboost/detail/atomic_count.hpp - thread/SMP safe reference counter
 //
 //  Copyright (c) 2001, 2002 Peter Dimov and Multi Media Ltd.
 //  Copyright (c) 2013 Peter Dimov

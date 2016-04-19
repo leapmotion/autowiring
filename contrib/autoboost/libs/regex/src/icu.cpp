@@ -3,8 +3,8 @@
  * Copyright (c) 2004
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -28,7 +28,7 @@
 
 namespace autoboost{
 
-namespace re_detail{
+namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 icu_regex_traits_implementation::string_type icu_regex_traits_implementation::do_transform(const char_type* p1, const char_type* p2, const U_NAMESPACE_QUALIFIER Collator* pcoll) const
 {
@@ -111,87 +111,87 @@ const icu_regex_traits::char_class_type icu_regex_traits::mask_vertical = icu_re
 icu_regex_traits::char_class_type icu_regex_traits::lookup_icu_mask(const ::UChar32* p1, const ::UChar32* p2)
 {
    static const ::UChar32 prop_name_table[] = {
-      /* any */  'a', 'n', 'y', 
-      /* ascii */  'a', 's', 'c', 'i', 'i', 
-      /* assigned */  'a', 's', 's', 'i', 'g', 'n', 'e', 'd', 
-      /* c* */  'c', '*', 
-      /* cc */  'c', 'c', 
-      /* cf */  'c', 'f', 
-      /* closepunctuation */  'c', 'l', 'o', 's', 'e', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n', 
-      /* cn */  'c', 'n', 
-      /* co */  'c', 'o', 
-      /* connectorpunctuation */  'c', 'o', 'n', 'n', 'e', 'c', 't', 'o', 'r', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n', 
-      /* control */  'c', 'o', 'n', 't', 'r', 'o', 'l', 
-      /* cs */  'c', 's', 
-      /* currencysymbol */  'c', 'u', 'r', 'r', 'e', 'n', 'c', 'y', 's', 'y', 'm', 'b', 'o', 'l', 
-      /* dashpunctuation */  'd', 'a', 's', 'h', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n', 
-      /* decimaldigitnumber */  'd', 'e', 'c', 'i', 'm', 'a', 'l', 'd', 'i', 'g', 'i', 't', 'n', 'u', 'm', 'b', 'e', 'r', 
-      /* enclosingmark */  'e', 'n', 'c', 'l', 'o', 's', 'i', 'n', 'g', 'm', 'a', 'r', 'k', 
-      /* finalpunctuation */  'f', 'i', 'n', 'a', 'l', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n', 
-      /* format */  'f', 'o', 'r', 'm', 'a', 't', 
-      /* initialpunctuation */  'i', 'n', 'i', 't', 'i', 'a', 'l', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n', 
-      /* l* */  'l', '*', 
-      /* letter */  'l', 'e', 't', 't', 'e', 'r', 
-      /* letternumber */  'l', 'e', 't', 't', 'e', 'r', 'n', 'u', 'm', 'b', 'e', 'r', 
-      /* lineseparator */  'l', 'i', 'n', 'e', 's', 'e', 'p', 'a', 'r', 'a', 't', 'o', 'r', 
-      /* ll */  'l', 'l', 
-      /* lm */  'l', 'm', 
-      /* lo */  'l', 'o', 
-      /* lowercaseletter */  'l', 'o', 'w', 'e', 'r', 'c', 'a', 's', 'e', 'l', 'e', 't', 't', 'e', 'r', 
-      /* lt */  'l', 't', 
-      /* lu */  'l', 'u', 
-      /* m* */  'm', '*', 
-      /* mark */  'm', 'a', 'r', 'k', 
-      /* mathsymbol */  'm', 'a', 't', 'h', 's', 'y', 'm', 'b', 'o', 'l', 
-      /* mc */  'm', 'c', 
-      /* me */  'm', 'e', 
-      /* mn */  'm', 'n', 
-      /* modifierletter */  'm', 'o', 'd', 'i', 'f', 'i', 'e', 'r', 'l', 'e', 't', 't', 'e', 'r', 
-      /* modifiersymbol */  'm', 'o', 'd', 'i', 'f', 'i', 'e', 'r', 's', 'y', 'm', 'b', 'o', 'l', 
-      /* n* */  'n', '*', 
-      /* nd */  'n', 'd', 
-      /* nl */  'n', 'l', 
-      /* no */  'n', 'o', 
-      /* nonspacingmark */  'n', 'o', 'n', 's', 'p', 'a', 'c', 'i', 'n', 'g', 'm', 'a', 'r', 'k', 
-      /* notassigned */  'n', 'o', 't', 'a', 's', 's', 'i', 'g', 'n', 'e', 'd', 
-      /* number */  'n', 'u', 'm', 'b', 'e', 'r', 
-      /* openpunctuation */  'o', 'p', 'e', 'n', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n', 
-      /* other */  'o', 't', 'h', 'e', 'r', 
-      /* otherletter */  'o', 't', 'h', 'e', 'r', 'l', 'e', 't', 't', 'e', 'r', 
-      /* othernumber */  'o', 't', 'h', 'e', 'r', 'n', 'u', 'm', 'b', 'e', 'r', 
-      /* otherpunctuation */  'o', 't', 'h', 'e', 'r', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n', 
-      /* othersymbol */  'o', 't', 'h', 'e', 'r', 's', 'y', 'm', 'b', 'o', 'l', 
-      /* p* */  'p', '*', 
-      /* paragraphseparator */  'p', 'a', 'r', 'a', 'g', 'r', 'a', 'p', 'h', 's', 'e', 'p', 'a', 'r', 'a', 't', 'o', 'r', 
-      /* pc */  'p', 'c', 
-      /* pd */  'p', 'd', 
-      /* pe */  'p', 'e', 
-      /* pf */  'p', 'f', 
-      /* pi */  'p', 'i', 
-      /* po */  'p', 'o', 
-      /* privateuse */  'p', 'r', 'i', 'v', 'a', 't', 'e', 'u', 's', 'e', 
-      /* ps */  'p', 's', 
-      /* punctuation */  'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n', 
-      /* s* */  's', '*', 
-      /* sc */  's', 'c', 
-      /* separator */  's', 'e', 'p', 'a', 'r', 'a', 't', 'o', 'r', 
-      /* sk */  's', 'k', 
-      /* sm */  's', 'm', 
-      /* so */  's', 'o', 
-      /* spaceseparator */  's', 'p', 'a', 'c', 'e', 's', 'e', 'p', 'a', 'r', 'a', 't', 'o', 'r', 
-      /* spacingcombiningmark */  's', 'p', 'a', 'c', 'i', 'n', 'g', 'c', 'o', 'm', 'b', 'i', 'n', 'i', 'n', 'g', 'm', 'a', 'r', 'k', 
-      /* surrogate */  's', 'u', 'r', 'r', 'o', 'g', 'a', 't', 'e', 
-      /* symbol */  's', 'y', 'm', 'b', 'o', 'l', 
-      /* titlecase */  't', 'i', 't', 'l', 'e', 'c', 'a', 's', 'e', 
-      /* titlecaseletter */  't', 'i', 't', 'l', 'e', 'c', 'a', 's', 'e', 'l', 'e', 't', 't', 'e', 'r', 
-      /* uppercaseletter */  'u', 'p', 'p', 'e', 'r', 'c', 'a', 's', 'e', 'l', 'e', 't', 't', 'e', 'r', 
-      /* z* */  'z', '*', 
-      /* zl */  'z', 'l', 
-      /* zp */  'z', 'p', 
-      /* zs */  'z', 's', 
+      /* any */  'a', 'n', 'y',
+      /* ascii */  'a', 's', 'c', 'i', 'i',
+      /* assigned */  'a', 's', 's', 'i', 'g', 'n', 'e', 'd',
+      /* c* */  'c', '*',
+      /* cc */  'c', 'c',
+      /* cf */  'c', 'f',
+      /* closepunctuation */  'c', 'l', 'o', 's', 'e', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n',
+      /* cn */  'c', 'n',
+      /* co */  'c', 'o',
+      /* connectorpunctuation */  'c', 'o', 'n', 'n', 'e', 'c', 't', 'o', 'r', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n',
+      /* control */  'c', 'o', 'n', 't', 'r', 'o', 'l',
+      /* cs */  'c', 's',
+      /* currencysymbol */  'c', 'u', 'r', 'r', 'e', 'n', 'c', 'y', 's', 'y', 'm', 'b', 'o', 'l',
+      /* dashpunctuation */  'd', 'a', 's', 'h', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n',
+      /* decimaldigitnumber */  'd', 'e', 'c', 'i', 'm', 'a', 'l', 'd', 'i', 'g', 'i', 't', 'n', 'u', 'm', 'b', 'e', 'r',
+      /* enclosingmark */  'e', 'n', 'c', 'l', 'o', 's', 'i', 'n', 'g', 'm', 'a', 'r', 'k',
+      /* finalpunctuation */  'f', 'i', 'n', 'a', 'l', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n',
+      /* format */  'f', 'o', 'r', 'm', 'a', 't',
+      /* initialpunctuation */  'i', 'n', 'i', 't', 'i', 'a', 'l', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n',
+      /* l* */  'l', '*',
+      /* letter */  'l', 'e', 't', 't', 'e', 'r',
+      /* letternumber */  'l', 'e', 't', 't', 'e', 'r', 'n', 'u', 'm', 'b', 'e', 'r',
+      /* lineseparator */  'l', 'i', 'n', 'e', 's', 'e', 'p', 'a', 'r', 'a', 't', 'o', 'r',
+      /* ll */  'l', 'l',
+      /* lm */  'l', 'm',
+      /* lo */  'l', 'o',
+      /* lowercaseletter */  'l', 'o', 'w', 'e', 'r', 'c', 'a', 's', 'e', 'l', 'e', 't', 't', 'e', 'r',
+      /* lt */  'l', 't',
+      /* lu */  'l', 'u',
+      /* m* */  'm', '*',
+      /* mark */  'm', 'a', 'r', 'k',
+      /* mathsymbol */  'm', 'a', 't', 'h', 's', 'y', 'm', 'b', 'o', 'l',
+      /* mc */  'm', 'c',
+      /* me */  'm', 'e',
+      /* mn */  'm', 'n',
+      /* modifierletter */  'm', 'o', 'd', 'i', 'f', 'i', 'e', 'r', 'l', 'e', 't', 't', 'e', 'r',
+      /* modifiersymbol */  'm', 'o', 'd', 'i', 'f', 'i', 'e', 'r', 's', 'y', 'm', 'b', 'o', 'l',
+      /* n* */  'n', '*',
+      /* nd */  'n', 'd',
+      /* nl */  'n', 'l',
+      /* no */  'n', 'o',
+      /* nonspacingmark */  'n', 'o', 'n', 's', 'p', 'a', 'c', 'i', 'n', 'g', 'm', 'a', 'r', 'k',
+      /* notassigned */  'n', 'o', 't', 'a', 's', 's', 'i', 'g', 'n', 'e', 'd',
+      /* number */  'n', 'u', 'm', 'b', 'e', 'r',
+      /* openpunctuation */  'o', 'p', 'e', 'n', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n',
+      /* other */  'o', 't', 'h', 'e', 'r',
+      /* otherletter */  'o', 't', 'h', 'e', 'r', 'l', 'e', 't', 't', 'e', 'r',
+      /* othernumber */  'o', 't', 'h', 'e', 'r', 'n', 'u', 'm', 'b', 'e', 'r',
+      /* otherpunctuation */  'o', 't', 'h', 'e', 'r', 'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n',
+      /* othersymbol */  'o', 't', 'h', 'e', 'r', 's', 'y', 'm', 'b', 'o', 'l',
+      /* p* */  'p', '*',
+      /* paragraphseparator */  'p', 'a', 'r', 'a', 'g', 'r', 'a', 'p', 'h', 's', 'e', 'p', 'a', 'r', 'a', 't', 'o', 'r',
+      /* pc */  'p', 'c',
+      /* pd */  'p', 'd',
+      /* pe */  'p', 'e',
+      /* pf */  'p', 'f',
+      /* pi */  'p', 'i',
+      /* po */  'p', 'o',
+      /* privateuse */  'p', 'r', 'i', 'v', 'a', 't', 'e', 'u', 's', 'e',
+      /* ps */  'p', 's',
+      /* punctuation */  'p', 'u', 'n', 'c', 't', 'u', 'a', 't', 'i', 'o', 'n',
+      /* s* */  's', '*',
+      /* sc */  's', 'c',
+      /* separator */  's', 'e', 'p', 'a', 'r', 'a', 't', 'o', 'r',
+      /* sk */  's', 'k',
+      /* sm */  's', 'm',
+      /* so */  's', 'o',
+      /* spaceseparator */  's', 'p', 'a', 'c', 'e', 's', 'e', 'p', 'a', 'r', 'a', 't', 'o', 'r',
+      /* spacingcombiningmark */  's', 'p', 'a', 'c', 'i', 'n', 'g', 'c', 'o', 'm', 'b', 'i', 'n', 'i', 'n', 'g', 'm', 'a', 'r', 'k',
+      /* surrogate */  's', 'u', 'r', 'r', 'o', 'g', 'a', 't', 'e',
+      /* symbol */  's', 'y', 'm', 'b', 'o', 'l',
+      /* titlecase */  't', 'i', 't', 'l', 'e', 'c', 'a', 's', 'e',
+      /* titlecaseletter */  't', 'i', 't', 'l', 'e', 'c', 'a', 's', 'e', 'l', 'e', 't', 't', 'e', 'r',
+      /* uppercaseletter */  'u', 'p', 'p', 'e', 'r', 'c', 'a', 's', 'e', 'l', 'e', 't', 't', 'e', 'r',
+      /* z* */  'z', '*',
+      /* zl */  'z', 'l',
+      /* zp */  'z', 'p',
+      /* zs */  'z', 's',
    };
 
-   static const re_detail::character_pointer_range< ::UChar32> range_data[] = {
+   static const AUTOBOOST_REGEX_DETAIL_NS::character_pointer_range< ::UChar32> range_data[] = {
       { prop_name_table+0, prop_name_table+3, }, // any
       { prop_name_table+3, prop_name_table+8, }, // ascii
       { prop_name_table+8, prop_name_table+16, }, // assigned
@@ -354,11 +354,11 @@ icu_regex_traits::char_class_type icu_regex_traits::lookup_icu_mask(const ::UCha
    };
 
 
-   static const re_detail::character_pointer_range< ::UChar32>* ranges_begin = range_data;
-   static const re_detail::character_pointer_range< ::UChar32>* ranges_end = range_data + (sizeof(range_data)/sizeof(range_data[0]));
-   
-   re_detail::character_pointer_range< ::UChar32> t = { p1, p2, };
-   const re_detail::character_pointer_range< ::UChar32>* p = std::lower_bound(ranges_begin, ranges_end, t);
+   static const AUTOBOOST_REGEX_DETAIL_NS::character_pointer_range< ::UChar32>* ranges_begin = range_data;
+   static const AUTOBOOST_REGEX_DETAIL_NS::character_pointer_range< ::UChar32>* ranges_end = range_data + (sizeof(range_data)/sizeof(range_data[0]));
+
+   AUTOBOOST_REGEX_DETAIL_NS::character_pointer_range< ::UChar32> t = { p1, p2, };
+   const AUTOBOOST_REGEX_DETAIL_NS::character_pointer_range< ::UChar32>* p = std::lower_bound(ranges_begin, ranges_end, t);
    if((p != ranges_end) && (t == *p))
       return icu_class_map[p - ranges_begin];
    return 0;
@@ -366,10 +366,10 @@ icu_regex_traits::char_class_type icu_regex_traits::lookup_icu_mask(const ::UCha
 
 icu_regex_traits::char_class_type icu_regex_traits::lookup_classname(const char_type* p1, const char_type* p2) const
 {
-   static const char_class_type masks[] = 
+   static const char_class_type masks[] =
    {
       0,
-      U_GC_L_MASK | U_GC_ND_MASK, 
+      U_GC_L_MASK | U_GC_ND_MASK,
       U_GC_L_MASK,
       mask_blank,
       U_GC_CC_MASK | U_GC_CF_MASK | U_GC_ZL_MASK | U_GC_ZP_MASK,
@@ -387,12 +387,12 @@ icu_regex_traits::char_class_type icu_regex_traits::lookup_classname(const char_
       mask_unicode,
       U_GC_LU_MASK,
       mask_vertical,
-      char_class_type(U_GC_L_MASK | U_GC_ND_MASK | U_GC_MN_MASK) | mask_underscore, 
-      char_class_type(U_GC_L_MASK | U_GC_ND_MASK | U_GC_MN_MASK) | mask_underscore, 
+      char_class_type(U_GC_L_MASK | U_GC_ND_MASK | U_GC_MN_MASK) | mask_underscore,
+      char_class_type(U_GC_L_MASK | U_GC_ND_MASK | U_GC_MN_MASK) | mask_underscore,
       char_class_type(U_GC_ND_MASK) | mask_xdigit,
    };
 
-   int idx = ::autoboost::re_detail::get_default_class_id(p1, p2);
+   int idx = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::get_default_class_id(p1, p2);
    if(idx >= 0)
       return masks[idx+1];
    char_class_type result = lookup_icu_mask(p1, p2);
@@ -415,7 +415,7 @@ icu_regex_traits::char_class_type icu_regex_traits::lookup_classname(const char_
          }
       }
       if(s.size())
-         idx = ::autoboost::re_detail::get_default_class_id(&*s.begin(), &*s.begin() + s.size());
+         idx = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::get_default_class_id(&*s.begin(), &*s.begin() + s.size());
       if(idx >= 0)
          return masks[idx+1];
       if(s.size())
@@ -457,7 +457,7 @@ icu_regex_traits::string_type icu_regex_traits::lookup_collatename(const char_ty
          return result;
       }
       // try POSIX name:
-      s = ::autoboost::re_detail::lookup_default_collate_name(s);
+      s = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::lookup_default_collate_name(s);
 #ifndef AUTOBOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
       result.assign(s.begin(), s.end());
 #else
@@ -478,7 +478,7 @@ bool icu_regex_traits::isctype(char_type c, char_class_type f) const
 {
    // check for standard catagories first:
    char_class_type m = char_class_type(1u << u_charType(c));
-   if((m & f) != 0) 
+   if((m & f) != 0)
       return true;
    // now check for special cases:
    if(((f & mask_blank) != 0) && u_isblank(c))
@@ -495,9 +495,9 @@ bool icu_regex_traits::isctype(char_type c, char_class_type f) const
       return true;
    if(((f & mask_ascii) != 0) && (c <= 0x7F))
       return true;
-   if(((f & mask_vertical) != 0) && (::autoboost::re_detail::is_separator(c) || (c == static_cast<char_type>('\v')) || (m == U_GC_ZL_MASK) || (m == U_GC_ZP_MASK)))
+   if(((f & mask_vertical) != 0) && (::autoboost::AUTOBOOST_REGEX_DETAIL_NS::is_separator(c) || (c == static_cast<char_type>('\v')) || (m == U_GC_ZL_MASK) || (m == U_GC_ZP_MASK)))
       return true;
-   if(((f & mask_horizontal) != 0) && !::autoboost::re_detail::is_separator(c) && u_isspace(c) && (c != static_cast<char_type>('\v')))
+   if(((f & mask_horizontal) != 0) && !::autoboost::AUTOBOOST_REGEX_DETAIL_NS::is_separator(c) && u_isspace(c) && (c != static_cast<char_type>('\v')))
       return true;
    return false;
 }

@@ -29,7 +29,7 @@ struct ratio_string
     static basic_string<CharT> symbol();
 };
 
-}  // boost
+}  // autoboost
 
 */
 #include <autoboost/ratio/config.hpp>

@@ -1,5 +1,5 @@
-#ifndef AB__DATE_TIME_POSIX_TIME_ZONE__
-#define AB__DATE_TIME_POSIX_TIME_ZONE__
+#ifndef _DATE_TIME_POSIX_TIME_ZONE__
+#define _DATE_TIME_POSIX_TIME_ZONE__
 
 /* Copyright (c) 2003-2005 CrystalClear Software, Inc.
  * Subject to the Boost Software License, Version 1.0. (See accompanying

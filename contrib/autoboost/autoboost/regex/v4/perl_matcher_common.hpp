@@ -3,8 +3,8 @@
  * Copyright (c) 2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -13,7 +13,7 @@
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         perl_matcher_common.cpp
   *   VERSION      see <autoboost/version.hpp>
-  *   DESCRIPTION: Definitions of perl_matcher member functions that are 
+  *   DESCRIPTION: Definitions of perl_matcher member functions that are
   *                common to both the recursive and non-recursive versions.
   */
 
@@ -40,14 +40,14 @@
 #endif
 
 namespace autoboost{
-namespace re_detail{
+namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 template <class BidiIterator, class Allocator, class traits>
 void perl_matcher<BidiIterator, Allocator, traits>::construct_init(const basic_regex<char_type, traits>& e, match_flag_type f)
-{ 
+{
    typedef typename regex_iterator_traits<BidiIterator>::iterator_category category;
    typedef typename basic_regex<char_type, traits>::flag_type expression_flag_type;
-   
+
    if(e.empty())
    {
       // precondition failure: e is not a valid regex.
@@ -80,11 +80,17 @@ void perl_matcher<BidiIterator, Allocator, traits>::construct_init(const basic_r
 #ifdef AUTOBOOST_REGEX_NON_RECURSIVE
    m_stack_base = 0;
    m_backup_state = 0;
+#elif defined(AUTOBOOST_REGEX_RECURSIVE)
+   m_can_backtrack = true;
+   m_have_accept = false;
 #endif
    // find the value to use for matching word boundaries:
-   m_word_mask = re.get_data().m_word_mask; 
+   m_word_mask = re.get_data().m_word_mask;
    // find bitmask to use for matching '.':
-   match_any_mask = static_cast<unsigned char>((f & match_not_dot_newline) ? re_detail::test_not_newline : re_detail::test_newline);
+   match_any_mask = static_cast<unsigned char>((f & match_not_dot_newline) ? AUTOBOOST_REGEX_DETAIL_NS::test_not_newline : AUTOBOOST_REGEX_DETAIL_NS::test_newline);
+   // Disable match_any if requested in the state machine:
+   if(e.get_data().m_disable_match_any)
+      m_match_flags &= ~regex_constants::match_any;
 }
 
 template <class BidiIterator, class Allocator, class traits>
@@ -101,7 +107,7 @@ void perl_matcher<BidiIterator, Allocator, traits>::estimate_max_state_count(std
    // Calculate NS^2 first:
    //
    static const std::ptrdiff_t k = 100000;
-   std::ptrdiff_t dist = autoboost::re_detail::distance(base, last);
+   std::ptrdiff_t dist = autoboost::AUTOBOOST_REGEX_DETAIL_NS::distance(base, last);
    if(dist == 0)
       dist = 1;
    std::ptrdiff_t states = re.size();
@@ -165,7 +171,7 @@ template <class BidiIterator, class Allocator, class traits>
 inline bool perl_matcher<BidiIterator, Allocator, traits>::protected_call(
    protected_proc_type proc)
 {
-   ::autoboost::re_detail::concrete_protected_call
+   ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::concrete_protected_call
       <perl_matcher<BidiIterator, Allocator, traits> >
       obj(this, proc);
    return obj.execute();
@@ -236,7 +242,7 @@ inline bool perl_matcher<BidiIterator, Allocator, traits>::find()
 template <class BidiIterator, class Allocator, class traits>
 bool perl_matcher<BidiIterator, Allocator, traits>::find_imp()
 {
-   static matcher_proc_type const s_find_vtable[7] = 
+   static matcher_proc_type const s_find_vtable[7] =
    {
       &perl_matcher<BidiIterator, Allocator, traits>::find_restart_any,
       &perl_matcher<BidiIterator, Allocator, traits>::find_restart_word,
@@ -277,7 +283,7 @@ bool perl_matcher<BidiIterator, Allocator, traits>::find_imp()
       {
          if(position == last)
             return false;
-         else 
+         else
             ++position;
       }
       // reset $` start:
@@ -293,8 +299,8 @@ bool perl_matcher<BidiIterator, Allocator, traits>::find_imp()
 
    verify_options(re.flags(), m_match_flags);
    // find out what kind of expression we have:
-   unsigned type = (m_match_flags & match_continuous) ? 
-      static_cast<unsigned int>(regbase::restart_continue) 
+   unsigned type = (m_match_flags & match_continuous) ?
+      static_cast<unsigned int>(regbase::restart_continue)
          : static_cast<unsigned int>(re.get_restart_type());
 
    // call the appropriate search routine:
@@ -348,6 +354,9 @@ bool perl_matcher<BidiIterator, Allocator, traits>::match_prefix()
 #endif
    if(!m_has_found_match)
       position = restart; // reset search postion
+#ifdef AUTOBOOST_REGEX_RECURSIVE
+   m_can_backtrack = true; // reset for further searches
+#endif
    return m_has_found_match;
 }
 
@@ -440,7 +449,7 @@ bool perl_matcher<BidiIterator, Allocator, traits>::match_end_line()
 template <class BidiIterator, class Allocator, class traits>
 bool perl_matcher<BidiIterator, Allocator, traits>::match_wild()
 {
-   if(position == last) 
+   if(position == last)
       return false;
    if(is_separator(*position) && ((match_any_mask & static_cast<const re_dot*>(pstate)->mask) == 0))
       return false;
@@ -494,7 +503,7 @@ bool perl_matcher<BidiIterator, Allocator, traits>::match_within_word()
    bool prev = traits_inst.isctype(*position, m_word_mask);
    {
       bool b;
-      if((position == backstop) && ((m_match_flags & match_prev_avail) == 0)) 
+      if((position == backstop) && ((m_match_flags & match_prev_avail) == 0))
          return false;
       else
       {
@@ -703,7 +712,7 @@ bool perl_matcher<BidiIterator, Allocator, traits>::match_backstep()
 #endif
    if( ::autoboost::is_random_access_iterator<BidiIterator>::value)
    {
-      std::ptrdiff_t maxlen = ::autoboost::re_detail::distance(backstop, position);
+      std::ptrdiff_t maxlen = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::distance(backstop, position);
       if(maxlen < static_cast<const re_brace*>(pstate)->index)
          return false;
       std::advance(position, -static_cast<const re_brace*>(pstate)->index);
@@ -793,6 +802,25 @@ bool perl_matcher<BidiIterator, Allocator, traits>::match_toggle_case()
    return true;
 }
 
+template <class BidiIterator, class Allocator, class traits>
+bool perl_matcher<BidiIterator, Allocator, traits>::match_fail()
+{
+   // Just force a backtrack:
+   return false;
+}
+
+template <class BidiIterator, class Allocator, class traits>
+bool perl_matcher<BidiIterator, Allocator, traits>::match_accept()
+{
+   if(!recursion_stack.empty())
+   {
+      return skip_until_paren(recursion_stack.back().idx);
+   }
+   else
+   {
+      return skip_until_paren(INT_MAX);
+   }
+}
 
 template <class BidiIterator, class Allocator, class traits>
 bool perl_matcher<BidiIterator, Allocator, traits>::find_restart_any()
@@ -911,21 +939,21 @@ bool perl_matcher<BidiIterator, Allocator, traits>::find_restart_lit()
    if(position == last)
       return false; // can't possibly match if we're at the end already
 
-   unsigned type = (m_match_flags & match_continuous) ? 
-      static_cast<unsigned int>(regbase::restart_continue) 
+   unsigned type = (m_match_flags & match_continuous) ?
+      static_cast<unsigned int>(regbase::restart_continue)
          : static_cast<unsigned int>(re.get_restart_type());
 
    const kmp_info<char_type>* info = access::get_kmp(re);
    int len = info->len;
    const char_type* x = info->pstr;
-   int j = 0; 
-   while (position != last) 
+   int j = 0;
+   while (position != last)
    {
-      while((j > -1) && (x[j] != traits_inst.translate(*position, icase))) 
+      while((j > -1) && (x[j] != traits_inst.translate(*position, icase)))
          j = info->kmp_next[j];
       ++position;
       ++j;
-      if(j >= len) 
+      if(j >= len)
       {
          if(type == regbase::restart_fixed_lit)
          {
@@ -966,7 +994,7 @@ bool perl_matcher<BidiIterator, Allocator, traits>::find_restart_lit()
    return false;
 }
 
-} // namespace re_detail
+} // namespace AUTOBOOST_REGEX_DETAIL_NS
 
 } // namespace autoboost
 

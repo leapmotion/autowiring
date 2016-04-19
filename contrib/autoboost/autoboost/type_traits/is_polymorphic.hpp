@@ -1,4 +1,4 @@
-//  (C) Copyright John Maddock 2000. 
+//  (C) Copyright John Maddock 2000.
 //  Use, modification and distribution are subject to the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt).
@@ -9,12 +9,10 @@
 #define AUTOBOOST_TT_IS_POLYMORPHIC_HPP
 
 #include <autoboost/type_traits/intrinsics.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
 #ifndef AUTOBOOST_IS_POLYMORPHIC
 #include <autoboost/type_traits/is_class.hpp>
-#include <autoboost/type_traits/remove_cv.hpp>
 #endif
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
 #include <autoboost/detail/workaround.hpp>
 
 #if defined(AUTOBOOST_MSVC) && (AUTOBOOST_MSVC >= 1700)
@@ -33,21 +31,20 @@ struct is_polymorphic_imp1
 {
 # if AUTOBOOST_WORKAROUND(__MWERKS__, <= 0x2407) // CWPro7 should return false always.
     typedef char d1, (&d2)[2];
-# else 
-   typedef typename remove_cv<T>::type ncvT;
-   struct d1 : public ncvT
+# else
+   struct d1 : public T
    {
       d1();
 #  if !defined(__GNUC__) // this raises warnings with some classes, and buys nothing with GCC
       ~d1()throw();
-#  endif 
+#  endif
       char padding[256];
    private:
       // keep some picky compilers happy:
       d1(const d1&);
       d1& operator=(const d1&);
    };
-   struct d2 : public ncvT
+   struct d2 : public T
    {
       d2();
       virtual ~d2()throw();
@@ -55,7 +52,7 @@ struct is_polymorphic_imp1
       // for some reason this messes up VC++ when T has virtual bases,
       // probably likewise for compilers that use the same ABI:
       struct unique{};
-      virtual void unique_name_to_boost5487629(unique*);
+      virtual void unique_name_to_autoboost5487629(unique*);
 #  endif
       char padding[256];
    private:
@@ -63,9 +60,13 @@ struct is_polymorphic_imp1
       d2(const d2&);
       d2& operator=(const d2&);
    };
-# endif 
+# endif
    AUTOBOOST_STATIC_CONSTANT(bool, value = (sizeof(d2) == sizeof(d1)));
 };
+
+template <class T> struct is_polymorphic_imp1<T const> : public is_polymorphic_imp1<T>{};
+template <class T> struct is_polymorphic_imp1<T const volatile> : public is_polymorphic_imp1<T>{};
+template <class T> struct is_polymorphic_imp1<T volatile> : public is_polymorphic_imp1<T>{};
 
 template <class T>
 struct is_polymorphic_imp2
@@ -104,17 +105,15 @@ struct is_polymorphic_imp
 
 } // namespace detail
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_polymorphic,T,::autoboost::detail::is_polymorphic_imp<T>::value)
+template <class T> struct is_polymorphic : public integral_constant<bool, ::autoboost::detail::is_polymorphic_imp<T>::value> {};
 
 #else // AUTOBOOST_IS_POLYMORPHIC
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_polymorphic,T,AUTOBOOST_IS_POLYMORPHIC(T))
+template <class T> struct is_polymorphic : public integral_constant<bool, AUTOBOOST_IS_POLYMORPHIC(T)> {};
 
 #endif
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #if defined(AUTOBOOST_MSVC) && (AUTOBOOST_MSVC >= 1700)
 #pragma warning(pop)

@@ -9,74 +9,54 @@
 #ifndef AUTOBOOST_TT_HAS_TRIVIAL_COPY_HPP_INCLUDED
 #define AUTOBOOST_TT_HAS_TRIVIAL_COPY_HPP_INCLUDED
 
-#include <autoboost/type_traits/config.hpp>
 #include <autoboost/type_traits/intrinsics.hpp>
-#include <autoboost/type_traits/is_volatile.hpp>
 #include <autoboost/type_traits/is_pod.hpp>
-#include <autoboost/type_traits/detail/ice_and.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
-#include <autoboost/type_traits/detail/ice_not.hpp>
+#include <autoboost/type_traits/is_reference.hpp>
 
-#ifdef __clang__
+#if (defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 409)) || defined(AUTOBOOST_CLANG) || (defined(__SUNPRO_CC) && defined(AUTOBOOST_HAS_TRIVIAL_COPY))
 #include <autoboost/type_traits/is_copy_constructible.hpp>
+#define AUTOBOOST_TT_TRIVIAL_CONSTRUCT_FIX && is_copy_constructible<T>::value
+#else
+#define AUTOBOOST_TT_TRIVIAL_CONSTRUCT_FIX
 #endif
 
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#ifdef AUTOBOOST_INTEL
+#include <autoboost/type_traits/add_const.hpp>
+#include <autoboost/type_traits/add_lvalue_reference.hpp>
+#endif
 
 namespace autoboost {
 
-namespace detail {
-
-template <typename T>
-struct has_trivial_copy_impl
-{
+template <typename T> struct has_trivial_copy
+: public integral_constant<bool,
 #ifdef AUTOBOOST_HAS_TRIVIAL_COPY
-#  ifdef __clang__
-   AUTOBOOST_STATIC_CONSTANT(bool, value = AUTOBOOST_HAS_TRIVIAL_COPY(T) && autoboost::is_copy_constructible<T>::value);
-#  else
-   AUTOBOOST_STATIC_CONSTANT(bool, value = AUTOBOOST_HAS_TRIVIAL_COPY(T));
-#  endif
+   AUTOBOOST_HAS_TRIVIAL_COPY(T) AUTOBOOST_TT_TRIVIAL_CONSTRUCT_FIX
 #else
-   AUTOBOOST_STATIC_CONSTANT(bool, value =
-      (::autoboost::type_traits::ice_and<
-         ::autoboost::is_pod<T>::value,
-         ::autoboost::type_traits::ice_not< ::autoboost::is_volatile<T>::value >::value
-      >::value));
+   ::autoboost::is_pod<T>::value
 #endif
-};
+>{};
+// Arrays are not explicitly copyable:
+template <typename T, std::size_t N> struct has_trivial_copy<T[N]> : public false_type{};
+template <typename T> struct has_trivial_copy<T[]> : public false_type{};
+// Are volatile types ever trivial?  We don't really know, so assume not:
+template <typename T> struct has_trivial_copy<T volatile> : public false_type{};
 
-#ifdef __clang__
-
-template <typename T, std::size_t N>
-struct has_trivial_copy_impl<T[N]>
-{
-   static const bool value = has_trivial_copy_impl<T>::value;
-};
-
-#endif
-
-} // namespace detail
-
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(has_trivial_copy,T,::autoboost::detail::has_trivial_copy_impl<T>::value)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(has_trivial_copy_constructor,T,::autoboost::detail::has_trivial_copy_impl<T>::value)
-
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_copy,void,false)
+template <> struct has_trivial_copy<void> : public false_type{};
 #ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_copy,void const,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_copy,void const volatile,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_copy,void volatile,false)
+template <> struct has_trivial_copy<void const> : public false_type{};
+template <> struct has_trivial_copy<void volatile> : public false_type{};
+template <> struct has_trivial_copy<void const volatile> : public false_type{};
 #endif
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_copy_constructor,void,false)
-#ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_copy_constructor,void const,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_copy_constructor,void const volatile,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_copy_constructor,void volatile,false)
+template <class T> struct has_trivial_copy<T&> : public false_type{};
+#if !defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES)
+template <class T> struct has_trivial_copy<T&&> : public false_type{};
 #endif
+
+template <class T> struct has_trivial_copy_constructor : public has_trivial_copy<T>{};
+
+#undef AUTOBOOST_TT_TRIVIAL_CONSTRUCT_FIX
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_HAS_TRIVIAL_COPY_HPP_INCLUDED

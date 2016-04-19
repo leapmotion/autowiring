@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // text_woarchive.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -26,8 +26,8 @@
 #include <cstddef> // size_t
 
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
-    using ::size_t; 
+namespace std{
+    using ::size_t;
 } // namespace std
 #endif
 
@@ -44,7 +44,7 @@ namespace std{
 #  pragma warning(disable : 4511 4512)
 #endif
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 
 namespace detail {
@@ -52,7 +52,7 @@ namespace detail {
 } // namespace detail
 
 template<class Archive>
-class text_woarchive_impl : 
+class AUTOBOOST_SYMBOL_VISIBLE text_woarchive_impl :
     public basic_text_oprimitive<std::wostream>,
     public basic_text_oarchive<Archive>
 {
@@ -83,21 +83,21 @@ protected:
     void save(const autoboost::serialization::item_version_type & t){
         save(static_cast<const unsigned int>(t));
     }
-    AUTOBOOST_WARCHIVE_DECL(void)
+    AUTOBOOST_WARCHIVE_DECL void
     save(const char * t);
     #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
-    AUTOBOOST_WARCHIVE_DECL(void)
+    AUTOBOOST_WARCHIVE_DECL void
     save(const wchar_t * t);
     #endif
-    AUTOBOOST_WARCHIVE_DECL(void)
+    AUTOBOOST_WARCHIVE_DECL void
     save(const std::string &s);
     #ifndef AUTOBOOST_NO_STD_WSTRING
-    AUTOBOOST_WARCHIVE_DECL(void)
+    AUTOBOOST_WARCHIVE_DECL void
     save(const std::wstring &ws);
     #endif
     text_woarchive_impl(std::wostream & os, unsigned int flags) :
         basic_text_oprimitive<std::wostream>(
-            os, 
+            os,
             0 != (flags & no_codecvt)
         ),
         basic_text_oarchive<Archive>(flags)
@@ -114,7 +114,7 @@ public:
         #else
         this->basic_text_oprimitive::save_binary(
         #endif
-            address, 
+            address,
             count
         );
         put(static_cast<wchar_t>('\n'));
@@ -129,7 +129,7 @@ public:
 // do not derive from this class.  If you want to extend this functionality
 // via inhertance, derived from text_oarchive_impl instead.  This will
 // preserve correct static polymorphism.
-class text_woarchive : 
+class AUTOBOOST_SYMBOL_VISIBLE text_woarchive :
     public text_woarchive_impl<text_woarchive>
 {
 public:

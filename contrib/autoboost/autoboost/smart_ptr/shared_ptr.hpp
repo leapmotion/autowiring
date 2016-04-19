@@ -18,7 +18,7 @@
 
 // In order to avoid circular dependencies with Boost.TR1
 // we make sure that our include of <memory> doesn't try to
-// pull in the TR1 headers: that's why we use this header 
+// pull in the TR1 headers: that's why we use this header
 // rather than including <memory> directly:
 #include <autoboost/config/no_tr1/memory.hpp>  // std::auto_ptr
 
@@ -29,6 +29,7 @@
 #include <autoboost/detail/workaround.hpp>
 #include <autoboost/smart_ptr/detail/sp_convertible.hpp>
 #include <autoboost/smart_ptr/detail/sp_nullptr_t.hpp>
+#include <autoboost/smart_ptr/detail/sp_disable_deprecated.hpp>
 
 #if !defined(AUTOBOOST_SP_NO_ATOMIC_ACCESS)
 #include <autoboost/smart_ptr/detail/spinlock_pool.hpp>
@@ -47,6 +48,11 @@
 #endif
 #endif
 
+#if defined( AUTOBOOST_SP_DISABLE_DEPRECATED )
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 namespace autoboost
 {
 
@@ -54,6 +60,13 @@ template<class T> class shared_ptr;
 template<class T> class weak_ptr;
 template<class T> class enable_shared_from_this;
 class enable_shared_from_raw;
+
+namespace movelib
+{
+
+    template< class T, class D > class unique_ptr;
+
+} // namespace movelib
 
 namespace detail
 {
@@ -242,7 +255,7 @@ template< class T, class R > struct sp_enable_if_auto_ptr
 template< class T, class R > struct sp_enable_if_auto_ptr< std::auto_ptr< T >, R >
 {
     typedef R type;
-}; 
+};
 
 #endif
 
@@ -495,6 +508,17 @@ public:
 
 #endif
 
+    template< class Y, class D >
+    shared_ptr( autoboost::movelib::unique_ptr< Y, D > r ): px( r.get() ), pn()
+    {
+        autoboost::detail::sp_assert_convertible< Y, T >();
+
+        typename autoboost::movelib::unique_ptr< Y, D >::pointer tmp = r.get();
+        pn = autoboost::detail::shared_count( r );
+
+        autoboost::detail::sp_deleter_construct( this, tmp );
+    }
+
     // assignment
 
     shared_ptr & operator=( shared_ptr const & r ) AUTOBOOST_NOEXCEPT
@@ -555,6 +579,27 @@ public:
     }
 
 #endif
+
+    template<class Y, class D>
+    shared_ptr & operator=( autoboost::movelib::unique_ptr<Y, D> r )
+    {
+        // this_type( static_cast< unique_ptr<Y, D> && >( r ) ).swap( *this );
+
+        autoboost::detail::sp_assert_convertible< Y, T >();
+
+        typename autoboost::movelib::unique_ptr< Y, D >::pointer p = r.get();
+
+        shared_ptr tmp;
+
+        tmp.px = p;
+        tmp.pn = autoboost::detail::shared_count( r );
+
+        autoboost::detail::sp_deleter_construct( &tmp, p );
+
+        tmp.swap( *this );
+
+        return *this;
+    }
 
 // Move support
 
@@ -634,28 +679,28 @@ public:
     {
         this_type( r, p ).swap( *this );
     }
-    
+
     // never throws (but has a AUTOBOOST_ASSERT in it, so not marked with AUTOBOOST_NOEXCEPT)
     typename autoboost::detail::sp_dereference< T >::type operator* () const
     {
         AUTOBOOST_ASSERT( px != 0 );
         return *px;
     }
-    
+
     // never throws (but has a AUTOBOOST_ASSERT in it, so not marked with AUTOBOOST_NOEXCEPT)
-    typename autoboost::detail::sp_member_access< T >::type operator-> () const 
+    typename autoboost::detail::sp_member_access< T >::type operator-> () const
     {
         AUTOBOOST_ASSERT( px != 0 );
         return px;
     }
-    
+
     // never throws (but has a AUTOBOOST_ASSERT in it, so not marked with AUTOBOOST_NOEXCEPT)
     typename autoboost::detail::sp_array_access< T >::type operator[] ( std::ptrdiff_t i ) const
     {
         AUTOBOOST_ASSERT( px != 0 );
         AUTOBOOST_ASSERT( i >= 0 && ( i < autoboost::detail::sp_extent< T >::value || autoboost::detail::sp_extent< T >::value == 0 ) );
 
-        return px[ i ];
+        return static_cast< typename autoboost::detail::sp_array_access< T >::type >( px[ i ] );
     }
 
     element_type * get() const AUTOBOOST_NOEXCEPT
@@ -1024,5 +1069,9 @@ template< class T > std::size_t hash_value( autoboost::shared_ptr<T> const & p )
 }
 
 } // namespace autoboost
+
+#if defined( AUTOBOOST_SP_DISABLE_DEPRECATED )
+#pragma GCC diagnostic pop
+#endif
 
 #endif  // #ifndef AUTOBOOST_SMART_PTR_SHARED_PTR_HPP_INCLUDED

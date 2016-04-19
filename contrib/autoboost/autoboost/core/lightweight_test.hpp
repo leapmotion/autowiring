@@ -8,7 +8,7 @@
 #endif
 
 //
-//  boost/core/lightweight_test.hpp - lightweight test library
+//  autoboost/core/lightweight_test.hpp - lightweight test library
 //
 //  Copyright (c) 2002, 2009, 2014 Peter Dimov
 //  Copyright (2) Beman Dawes 2010, 2011
@@ -44,7 +44,7 @@ struct report_errors_reminder
 
     ~report_errors_reminder()
     {
-        AUTOBOOST_ASSERT(called_report_errors_function);  // verify report_errors() was called  
+        AUTOBOOST_ASSERT(called_report_errors_function);  // verify report_errors() was called
     }
 };
 
@@ -123,9 +123,9 @@ template<class T, class U> inline void test_ne_impl( char const * expr1, char co
 
 inline int report_errors()
 {
-    detail::report_errors_remind().called_report_errors_function = true;
+    autoboost::detail::report_errors_remind().called_report_errors_function = true;
 
-    int errors = detail::test_errors();
+    int errors = autoboost::detail::test_errors();
 
     if( errors == 0 )
     {

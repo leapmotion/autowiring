@@ -1,12 +1,13 @@
 #ifndef AUTOBOOST_THREAD_PTHREAD_MUTEX_HPP
 #define AUTOBOOST_THREAD_PTHREAD_MUTEX_HPP
 // (C) Copyright 2007-8 Anthony Williams
-// (C) Copyright 2011-2012 Vicente J. Botet Escriba
+// (C) Copyright 2011,2012,2015 Vicente J. Botet Escriba
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
 #include <autoboost/thread/detail/config.hpp>
+#include <autoboost/assert.hpp>
 #include <pthread.h>
 #include <autoboost/throw_exception.hpp>
 #include <autoboost/core/ignore_unused.hpp>
@@ -26,11 +27,10 @@
 #endif
 #include <autoboost/thread/detail/delete.hpp>
 
-#ifdef _POSIX_TIMEOUTS
-#if _POSIX_TIMEOUTS >= 0 && _POSIX_TIMEOUTS>=200112L
+#if (defined(_POSIX_TIMEOUTS) && (_POSIX_TIMEOUTS-0)>=200112L) \
+ || (defined(__ANDROID__) && defined(__ANDROID_API__) && __ANDROID_API__ >= 21)
 #ifndef AUTOBOOST_PTHREAD_HAS_TIMEDLOCK
 #define AUTOBOOST_PTHREAD_HAS_TIMEDLOCK
-#endif
 #endif
 #endif
 
@@ -116,17 +116,19 @@ namespace autoboost
             int res = posix::pthread_mutex_lock(&m);
             if (res)
             {
-                autoboost::throw_exception(lock_error(res,"boost: mutex lock failed in pthread_mutex_lock"));
+                autoboost::throw_exception(lock_error(res,"autoboost: mutex lock failed in pthread_mutex_lock"));
             }
         }
 
         void unlock()
         {
             int res = posix::pthread_mutex_unlock(&m);
-            if (res)
-            {
-                autoboost::throw_exception(lock_error(res,"boost: mutex unlock failed in pthread_mutex_unlock"));
-            }
+            (void)res;
+            AUTOBOOST_ASSERT(res == 0);
+//            if (res)
+//            {
+//                autoboost::throw_exception(lock_error(res,"autoboost: mutex unlock failed in pthread_mutex_unlock"));
+//            }
         }
 
         bool try_lock()
@@ -212,17 +214,19 @@ namespace autoboost
             int res = posix::pthread_mutex_lock(&m);
             if (res)
             {
-                autoboost::throw_exception(lock_error(res,"boost: mutex lock failed in pthread_mutex_lock"));
+                autoboost::throw_exception(lock_error(res,"autoboost: mutex lock failed in pthread_mutex_lock"));
             }
         }
 
         void unlock()
         {
             int res = posix::pthread_mutex_unlock(&m);
-            if (res)
-            {
-                autoboost::throw_exception(lock_error(res,"boost: mutex unlock failed in pthread_mutex_unlock"));
-            }
+            (void)res;
+            AUTOBOOST_ASSERT(res == 0);
+//            if (res)
+//            {
+//                autoboost::throw_exception(lock_error(res,"autoboost: mutex unlock failed in pthread_mutex_unlock"));
+//            }
         }
 
         bool try_lock()

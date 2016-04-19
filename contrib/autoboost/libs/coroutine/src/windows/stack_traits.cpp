@@ -4,7 +4,7 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-#include "boost/coroutine/stack_traits.hpp"
+#include "autoboost/coroutine/stack_traits.hpp"
 
 extern "C" {
 #include <windows.h>
@@ -19,7 +19,7 @@ extern "C" {
 #include <stdexcept>
 
 #include <autoboost/assert.hpp>
-#include <autoboost/context/detail/config.hpp>
+#include <autoboost/coroutine/detail/config.hpp>
 #include <autoboost/thread.hpp>
 
 #include <autoboost/coroutine/stack_context.hpp>
@@ -42,8 +42,7 @@ extern "C" {
 #  include AUTOBOOST_ABI_PREFIX
 #endif
 
-namespace autoboost {
-namespace coroutines {
+namespace {
 
 void system_info_( SYSTEM_INFO * si)
 { ::GetSystemInfo( si); }
@@ -65,6 +64,11 @@ std::size_t page_count( std::size_t stacksize)
         std::floor(
             static_cast< float >( stacksize) / pagesize() ) );
 }
+
+}
+
+namespace autoboost {
+namespace coroutines {
 
 // Windows seams not to provide a limit for the stacksize
 // libcoco uses 32k+4k bytes as minimum

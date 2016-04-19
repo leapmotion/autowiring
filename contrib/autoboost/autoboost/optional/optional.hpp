@@ -1,5 +1,5 @@
 // Copyright (C) 2003, 2008 Fernando Luis Cacciola Carballal.
-// Copyright (C) 2014 Andrzej Krzemienski.
+// Copyright (C) 2014, 2015 Andrzej Krzemienski.
 //
 // Use, modification, and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
@@ -18,12 +18,14 @@
 #define AUTOBOOST_OPTIONAL_OPTIONAL_FLC_19NOV2002_HPP
 
 #include <new>
-#include <algorithm>
 #include <iosfwd>
 
 #include <autoboost/config.hpp>
 #include <autoboost/assert.hpp>
+#include <autoboost/core/addressof.hpp>
+#include <autoboost/core/enable_if.hpp>
 #include <autoboost/core/explicit_operator_bool.hpp>
+#include <autoboost/core/swap.hpp>
 #include <autoboost/optional/bad_optional_access.hpp>
 #include <autoboost/static_assert.hpp>
 #include <autoboost/throw_exception.hpp>
@@ -47,15 +49,13 @@
 #include <autoboost/detail/reference_content.hpp>
 #include <autoboost/move/utility.hpp>
 #include <autoboost/none.hpp>
-#include <autoboost/utility/addressof.hpp>
 #include <autoboost/utility/compare_pointees.hpp>
-#include <autoboost/utility/enable_if.hpp>
-#include <autoboost/utility/in_place_factory.hpp>
-#include <autoboost/utility/swap.hpp>
-
-
 
 #include <autoboost/optional/optional_fwd.hpp>
+
+#if (defined AUTOBOOST_NO_CXX11_RVALUE_REFERENCES) || (defined AUTOBOOST_OPTIONAL_CONFIG_NO_RVALUE_REFERENCES)
+#define AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
+#endif
 
 #if AUTOBOOST_WORKAROUND(AUTOBOOST_INTEL_CXX_VERSION,<=700)
 // AFAICT only Intel 7 correctly resolves the overload set
@@ -98,7 +98,7 @@ namespace autoboost_optional_detail
   template <class T, class Factory>
   inline void construct(Factory const& factory, void* address)
   {
-    factory.AUTOBOOST_NESTED_TEMPLATE apply<T>(address);
+    factory.BOOST_NESTED_TEMPLATE apply<T>(address);
   }
 }
 
@@ -148,7 +148,7 @@ struct types_when_isnt_ref
 {
   typedef T const& reference_const_type ;
   typedef T &      reference_type ;
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
   typedef T &&     rval_reference_type ;
   typedef T &&     reference_type_of_temporary_wrapper;
 #ifdef AUTOBOOST_MOVE_OLD_RVALUE_REF_BINDING_RULES
@@ -171,7 +171,7 @@ struct types_when_is_ref
 
   typedef raw_type&  reference_const_type ;
   typedef raw_type&  reference_type ;
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
   typedef AUTOBOOST_DEDUCED_TYPENAME remove_const<raw_type>::type&& rval_reference_type ;
   typedef raw_type&  reference_type_of_temporary_wrapper;
   static reference_type move(reference_type r) { return r; }
@@ -184,11 +184,11 @@ struct types_when_is_ref
 template <class To, class From>
 void prevent_binding_rvalue_ref_to_optional_lvalue_ref()
 {
-#ifndef AUTOBOOST_OPTIONAL_ALLOW_BINDING_TO_RVALUES
+#ifndef AUTOBOOST_OPTIONAL_CONFIG_ALLOW_BINDING_TO_RVALUES
   AUTOBOOST_STATIC_ASSERT_MSG(
-    !autoboost::is_lvalue_reference<To>::value || !autoboost::is_rvalue_reference<From>::value, 
+    !autoboost::is_lvalue_reference<To>::value || !autoboost::is_rvalue_reference<From>::value,
     "binding rvalue references to optional lvalue references is disallowed");
-#endif    
+#endif
 }
 
 struct optional_tag {} ;
@@ -226,7 +226,7 @@ class optional_base : public optional_tag
   protected:
     typedef AUTOBOOST_DEDUCED_TYPENAME types::reference_type       reference_type ;
     typedef AUTOBOOST_DEDUCED_TYPENAME types::reference_const_type reference_const_type ;
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     typedef AUTOBOOST_DEDUCED_TYPENAME types::rval_reference_type  rval_reference_type ;
     typedef AUTOBOOST_DEDUCED_TYPENAME types::reference_type_of_temporary_wrapper reference_type_of_temporary_wrapper ;
 #endif
@@ -255,7 +255,7 @@ class optional_base : public optional_tag
       construct(val);
     }
 
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     // move-construct an optional<T> initialized from an rvalue-ref to 'val'.
     // Can throw if T::T(T&&) does
     optional_base ( rval_reference_type val )
@@ -286,7 +286,7 @@ class optional_base : public optional_tag
         construct(rhs.get_impl());
     }
 
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     // Creates a deep move of another optional<T>
     // Can throw if T::T(T&&) does
     optional_base ( optional_base&& rhs )
@@ -298,7 +298,7 @@ class optional_base : public optional_tag
     }
 #endif
 
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
 
     template<class Expr, class PtrExpr>
     explicit optional_base ( Expr&& expr, PtrExpr const* tag )
@@ -341,8 +341,8 @@ class optional_base : public optional_tag
           construct(rhs.get_impl());
       }
     }
-    
-#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+
+#ifndef AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     // Assigns from another optional<T> (deep-moves the rhs value)
     void assign ( optional_base&& rhs )
     {
@@ -358,7 +358,7 @@ class optional_base : public optional_tag
           construct(autoboost::move(rhs.get_impl()));
       }
     }
-#endif 
+#endif
 
     // Assigns from another _convertible_ optional<U> (deep-copies the rhs value)
     template<class U>
@@ -367,17 +367,26 @@ class optional_base : public optional_tag
       if (is_initialized())
       {
         if ( rhs.is_initialized() )
-             assign_value(static_cast<value_type>(rhs.get()), is_reference_predicate() );
+#ifndef AUTOBOOST_OPTIONAL_CONFIG_RESTORE_ASSIGNMENT_OF_NONCONVERTIBLE_TYPES
+          assign_value(rhs.get(), is_reference_predicate() );
+#else
+          assign_value(static_cast<value_type>(rhs.get()), is_reference_predicate() );
+#endif
+
         else destroy();
       }
       else
       {
         if ( rhs.is_initialized() )
+#ifndef AUTOBOOST_OPTIONAL_CONFIG_RESTORE_ASSIGNMENT_OF_NONCONVERTIBLE_TYPES
+          construct(rhs.get());
+#else
           construct(static_cast<value_type>(rhs.get()));
+#endif
       }
     }
 
-#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     // move-assigns from another _convertible_ optional<U> (deep-moves from the rhs value)
     template<class U>
     void assign ( optional<U>&& rhs )
@@ -396,7 +405,7 @@ class optional_base : public optional_tag
       }
     }
 #endif
-    
+
     // Assigns from a T (deep-copies the rhs value)
     void assign ( argument_type val )
     {
@@ -404,8 +413,8 @@ class optional_base : public optional_tag
            assign_value(val, is_reference_predicate() );
       else construct(val);
     }
-    
-#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+
+#ifndef AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     // Assigns from a T (deep-moves the rhs value)
     void assign ( rval_reference_type val )
     {
@@ -421,7 +430,7 @@ class optional_base : public optional_tag
 
 #ifndef AUTOBOOST_OPTIONAL_NO_INPLACE_FACTORY_SUPPORT
 
-#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     template<class Expr, class ExprPtr>
     void assign_expr ( Expr&& expr, ExprPtr const* tag )
     {
@@ -465,8 +474,8 @@ class optional_base : public optional_tag
        ::new (m_storage.address()) internal_type(val) ;
        m_initialized = true ;
      }
-     
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     void construct ( rval_reference_type val )
      {
        ::new (m_storage.address()) internal_type( types::move(val) ) ;
@@ -475,7 +484,7 @@ class optional_base : public optional_tag
 #endif
 
 
-#if (!defined AUTOBOOST_NO_CXX11_RVALUE_REFERENCES) && (!defined AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if (!defined AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES) && (!defined AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
     // Constructs in-place
     // upon exception *this is always uninitialized
     template<class... Args>
@@ -485,12 +494,19 @@ class optional_base : public optional_tag
        ::new (m_storage.address()) internal_type( autoboost::forward<Args>(args)... );
        m_initialized = true ;
      }
-#elif (!defined AUTOBOOST_NO_CXX11_RVALUE_REFERENCES)
+#elif (!defined AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES)
     template<class Arg>
     void emplace_assign ( Arg&& arg )
      {
        destroy();
        ::new (m_storage.address()) internal_type( autoboost::forward<Arg>(arg) );
+       m_initialized = true ;
+     }
+
+    void emplace_assign ()
+     {
+       destroy();
+       ::new (m_storage.address()) internal_type();
        m_initialized = true ;
      }
 #else
@@ -501,19 +517,26 @@ class optional_base : public optional_tag
        ::new (m_storage.address()) internal_type( arg );
        m_initialized = true ;
      }
-     
-     template<class Arg>
+
+    template<class Arg>
     void emplace_assign ( Arg& arg )
      {
        destroy();
        ::new (m_storage.address()) internal_type( arg );
        m_initialized = true ;
      }
+
+    void emplace_assign ()
+     {
+       destroy();
+       ::new (m_storage.address()) internal_type();
+       m_initialized = true ;
+     }
 #endif
 
 #ifndef AUTOBOOST_OPTIONAL_NO_INPLACE_FACTORY_SUPPORT
 
-#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     // Constructs in-place using the given factory
     template<class Expr>
     void construct ( Expr&& factory, in_place_factory_base const* )
@@ -584,7 +607,7 @@ class optional_base : public optional_tag
 
 #endif
 
-#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     // Constructs using any expression implicitly convertible to the single argument
     // of a one-argument T constructor.
     // Converting constructions of optional<T> from optional<U> uses this function with
@@ -642,7 +665,7 @@ class optional_base : public optional_tag
     // For VC<=70 compilers this workaround dosen't work becasue the comnpiler issues and error
     // instead of choosing the wrong overload
     //
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     // Notice that 'Expr' will be optional<T> or optional<U> (but not optional_base<..>)
     template<class Expr>
     void construct ( Expr&& expr, optional_tag const* )
@@ -673,7 +696,7 @@ class optional_base : public optional_tag
 
     void assign_value ( argument_type val, is_not_reference_tag ) { get_impl() = val; }
     void assign_value ( argument_type val, is_reference_tag     ) { construct(val); }
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     void assign_value ( rval_reference_type val, is_not_reference_tag ) { get_impl() = static_cast<rval_reference_type>(val); }
     void assign_value ( rval_reference_type val, is_reference_tag     ) { construct( static_cast<rval_reference_type>(val) ); }
 #endif
@@ -750,7 +773,7 @@ class optional : public optional_detail::optional_base<T>
     typedef AUTOBOOST_DEDUCED_TYPENAME base::value_type           value_type ;
     typedef AUTOBOOST_DEDUCED_TYPENAME base::reference_type       reference_type ;
     typedef AUTOBOOST_DEDUCED_TYPENAME base::reference_const_type reference_const_type ;
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     typedef AUTOBOOST_DEDUCED_TYPENAME base::rval_reference_type  rval_reference_type ;
     typedef AUTOBOOST_DEDUCED_TYPENAME base::reference_type_of_temporary_wrapper reference_type_of_temporary_wrapper ;
 #endif
@@ -770,10 +793,10 @@ class optional : public optional_detail::optional_base<T>
     // Can throw if T::T(T const&) does
     optional ( argument_type val ) : base(val) {}
 
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     // Creates an optional<T> initialized with 'move(val)'.
     // Can throw if T::T(T &&) does
-    optional ( rval_reference_type val ) : base( autoboost::forward<T>(val) ) 
+    optional ( rval_reference_type val ) : base( autoboost::forward<T>(val) )
       {optional_detail::prevent_binding_rvalue_ref_to_optional_lvalue_ref<T, rval_reference_type>();}
 #endif
 
@@ -794,8 +817,8 @@ class optional : public optional_detail::optional_base<T>
       if ( rhs.is_initialized() )
         this->construct(rhs.get());
     }
-    
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     // Creates a deep move of another convertible optional<U>
     // Requires a valid conversion from U to T.
     // Can throw if T::T(U&&) does
@@ -819,34 +842,34 @@ class optional : public optional_detail::optional_base<T>
     //       even though explicit overloads are present for these.
     // Depending on the above some T ctor is called.
     // Can throw if the resolved T ctor throws.
-#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
 
 
   template<class Expr>
-  explicit optional ( Expr&& expr, 
+  explicit optional ( Expr&& expr,
                       AUTOBOOST_DEDUCED_TYPENAME autoboost::disable_if_c<
-                        (autoboost::is_base_of<optional_detail::optional_tag, AUTOBOOST_DEDUCED_TYPENAME autoboost::decay<Expr>::type>::value) || 
-                        autoboost::is_same<AUTOBOOST_DEDUCED_TYPENAME autoboost::decay<Expr>::type, none_t>::value >::type* = 0 
-  ) 
-    : base(autoboost::forward<Expr>(expr),autoboost::addressof(expr)) 
+                        (autoboost::is_base_of<optional_detail::optional_tag, AUTOBOOST_DEDUCED_TYPENAME autoboost::decay<Expr>::type>::value) ||
+                        autoboost::is_same<AUTOBOOST_DEDUCED_TYPENAME autoboost::decay<Expr>::type, none_t>::value >::type* = 0
+  )
+    : base(autoboost::forward<Expr>(expr),autoboost::addressof(expr))
     {optional_detail::prevent_binding_rvalue_ref_to_optional_lvalue_ref<T, Expr&&>();}
 
 #else
     template<class Expr>
     explicit optional ( Expr const& expr ) : base(expr,autoboost::addressof(expr)) {}
-#endif // !defined AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#endif // !defined AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
 #endif // !defined AUTOBOOST_OPTIONAL_NO_INPLACE_FACTORY_SUPPORT
 
     // Creates a deep copy of another optional<T>
     // Can throw if T::T(T const&) does
     optional ( optional const& rhs ) : base( static_cast<base const&>(rhs) ) {}
 
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
 	// Creates a deep move of another optional<T>
 	// Can throw if T::T(T&&) does
-	optional ( optional && rhs ) 
+	optional ( optional && rhs )
 	  AUTOBOOST_NOEXCEPT_IF(::autoboost::is_nothrow_move_constructible<T>::value)
-	  : base( autoboost::move(rhs) ) 
+	  : base( autoboost::move(rhs) )
 	{}
 
 #endif
@@ -856,14 +879,14 @@ class optional : public optional_detail::optional_base<T>
 #if !defined(AUTOBOOST_OPTIONAL_NO_INPLACE_FACTORY_SUPPORT) && !defined(AUTOBOOST_OPTIONAL_WEAK_OVERLOAD_RESOLUTION)
     // Assigns from an expression. See corresponding constructor.
     // Basic Guarantee: If the resolved T ctor throws, this is left UNINITIALIZED
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
 
     template<class Expr>
     AUTOBOOST_DEDUCED_TYPENAME autoboost::disable_if_c<
-      autoboost::is_base_of<optional_detail::optional_tag, AUTOBOOST_DEDUCED_TYPENAME autoboost::decay<Expr>::type>::value || 
+      autoboost::is_base_of<optional_detail::optional_tag, AUTOBOOST_DEDUCED_TYPENAME autoboost::decay<Expr>::type>::value ||
         autoboost::is_same<AUTOBOOST_DEDUCED_TYPENAME autoboost::decay<Expr>::type, none_t>::value,
       optional&
-    >::type 
+    >::type
     operator= ( Expr&& expr )
       {
         optional_detail::prevent_binding_rvalue_ref_to_optional_lvalue_ref<T, Expr&&>();
@@ -878,7 +901,7 @@ class optional : public optional_detail::optional_base<T>
         this->assign_expr(expr,autoboost::addressof(expr));
         return *this ;
       }
-#endif // !defined  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#endif // !defined  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
 #endif // !defined(AUTOBOOST_OPTIONAL_NO_INPLACE_FACTORY_SUPPORT) && !defined(AUTOBOOST_OPTIONAL_WEAK_OVERLOAD_RESOLUTION)
 
     // Copy-assigns from another convertible optional<U> (converts && deep-copies the rhs value)
@@ -890,8 +913,8 @@ class optional : public optional_detail::optional_base<T>
         this->assign(rhs);
         return *this ;
       }
-      
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     // Move-assigns from another convertible optional<U> (converts && deep-moves the rhs value)
     // Requires a valid conversion from U to T.
     // Basic Guarantee: If T::T( U && ) throws, this is left UNINITIALIZED
@@ -912,9 +935,9 @@ class optional : public optional_detail::optional_base<T>
         return *this ;
       }
 
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     // Assigns from another optional<T> (deep-moves the rhs value)
-    optional& operator= ( optional && rhs ) 
+    optional& operator= ( optional && rhs )
 	  AUTOBOOST_NOEXCEPT_IF(::autoboost::is_nothrow_move_constructible<T>::value && ::autoboost::is_nothrow_move_assignable<T>::value)
       {
         this->assign( static_cast<base &&>(rhs) ) ;
@@ -930,7 +953,7 @@ class optional : public optional_detail::optional_base<T>
         return *this ;
       }
 
-#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     // Assigns from a T (deep-moves the rhs value)
     optional& operator= ( rval_reference_type val )
       {
@@ -948,8 +971,8 @@ class optional : public optional_detail::optional_base<T>
         this->assign( none_ ) ;
         return *this ;
       }
-      
-#if (!defined AUTOBOOST_NO_CXX11_RVALUE_REFERENCES) && (!defined AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+
+#if (!defined AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES) && (!defined AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
     // Constructs in-place
     // upon exception *this is always uninitialized
     template<class... Args>
@@ -957,11 +980,16 @@ class optional : public optional_detail::optional_base<T>
      {
        this->emplace_assign( autoboost::forward<Args>(args)... );
      }
-#elif (!defined AUTOBOOST_NO_CXX11_RVALUE_REFERENCES)
+#elif (!defined AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES)
     template<class Arg>
     void emplace ( Arg&& arg )
      {
        this->emplace_assign( autoboost::forward<Arg>(arg) );
+     }
+
+    void emplace ()
+     {
+       this->emplace_assign();
      }
 #else
     template<class Arg>
@@ -969,11 +997,16 @@ class optional : public optional_detail::optional_base<T>
      {
        this->emplace_assign( arg );
      }
-     
+
     template<class Arg>
     void emplace ( Arg& arg )
      {
        this->emplace_assign( arg );
+     }
+
+    void emplace ()
+     {
+       this->emplace_assign();
      }
 #endif
 
@@ -1004,51 +1037,51 @@ class optional : public optional_detail::optional_base<T>
     // Returns a reference to the value if this is initialized, otherwise,
     // the behaviour is UNDEFINED
     // No-throw
-#ifndef AUTOBOOST_NO_CXX11_REF_QUALIFIERS
+#if (!defined AUTOBOOST_NO_CXX11_REF_QUALIFIERS) && (!defined AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES)
     reference_const_type operator *() const& { return this->get() ; }
     reference_type       operator *() &      { return this->get() ; }
-    reference_type_of_temporary_wrapper operator *() && { return autoboost::move(this->get()) ; }
+    reference_type_of_temporary_wrapper operator *() && { return base::types::move(this->get()) ; }
 #else
     reference_const_type operator *() const { return this->get() ; }
     reference_type       operator *()       { return this->get() ; }
 #endif // !defined AUTOBOOST_NO_CXX11_REF_QUALIFIERS
 
-#ifndef AUTOBOOST_NO_CXX11_REF_QUALIFIERS
+#if (!defined AUTOBOOST_NO_CXX11_REF_QUALIFIERS) && (!defined AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES)
     reference_const_type value() const&
-      { 
+      {
         if (this->is_initialized())
           return this->get() ;
-        else
-          throw_exception(bad_optional_access());
-      }
-      
-    reference_type value() &
-      { 
-        if (this->is_initialized())
-          return this->get() ;
-        else
-          throw_exception(bad_optional_access());
-      }
-      
-    reference_type_of_temporary_wrapper value() &&
-      { 
-        if (this->is_initialized())
-          return autoboost::move(this->get()) ;
         else
           throw_exception(bad_optional_access());
       }
 
-#else 
-    reference_const_type value() const
-      { 
+    reference_type value() &
+      {
         if (this->is_initialized())
           return this->get() ;
         else
           throw_exception(bad_optional_access());
       }
-      
+
+    reference_type_of_temporary_wrapper value() &&
+      {
+        if (this->is_initialized())
+          return base::types::move(this->get()) ;
+        else
+          throw_exception(bad_optional_access());
+      }
+
+#else
+    reference_const_type value() const
+      {
+        if (this->is_initialized())
+          return this->get() ;
+        else
+          throw_exception(bad_optional_access());
+      }
+
     reference_type value()
-      { 
+      {
         if (this->is_initialized())
           return this->get() ;
         else
@@ -1060,24 +1093,24 @@ class optional : public optional_detail::optional_base<T>
 #ifndef AUTOBOOST_NO_CXX11_REF_QUALIFIERS
     template <class U>
     value_type value_or ( U&& v ) const&
-      { 
+      {
         if (this->is_initialized())
           return get();
         else
           return autoboost::forward<U>(v);
       }
-    
+
     template <class U>
-    value_type value_or ( U&& v ) && 
-      { 
+    value_type value_or ( U&& v ) &&
+      {
         if (this->is_initialized())
-          return autoboost::move(get());
+          return base::types::move(get());
         else
           return autoboost::forward<U>(v);
       }
-#elif !defined AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#elif !defined AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
     template <class U>
-    value_type value_or ( U&& v ) const 
+    value_type value_or ( U&& v ) const
       {
         if (this->is_initialized())
           return get();
@@ -1086,8 +1119,17 @@ class optional : public optional_detail::optional_base<T>
       }
 #else
     template <class U>
-    value_type value_or ( U const& v ) const 
-      { 
+    value_type value_or ( U const& v ) const
+      {
+        if (this->is_initialized())
+          return get();
+        else
+          return v;
+      }
+
+    template <class U>
+    value_type value_or ( U& v ) const
+      {
         if (this->is_initialized())
           return get();
         else
@@ -1105,12 +1147,12 @@ class optional : public optional_detail::optional_base<T>
         else
           return f();
       }
-      
+
     template <typename F>
     value_type value_or_eval ( F f ) &&
       {
         if (this->is_initialized())
-          return autoboost::move(get());
+          return base::types::move(get());
         else
           return f();
       }
@@ -1124,13 +1166,13 @@ class optional : public optional_detail::optional_base<T>
           return f();
       }
 #endif
-      
+
     bool operator!() const AUTOBOOST_NOEXCEPT { return !this->is_initialized() ; }
-    
+
     AUTOBOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
 } ;
 
-#ifndef  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef  AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
 template<class T>
 class optional<T&&>
 {
@@ -1226,10 +1268,14 @@ get_pointer ( optional<T>& opt )
   return opt.get_ptr() ;
 }
 
-// Forward declaration to prevent operator safe-bool from being used.
-template<class CharType, class CharTrait, class T>
+// The following declaration prevents a bug where operator safe-bool is used upon streaming optional object if you forget the IO header.
+template<class CharType, class CharTrait>
 std::basic_ostream<CharType, CharTrait>&
-operator<<(std::basic_ostream<CharType, CharTrait>& out, optional<T> const& v);
+operator<<(std::basic_ostream<CharType, CharTrait>& os, optional_detail::optional_tag const&)
+{
+  AUTOBOOST_STATIC_ASSERT_MSG(sizeof(CharType) == 0, "If you want to output autoboost::optional, include header <autoboost/optional/optional_io.hpp>");
+  return os;
+}
 
 // optional's relational operators ( ==, !=, <, >, <=, >= ) have deep-semantics (compare values).
 // WARNING: This is UNLIKE pointers. Use equal_pointees()/less_pointess() in generic code instead.
@@ -1423,9 +1469,9 @@ struct swap_selector<true>
             return;
 
         if( !hasX )
-            x = autoboost::in_place();
+            x.emplace();
         else if ( !hasY )
-            y = autoboost::in_place();
+            y.emplace();
 
         // Boost.Utility.Swap will take care of ADL and workarounds for broken compilers
         autoboost::swap(x.get(),y.get());
@@ -1437,12 +1483,12 @@ struct swap_selector<true>
     }
 };
 
-#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
 template<>
 struct swap_selector<false>
 {
     template<class T>
-    static void optional_swap ( optional<T>& x, optional<T>& y ) 
+    static void optional_swap ( optional<T>& x, optional<T>& y )
     //AUTOBOOST_NOEXCEPT_IF(::autoboost::is_nothrow_move_constructible<T>::value && AUTOBOOST_NOEXCEPT_EXPR(autoboost::swap(*x, *y)))
     {
         if(x)
@@ -1494,12 +1540,21 @@ struct swap_selector<false>
         }
     }
 };
-#endif // !defined AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#endif // !defined AUTOBOOST_OPTIONAL_DETAIL_NO_RVALUE_REFERENCES
 
 } // namespace optional_detail
 
+#if (!defined AUTOBOOST_NO_CXX11_RVALUE_REFERENCES) && (!defined AUTOBOOST_CONFIG_RESTORE_OBSOLETE_SWAP_IMPLEMENTATION)
+
+template<class T>
+struct optional_swap_should_use_default_constructor : autoboost::false_type {} ;
+
+#else
+
 template<class T>
 struct optional_swap_should_use_default_constructor : has_nothrow_default_constructor<T> {} ;
+
+#endif //AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
 
 template<class T> inline void swap ( optional<T>& x, optional<T>& y )
   //AUTOBOOST_NOEXCEPT_IF(::autoboost::is_nothrow_move_constructible<T>::value && AUTOBOOST_NOEXCEPT_EXPR(autoboost::swap(*x, *y)))

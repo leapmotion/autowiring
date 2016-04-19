@@ -136,7 +136,7 @@
 // We disable this if the compiler is really nvcc as it
 // doesn't actually support __int128 as of CUDA_VERSION=5000
 // even though it defines __SIZEOF_INT128__.
-// See https://svn.boost.org/trac/boost/ticket/8048
+// See https://svn.boost.org/trac/autoboost/ticket/8048
 // Only re-enable this for nvcc if you're absolutely sure
 // of the circumstances under which it's supported:
 //

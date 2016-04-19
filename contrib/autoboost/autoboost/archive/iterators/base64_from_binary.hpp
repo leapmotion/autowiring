@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // base64_from_binary.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -20,17 +20,15 @@
 
 #include <cstddef> // size_t
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
-    using ::size_t; 
+namespace std{
+    using ::size_t;
 } // namespace std
 #endif
-
-#include <autoboost/serialization/pfto.hpp>
 
 #include <autoboost/iterator/transform_iterator.hpp>
 #include <autoboost/archive/iterators/dataflow_exception.hpp>
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 namespace iterators {
 
@@ -43,7 +41,7 @@ template<class CharType>
 struct from_6_bit {
     typedef CharType result_type;
     CharType operator()(CharType t) const{
-        const char * lookup_table = 
+        const char * lookup_table =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             "abcdefghijklmnopqrstuvwxyz"
             "0123456789"
@@ -70,10 +68,10 @@ struct from_6_bit {
 
 //template<class Base, class CharType = typename Base::value_type>
 template<
-    class Base, 
+    class Base,
     class CharType = typename autoboost::iterator_value<Base>::type
 >
-class base64_from_binary : 
+class base64_from_binary :
     public transform_iterator<
         detail::from_6_bit<CharType>,
         Base
@@ -88,14 +86,14 @@ class base64_from_binary :
 public:
     // make composible buy using templated constructor
     template<class T>
-    base64_from_binary(AUTOBOOST_PFTO_WRAPPER(T) start) :
+    base64_from_binary(T start) :
         super_t(
-            Base(AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast< T >(start))),
+            Base(static_cast< T >(start)),
             detail::from_6_bit<CharType>()
         )
     {}
     // intel 7.1 doesn't like default copy constructor
-    base64_from_binary(const base64_from_binary & rhs) : 
+    base64_from_binary(const base64_from_binary & rhs) :
         super_t(
             Base(rhs.base_reference()),
             detail::from_6_bit<CharType>()

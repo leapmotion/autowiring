@@ -1,14 +1,14 @@
-#ifndef AB_DATE_DURATION_TYPES_HPP___
-#define AB_DATE_DURATION_TYPES_HPP___
+#ifndef DATE_DURATION_TYPES_HPP___
+#define DATE_DURATION_TYPES_HPP___
 
 /* Copyright (c) 2004 CrystalClear Software, Inc.
- * Subject to the Boost Software License, Version 1.0. 
- * (See accompanying file LICENSE_1_0.txt or 
+ * Subject to the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or
  * http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
  * $Date$
  */
-                                                                                
+
 #include <autoboost/date_time/int_adapter.hpp>
 #include <autoboost/date_time/special_defs.hpp>
 #include <autoboost/date_time/date_duration.hpp>
@@ -21,9 +21,9 @@ namespace date_time {
   template <class duration_config>
   class weeks_duration : public date_duration<duration_config> {
   public:
-    weeks_duration(typename duration_config::impl_type w) 
+    weeks_duration(typename duration_config::impl_type w)
       : date_duration<duration_config>(w * 7) {}
-    weeks_duration(special_values sv) 
+    weeks_duration(special_values sv)
       : date_duration<duration_config>(sv) {}
   };
 
@@ -32,12 +32,12 @@ namespace date_time {
   class years_duration;
 
   //! additional duration type that represents a logical month
-  /*! A logical month enables things like: "date(2002,Mar,2) + months(2) -> 
-   * 2002-May2". If the date is a last day-of-the-month, the result will 
+  /*! A logical month enables things like: "date(2002,Mar,2) + months(2) ->
+   * 2002-May2". If the date is a last day-of-the-month, the result will
    * also be a last-day-of-the-month.
    */
   template<class base_config>
-  class months_duration 
+  class months_duration
   {
     private:
       typedef typename base_config::int_rep int_rep;
@@ -49,7 +49,7 @@ namespace date_time {
       typedef years_duration<base_config> years_type;
     public:
       months_duration(int_rep num) : _m(num) {}
-      months_duration(special_values sv) : _m(sv) 
+      months_duration(special_values sv) : _m(sv)
       {
         _m = int_rep::from_special(sv);
       }
@@ -147,19 +147,19 @@ namespace date_time {
         // get_neg_offset returns a negative duration, so we add
         return d += m.get_neg_offset(d);
       }
-        
+
     private:
       int_rep _m;
   };
 
   //! additional duration type that represents a logical year
-  /*! A logical year enables things like: "date(2002,Mar,2) + years(2) -> 
-   * 2004-Mar-2". If the date is a last day-of-the-month, the result will 
+  /*! A logical year enables things like: "date(2002,Mar,2) + years(2) ->
+   * 2004-Mar-2". If the date is a last day-of-the-month, the result will
    * also be a last-day-of-the-month (ie date(2001-Feb-28) + years(3) ->
    * 2004-Feb-29).
    */
   template<class base_config>
-  class years_duration 
+  class years_duration
   {
     private:
       typedef typename base_config::int_rep int_rep;
@@ -171,7 +171,7 @@ namespace date_time {
       typedef months_duration<base_config> months_type;
     public:
       years_duration(int_rep num) : _y(num) {}
-      years_duration(special_values sv) : _y(sv) 
+      years_duration(special_values sv) : _y(sv)
       {
         _y = int_rep::from_special(sv);
       }

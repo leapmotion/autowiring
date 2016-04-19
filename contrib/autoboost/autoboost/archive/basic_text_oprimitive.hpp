@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // basic_text_oprimitive.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -39,7 +39,7 @@
 #endif
 
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
+namespace std{
     using ::size_t;
     #if ! defined(AUTOBOOST_DINKUMWARE_STDLIB) && ! defined(__SGI_STL_PORT)
         using ::locale;
@@ -61,12 +61,10 @@ namespace std{
 namespace autoboost {
 namespace archive {
 
-class save_access;
-
 /////////////////////////////////////////////////////////////////////////
 // class basic_text_oprimitive - output of prmitives to stream
 template<class OStream>
-class basic_text_oprimitive
+class AUTOBOOST_SYMBOL_VISIBLE basic_text_oprimitive
 {
 protected:
     OStream &os;
@@ -76,7 +74,7 @@ protected:
     #ifndef AUTOBOOST_NO_STD_LOCALE
     autoboost::scoped_ptr<std::locale> archive_locale;
     basic_streambuf_locale_saver<
-        typename OStream::char_type, 
+        typename OStream::char_type,
         typename OStream::traits_type
     > locale_saver;
     #endif
@@ -137,12 +135,12 @@ protected:
 
     template<class T>
     struct is_float {
-        typedef typename mpl::bool_< 
-            autoboost::is_floating_point<T>::value 
+        typedef typename mpl::bool_<
+            autoboost::is_floating_point<T>::value
             || (std::numeric_limits<T>::is_specialized
             && !std::numeric_limits<T>::is_integer
             && !std::numeric_limits<T>::is_exact
-            && std::numeric_limits<T>::max_exponent) 
+            && std::numeric_limits<T>::max_exponent)
         >::type type;
     };
 
@@ -176,9 +174,9 @@ protected:
         save_impl(t, tf);
     }
 
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     basic_text_oprimitive(OStream & os, bool no_codecvt);
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     ~basic_text_oprimitive();
 public:
     // unformatted append of one character
@@ -194,12 +192,12 @@ public:
         while('\0' != *s)
             os.put(*s++);
     }
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void) 
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     save_binary(const void *address, std::size_t count);
 };
 
-} //namespace autoboost 
-} //namespace archive 
+} //namespace autoboost
+} //namespace archive
 
 #include <autoboost/archive/detail/abi_suffix.hpp> // pops abi_suffix.hpp pragmas
 

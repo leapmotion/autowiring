@@ -3,8 +3,8 @@
  * Copyright (c) 1998-2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -29,7 +29,7 @@
 #include <cstddef>
 
 namespace autoboost{
-   namespace re_detail{
+   namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 #ifdef AUTOBOOST_MSVC
 #pragma warning(push)
@@ -124,7 +124,7 @@ public:
    }
 
    void AUTOBOOST_REGEX_CALL resize(size_type n);
-   
+
    void* AUTOBOOST_REGEX_CALL extend(size_type n)
    {
       if(size_type(last - end) < n)
@@ -198,7 +198,7 @@ inline raw_storage::raw_storage(size_type n)
 #pragma warning(pop)
 #endif
 
-} // namespace re_detail
+} // namespace AUTOBOOST_REGEX_DETAIL_NS
 } // namespace autoboost
 
 #endif

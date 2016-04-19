@@ -18,7 +18,7 @@
 
 namespace autoboost {
 
-    template<class Ch, class Tr, class Alloc> inline 
+    template<class Ch, class Tr, class Alloc> inline
     std::basic_string<Ch, Tr, Alloc> str(const basic_format<Ch, Tr, Alloc>& f) {
         // adds up all pieces of strings and converted items, and return the formatted string
         return f.str();
@@ -29,26 +29,26 @@ namespace autoboost {
 
 #ifndef  AUTOBOOST_NO_TEMPLATE_STD_STREAM
         template<class Ch, class Tr, class Alloc>
-        std::basic_ostream<Ch, Tr> & 
+        std::basic_ostream<Ch, Tr> &
         operator<<( std::basic_ostream<Ch, Tr> & os,
                     const basic_format<Ch, Tr, Alloc>& f)
 #else
         template<class Ch, class Tr, class Alloc>
-        std::ostream & 
+        std::ostream &
         operator<<( std::ostream & os,
                     const basic_format<Ch, Tr, Alloc>& f)
 #endif
         // effect: "return os << str(f);" but we can do it faster
     {
         typedef autoboost::basic_format<Ch, Tr, Alloc>   format_t;
-        if(f.items_.size()==0) 
+        if(f.items_.size()==0)
             os << f.prefix_;
         else {
             if(f.cur_arg_ < f.num_args_)
                 if( f.exceptions() & io::too_few_args_bit )
                     // not enough variables supplied
-                    autoboost::throw_exception(io::too_few_args(f.cur_arg_, f.num_args_)); 
-            if(f.style_ & format_t::special_needs) 
+                    autoboost::throw_exception(io::too_few_args(f.cur_arg_, f.num_args_));
+            if(f.style_ & format_t::special_needs)
                 os << f.str();
             else {
                 // else we dont have to count chars output, so we dump directly to os :

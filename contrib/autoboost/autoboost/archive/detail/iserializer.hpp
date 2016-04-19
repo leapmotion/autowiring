@@ -15,7 +15,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // iserializer.hpp: interface for serialization system.
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -28,8 +28,8 @@
 #include <autoboost/config.hpp>
 #include <autoboost/detail/workaround.hpp>
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
-    using ::size_t; 
+namespace std{
+    using ::size_t;
 } // namespace std
 #endif
 
@@ -40,10 +40,10 @@ namespace std{
 #include <autoboost/mpl/greater_equal.hpp>
 #include <autoboost/mpl/equal_to.hpp>
 #include <autoboost/mpl/bool.hpp>
-#include <autoboost/detail/no_exceptions_support.hpp>
+#include <autoboost/core/no_exceptions_support.hpp>
 
-#ifndef AUTOBOOST_SERIALIZATION_DEFAULT_TYPE_INFO   
-    #include <autoboost/serialization/extended_type_info_typeid.hpp>   
+#ifndef AUTOBOOST_SERIALIZATION_DEFAULT_TYPE_INFO
+    #include <autoboost/serialization/extended_type_info_typeid.hpp>
 #endif
 #include <autoboost/serialization/throw_exception.hpp>
 #include <autoboost/serialization/smart_cast.hpp>
@@ -57,11 +57,16 @@ namespace std{
 #include <autoboost/type_traits/is_polymorphic.hpp>
 
 #include <autoboost/serialization/assume_abstract.hpp>
-#define DONT_USE_HAS_NEW_OPERATOR (                    \
-    defined(__BORLANDC__)                              \
-    || AUTOBOOST_WORKAROUND(__IBMCPP__, < 1210)            \
-    || defined(__SUNPRO_CC) && (__SUNPRO_CC < 0x590)   \
-)
+
+#ifndef AUTOBOOST_MSVC
+    #define DONT_USE_HAS_NEW_OPERATOR (                    \
+           AUTOBOOST_WORKAROUND(__IBMCPP__, < 1210)            \
+        || defined(__SUNPRO_CC) && (__SUNPRO_CC < 0x590)   \
+    )
+#else
+    #define DONT_USE_HAS_NEW_OPERATOR 0
+#endif
+
 #if ! DONT_USE_HAS_NEW_OPERATOR
 #include <autoboost/type_traits/has_new_operator.hpp>
 #endif
@@ -123,7 +128,7 @@ protected:
     explicit iserializer() :
         basic_iserializer(
             autoboost::serialization::singleton<
-                typename 
+                typename
                 autoboost::serialization::type_info_implementation< T >::type
             >::get_const_instance()
         )
@@ -131,17 +136,17 @@ protected:
 public:
     virtual AUTOBOOST_DLLEXPORT void load_object_data(
         basic_iarchive & ar,
-        void *x, 
+        void *x,
         const unsigned int file_version
     ) const AUTOBOOST_USED;
     virtual bool class_info() const {
-        return autoboost::serialization::implementation_level< T >::value 
+        return autoboost::serialization::implementation_level< T >::value
             >= autoboost::serialization::object_class_info;
     }
     virtual bool tracking(const unsigned int /* flags */) const {
-        return autoboost::serialization::tracking_level< T >::value 
+        return autoboost::serialization::tracking_level< T >::value
                 == autoboost::serialization::track_always
-            || ( autoboost::serialization::tracking_level< T >::value 
+            || ( autoboost::serialization::tracking_level< T >::value
                 == autoboost::serialization::track_selectively
                 && serialized_as_pointer());
     }
@@ -161,12 +166,12 @@ public:
 template<class Archive, class T>
 AUTOBOOST_DLLEXPORT void iserializer<Archive, T>::load_object_data(
     basic_iarchive & ar,
-    void *x, 
+    void *x,
     const unsigned int file_version
 ) const {
     // note: we now comment this out. Before we permited archive
     // version # to be very large.  Now we don't.  To permit
-    // readers of these old archives, we have to suppress this 
+    // readers of these old archives, we have to suppress this
     // code.  Perhaps in the future we might re-enable it but
     // permit its suppression with a runtime switch.
     #if 0
@@ -183,7 +188,7 @@ AUTOBOOST_DLLEXPORT void iserializer<Archive, T>::load_object_data(
     // be specialized by the user.
     autoboost::serialization::serialize_adl(
         autoboost::serialization::smart_cast_reference<Archive &>(ar),
-        * static_cast<T *>(x), 
+        * static_cast<T *>(x),
         file_version
     );
 }
@@ -196,8 +201,8 @@ AUTOBOOST_DLLEXPORT void iserializer<Archive, T>::load_object_data(
 // the purpose of this code is to allocate memory for an object
 // without requiring the constructor to be called.  Presumably
 // the allocated object will be subsequently initialized with
-// "placement new". 
-// note: we have the boost type trait has_new_operator but we
+// "placement new".
+// note: we have the autoboost type trait has_new_operator but we
 // have no corresponding has_delete_operator.  So we presume
 // that the former being true would imply that the a delete
 // operator is also defined for the class T.
@@ -221,20 +226,25 @@ struct heap_allocation {
             static T * invoke_new() {
                 return static_cast<T *>((T::operator new)(sizeof(T)));
             }
+            template<void D(void *, std::size_t)>
+            static void deleter(void * t, std::size_t s){
+                D(t, s);
+            }
+
+            template<void D(void *)>
+            static void deleter(void * t, std::size_t s){
+                D(t);
+            }
             static void invoke_delete(T * t) {
                 // if compilation fails here, the likely cause that the class
                 // T has a class specific new operator but no class specific
-                // delete operator which matches the following signature.  Fix
-                // your program to have this.  Note that adding operator delete
-                // with only one parameter doesn't seem correct to me since 
-                // the standard(3.7.4.2) says "
-                // "If a class T has a member deallocation function named
-                // 'operator delete' with exactly one parameter, then that function 
-                // is a usual (non-placement) deallocation function" which I take
-                // to mean that it will call the destructor of type T which we don't
-                // want to do here.
-                // Note: reliance upon automatic conversion from T * to void * here
-                (T::operator delete)(t, sizeof(T));
+                // delete operator which matches the following signature.
+                // note that this solution addresses the issue that two
+                // possible signatures.  But it doesn't address the possibility
+                // that the class might have class specific new with NO
+                // class specific delete at all.  Patches (compatible with
+                // C++03) welcome!
+                deleter<T::operator delete>(t, sizeof(T));
             }
         };
         struct doesnt_have_new_operator {
@@ -251,7 +261,7 @@ struct heap_allocation {
                 mpl::eval_if<
                     autoboost::has_new_operator< T >,
                     mpl::identity<has_new_operator >,
-                    mpl::identity<doesnt_have_new_operator >    
+                    mpl::identity<doesnt_have_new_operator >
                 >::type typex;
             return typex::invoke_new();
         }
@@ -260,7 +270,7 @@ struct heap_allocation {
                 mpl::eval_if<
                     autoboost::has_new_operator< T >,
                     mpl::identity<has_new_operator >,
-                    mpl::identity<doesnt_have_new_operator >    
+                    mpl::identity<doesnt_have_new_operator >
                 >::type typex;
             typex::invoke_delete(t);
         }
@@ -302,7 +312,7 @@ private:
         >::get_const_instance();
     }
     AUTOBOOST_DLLEXPORT virtual void load_object_ptr(
-        basic_iarchive & ar, 
+        basic_iarchive & ar,
         void * x,
         const unsigned int file_version
     ) const AUTOBOOST_USED;
@@ -320,12 +330,12 @@ protected:
 // serialized only through base class won't get optimized out
 template<class Archive, class T>
 AUTOBOOST_DLLEXPORT void pointer_iserializer<Archive, T>::load_object_ptr(
-    basic_iarchive & ar, 
+    basic_iarchive & ar,
     void * t,
     const unsigned int file_version
 ) const
 {
-    Archive & ar_impl = 
+    Archive & ar_impl =
         autoboost::serialization::smart_cast_reference<Archive &>(ar);
 
     // note that the above will throw std::bad_alloc if the allocation
@@ -335,7 +345,7 @@ AUTOBOOST_DLLEXPORT void pointer_iserializer<Archive, T>::load_object_ptr(
     // automatically delete the t which is most likely not fully
     // constructed
     AUTOBOOST_TRY {
-        // this addresses an obscure situation that occurs when 
+        // this addresses an obscure situation that occurs when
         // load_constructor de-serializes something through a pointer.
         ar.next_object_pointer(t);
         autoboost::serialization::load_construct_data_adl<Archive, T>(
@@ -359,7 +369,7 @@ template<class Archive, class T>
 pointer_iserializer<Archive, T>::pointer_iserializer() :
     basic_pointer_iserializer(
         autoboost::serialization::singleton<
-            typename 
+            typename
             autoboost::serialization::type_info_implementation< T >::type
         >::get_const_instance()
     )
@@ -394,8 +404,8 @@ struct load_non_pointer_type {
             // make sure call is routed through the higest interface that might
             // be specialized by the user.
             autoboost::serialization::serialize_adl(
-                ar, 
-                const_cast<T &>(t), 
+                ar,
+                const_cast<T &>(t),
                 autoboost::serialization::version< T >::value
             );
         }
@@ -408,7 +418,7 @@ struct load_non_pointer_type {
         static void invoke(Archive &ar, const T & t){
             void * x = & const_cast<T &>(t);
             ar.load_object(
-                x, 
+                x,
                 autoboost::serialization::singleton<
                     iserializer<Archive, T>
                 >::get_const_instance()
@@ -485,7 +495,7 @@ struct load_pointer_type {
 
     template<class T>
     static const basic_pointer_iserializer * register_type(Archive &ar, const T & /*t*/){
-        // there should never be any need to load an abstract polymorphic 
+        // there should never be any need to load an abstract polymorphic
         // class pointer.  Inhibiting code generation for this
         // permits abstract base classes to be used - note: exception
         // virtual serialize functions used for plug-ins
@@ -493,7 +503,7 @@ struct load_pointer_type {
             mpl::eval_if<
                 autoboost::serialization::is_abstract<const T>,
                 autoboost::mpl::identity<abstract>,
-                autoboost::mpl::identity<non_abstract>  
+                autoboost::mpl::identity<non_abstract>
             >::type typex;
         return typex::template register_type< T >(ar);
     }
@@ -509,7 +519,7 @@ struct load_pointer_type {
             autoboost::serialization::void_upcast(
                 eti,
                 autoboost::serialization::singleton<
-                    typename 
+                    typename
                     autoboost::serialization::type_info_implementation< T >::type
                 >::get_const_instance(),
                 t
@@ -571,13 +581,13 @@ struct load_array_type {
     template<class T>
     static void invoke(Archive &ar, T &t){
         typedef typename remove_extent< T >::type value_type;
-        
+
         // convert integers to correct enum to load
         // determine number of elements in the array. Consider the
         // fact that some machines will align elements on boundries
         // other than characters.
         std::size_t current_count = sizeof(t) / (
-            static_cast<char *>(static_cast<void *>(&t[1])) 
+            static_cast<char *>(static_cast<void *>(&t[1]))
             - static_cast<char *>(static_cast<void *>(&t[0]))
         );
         autoboost::serialization::collection_size_type count;
@@ -617,40 +627,6 @@ inline void load(Archive & ar, T &t){
         >::type typex;
     typex::invoke(ar, t);
 }
-
-#if 0
-
-// BORLAND
-#if AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x560))
-// borland has a couple of problems
-// a) if function is partially specialized - see below
-// const paramters are transformed to non-const ones
-// b) implementation of base_object can't be made to work
-// correctly which results in all base_object s being const.
-// So, strip off the const for borland.  This breaks the trap
-// for loading const objects - but I see no alternative
-template<class Archive, class T>
-inline void load(Archive &ar, const T & t){
-    load(ar, const_cast<T &>(t));
-}
-#endif
-
-// let wrappers through.
-#ifndef AUTOBOOST_NO_FUNCTION_TEMPLATE_ORDERING
-template<class Archive, class T>
-inline void load_wrapper(Archive &ar, const T&t, mpl::true_){
-    autoboost::archive::load(ar, const_cast<T&>(t));
-}
-
-#if !AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x560))
-template<class Archive, class T>
-inline void load(Archive &ar, const T&t){
-  load_wrapper(ar,t,serialization::is_wrapper< T >());
-}
-#endif 
-#endif
-
-#endif
 
 } // namespace archive
 } // namespace autoboost

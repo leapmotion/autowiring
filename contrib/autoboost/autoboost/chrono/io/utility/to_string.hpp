@@ -1,4 +1,4 @@
-//  boost/chrono/utility/to_string.hpp
+//  autoboost/chrono/utility/to_string.hpp
 //
 //  Copyright 2011 Vicente J. Botet Escriba
 //  Use, modification and distribution are subject to the Boost Software License,
@@ -45,6 +45,6 @@ namespace autoboost
 #endif
   } // chrono
 
-} // boost
+} // autoboost
 
 #endif  // header

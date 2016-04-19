@@ -1,5 +1,5 @@
-#ifndef AB_POSIX_TIME_CONVERSION_HPP___
-#define AB_POSIX_TIME_CONVERSION_HPP___
+#ifndef POSIX_TIME_CONVERSION_HPP___
+#define POSIX_TIME_CONVERSION_HPP___
 
 /* Copyright (c) 2002-2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -28,6 +28,14 @@ namespace posix_time {
   {
     ptime start(gregorian::date(1970,1,1));
     return start + seconds(static_cast<long>(t));
+  }
+
+  //! Function that converts a ptime into a time_t
+  inline
+  std::time_t to_time_t(ptime pt)
+  {
+    time_duration dur = pt - ptime(gregorian::date(1970,1,1));
+    return std::time_t(dur.total_seconds());
   }
 
   //! Convert a time to a tm structure truncating any fractional seconds

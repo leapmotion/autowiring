@@ -1,5 +1,5 @@
-#ifndef AB_GREGORIAN_GREGORIAN_CALENDAR_HPP__
-#define AB_GREGORIAN_GREGORIAN_CALENDAR_HPP__
+#ifndef GREGORIAN_GREGORIAN_CALENDAR_HPP__
+#define GREGORIAN_GREGORIAN_CALENDAR_HPP__
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

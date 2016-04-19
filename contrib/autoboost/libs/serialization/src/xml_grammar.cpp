@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // xml_grammar.cpp:
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -26,9 +26,9 @@ using namespace autoboost::spirit::classic;
 #include <string>
 namespace std {
     template<>
-    inline string & 
+    inline string &
     string::replace (
-        char * first1, 
+        char * first1,
         char * last1,
         const char * first2,
         const char * last2
@@ -49,7 +49,7 @@ typedef basic_xml_grammar<char> xml_grammar;
 
 template<>
 void xml_grammar::init_chset(){
-    Char = chset_t("\x9\xA\xD\x20-\x7f\x80\x81-\xFF"); 
+    Char = chset_t("\x9\xA\xD\x20-\x7f\x80\x81-\xFF");
     Letter = chset_t("\x41-\x5A\x61-\x7A\xC0-\xD6\xD8-\xF6\xF8-\xFF");
     Digit = chset_t("0-9");
     Extender = chset_t('\xB7');

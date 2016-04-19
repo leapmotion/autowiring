@@ -2,7 +2,7 @@
 #define AUTOBOOST_SMART_PTR_DETAIL_ATOMIC_COUNT_NT_HPP_INCLUDED
 
 //
-//  boost/detail/atomic_count_nt.hpp
+//  autoboost/detail/atomic_count_nt.hpp
 //
 //  Trivial atomic_count for the single-threaded case
 //

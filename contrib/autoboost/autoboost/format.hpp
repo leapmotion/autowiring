@@ -35,7 +35,7 @@
 #include <autoboost/format/internals_fwd.hpp>  // misc forward declarations for internal use
 
 // ****  Auxiliary structs (stream_format_state<Ch,Tr> , and format_item<Ch,Tr> )
-#include <autoboost/format/internals.hpp>    
+#include <autoboost/format/internals.hpp>
 
 // ****  Format  class  interface --------------------------------
 #include <autoboost/format/format_class.hpp>

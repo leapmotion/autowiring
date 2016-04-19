@@ -1,6 +1,7 @@
 //  GetLastError.hpp  --------------------------------------------------------------//
 
 //  Copyright 2010 Vicente J. Botet Escriba
+//  Copyright 2015 Andrey Semashev
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
@@ -15,15 +16,16 @@
 #pragma once
 #endif
 
+#if !defined( AUTOBOOST_USE_WINDOWS_H )
+extern "C" {
+AUTOBOOST_SYMBOL_IMPORT autoboost::detail::winapi::DWORD_ WINAPI GetLastError(AUTOBOOST_DETAIL_WINAPI_VOID);
+}
+#endif
+
 namespace autoboost {
 namespace detail {
 namespace winapi {
-#if defined( AUTOBOOST_USE_WINDOWS_H )
-    using ::GetLastError;
-#else
-    extern "C" __declspec(dllimport) DWORD_ WINAPI
-        GetLastError();
-#endif
+using ::GetLastError;
 }
 }
 }

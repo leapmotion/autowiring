@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // basic_binary_oarchive.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -26,7 +26,6 @@
 #include <autoboost/assert.hpp>
 #include <autoboost/config.hpp>
 #include <autoboost/detail/workaround.hpp>
-#include <autoboost/serialization/pfto.hpp>
 
 #include <autoboost/integer.hpp>
 #include <autoboost/integer_traits.hpp>
@@ -59,8 +58,8 @@ namespace detail {
 // does have the virtue of buiding the smalles archive in the minimum amount
 // of time.  So under some circumstances it may be he right choice.
 template<class Archive>
-class basic_binary_oarchive : 
-    public archive::detail::common_oarchive<Archive>
+class AUTOBOOST_SYMBOL_VISIBLE basic_binary_oarchive :
+    public detail::common_oarchive<Archive>
 {
 #ifdef AUTOBOOST_NO_MEMBER_TEMPLATE_FRIENDS
 public:
@@ -77,8 +76,8 @@ protected:
     // any datatype not specifed below will be handled by base class
     typedef detail::common_oarchive<Archive> detail_common_oarchive;
     template<class T>
-    void save_override(const T & t, AUTOBOOST_PFTO int version){
-      this->detail_common_oarchive::save_override(t, static_cast<int>(version));
+    void save_override(const T & t){
+      this->detail_common_oarchive::save_override(t);
     }
 
     // include these to trap a change in binary format which
@@ -91,15 +90,15 @@ protected:
     AUTOBOOST_STATIC_ASSERT(sizeof(object_id_type) == sizeof(uint_least32_t));
     AUTOBOOST_STATIC_ASSERT(sizeof(object_reference_type) == sizeof(uint_least32_t));
 
-    // binary files don't include the optional information 
-    void save_override(const class_id_optional_type & /* t */, int){}
+    // binary files don't include the optional information
+    void save_override(const class_id_optional_type & /* t */){}
 
     // enable this if we decide to support generation of previous versions
     #if 0
-    void save_override(const autoboost::archive::version_type & t, int version){
+    void save_override(const autoboost::archive::version_type & t){
         library_version_type lvt = this->get_library_version();
         if(autoboost::archive::library_version_type(7) < lvt){
-            this->detail_common_oarchive::save_override(t, version);
+            this->detail_common_oarchive::save_override(t);
         }
         else
         if(autoboost::archive::library_version_type(6) < lvt){
@@ -111,10 +110,10 @@ protected:
             * this->This() << x;
         }
     }
-    void save_override(const autoboost::serialization::item_version_type & t, int version){
+    void save_override(const autoboost::serialization::item_version_type & t){
         library_version_type lvt = this->get_library_version();
         if(autoboost::archive::library_version_type(7) < lvt){
-            this->detail_common_oarchive::save_override(t, version);
+            this->detail_common_oarchive::save_override(t);
         }
         else
         if(autoboost::archive::library_version_type(6) < lvt){
@@ -127,10 +126,10 @@ protected:
         }
     }
 
-    void save_override(class_id_type & t, int version){
+    void save_override(class_id_type & t){
         library_version_type lvt = this->get_library_version();
         if(autoboost::archive::library_version_type(7) < lvt){
-            this->detail_common_oarchive::save_override(t, version);
+            this->detail_common_oarchive::save_override(t);
         }
         else
         if(autoboost::archive::library_version_type(6) < lvt){
@@ -142,31 +141,31 @@ protected:
             * this->This() << x;
         }
     }
-    void save_override(class_id_reference_type & t, int version){
-        save_override(static_cast<class_id_type &>(t), version);
+    void save_override(class_id_reference_type & t){
+        save_override(static_cast<class_id_type &>(t));
     }
 
     #endif
 
     // explicitly convert to char * to avoid compile ambiguities
-    void save_override(const class_name_type & t, int){
+    void save_override(const class_name_type & t){
         const std::string s(t);
         * this->This() << s;
     }
 
     #if 0
-    void save_override(const serialization::collection_size_type & t, int){
+    void save_override(const serialization::collection_size_type & t){
         if (get_library_version() < autoboost::archive::library_version_type(6)){
             unsigned int x=0;
             * this->This() >> x;
             t = serialization::collection_size_type(x);
-        } 
+        }
         else{
             * this->This() >> t;
         }
     }
     #endif
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     init();
 
     basic_binary_oarchive(unsigned int flags) :

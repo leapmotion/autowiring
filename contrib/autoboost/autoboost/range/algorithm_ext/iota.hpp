@@ -39,11 +39,11 @@ inline const ForwardRange& iota( const ForwardRange& rng, Value x )
 {
     AUTOBOOST_CONCEPT_ASSERT(( ForwardRangeConcept<const ForwardRange> ));
     typedef AUTOBOOST_DEDUCED_TYPENAME range_iterator<const ForwardRange>::type iterator_t;
-    
+
     iterator_t last_target = ::autoboost::end(rng);
     for (iterator_t target = ::autoboost::begin(rng); target != last_target; ++target, ++x)
         *target = x;
-    
+
     return rng;
 }
 

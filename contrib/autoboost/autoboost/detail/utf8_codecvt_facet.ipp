@@ -2,7 +2,7 @@
 // utf8_codecvt_facet.ipp
 
 // Copyright (c) 2001 Ronald Garcia, Indiana University (garcia@osl.iu.edu)
-// Andrew Lumsdaine, Indiana University (lums@osl.iu.edu). 
+// Andrew Lumsdaine, Indiana University (lums@osl.iu.edu).
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -18,7 +18,7 @@
 #include <autoboost/limits.hpp>
 #include <autoboost/config.hpp>
 
-// If we don't have wstring, then Unicode support 
+// If we don't have wstring, then Unicode support
 // is not available anyway, so we don't need to even
 // compiler this file. This also fixes the problem
 // with mingw, which can compile this file, but will
@@ -32,12 +32,12 @@ AUTOBOOST_UTF8_BEGIN_NAMESPACE
 
 // Translate incoming UTF-8 into UCS-4
 std::codecvt_base::result utf8_codecvt_facet::do_in(
-    std::mbstate_t& /*state*/, 
+    std::mbstate_t& /*state*/,
     const char * from,
-    const char * from_end, 
+    const char * from_end,
     const char * & from_next,
-    wchar_t * to, 
-    wchar_t * to_end, 
+    wchar_t * to,
+    wchar_t * to_end,
     wchar_t * & to_next
 ) const {
     // Basic algorithm:  The first octet determines how many
@@ -57,7 +57,7 @@ std::codecvt_base::result utf8_codecvt_facet::do_in(
             return std::codecvt_base::error;
         }
 
-        // The first octet is   adjusted by a value dependent upon 
+        // The first octet is   adjusted by a value dependent upon
         // the number   of "continuing octets" encoding the character
         const   int cont_octet_count = get_cont_octet_count(*from);
         const   wchar_t octet1_modifier_table[] =   {
@@ -66,12 +66,12 @@ std::codecvt_base::result utf8_codecvt_facet::do_in(
 
         // The unsigned char conversion is necessary in case char is
         // signed   (I learned this the hard way)
-        wchar_t ucs_result = 
+        wchar_t ucs_result =
             (unsigned char)(*from++) - octet1_modifier_table[cont_octet_count];
 
-        // Invariants   : 
+        // Invariants   :
         //   1) At the start of the loop,   'i' continuing characters have been
-        //    processed 
+        //    processed
         //   2) *from   points to the next continuing character to be processed.
         int i   = 0;
         while(i != cont_octet_count && from != from_end) {
@@ -83,9 +83,9 @@ std::codecvt_base::result utf8_codecvt_facet::do_in(
                 return std::codecvt_base::error;
             }
 
-            ucs_result *= (1 << 6); 
+            ucs_result *= (1 << 6);
 
-            // each continuing character has an extra (10xxxxxx)b attached to 
+            // each continuing character has an extra (10xxxxxx)b attached to
             // it that must be removed.
             ucs_result += (unsigned char)(*from++) - 0x80;
             ++i;
@@ -94,7 +94,7 @@ std::codecvt_base::result utf8_codecvt_facet::do_in(
         // If   the buffer ends with an incomplete unicode character...
         if (from == from_end && i   != cont_octet_count) {
             // rewind "from" to before the current character translation
-            from_next = from - (i+1); 
+            from_next = from - (i+1);
             to_next = to;
             return std::codecvt_base::partial;
         }
@@ -109,12 +109,12 @@ std::codecvt_base::result utf8_codecvt_facet::do_in(
 }
 
 std::codecvt_base::result utf8_codecvt_facet::do_out(
-    std::mbstate_t& /*state*/, 
+    std::mbstate_t& /*state*/,
     const wchar_t *   from,
-    const wchar_t * from_end, 
+    const wchar_t * from_end,
     const wchar_t * & from_next,
-    char * to, 
-    char * to_end, 
+    char * to,
+    char * to_end,
     char * & to_next
 ) const
 {
@@ -142,7 +142,7 @@ std::codecvt_base::result utf8_codecvt_facet::do_out(
         *to++ = static_cast<char>(octet1_modifier_table[cont_octet_count] +
             (unsigned char)(*from / (1 << shift_exponent)));
 
-        // Process the continuation characters 
+        // Process the continuation characters
         // Invariants: At   the start of the loop:
         //   1) 'i' continuing octets   have been generated
         //   2) '*to'   points to the next location to place an octet
@@ -173,13 +173,13 @@ std::codecvt_base::result utf8_codecvt_facet::do_out(
 int utf8_codecvt_facet::do_length(
     const std::mbstate_t &,
     const char * from,
-    const char * from_end, 
+    const char * from_end,
     std::size_t max_limit
 ) const
 #if AUTOBOOST_WORKAROUND(__IBMCPP__, AUTOBOOST_TESTED_AT(600))
         throw()
 #endif
-{ 
+{
     // RG - this code is confusing!  I need a better way to express it.
     // and test cases.
 
@@ -188,7 +188,7 @@ int utf8_codecvt_facet::do_length(
     // 2) char_count holds the number of characters shown to fit
     // within the bounds so far (no greater than max_limit)
     // 3) from_next points to the octet 'last_octet_count' before the
-    // last measured character.  
+    // last measured character.
     int last_octet_count=0;
     std::size_t char_count = 0;
     const char* from_next = from;
@@ -216,9 +216,9 @@ unsigned int utf8_codecvt_facet::get_octet_count(
     else if (0xf8 <= lead_octet && lead_octet <= 0xfb) return 5;
     else return 6;
 }
-AUTOBOOST_UTF8_END_NAMESPACE
 
-namespace {
+namespace detail {
+
 template<std::size_t s>
 int get_cont_octet_out_count_impl(wchar_t word){
     if (word < 0x80) {
@@ -252,7 +252,7 @@ int get_cont_octet_out_count_impl<4>(wchar_t word){
 #if defined(_MSC_VER) && _MSC_VER <= 1310 // 7.1 or earlier
     return 2;
 #elif WCHAR_MAX > 0x10000
-    
+
    if (word < 0x10000) {
         return 2;
     }
@@ -263,21 +263,20 @@ int get_cont_octet_out_count_impl<4>(wchar_t word){
         return 4;
     }
     return 5;
-    
+
 #else
     return 2;
 #endif
 }
 
-} // namespace anonymous
+} // namespace detail
 
-AUTOBOOST_UTF8_BEGIN_NAMESPACE
 // How many "continuing octets" will be needed for this word
 // ==   total octets - 1.
 int utf8_codecvt_facet::get_cont_octet_out_count(
     wchar_t word
 ) const {
-    return get_cont_octet_out_count_impl<sizeof(wchar_t)>(word);
+    return detail::get_cont_octet_out_count_impl<sizeof(wchar_t)>(word);
 }
 AUTOBOOST_UTF8_END_NAMESPACE
 

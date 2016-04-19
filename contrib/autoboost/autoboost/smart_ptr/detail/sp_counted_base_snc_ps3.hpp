@@ -79,7 +79,7 @@ inline uint32_t atomic_conditional_increment( uint32_t * pw )
         {
             return r;
         }
-    }    
+    }
 }
 
 class sp_counted_base

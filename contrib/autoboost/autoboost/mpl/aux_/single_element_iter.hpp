@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -24,7 +24,7 @@
 #include <autoboost/mpl/aux_/value_wknd.hpp>
 #include <autoboost/mpl/aux_/config/ctps.hpp>
 
-namespace autoboost { namespace mpl { 
+namespace autoboost { namespace mpl {
 
 #if !defined(AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
 
@@ -59,10 +59,10 @@ struct advance< aux::sel_iter<T,is_last_>,Distance>
         > type;
 };
 
-template< 
+template<
       typename T
     , AUTOBOOST_MPL_AUX_NTTP_DECL(int, l1)
-    , AUTOBOOST_MPL_AUX_NTTP_DECL(int, l2) 
+    , AUTOBOOST_MPL_AUX_NTTP_DECL(int, l2)
     >
 struct distance< aux::sel_iter<T,l1>, aux::sel_iter<T,l2> >
     : int_<( l2 - l1 )>

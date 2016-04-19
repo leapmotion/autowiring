@@ -19,7 +19,7 @@
 
 # include <autoboost/concept/assert.hpp>
 
-# include <autoboost/iterator.hpp>
+# include <iterator>
 # include <autoboost/type_traits/conversion_traits.hpp>
 # include <utility>
 # include <autoboost/type_traits/is_same.hpp>
@@ -27,7 +27,6 @@
 # include <autoboost/mpl/assert.hpp>
 # include <autoboost/mpl/bool.hpp>
 # include <autoboost/detail/workaround.hpp>
-# include <autoboost/detail/iterator.hpp>
 
 # include <autoboost/concept/usage.hpp>
 # include <autoboost/concept/detail/concept_def.hpp>
@@ -504,11 +503,11 @@ namespace autoboost
     : Assignable<TT>
     , EqualityComparable<TT>
   {
-      typedef typename autoboost::detail::iterator_traits<TT>::value_type value_type;
-      typedef typename autoboost::detail::iterator_traits<TT>::difference_type difference_type;
-      typedef typename autoboost::detail::iterator_traits<TT>::reference reference;
-      typedef typename autoboost::detail::iterator_traits<TT>::pointer pointer;
-      typedef typename autoboost::detail::iterator_traits<TT>::iterator_category iterator_category;
+      typedef typename std::iterator_traits<TT>::value_type value_type;
+      typedef typename std::iterator_traits<TT>::difference_type difference_type;
+      typedef typename std::iterator_traits<TT>::reference reference;
+      typedef typename std::iterator_traits<TT>::pointer pointer;
+      typedef typename std::iterator_traits<TT>::iterator_category iterator_category;
 
       AUTOBOOST_CONCEPT_USAGE(InputIterator)
       {
@@ -617,7 +616,7 @@ namespace autoboost
    private:
     TT a, b;
     TT i, j;
-      typename autoboost::detail::iterator_traits<TT>::difference_type n;
+      typename std::iterator_traits<TT>::difference_type n;
   };
 
   AUTOBOOST_concept(Mutable_RandomAccessIterator,(TT))
@@ -630,7 +629,7 @@ namespace autoboost
       }
    private:
     TT i;
-    typename autoboost::detail::iterator_traits<TT>::difference_type n;
+    typename std::iterator_traits<TT>::difference_type n;
   };
 
   //===========================================================================
@@ -818,9 +817,8 @@ namespace autoboost
       AUTOBOOST_CONCEPT_USAGE(Sequence)
       {
           S
-              c(n),
-              c2(n, t),
-              c3(first, last);
+              c(n, t),
+              c2(first, last);
 
           c.insert(p, t);
           c.insert(p, n, t);
@@ -833,7 +831,6 @@ namespace autoboost
 
           ignore_unused_variable_warning(c);
           ignore_unused_variable_warning(c2);
-          ignore_unused_variable_warning(c3);
           ignore_unused_variable_warning(r);
           const_constraints(c);
       }

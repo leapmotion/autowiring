@@ -145,7 +145,7 @@ public:
 };
 
 }  // thread_v2
-}  // boost
+}  // autoboost
 
  */
 
@@ -1051,7 +1051,7 @@ namespace autoboost {
     }
 
   }  // thread_v2
-}  // boost
+}  // autoboost
 
 namespace autoboost {
   //using thread_v2::shared_mutex;

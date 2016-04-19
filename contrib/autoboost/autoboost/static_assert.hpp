@@ -1,6 +1,6 @@
 //  (C) Copyright John Maddock 2000.
-//  Use, modification and distribution are subject to the 
-//  Boost Software License, Version 1.0. (See accompanying file 
+//  Use, modification and distribution are subject to the
+//  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org/libs/static_assert for documentation.
@@ -30,7 +30,7 @@
 #  ifndef AUTOBOOST_NO_CXX11_VARIADIC_MACROS
 #     define AUTOBOOST_STATIC_ASSERT_MSG( ... ) static_assert(__VA_ARGS__)
 #  else
-#     define AUTOBOOST_STATIC_ASSERT_MSG( B, Msg ) AUTOBOOST_STATIC_ASSERT( B )
+#     define AUTOBOOST_STATIC_ASSERT_MSG( B, Msg ) static_assert( B, Msg )
 #  endif
 #else
 #     define AUTOBOOST_STATIC_ASSERT_MSG( B, Msg ) AUTOBOOST_STATIC_ASSERT( B )
@@ -63,14 +63,6 @@
 #  else
 #     define AUTOBOOST_STATIC_ASSERT_BOOL_CAST(x) (bool)(x)
 #  endif
-#endif
-//
-// If the compiler warns about unused typedefs then enable this:
-//
-#if defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 7)))
-#  define AUTOBOOST_STATIC_ASSERT_UNUSED_ATTRIBUTE __attribute__((unused))
-#else
-#  define AUTOBOOST_STATIC_ASSERT_UNUSED_ATTRIBUTE
 #endif
 
 #ifndef AUTOBOOST_NO_CXX11_STATIC_ASSERT
@@ -117,49 +109,42 @@ template<int x> struct static_assert_test{};
 //
 #if !defined(AUTOBOOST_BUGGY_INTEGRAL_CONSTANT_EXPRESSIONS)
 
-#if defined(AUTOBOOST_MSVC) && (AUTOBOOST_MSVC < 1300)
-// __LINE__ macro broken when -ZI is used see Q199057
-// fortunately MSVC ignores duplicate typedef's.
-#define AUTOBOOST_STATIC_ASSERT( B ) \
-   typedef ::autoboost::static_assert_test<\
-      sizeof(::autoboost::STATIC_ASSERTION_FAILURE< (bool)( B ) >)\
-      > boost_static_assert_typedef_
-#elif defined(AUTOBOOST_MSVC) && defined(AUTOBOOST_NO_CXX11_VARIADIC_MACROS)
+#if defined(AUTOBOOST_MSVC) && defined(AUTOBOOST_NO_CXX11_VARIADIC_MACROS)
 #define AUTOBOOST_STATIC_ASSERT( B ) \
    typedef ::autoboost::static_assert_test<\
       sizeof(::autoboost::STATIC_ASSERTION_FAILURE< AUTOBOOST_STATIC_ASSERT_BOOL_CAST ( B ) >)>\
-         AUTOBOOST_JOIN(boost_static_assert_typedef_, __COUNTER__)
+         AUTOBOOST_JOIN(autoboost_static_assert_typedef_, __COUNTER__)
 #elif defined(AUTOBOOST_MSVC)
 #define AUTOBOOST_STATIC_ASSERT(...) \
    typedef ::autoboost::static_assert_test<\
       sizeof(::autoboost::STATIC_ASSERTION_FAILURE< AUTOBOOST_STATIC_ASSERT_BOOL_CAST (__VA_ARGS__) >)>\
-         AUTOBOOST_JOIN(boost_static_assert_typedef_, __COUNTER__)
+         AUTOBOOST_JOIN(autoboost_static_assert_typedef_, __COUNTER__)
 #elif (defined(AUTOBOOST_INTEL_CXX_VERSION) || defined(AUTOBOOST_SA_GCC_WORKAROUND))  && defined(AUTOBOOST_NO_CXX11_VARIADIC_MACROS)
-// agurt 15/sep/02: a special care is needed to force Intel C++ issue an error 
+// agurt 15/sep/02: a special care is needed to force Intel C++ issue an error
 // instead of warning in case of failure
 # define AUTOBOOST_STATIC_ASSERT( B ) \
-    typedef char AUTOBOOST_JOIN(boost_static_assert_typedef_, __LINE__) \
+    typedef char AUTOBOOST_JOIN(autoboost_static_assert_typedef_, __LINE__) \
         [ ::autoboost::STATIC_ASSERTION_FAILURE< AUTOBOOST_STATIC_ASSERT_BOOL_CAST( B ) >::value ]
 #elif (defined(AUTOBOOST_INTEL_CXX_VERSION) || defined(AUTOBOOST_SA_GCC_WORKAROUND))  && !defined(AUTOBOOST_NO_CXX11_VARIADIC_MACROS)
-// agurt 15/sep/02: a special care is needed to force Intel C++ issue an error 
+// agurt 15/sep/02: a special care is needed to force Intel C++ issue an error
 // instead of warning in case of failure
 # define AUTOBOOST_STATIC_ASSERT(...) \
-    typedef char AUTOBOOST_JOIN(boost_static_assert_typedef_, __LINE__) \
+    typedef char AUTOBOOST_JOIN(autoboost_static_assert_typedef_, __LINE__) \
         [ ::autoboost::STATIC_ASSERTION_FAILURE< AUTOBOOST_STATIC_ASSERT_BOOL_CAST( __VA_ARGS__ ) >::value ]
 #elif defined(__sgi)
 // special version for SGI MIPSpro compiler
 #define AUTOBOOST_STATIC_ASSERT( B ) \
    AUTOBOOST_STATIC_CONSTANT(bool, \
-     AUTOBOOST_JOIN(boost_static_assert_test_, __LINE__) = ( B )); \
+     AUTOBOOST_JOIN(autoboost_static_assert_test_, __LINE__) = ( B )); \
    typedef ::autoboost::static_assert_test<\
      sizeof(::autoboost::STATIC_ASSERTION_FAILURE< \
-       AUTOBOOST_JOIN(boost_static_assert_test_, __LINE__) >)>\
-         AUTOBOOST_JOIN(boost_static_assert_typedef_, __LINE__)
+       AUTOBOOST_JOIN(autoboost_static_assert_test_, __LINE__) >)>\
+         AUTOBOOST_JOIN(autoboost_static_assert_typedef_, __LINE__)
 #elif AUTOBOOST_WORKAROUND(__MWERKS__, <= 0x3003)
 // special version for CodeWarrior <= 8.x
 #define AUTOBOOST_STATIC_ASSERT( B ) \
    AUTOBOOST_STATIC_CONSTANT(int, \
-     AUTOBOOST_JOIN(boost_static_assert_test_, __LINE__) = \
+     AUTOBOOST_JOIN(autoboost_static_assert_test_, __LINE__) = \
        sizeof(::autoboost::STATIC_ASSERTION_FAILURE< AUTOBOOST_STATIC_ASSERT_BOOL_CAST( B ) >) )
 #else
 // generic version
@@ -167,12 +152,12 @@ template<int x> struct static_assert_test{};
 #     define AUTOBOOST_STATIC_ASSERT( ... ) \
          typedef ::autoboost::static_assert_test<\
             sizeof(::autoboost::STATIC_ASSERTION_FAILURE< AUTOBOOST_STATIC_ASSERT_BOOL_CAST( __VA_ARGS__ ) >)>\
-               AUTOBOOST_JOIN(boost_static_assert_typedef_, __LINE__) AUTOBOOST_STATIC_ASSERT_UNUSED_ATTRIBUTE
+               AUTOBOOST_JOIN(autoboost_static_assert_typedef_, __LINE__) AUTOBOOST_ATTRIBUTE_UNUSED
 #  else
 #     define AUTOBOOST_STATIC_ASSERT( B ) \
          typedef ::autoboost::static_assert_test<\
             sizeof(::autoboost::STATIC_ASSERTION_FAILURE< AUTOBOOST_STATIC_ASSERT_BOOL_CAST( B ) >)>\
-               AUTOBOOST_JOIN(boost_static_assert_typedef_, __LINE__) AUTOBOOST_STATIC_ASSERT_UNUSED_ATTRIBUTE
+               AUTOBOOST_JOIN(autoboost_static_assert_typedef_, __LINE__) AUTOBOOST_ATTRIBUTE_UNUSED
 #  endif
 #endif
 
@@ -180,11 +165,11 @@ template<int x> struct static_assert_test{};
 // alternative enum based implementation:
 #  ifndef AUTOBOOST_NO_CXX11_VARIADIC_MACROS
 #    define AUTOBOOST_STATIC_ASSERT( ... ) \
-         enum { AUTOBOOST_JOIN(boost_static_assert_enum_, __LINE__) \
+         enum { AUTOBOOST_JOIN(autoboost_static_assert_enum_, __LINE__) \
             = sizeof(::autoboost::STATIC_ASSERTION_FAILURE< (bool)( __VA_ARGS__ ) >) }
 #  else
 #    define AUTOBOOST_STATIC_ASSERT(B) \
-         enum { AUTOBOOST_JOIN(boost_static_assert_enum_, __LINE__) \
+         enum { AUTOBOOST_JOIN(autoboost_static_assert_enum_, __LINE__) \
             = sizeof(::autoboost::STATIC_ASSERTION_FAILURE< (bool)( B ) >) }
 #  endif
 #endif

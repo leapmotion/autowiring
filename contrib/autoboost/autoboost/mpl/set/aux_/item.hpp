@@ -5,8 +5,8 @@
 // Copyright Aleksey Gurtovoy 2003-2007
 // Copyright David Abrahams 2003-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -33,7 +33,8 @@ struct s_item
     typedef void_       last_masked_;
     typedef T           item_type_;
     typedef typename Base::item_ base;
-    
+    typedef s_item type;
+
     typedef typename next< typename Base::size >::type  size;
     typedef typename next< typename Base::order >::type order;
 
@@ -57,6 +58,7 @@ struct s_mask
     typedef void_   item_type_;
     typedef typename Base::item_ base;
     typedef typename prior< typename Base::size >::type  size;
+    typedef s_mask type;
 
     AUTOBOOST_MPL_AUX_SET_OVERLOAD( aux::yes_tag, IS_MASKED, s_mask, aux::type_wrapper<T>* );
 };

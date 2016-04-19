@@ -1,4 +1,4 @@
-//  boost/chrono/round.hpp  ------------------------------------------------------------//
+//  autoboost/chrono/round.hpp  ------------------------------------------------------------//
 
 //  (C) Copyright Howard Hinnant
 //  Copyright 2011 Vicente J. Botet Escriba

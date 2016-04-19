@@ -1,5 +1,5 @@
-#ifndef AB_UUID_AA15E74A856F11E08B8D93F24824019B
-#define AB_UUID_AA15E74A856F11E08B8D93F24824019B
+#ifndef UUID_AA15E74A856F11E08B8D93F24824019B
+#define UUID_AA15E74A856F11E08B8D93F24824019B
 #if (__GNUC__*100+__GNUC_MINOR__>301) && !defined(AUTOBOOST_EXCEPTION_ENABLE_WARNINGS)
 #pragma GCC system_header
 #endif
@@ -14,7 +14,7 @@
 #endif
 
 //
-//  boost/throw_exception.hpp
+//  autoboost/throw_exception.hpp
 //
 //  Copyright (c) 2002 Peter Dimov and Multi Media Ltd.
 //  Copyright (c) 2008-2009 Emil Dotchevski and Reverge Studios, Inc.
@@ -61,7 +61,7 @@ inline void throw_exception_assert_compatibility( std::exception const & ) { }
 
 template<class E> AUTOBOOST_NORETURN inline void throw_exception( E const & e )
 {
-    //All boost exceptions are required to derive from std::exception,
+    //All autoboost exceptions are required to derive from std::exception,
     //to ensure compatibility with AUTOBOOST_NO_EXCEPTIONS.
     throw_exception_assert_compatibility(e);
 

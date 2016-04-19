@@ -11,18 +11,13 @@
 # include <autoboost/parameter/aux_/void.hpp>
 # include <autoboost/type_traits/is_same.hpp>
 
-# if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1300)
-#  include <autoboost/mpl/eval_if.hpp>
-# endif
-
-namespace autoboost { namespace parameter { 
+namespace autoboost { namespace parameter {
 
 // A metafunction that, given an argument pack, returns the type of
 // the parameter identified by the given keyword.  If no such
 // parameter has been specified, returns Default
 
-# if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, <= 1300) \
-  || AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x564))
+# if AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x564))
 template <class Parameters, class Keyword, class Default>
 struct binding0
 {
@@ -40,14 +35,9 @@ struct binding0
 # endif
 
 template <class Parameters, class Keyword, class Default = void_>
-# if !AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1300)
 struct binding
-# else
-struct binding_eti
-# endif
 {
-# if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, <= 1300) \
-  || AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x564))
+# if AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x564))
     typedef typename mpl::eval_if<
         mpl::is_placeholder<Parameters>
       , mpl::identity<int>
@@ -66,24 +56,8 @@ struct binding_eti
     ));
 # endif
 
-# if !AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1300)
-    AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT(3,binding,(Parameters,Keyword,Default))
-# endif
-};
-
-# if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1300)
-template <class Parameters, class Keyword, class Default = void_>
-struct binding
-{
-    typedef typename mpl::eval_if<
-        is_same<Parameters, int>
-      , mpl::identity<int>
-      , binding_eti<Parameters, Keyword, Default>
-    >::type type;
-
     AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT(3,binding,(Parameters,Keyword,Default))
 };
-# endif
 
 // A metafunction that, given an argument pack, returns the type of
 // the parameter identified by the given keyword.  If no such

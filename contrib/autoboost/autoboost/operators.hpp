@@ -14,7 +14,7 @@
 //  03 Apr 08 Make sure "convertible to bool" is sufficient
 //            for T::operator<, etc. (Daniel Frey)
 //  24 May 07 Changed empty_base to depend on T, see
-//            http://svn.boost.org/trac/boost/ticket/979
+//            http://svn.boost.org/trac/autoboost/ticket/979
 //  21 Oct 02 Modified implementation of operators to allow compilers with a
 //            correct named return value optimization (NRVO) to produce optimal
 //            code.  (Daniel Frey)
@@ -24,8 +24,8 @@
 //            additional classes for groups of related operators added;
 //            workaround for empty base class optimization
 //            bug of GCC 3.0 (Helmut Zeisel)
-//  25 Jun 01 output_iterator_helper changes: removed default template 
-//            parameters, added support for self-proxying, additional 
+//  25 Jun 01 output_iterator_helper changes: removed default template
+//            parameters, added support for self-proxying, additional
 //            documentation and tests (Aleksey Gurtovoy)
 //  29 May 01 Added operator classes for << and >>.  Added input and output
 //            iterator helper classes.  Added classes to connect equality and
@@ -38,18 +38,18 @@
 //  04 Jul 00 Fixed NO_OPERATORS_IN_NAMESPACE bugs, major cleanup and
 //            refactoring of compiler workarounds, additional documentation
 //            (Alexy Gurtovoy and Mark Rodgers with some help and prompting from
-//            Dave Abrahams) 
+//            Dave Abrahams)
 //  28 Jun 00 General cleanup and integration of bugfixes from Mark Rodgers and
 //            Jeremy Siek (Dave Abrahams)
 //  20 Jun 00 Changes to accommodate Borland C++Builder 4 and Borland C++ 5.5
 //            (Mark Rodgers)
 //  20 Jun 00 Minor fixes to the prior revision (Aleksey Gurtovoy)
 //  10 Jun 00 Support for the base class chaining technique was added
-//            (Aleksey Gurtovoy). See documentation and the comments below 
-//            for the details. 
+//            (Aleksey Gurtovoy). See documentation and the comments below
+//            for the details.
 //  12 Dec 99 Initial version with iterator operators (Jeremy Siek)
 //  18 Nov 99 Change name "divideable" to "dividable", remove unnecessary
-//            specializations of dividable, subtractable, modable (Ed Brey) 
+//            specializations of dividable, subtractable, modable (Ed Brey)
 //  17 Nov 99 Add comments (Beman Dawes)
 //            Remove unnecessary specialization of operators<> (Ed Brey)
 //  15 Nov 99 Fix less_than_comparable<T,U> second operand type for first two
@@ -60,8 +60,8 @@
 //  10 Nov 99 Initial version
 
 // 10 Jun 00:
-// An additional optional template parameter was added to most of 
-// operator templates to support the base class chaining technique (see 
+// An additional optional template parameter was added to most of
+// operator templates to support the base class chaining technique (see
 // documentation for the details). Unfortunately, a straightforward
 // implementation of this change would have broken compatibility with the
 // previous version of the library by making it impossible to use the same
@@ -72,18 +72,20 @@
 // One of the complications is an existence of special auxiliary class template
 // 'is_chained_base<>' (see 'detail' namespace below), which is used
 // to determine whether its template parameter is a library's operator template
-// or not. You have to specialize 'is_chained_base<>' for each new 
+// or not. You have to specialize 'is_chained_base<>' for each new
 // operator template you add to the library.
 //
-// However, most of the non-trivial implementation details are hidden behind 
+// However, most of the non-trivial implementation details are hidden behind
 // several local macros defined below, and as soon as you understand them,
-// you understand the whole library implementation. 
+// you understand the whole library implementation.
 
 #ifndef AUTOBOOST_OPERATORS_HPP
 #define AUTOBOOST_OPERATORS_HPP
 
+#include <cstddef>
+#include <iterator>
+
 #include <autoboost/config.hpp>
-#include <autoboost/iterator.hpp>
 #include <autoboost/detail/workaround.hpp>
 
 #if defined(__sgi) && !defined(__GNUC__)
@@ -91,7 +93,7 @@
 #endif
 
 #if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1600)
-#   pragma warning( disable : 4284 ) // complaint about return type of 
+#   pragma warning( disable : 4284 ) // complaint about return type of
 #endif                               // operator-> not begin a UDT
 
 namespace autoboost {
@@ -293,8 +295,8 @@ template <class T, class P, class B = ::autoboost::detail::empty_base<T> >
 struct dereferenceable : B
 {
   P operator->() const
-  { 
-    return &*static_cast<const T&>(*this); 
+  {
+    return &*static_cast<const T&>(*this);
   }
 };
 
@@ -650,14 +652,14 @@ struct random_access_iteratable
 // AUTOBOOST_IMPORT_TEMPLATE1 .. AUTOBOOST_IMPORT_TEMPLATE4 -
 //
 // When AUTOBOOST_NO_OPERATORS_IN_NAMESPACE is defined we need a way to import an
-// operator template into the boost namespace. AUTOBOOST_IMPORT_TEMPLATE1 is used
+// operator template into the autoboost namespace. AUTOBOOST_IMPORT_TEMPLATE1 is used
 // for one-argument forms of operator templates; AUTOBOOST_IMPORT_TEMPLATE2 for
 // two-argument forms. Note that these macros expect to be invoked from within
-// boost.
+// autoboost.
 
 #ifndef AUTOBOOST_NO_OPERATORS_IN_NAMESPACE
 
-  // The template is already in boost so we have nothing to do.
+  // The template is already in autoboost so we have nothing to do.
 # define AUTOBOOST_IMPORT_TEMPLATE4(template_name)
 # define AUTOBOOST_IMPORT_TEMPLATE3(template_name)
 # define AUTOBOOST_IMPORT_TEMPLATE2(template_name)
@@ -726,7 +728,7 @@ template<class T> struct is_chained_base {
 
 } // namespace autoboost
 
-// Import a 4-type-argument operator template into boost (if necessary) and
+// Import a 4-type-argument operator template into autoboost (if necessary) and
 // provide a specialization of 'is_chained_base<>' for it.
 # define AUTOBOOST_OPERATOR_TEMPLATE4(template_name4)                     \
   AUTOBOOST_IMPORT_TEMPLATE4(template_name4)                              \
@@ -735,7 +737,7 @@ template<class T> struct is_chained_base {
     typedef ::autoboost::detail::true_t value;                            \
   };
 
-// Import a 3-type-argument operator template into boost (if necessary) and
+// Import a 3-type-argument operator template into autoboost (if necessary) and
 // provide a specialization of 'is_chained_base<>' for it.
 # define AUTOBOOST_OPERATOR_TEMPLATE3(template_name3)                     \
   AUTOBOOST_IMPORT_TEMPLATE3(template_name3)                              \
@@ -744,7 +746,7 @@ template<class T> struct is_chained_base {
     typedef ::autoboost::detail::true_t value;                            \
   };
 
-// Import a 2-type-argument operator template into boost (if necessary) and
+// Import a 2-type-argument operator template into autoboost (if necessary) and
 // provide a specialization of 'is_chained_base<>' for it.
 # define AUTOBOOST_OPERATOR_TEMPLATE2(template_name2)                  \
   AUTOBOOST_IMPORT_TEMPLATE2(template_name2)                           \
@@ -753,7 +755,7 @@ template<class T> struct is_chained_base {
     typedef ::autoboost::detail::true_t value;                         \
   };
 
-// Import a 1-type-argument operator template into boost (if necessary) and
+// Import a 1-type-argument operator template into autoboost (if necessary) and
 // provide a specialization of 'is_chained_base<>' for it.
 # define AUTOBOOST_OPERATOR_TEMPLATE1(template_name1)                  \
   AUTOBOOST_IMPORT_TEMPLATE1(template_name1)                           \
@@ -770,7 +772,7 @@ template<class T> struct is_chained_base {
 //
 // The template type parameter O == is_chained_base<U>::value is used to
 // distinguish whether the 2nd argument to <template_name> is being used for
-// base class chaining from another boost operator template or is describing a
+// base class chaining from another autoboost operator template or is describing a
 // 2nd operand type. O == true_t only when U is actually an another operator
 // template from the library. Partial specialization is used to select an
 // implementation in terms of either '<template_name>1' or '<template_name>2'.
@@ -803,7 +805,7 @@ AUTOBOOST_OPERATOR_TEMPLATE1(template_name##1)
 
 
 namespace autoboost {
-    
+
 AUTOBOOST_OPERATOR_TEMPLATE(less_than_comparable)
 AUTOBOOST_OPERATOR_TEMPLATE(equality_comparable)
 AUTOBOOST_OPERATOR_TEMPLATE(multipliable)
@@ -891,13 +893,13 @@ template <class T,
           class R = V const &>
 struct input_iterator_helper
   : input_iteratable<T, P
-  , autoboost::iterator<std::input_iterator_tag, V, D, P, R
+  , std::iterator<std::input_iterator_tag, V, D, P, R
     > > {};
 
 template<class T>
 struct output_iterator_helper
   : output_iteratable<T
-  , autoboost::iterator<std::output_iterator_tag, void, void, void, void
+  , std::iterator<std::output_iterator_tag, void, void, void, void
   > >
 {
   T& operator*()  { return static_cast<T&>(*this); }
@@ -911,7 +913,7 @@ template <class T,
           class R = V&>
 struct forward_iterator_helper
   : forward_iteratable<T, P
-  , autoboost::iterator<std::forward_iterator_tag, V, D, P, R
+  , std::iterator<std::forward_iterator_tag, V, D, P, R
     > > {};
 
 template <class T,
@@ -921,17 +923,17 @@ template <class T,
           class R = V&>
 struct bidirectional_iterator_helper
   : bidirectional_iteratable<T, P
-  , autoboost::iterator<std::bidirectional_iterator_tag, V, D, P, R
+  , std::iterator<std::bidirectional_iterator_tag, V, D, P, R
     > > {};
 
 template <class T,
-          class V, 
+          class V,
           class D = std::ptrdiff_t,
           class P = V*,
           class R = V&>
 struct random_access_iterator_helper
   : random_access_iteratable<T, P, D, R
-  , autoboost::iterator<std::random_access_iterator_tag, V, D, P, R
+  , std::iterator<std::random_access_iterator_tag, V, D, P, R
     > >
 {
   friend D requires_difference_operator(const T& x, const T& y) {

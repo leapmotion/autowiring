@@ -23,7 +23,7 @@
 #   pragma once
 #endif
 
-namespace autoboost 
+namespace autoboost
 {
     namespace detail // '0', '-', '+', 'e', 'E' and '.' constants
     {

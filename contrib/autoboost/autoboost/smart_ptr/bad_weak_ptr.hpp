@@ -8,7 +8,7 @@
 #endif
 
 //
-//  boost/smart_ptr/bad_weak_ptr.hpp
+//  autoboost/smart_ptr/bad_weak_ptr.hpp
 //
 //  Copyright (c) 2001, 2002, 2003 Peter Dimov and Multi Media Ltd.
 //

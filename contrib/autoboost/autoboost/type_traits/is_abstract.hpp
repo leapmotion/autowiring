@@ -12,7 +12,7 @@
 //  Use, modification and distribution is subject to the Boost Software
 //  License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
-//  
+//
 //  See http://www.boost.org for updates, documentation, and revision history.
 //
 
@@ -31,13 +31,13 @@
 //  - VC++6, VC++7.0 and less
 //  - GCC 3.3.X and less
 //  - Borland C++ 6 and less
-//      
+//
 //
 // History:
 //  - Originally written by Rani Sharoni, see
 //    http://groups.google.com/groups?selm=df893da6.0207110613.75b2fe90%40posting.google.com
 //    At this time supported by EDG (Intel C++ 7, Comeau 4.3.2) and VC7.1.
-//  - Adapted and added into Boost.Serialization library by Robert Ramey 
+//  - Adapted and added into Boost.Serialization library by Robert Ramey
 //    (starting with submission #10).
 //  - Jan 2004: GCC 3.4 fixed to support DR337 (Giovanni Bajo).
 //  - Jan 2004: modified to be part of Boost.TypeTraits (Pavel Vozenilek).
@@ -49,20 +49,18 @@
 //
 
 #include <autoboost/type_traits/intrinsics.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
 #ifndef AUTOBOOST_IS_ABSTRACT
 #include <autoboost/static_assert.hpp>
 #include <autoboost/type_traits/detail/yes_no_type.hpp>
 #include <autoboost/type_traits/is_class.hpp>
-#include <autoboost/type_traits/detail/ice_and.hpp>
 #ifdef AUTOBOOST_NO_IS_ABSTRACT
 #include <autoboost/type_traits/is_polymorphic.hpp>
 #endif
 #endif
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
-
 
 namespace autoboost {
+
 namespace detail{
 
 #ifdef AUTOBOOST_IS_ABSTRACT
@@ -75,8 +73,8 @@ struct is_abstract_imp
 template<class T>
 struct is_abstract_imp2
 {
-   // Deduction fails if T is void, function type, 
-   // reference type (14.8.2/2)or an abstract class type 
+   // Deduction fails if T is void, function type,
+   // reference type (14.8.2/2)or an abstract class type
    // according to review status issue #337
    //
    template<class U>
@@ -103,8 +101,8 @@ struct is_abstract_imp2
 #pragma warning(pop)
 #endif
 #endif
-    
-   AUTOBOOST_STATIC_CONSTANT(bool, value = 
+
+   AUTOBOOST_STATIC_CONSTANT(bool, value =
       (s1 == sizeof(type_traits::yes_type)));
 };
 
@@ -141,13 +139,11 @@ struct is_abstract_imp
 }
 
 #ifndef AUTOBOOST_NO_IS_ABSTRACT
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_abstract,T,::autoboost::detail::is_abstract_imp<T>::value)
+template <class T> struct is_abstract : public integral_constant<bool, ::autoboost::detail::is_abstract_imp<T>::value> {};
 #else
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_abstract,T,::autoboost::detail::is_polymorphic_imp<T>::value)
+template <class T> struct is_abstract : public integral_constant<bool, ::autoboost::detail::is_polymorphic_imp<T>::value> {};
 #endif
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif //AUTOBOOST_TT_IS_ABSTRACT_CLASS_HPP

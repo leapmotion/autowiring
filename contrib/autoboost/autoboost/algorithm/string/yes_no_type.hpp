@@ -14,14 +14,14 @@
 namespace autoboost {
     namespace algorithm {
 
-        // taken from boost mailing-list
+        // taken from autoboost mailing-list
         // when yes_no_type will become officially
-        // a part of boost distribution, this header
+        // a part of autoboost distribution, this header
         // will be deprecated
-        template<int I> struct size_descriptor 
+        template<int I> struct size_descriptor
         {
             typedef char (& type)[I];
-        }; 
+        };
 
         typedef size_descriptor<1>::type yes_type;
         typedef size_descriptor<2>::type no_type;

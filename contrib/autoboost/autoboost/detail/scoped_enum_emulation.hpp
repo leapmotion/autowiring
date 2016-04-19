@@ -10,7 +10,7 @@
 #define AUTOBOOST_DETAIL_SCOPED_ENUM_EMULATION_HPP
 
 // The header file at this path is deprecated;
-// use boost/core/scoped_enum.hpp instead.
+// use autoboost/core/scoped_enum.hpp instead.
 
 #include <autoboost/core/scoped_enum.hpp>
 

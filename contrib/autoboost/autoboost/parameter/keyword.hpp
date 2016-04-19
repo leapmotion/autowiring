@@ -52,7 +52,6 @@ struct keyword
         return aux::lazy_default<Tag, Default>(default_);
     }
 
-#if !AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1300)  // avoid partial ordering bugs
     template <class T>
     typename aux::tag<Tag, T const>::type const
     operator=(T const& x) const
@@ -60,15 +59,10 @@ struct keyword
         typedef typename aux::tag<Tag, T const>::type result;
         return result(x);
     }
-#endif 
 
-#if !AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1300)  // avoid partial ordering bugs
     template <class Default>
     aux::default_<Tag, const Default>
     operator|(const Default& default_) const
-#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, == 1300)
-        volatile
-#endif 
     {
         return aux::default_<Tag, const Default>(default_);
     }
@@ -76,16 +70,12 @@ struct keyword
     template <class Default>
     aux::lazy_default<Tag, Default>
     operator||(Default const& default_) const
-#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, == 1300)
-        volatile
-#endif 
     {
         return aux::lazy_default<Tag, Default>(default_);
     }
-#endif
 
  public: // Insurance against ODR violations
-    
+
     // People will need to define these keywords in header files.  To
     // prevent ODR violations, it's important that the keyword used in
     // every instantiation of a function template is the same object.
@@ -109,24 +99,6 @@ keyword<Tag> const keyword<Tag>::instance = {};
 // reference in an anonymous namespace to a singleton instance of that
 // type.
 
-#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1300)
-
-# define AUTOBOOST_PARAMETER_KEYWORD(tag_namespace,name)                    \
-    namespace tag_namespace                                             \
-    {                                                                   \
-      struct name                                                       \
-      {                                                                 \
-          static char const* keyword_name()                             \
-          {                                                             \
-              return #name;                                             \
-          }                                                             \
-      };                                                                \
-    }                                                                   \
-    static ::autoboost::parameter::keyword<tag_namespace::name> const& name \
-       = ::autoboost::parameter::keyword<tag_namespace::name>::instance;
-
-#else
-
 #define AUTOBOOST_PARAMETER_KEYWORD(tag_namespace,name)                 \
     namespace tag_namespace                                         \
     {                                                               \
@@ -143,8 +115,6 @@ keyword<Tag> const keyword<Tag>::instance = {};
        ::autoboost::parameter::keyword<tag_namespace::name> const& name \
        = ::autoboost::parameter::keyword<tag_namespace::name>::instance;\
     }
-
-#endif
 
 }} // namespace autoboost::parameter
 

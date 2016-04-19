@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_TIME_RESOLUTION_TRAITS_HPP
-#define AB_DATE_TIME_TIME_RESOLUTION_TRAITS_HPP
+#ifndef DATE_TIME_TIME_RESOLUTION_TRAITS_HPP
+#define DATE_TIME_TIME_RESOLUTION_TRAITS_HPP
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -68,16 +68,16 @@ namespace date_time {
            typename frac_sec_type::int_type resolution_adjust,
 #endif
            unsigned short frac_digits,
-           typename v_type = autoboost::int32_t >
+           typename var_type = autoboost::int32_t >
   class time_resolution_traits {
   public:
     typedef typename frac_sec_type::int_type fractional_seconds_type;
     typedef typename frac_sec_type::int_type tick_type;
     typedef typename frac_sec_type::impl_type impl_type;
-    typedef v_type  day_type;
-    typedef v_type  hour_type;
-    typedef v_type  min_type;
-    typedef v_type  sec_type;
+    typedef var_type  day_type;
+    typedef var_type  hour_type;
+    typedef var_type  min_type;
+    typedef var_type  sec_type;
 
     // bring in function from frac_sec_type traits structs
     static fractional_seconds_type as_number(impl_type i)

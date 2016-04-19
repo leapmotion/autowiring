@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // insert_linebreaks.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -23,23 +23,21 @@
 namespace std{ using ::memcpy; }
 #endif
 
-#include <autoboost/serialization/pfto.hpp>
-
 #include <autoboost/iterator/iterator_adaptor.hpp>
 #include <autoboost/iterator/iterator_traits.hpp>
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 namespace iterators {
 
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // insert line break every N characters
 template<
-    class Base, 
-    int N, 
+    class Base,
+    int N,
     class CharType = typename autoboost::iterator_value<Base>::type
 >
-class insert_linebreaks : 
+class insert_linebreaks :
     public iterator_adaptor<
         insert_linebreaks<Base, N, CharType>,
         Base,
@@ -83,12 +81,12 @@ private:
 public:
     // make composible buy using templated constructor
     template<class T>
-    insert_linebreaks(AUTOBOOST_PFTO_WRAPPER(T)  start) :
-        super_t(Base(AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast< T >(start)))),
+    insert_linebreaks(T  start) :
+        super_t(Base(static_cast< T >(start))),
         m_count(0)
     {}
     // intel 7.1 doesn't like default copy constructor
-    insert_linebreaks(const insert_linebreaks & rhs) : 
+    insert_linebreaks(const insert_linebreaks & rhs) :
         super_t(rhs.base_reference()),
         m_count(rhs.m_count)
     {}

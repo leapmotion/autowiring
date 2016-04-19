@@ -7,7 +7,7 @@
 #ifndef AUTOBOOST_NO_EXCEPTIONS
 
 
-#include <autoboost/thread/future_error_code.hpp>
+#include <autoboost/thread/futures/future_error_code.hpp>
 #include <string>
 
 namespace autoboost

@@ -14,53 +14,53 @@ namespace autoboost {
 #ifndef AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES
 
 template <typename... Ts>
-inline void ignore_unused(Ts const& ...)
+AUTOBOOST_FORCEINLINE AUTOBOOST_CXX14_CONSTEXPR void ignore_unused(Ts const& ...)
 {}
 
 template <typename... Ts>
-inline void ignore_unused()
+AUTOBOOST_FORCEINLINE AUTOBOOST_CXX14_CONSTEXPR void ignore_unused()
 {}
 
 #else
 
 template <typename T1>
-inline void ignore_unused(T1 const&)
+AUTOBOOST_FORCEINLINE AUTOBOOST_CXX14_CONSTEXPR void ignore_unused(T1 const&)
 {}
 
 template <typename T1, typename T2>
-inline void ignore_unused(T1 const&, T2 const&)
+AUTOBOOST_FORCEINLINE AUTOBOOST_CXX14_CONSTEXPR void ignore_unused(T1 const&, T2 const&)
 {}
 
 template <typename T1, typename T2, typename T3>
-inline void ignore_unused(T1 const&, T2 const&, T3 const&)
+AUTOBOOST_FORCEINLINE AUTOBOOST_CXX14_CONSTEXPR void ignore_unused(T1 const&, T2 const&, T3 const&)
 {}
 
 template <typename T1, typename T2, typename T3, typename T4>
-inline void ignore_unused(T1 const&, T2 const&, T3 const&, T4 const&)
+AUTOBOOST_FORCEINLINE AUTOBOOST_CXX14_CONSTEXPR void ignore_unused(T1 const&, T2 const&, T3 const&, T4 const&)
 {}
 
 template <typename T1, typename T2, typename T3, typename T4, typename T5>
-inline void ignore_unused(T1 const&, T2 const&, T3 const&, T4 const&, T5 const&)
+AUTOBOOST_FORCEINLINE AUTOBOOST_CXX14_CONSTEXPR void ignore_unused(T1 const&, T2 const&, T3 const&, T4 const&, T5 const&)
 {}
 
 template <typename T1>
-inline void ignore_unused()
+AUTOBOOST_FORCEINLINE AUTOBOOST_CXX14_CONSTEXPR void ignore_unused()
 {}
 
 template <typename T1, typename T2>
-inline void ignore_unused()
+AUTOBOOST_FORCEINLINE AUTOBOOST_CXX14_CONSTEXPR void ignore_unused()
 {}
 
 template <typename T1, typename T2, typename T3>
-inline void ignore_unused()
+AUTOBOOST_FORCEINLINE AUTOBOOST_CXX14_CONSTEXPR void ignore_unused()
 {}
 
 template <typename T1, typename T2, typename T3, typename T4>
-inline void ignore_unused()
+AUTOBOOST_FORCEINLINE AUTOBOOST_CXX14_CONSTEXPR void ignore_unused()
 {}
 
 template <typename T1, typename T2, typename T3, typename T4, typename T5>
-inline void ignore_unused()
+AUTOBOOST_FORCEINLINE AUTOBOOST_CXX14_CONSTEXPR void ignore_unused()
 {}
 
 #endif

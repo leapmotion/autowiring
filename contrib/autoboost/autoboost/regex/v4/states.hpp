@@ -3,8 +3,8 @@
  * Copyright (c) 1998-2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -31,12 +31,12 @@
 #endif
 
 namespace autoboost{
-namespace re_detail{
+namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 /*** mask_type *******************************************************
 Whenever we have a choice of two alternatives, we use an array of bytes
 to indicate which of the two alternatives it is possible to take for any
-given input character.  If mask_take is set, then we can take the next 
+given input character.  If mask_take is set, then we can take the next
 state, and if mask_skip is set then we can take the alternative.
 ***********************************************************************/
 enum mask_type
@@ -120,7 +120,12 @@ enum syntax_element_type
    syntax_element_assert_backref = syntax_element_backstep + 1,
    syntax_element_toggle_case = syntax_element_assert_backref + 1,
    // a recursive expression:
-   syntax_element_recurse = syntax_element_toggle_case + 1
+   syntax_element_recurse = syntax_element_toggle_case + 1,
+   // Verbs:
+   syntax_element_fail = syntax_element_recurse + 1,
+   syntax_element_accept = syntax_element_fail + 1,
+   syntax_element_commit = syntax_element_accept + 1,
+   syntax_element_then = syntax_element_commit + 1
 };
 
 #ifdef AUTOBOOST_REGEX_DEBUG
@@ -179,7 +184,7 @@ struct re_dot : public re_syntax_base
 };
 
 /*** struct re_literal ************************************************
-A string of literals, following this structure will be an 
+A string of literals, following this structure will be an
 array of characters: charT[length]
 ***********************************************************************/
 struct re_literal : public re_syntax_base
@@ -256,6 +261,21 @@ struct re_recurse : public re_jump
    int state_id;             // identifier of first nested repeat within the recursion.
 };
 
+/*** struct re_commit *************************************************
+Used for the PRUNE, SKIP and COMMIT verbs which basically differ only in what happens
+if no match is found and we start searching forward.
+**********************************************************************/
+enum commit_type
+{
+   commit_prune,
+   commit_skip,
+   commit_commit
+};
+struct re_commit : public re_syntax_base
+{
+   commit_type action;
+};
+
 /*** enum re_jump_size_type *******************************************
 Provides compiled size of re_jump structure (allowing for trailing alignment).
 We provide this so we know how manybytes to insert when constructing the machine
@@ -276,12 +296,12 @@ template<class charT, class traits>
 struct regex_data;
 
 template <class iterator, class charT, class traits_type, class char_classT>
-iterator AUTOBOOST_REGEX_CALL re_is_set_member(iterator next, 
-                          iterator last, 
-                          const re_set_long<char_classT>* set_, 
+iterator AUTOBOOST_REGEX_CALL re_is_set_member(iterator next,
+                          iterator last,
+                          const re_set_long<char_classT>* set_,
                           const regex_data<charT, traits_type>& e, bool icase);
 
-} // namespace re_detail
+} // namespace AUTOBOOST_REGEX_DETAIL_NS
 
 } // namespace autoboost
 

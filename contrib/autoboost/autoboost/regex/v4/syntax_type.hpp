@@ -3,12 +3,12 @@
  * Copyright (c) 2003
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
- 
+
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         syntax_type.hpp
@@ -71,8 +71,8 @@ static const escape_syntax_type escape_type_unicode = 0; // not used
 static const escape_syntax_type escape_type_identity = 0; // not used
 static const escape_syntax_type escape_type_backref = syntax_digit;
 static const escape_syntax_type escape_type_decimal = syntax_digit; // not used
-static const escape_syntax_type escape_type_class = 22; 
-static const escape_syntax_type escape_type_not_class = 23; 
+static const escape_syntax_type escape_type_class = 22;
+static const escape_syntax_type escape_type_not_class = 23;
 
 // extensions:
 

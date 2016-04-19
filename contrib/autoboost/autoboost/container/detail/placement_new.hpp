@@ -1,6 +1,8 @@
+#ifndef AUTOBOOST_CONTAINER_DETAIL_PLACEMENT_NEW_HPP
+#define AUTOBOOST_CONTAINER_DETAIL_PLACEMENT_NEW_HPP
 ///////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2014-2014. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2014-2015. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -8,20 +10,21 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef AUTOBOOST_CONTAINER_DETAIL_PLACEMENT_NEW_HPP
-#define AUTOBOOST_CONTAINER_DETAIL_PLACEMENT_NEW_HPP
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
 
-#if defined(_MSC_VER)
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
-struct boost_container_new_t{};
+struct autoboost_container_new_t{};
 
 //avoid including <new>
-inline void *operator new(std::size_t, void *p, boost_container_new_t)
+inline void *operator new(std::size_t, void *p, autoboost_container_new_t)
 {  return p;  }
 
-inline void operator delete(void *, void *, boost_container_new_t)
+inline void operator delete(void *, void *, autoboost_container_new_t)
 {}
 
 #endif   //AUTOBOOST_CONTAINER_DETAIL_PLACEMENT_NEW_HPP

@@ -2,7 +2,7 @@
 // extended_type_info_no_rtti.cpp: specific implementation of type info
 // that is NOT based on typeid
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -23,20 +23,20 @@ namespace std{ using ::strcmp; }
 
 #define EXTENDED_TYPE_INFO_NO_RTTI_KEY 2
 
-namespace autoboost { 
-namespace serialization { 
-namespace no_rtti_system { 
+namespace autoboost {
+namespace serialization {
+namespace no_rtti_system {
 
-AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY())  
+AUTOBOOST_SERIALIZATION_DECL
 extended_type_info_no_rtti_0::extended_type_info_no_rtti_0(
     const char * key
 ) :
     extended_type_info(EXTENDED_TYPE_INFO_NO_RTTI_KEY, key)
 {}
 
-AUTOBOOST_SERIALIZATION_DECL(bool)
+AUTOBOOST_SERIALIZATION_DECL bool
 extended_type_info_no_rtti_0::is_less_than(
-    const autoboost::serialization::extended_type_info &rhs) const 
+    const autoboost::serialization::extended_type_info &rhs) const
 {
     // shortcut for common case
     if(this == & rhs)
@@ -48,7 +48,7 @@ extended_type_info_no_rtti_0::is_less_than(
     // this method of type id are in fact exported.
     // b) This class was used (e.g. serialized through a pointer) before
     // it was exported.  Make sure that classes which use this method
-    // of type id are NOT "automatically" registered by serializating 
+    // of type id are NOT "automatically" registered by serializating
     // through a pointer to the to most derived class.  OR make sure
     // that the AUTOBOOST_CLASS_EXPORT is included in every file
     // which does this.
@@ -57,9 +57,9 @@ extended_type_info_no_rtti_0::is_less_than(
     return std::strcmp(l, r) < 0;
 }
 
-AUTOBOOST_SERIALIZATION_DECL(bool)
+AUTOBOOST_SERIALIZATION_DECL bool
 extended_type_info_no_rtti_0::is_equal(
-    const autoboost::serialization::extended_type_info &rhs) const 
+    const autoboost::serialization::extended_type_info &rhs) const
 {
     // shortcut for common case
     if(this == & rhs)
@@ -76,7 +76,7 @@ extended_type_info_no_rtti_0::is_equal(
     return 0 == std::strcmp(l, r);
 }
 
-AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY())  
+AUTOBOOST_SERIALIZATION_DECL
 extended_type_info_no_rtti_0::~extended_type_info_no_rtti_0()
 {}
 

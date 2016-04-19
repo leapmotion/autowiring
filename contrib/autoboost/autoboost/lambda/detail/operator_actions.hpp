@@ -6,12 +6,12 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-// For more information, see http://lambda.cs.utu.fi 
+// For more information, see http://lambda.cs.utu.fi
 
 #ifndef AUTOBOOST_LAMBDA_OPERATOR_ACTIONS_HPP
 #define AUTOBOOST_LAMBDA_OPERATOR_ACTIONS_HPP
 
-namespace autoboost { 
+namespace autoboost {
 namespace lambda {
 
 
@@ -74,7 +74,7 @@ template <class Action> class post_increment_decrement_action;
 
 // ---------------------------------------------------------
 
-  // actions, for which the existence of protect is checked in return type 
+  // actions, for which the existence of protect is checked in return type
   // deduction.
 
 template <class Act> struct is_protectable<arithmetic_action<Act> > {
@@ -89,7 +89,7 @@ template <class Act> struct is_protectable<logical_action<Act> > {
 template <class Act> struct is_protectable<relational_action<Act> > {
   AUTOBOOST_STATIC_CONSTANT(bool, value = true);
 };
-template <class Act> 
+template <class Act>
 struct is_protectable<arithmetic_assignment_action<Act> > {
   AUTOBOOST_STATIC_CONSTANT(bool, value = true);
 };
@@ -99,11 +99,11 @@ template <class Act> struct is_protectable<bitwise_assignment_action<Act> > {
 template <class Act> struct is_protectable<unary_arithmetic_action<Act> > {
   AUTOBOOST_STATIC_CONSTANT(bool, value = true);
 };
-template <class Act> 
+template <class Act>
 struct is_protectable<pre_increment_decrement_action<Act> > {
   AUTOBOOST_STATIC_CONSTANT(bool, value = true);
 };
-template <class Act> struct 
+template <class Act> struct
 is_protectable<post_increment_decrement_action<Act> > {
   AUTOBOOST_STATIC_CONSTANT(bool, value = true);
 };
@@ -126,7 +126,7 @@ template<> struct is_protectable<other_action<assignment_action> > {
   // in actions.hpp
 
 
-} // namespace lambda 
+} // namespace lambda
 } // namespace autoboost
 
 #endif

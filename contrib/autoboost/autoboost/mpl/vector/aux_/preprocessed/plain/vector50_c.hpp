@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -33,7 +33,7 @@ struct vector41_c
         , integral_c< T,C31 >, integral_c< T,C32 >, integral_c< T,C33 >
         , integral_c< T,C34 >, integral_c< T,C35 >, integral_c< T,C36 >
         , integral_c< T,C37 >, integral_c< T,C38 >, integral_c< T,C39 >, integral_c<T
-        , C40> 
+        , C40>
  >
 {
     typedef vector41_c type;
@@ -63,7 +63,7 @@ struct vector42_c
         , integral_c< T,C31 >, integral_c< T,C32 >, integral_c< T,C33 >
         , integral_c< T,C34 >, integral_c< T,C35 >, integral_c< T,C36 >
         , integral_c< T,C37 >, integral_c< T,C38 >, integral_c< T,C39 >
-        , integral_c< T,C40 >, integral_c< T,C41 > 
+        , integral_c< T,C40 >, integral_c< T,C41 >
  >
 {
     typedef vector42_c type;
@@ -93,7 +93,7 @@ struct vector43_c
         , integral_c< T,C31 >, integral_c< T,C32 >, integral_c< T,C33 >
         , integral_c< T,C34 >, integral_c< T,C35 >, integral_c< T,C36 >
         , integral_c< T,C37 >, integral_c< T,C38 >, integral_c< T,C39 >
-        , integral_c< T,C40 >, integral_c< T,C41 >, integral_c< T,C42 > 
+        , integral_c< T,C40 >, integral_c< T,C41 >, integral_c< T,C42 >
  >
 {
     typedef vector43_c type;
@@ -124,7 +124,7 @@ struct vector44_c
         , integral_c< T,C34 >, integral_c< T,C35 >, integral_c< T,C36 >
         , integral_c< T,C37 >, integral_c< T,C38 >, integral_c< T,C39 >
         , integral_c< T,C40 >, integral_c< T,C41 >, integral_c< T,C42 >, integral_c<T
-        , C43> 
+        , C43>
  >
 {
     typedef vector44_c type;
@@ -155,7 +155,7 @@ struct vector45_c
         , integral_c< T,C34 >, integral_c< T,C35 >, integral_c< T,C36 >
         , integral_c< T,C37 >, integral_c< T,C38 >, integral_c< T,C39 >
         , integral_c< T,C40 >, integral_c< T,C41 >, integral_c< T,C42 >
-        , integral_c< T,C43 >, integral_c< T,C44 > 
+        , integral_c< T,C43 >, integral_c< T,C44 >
  >
 {
     typedef vector45_c type;
@@ -186,7 +186,7 @@ struct vector46_c
         , integral_c< T,C34 >, integral_c< T,C35 >, integral_c< T,C36 >
         , integral_c< T,C37 >, integral_c< T,C38 >, integral_c< T,C39 >
         , integral_c< T,C40 >, integral_c< T,C41 >, integral_c< T,C42 >
-        , integral_c< T,C43 >, integral_c< T,C44 >, integral_c< T,C45 > 
+        , integral_c< T,C43 >, integral_c< T,C44 >, integral_c< T,C45 >
  >
 {
     typedef vector46_c type;
@@ -218,7 +218,7 @@ struct vector47_c
         , integral_c< T,C37 >, integral_c< T,C38 >, integral_c< T,C39 >
         , integral_c< T,C40 >, integral_c< T,C41 >, integral_c< T,C42 >
         , integral_c< T,C43 >, integral_c< T,C44 >, integral_c< T,C45 >, integral_c<T
-        , C46> 
+        , C46>
  >
 {
     typedef vector47_c type;
@@ -250,7 +250,7 @@ struct vector48_c
         , integral_c< T,C37 >, integral_c< T,C38 >, integral_c< T,C39 >
         , integral_c< T,C40 >, integral_c< T,C41 >, integral_c< T,C42 >
         , integral_c< T,C43 >, integral_c< T,C44 >, integral_c< T,C45 >
-        , integral_c< T,C46 >, integral_c< T,C47 > 
+        , integral_c< T,C46 >, integral_c< T,C47 >
  >
 {
     typedef vector48_c type;
@@ -282,7 +282,7 @@ struct vector49_c
         , integral_c< T,C37 >, integral_c< T,C38 >, integral_c< T,C39 >
         , integral_c< T,C40 >, integral_c< T,C41 >, integral_c< T,C42 >
         , integral_c< T,C43 >, integral_c< T,C44 >, integral_c< T,C45 >
-        , integral_c< T,C46 >, integral_c< T,C47 >, integral_c< T,C48 > 
+        , integral_c< T,C46 >, integral_c< T,C47 >, integral_c< T,C48 >
  >
 {
     typedef vector49_c type;
@@ -315,7 +315,7 @@ struct vector50_c
         , integral_c< T,C40 >, integral_c< T,C41 >, integral_c< T,C42 >
         , integral_c< T,C43 >, integral_c< T,C44 >, integral_c< T,C45 >
         , integral_c< T,C46 >, integral_c< T,C47 >, integral_c< T,C48 >, integral_c<T
-        , C49> 
+        , C49>
  >
 {
     typedef vector50_c type;

@@ -3,8 +3,8 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef AB_UUID_8D22C4CA9CC811DCAA9133D256D89593
-#define AB_UUID_8D22C4CA9CC811DCAA9133D256D89593
+#ifndef UUID_8D22C4CA9CC811DCAA9133D256D89593
+#define UUID_8D22C4CA9CC811DCAA9133D256D89593
 #if (__GNUC__*100+__GNUC_MINOR__>301) && !defined(AUTOBOOST_EXCEPTION_ENABLE_WARNINGS)
 #pragma GCC system_header
 #endif
@@ -177,15 +177,15 @@ autoboost
 
         template <class T>
         struct
-        derives_boost_exception
+        derives_autoboost_exception
             {
-            enum e { value = (sizeof(dispatch_boost_exception((T*)0))==sizeof(large_size)) };
+            enum e { value = (sizeof(dispatch_autoboost_exception((T*)0))==sizeof(large_size)) };
             };
         }
 
     template <class E,class Tag,class T>
     inline
-    typename enable_if<exception_detail::derives_boost_exception<E>,E const &>::type
+    typename enable_if<exception_detail::derives_autoboost_exception<E>,E const &>::type
     operator<<( E const & x, error_info<Tag,T> const & v )
         {
         return exception_detail::set_info(x,v);

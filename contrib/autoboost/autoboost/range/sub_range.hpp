@@ -14,7 +14,7 @@
 
 #include <autoboost/detail/workaround.hpp>
 
-#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, AUTOBOOST_TESTED_AT(1500)) 
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, AUTOBOOST_TESTED_AT(1500))
     #pragma warning( push )
     #pragma warning( disable : 4996 )
 #endif
@@ -180,11 +180,11 @@ public:
         sub_range()
         { }
 
-#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, AUTOBOOST_TESTED_AT(1500) ) 
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, AUTOBOOST_TESTED_AT(1500) )
         sub_range(const sub_range& r)
-            : base(impl::adl_begin(static_cast<const base&>(r)),
-                   impl::adl_end(static_cast<const base&>(r)))
-        { }  
+            : base(impl::adl_begin(const_cast<base&>(static_cast<const base&>(r))),
+                   impl::adl_end(const_cast<base&>(static_cast<const base&>(r))))
+        { }
 #endif
 
         template< class ForwardRange2 >
@@ -254,21 +254,21 @@ public:
         {
             iterator_range_::operator=( r );
             return *this;
-        }   
+        }
 
         sub_range& operator=( const sub_range& r )
         {
             iterator_range_::operator=( static_cast<const iterator_range_&>(r) );
-            return *this;            
+            return *this;
         }
-        
+
         sub_range& advance_begin(
             AUTOBOOST_DEDUCED_TYPENAME base::difference_type n)
         {
             std::advance(this->m_Begin, n);
             return *this;
         }
-        
+
         sub_range& advance_end(
             AUTOBOOST_DEDUCED_TYPENAME base::difference_type n)
         {
@@ -277,9 +277,9 @@ public:
         }
     };
 
-} // namespace 'boost'
+} // namespace 'autoboost'
 
-#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, AUTOBOOST_TESTED_AT(1500)) 
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, AUTOBOOST_TESTED_AT(1500))
     #pragma warning( pop )
 #endif
 

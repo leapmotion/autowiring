@@ -11,11 +11,20 @@
 #ifndef AUTOBOOST_MOVE_UNIQUE_PTR_HPP_INCLUDED
 #define AUTOBOOST_MOVE_UNIQUE_PTR_HPP_INCLUDED
 
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <autoboost/move/detail/config_begin.hpp>
 #include <autoboost/move/detail/workaround.hpp>
 #include <autoboost/move/detail/unique_ptr_meta_utils.hpp>
 #include <autoboost/move/default_delete.hpp>
 #include <autoboost/move/utility_core.hpp>
+#include <autoboost/move/adl_move_swap.hpp>
 #include <autoboost/static_assert.hpp>
 #include <autoboost/assert.hpp>
 
@@ -27,9 +36,9 @@
 //!
 //! Main differences from std::unique_ptr to avoid heavy dependencies,
 //! specially in C++03 compilers:
-//!   - <tt>operator < </tt> uses pointer <tt>operator < </tt>instead of <tt>std::less<common_type></tt>. 
+//!   - <tt>operator < </tt> uses pointer <tt>operator < </tt>instead of <tt>std::less<common_type></tt>.
 //!      This avoids dependencies on <tt>std::common_type</tt> and <tt>std::less</tt>
-//!      (<tt><type_traits>/<functional></tt> headers. In C++03 this avoid pulling Boost.Typeof and other
+//!      (<tt><type_traits>/<functional></tt> headers). In C++03 this avoid pulling Boost.Typeof and other
 //!      cascading dependencies. As in all Boost platforms <tt>operator <</tt> on raw pointers and
 //!      other smart pointers provides strict weak ordering in practice this should not be a problem for users.
 //!   - assignable from literal 0 for compilers without nullptr
@@ -37,6 +46,7 @@
 //!      cv-less T and cv-less U are the same type and T is more CV qualified than U.
 
 namespace autoboost{
+// @cond
 namespace move_upd {
 
 ////////////////////////////////////////////
@@ -49,7 +59,7 @@ class is_noncopyable
    typedef char true_t;
    class false_t { char dummy[2]; };
    template<class U> static false_t dispatch(...);
-   template<class U> static true_t  dispatch(typename U::boost_move_no_copy_constructor_or_assign*);
+   template<class U> static true_t  dispatch(typename U::autoboost_move_no_copy_constructor_or_assign*);
    public:
    static const bool value = sizeof(dispatch<T>(0)) == sizeof(true_t);
 };
@@ -96,8 +106,8 @@ struct unique_ptr_data
    {}
 
    template <class U>
-   unique_ptr_data(P p, AUTOBOOST_FWD_REF(U) d) AUTOBOOST_NOEXCEPT
-      : m_p(p), d(::autoboost::forward<U>(d))
+   unique_ptr_data(P p, AUTOBOOST_FWD_REF(U) d1) AUTOBOOST_NOEXCEPT
+      : m_p(p), d(::autoboost::forward<U>(d1))
    {}
 
    del_ref deleter()       { return d; }
@@ -210,9 +220,14 @@ struct enable_up_ptr
 template<class T, class D, class U, class E>
 struct unique_moveconvert_assignable
 {
-   static const bool value = (bmupmu::extent<T>::value == bmupmu::extent<U>::value) && is_unique_ptr_convertible
-      < bmupmu::is_array<T>::value
-      , typename bmupmu::pointer_type<U, E>::type, typename bmupmu::pointer_type<T, D>::type>::value;
+   static const bool t_is_array = bmupmu::is_array<T>::value;
+   static const bool value =
+      t_is_array == bmupmu::is_array<U>::value &&
+      bmupmu::extent<T>::value == bmupmu::extent<U>::value &&
+      is_unique_ptr_convertible
+         < t_is_array
+         , typename bmupmu::pointer_type<U, E>::type, typename bmupmu::pointer_type<T, D>::type
+         >::value;
 };
 
 template<class T, class D, class U, class E, std::size_t N>
@@ -281,41 +296,43 @@ struct unique_deleter_is_initializable<D, E, false>
 
 template<class T, class D, class U, class E, class Type = bmupmu::nat>
 struct enable_up_moveconv_constr
-   : bmupmu::enable_if_c<unique_moveconvert_assignable<T, D, U, E>::value &&
-                      unique_deleter_is_initializable<D, E>::value, Type>
+   : bmupmu::enable_if_c
+      < unique_moveconvert_assignable<T, D, U, E>::value && unique_deleter_is_initializable<D, E>::value
+      , Type>
 {};
 
 }  //namespace move_upd {
+// @endcond
 
 namespace movelib {
 
 //! A unique pointer is an object that owns another object and
 //! manages that other object through a pointer.
-//! 
+//!
 //! More precisely, a unique pointer is an object u that stores a pointer to a second object p and will dispose
 //! of p when u is itself destroyed (e.g., when leaving block scope). In this context, u is said to own p.
-//! 
+//!
 //! The mechanism by which u disposes of p is known as p's associated deleter, a function object whose correct
 //! invocation results in p's appropriate disposition (typically its deletion).
-//! 
+//!
 //! Let the notation u.p denote the pointer stored by u, and let u.d denote the associated deleter. Upon request,
 //! u can reset (replace) u.p and u.d with another pointer and deleter, but must properly dispose of its owned
 //! object via the associated deleter before such replacement is considered completed.
-//! 
+//!
 //! Additionally, u can, upon request, transfer ownership to another unique pointer u2. Upon completion of
 //! such a transfer, the following postconditions hold:
 //!   - u2.p is equal to the pre-transfer u.p,
 //!   - u.p is equal to nullptr, and
 //!   - if the pre-transfer u.d maintained state, such state has been transferred to u2.d.
-//! 
+//!
 //! As in the case of a reset, u2 must properly dispose of its pre-transfer owned object via the pre-transfer
 //! associated deleter before the ownership transfer is considered complete.
-//! 
+//!
 //! Each object of a type U instantiated from the unique_ptr template specified in this subclause has the strict
 //! ownership semantics, specified above, of a unique pointer. In partial satisfaction of these semantics, each
 //! such U is MoveConstructible and MoveAssignable, but is not CopyConstructible nor CopyAssignable.
 //! The template parameter T of unique_ptr may be an incomplete type.
-//! 
+//!
 //! The uses of unique_ptr include providing exception safety for dynamically allocated memory, passing
 //! ownership of dynamically allocated memory to a function, and returning dynamically allocated memory from
 //! a function.
@@ -371,7 +388,7 @@ class unique_ptr
    //! <b>Postconditions</b>: <tt>get() == nullptr</tt>. <tt>get_deleter()</tt> returns a reference to the stored deleter.
    //!
    //! <b>Remarks</b>: If this constructor is instantiated with a pointer type or reference type
-   //!   for the template argument D, the program is ill-formed.   
+   //!   for the template argument D, the program is ill-formed.
    AUTOBOOST_CONSTEXPR unique_ptr() AUTOBOOST_NOEXCEPT
       : m_data()
    {
@@ -382,7 +399,7 @@ class unique_ptr
    }
 
    //! <b>Effects</b>: Same as <tt>unique_ptr()</tt> (default constructor).
-   //! 
+   //!
    AUTOBOOST_CONSTEXPR unique_ptr(AUTOBOOST_MOVE_DOC0PTR(bmupd::nullptr_type)) AUTOBOOST_NOEXCEPT
       : m_data()
    {
@@ -395,7 +412,7 @@ class unique_ptr
    //! <b>Requires</b>: D shall satisfy the requirements of DefaultConstructible, and
    //!   that construction shall not throw an exception.
    //!
-   //! <b>Effects</b>: Constructs a unique_ptr which owns p, initializing the stored pointer 
+   //! <b>Effects</b>: Constructs a unique_ptr which owns p, initializing the stored pointer
    //!   with p and value initializing the stored deleter.
    //!
    //! <b>Postconditions</b>: <tt>get() == p</tt>. <tt>get_deleter()</tt> returns a reference to the stored deleter.
@@ -428,7 +445,7 @@ class unique_ptr
    //!
    //!
    //! <b>Requires</b>: Either
-   //!   - D is not an lvalue-reference type and d is an lvalue or const rvalue. 
+   //!   - D is not an lvalue-reference type and d is an lvalue or const rvalue.
    //!         D shall satisfy the requirements of CopyConstructible, and the copy constructor of D
    //!         shall not throw an exception. This unique_ptr will hold a copy of d.
    //!   - D is an lvalue-reference type and d is an lvalue. the type which D references need not be CopyConstructible nor
@@ -436,7 +453,7 @@ class unique_ptr
    //!
    //! <b>Effects</b>: Constructs a unique_ptr object which owns p, initializing the stored pointer with p and
    //!   initializing the deleter as described above.
-   //! 
+   //!
    //! <b>Postconditions</b>: <tt>get() == p</tt>. <tt>get_deleter()</tt> returns a reference to the stored deleter. If D is a
    //!   reference type then <tt>get_deleter()</tt> returns a reference to the lvalue d.
    //!
@@ -474,7 +491,7 @@ class unique_ptr
    //!
    //! <b>Effects</b>: Constructs a unique_ptr object which owns p, initializing the stored pointer with p and
    //!   initializing the deleter as described above.
-   //! 
+   //!
    //! <b>Postconditions</b>: <tt>get() == p</tt>. <tt>get_deleter()</tt> returns a reference to the stored deleter. If D is a
    //!   reference type then <tt>get_deleter()</tt> returns a reference to the lvalue d.
    //!
@@ -501,11 +518,11 @@ class unique_ptr
 
    //! <b>Requires</b>: If D is not a reference type, D shall satisfy the requirements of MoveConstructible.
    //! Construction of the deleter from an rvalue of type D shall not throw an exception.
-   //! 
+   //!
    //! <b>Effects</b>: Constructs a unique_ptr by transferring ownership from u to *this. If D is a reference type,
    //! this deleter is copy constructed from u's deleter; otherwise, this deleter is move constructed from u's
    //! deleter.
-   //! 
+   //!
    //! <b>Postconditions</b>: <tt>get()</tt> yields the value u.get() yielded before the construction. <tt>get_deleter()</tt>
    //! returns a reference to the stored deleter that was constructed from u.get_deleter(). If D is a
    //! reference type then <tt>get_deleter()</tt> and <tt>u.get_deleter()</tt> both reference the same lvalue deleter.
@@ -529,7 +546,7 @@ class unique_ptr
    //! <b>Postconditions</b>: <tt>get()</tt> yields the value <tt>u.get()</tt> yielded before the construction. <tt>get_deleter()</tt>
    //!   returns a reference to the stored deleter that was constructed from <tt>u.get_deleter()</tt>.
    template <class U, class E>
-   unique_ptr( AUTOBOOST_RV_REF_BEG unique_ptr<U, E> AUTOBOOST_RV_REF_END u
+   unique_ptr( AUTOBOOST_RV_REF_BEG_IF_CXX11 unique_ptr<U, E> AUTOBOOST_RV_REF_END_IF_CXX11 u
       AUTOBOOST_MOVE_DOCIGN(AUTOBOOST_MOVE_I typename bmupd::enable_up_moveconv_constr<T AUTOBOOST_MOVE_I D AUTOBOOST_MOVE_I U AUTOBOOST_MOVE_I E>::type* =0)
       ) AUTOBOOST_NOEXCEPT
       : m_data(u.release(), ::autoboost::move_if_not_lvalue_reference<E>(u.get_deleter()))
@@ -643,7 +660,7 @@ class unique_ptr
    //!
    AUTOBOOST_MOVE_DOC1ST(D&, typename bmupmu::add_lvalue_reference<D>::type)
       get_deleter() AUTOBOOST_NOEXCEPT
-   {  return m_data.deleter();  }   
+   {  return m_data.deleter();  }
 
    //! <b>Returns</b>: A reference to the stored deleter.
    //!
@@ -667,7 +684,7 @@ class unique_ptr
 
    //! <b>Postcondition</b>: <tt>get() == nullptr</tt>.
    //!
-   //! <b>Returns</b>: The value <tt>get()</tt> had at the start of the call to release.   
+   //! <b>Returns</b>: The value <tt>get()</tt> had at the start of the call to release.
    pointer release() AUTOBOOST_NOEXCEPT
    {
       const pointer tmp = m_data.m_p;
@@ -714,7 +731,7 @@ class unique_ptr
    {  this->reset(pointer());  }
 
    //! <b>Effects</b>: Same as <tt>reset()</tt>
-   //! 
+   //!
    void reset(AUTOBOOST_MOVE_DOC0PTR(bmupd::nullptr_type)) AUTOBOOST_NOEXCEPT
    {  this->reset(); }
 
@@ -723,9 +740,8 @@ class unique_ptr
    //! <b>Effects</b>: Invokes swap on the stored pointers and on the stored deleters of *this and u.
    void swap(unique_ptr& u) AUTOBOOST_NOEXCEPT
    {
-      using ::autoboost::move_detail::swap;
-      swap(m_data.m_p, u.m_data.m_p);
-      swap(m_data.deleter(), u.m_data.deleter());
+      ::autoboost::adl_move_swap(m_data.m_p, u.m_data.m_p);
+      ::autoboost::adl_move_swap(m_data.deleter(), u.m_data.deleter());
    }
 };
 

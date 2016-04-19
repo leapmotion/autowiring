@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // basic_archive.cpp:
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -18,8 +18,8 @@
 
 #include <autoboost/config.hpp>
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
-    using ::size_t; 
+namespace std{
+    using ::size_t;
 } // namespace std
 #endif
 
@@ -40,6 +40,8 @@ namespace std{
 #include <autoboost/archive/detail/basic_iserializer.hpp>
 #include <autoboost/archive/detail/basic_pointer_iserializer.hpp>
 #include <autoboost/archive/detail/basic_iarchive.hpp>
+
+#include <autoboost/archive/detail/auto_link_archive.hpp>
 
 using namespace autoboost::serialization;
 
@@ -68,10 +70,10 @@ class basic_iarchive_impl {
             loaded_as_pointer(false),
             class_id(class_id_)
         {}
-        aobject() : 
+        aobject() :
             address(NULL),
             loaded_as_pointer(false),
-            class_id(-2) 
+            class_id(-2)
         {}
     };
     typedef std::vector<aobject> object_id_vector_type;
@@ -93,7 +95,7 @@ class basic_iarchive_impl {
     } m_moveable_objects;
 
     void reset_object_address(
-        const void * new_address, 
+        const void * new_address,
         const void *old_address
     );
 
@@ -106,11 +108,11 @@ class basic_iarchive_impl {
         cobject_type(
             std::size_t class_id,
             const basic_iserializer & bis
-        ) : 
+        ) :
             m_bis(& bis),
             m_class_id(class_id)
         {}
-        cobject_type(const cobject_type & rhs) : 
+        cobject_type(const cobject_type & rhs) :
             m_bis(rhs.m_bis),
             m_class_id(rhs.m_class_id)
         {}
@@ -128,7 +130,7 @@ class basic_iarchive_impl {
 
     //////////////////////////////////////////////////////////////////////
     // information about each serialized class indexed on class_id
-    class cobject_id 
+    class cobject_id
     {
     public:
         cobject_id & operator=(const cobject_id & rhs){
@@ -152,7 +154,7 @@ class basic_iarchive_impl {
             tracking_level(track_never),
             initialized(false)
         {}
-        cobject_id(const cobject_id &rhs): 
+        cobject_id(const cobject_id &rhs):
             bis_ptr(rhs.bis_ptr),
             bpis_ptr(rhs.bpis_ptr),
             file_version(rhs.file_version),
@@ -181,7 +183,6 @@ class basic_iarchive_impl {
         m_archive_library_version(AUTOBOOST_ARCHIVE_VERSION()),
         m_flags(flags)
     {}
-    ~basic_iarchive_impl(){}
     void set_library_version(library_version_type archive_library_version){
         m_archive_library_version = archive_library_version;
     }
@@ -221,18 +222,17 @@ class basic_iarchive_impl {
     );
     const basic_pointer_iserializer * load_pointer(
         basic_iarchive & ar,
-        void * & t, 
+        void * & t,
         const basic_pointer_iserializer * bpis,
         const basic_pointer_iserializer * (*finder)(
             const autoboost::serialization::extended_type_info & type
         )
-
     );
 };
 
-inline void 
+inline void
 basic_iarchive_impl::reset_object_address(
-    void const * const new_address, 
+    void const * const new_address,
     void const * const old_address
 ){
     if(m_moveable_objects.is_pointer)
@@ -250,8 +250,8 @@ basic_iarchive_impl::reset_object_address(
     //    but the code may work anyway.  Naturally, a bad practice on the part
     //    of the programmer but we can't detect it - as above.  So maybe we
     //    can save a few more people from themselves as above.
-    object_id_type i;
-    for(i = m_moveable_objects.recent; i < m_moveable_objects.end; ++i){
+    object_id_type i = m_moveable_objects.recent;
+    for(; i < m_moveable_objects.end; ++i){
         if(old_address == object_id_vector[i].address)
             break;
     }
@@ -262,7 +262,7 @@ basic_iarchive_impl::reset_object_address(
         // but expected to work on all platforms in current usage
         if(this_address > old_address){
             std::size_t member_displacement
-                = reinterpret_cast<std::size_t>(this_address) 
+                = reinterpret_cast<std::size_t>(this_address)
                 - reinterpret_cast<std::size_t>(old_address);
             object_id_vector[i].address = reinterpret_cast<void *>(
                 reinterpret_cast<std::size_t>(new_address) + member_displacement
@@ -271,7 +271,7 @@ basic_iarchive_impl::reset_object_address(
         else{
             std::size_t member_displacement
                 = reinterpret_cast<std::size_t>(old_address)
-                - reinterpret_cast<std::size_t>(this_address); 
+                - reinterpret_cast<std::size_t>(this_address);
             object_id_vector[i].address = reinterpret_cast<void *>(
                 reinterpret_cast<std::size_t>(new_address) - member_displacement
             );
@@ -279,13 +279,13 @@ basic_iarchive_impl::reset_object_address(
     }
 }
 
-inline void 
+inline void
 basic_iarchive_impl::delete_created_pointers()
 {
     object_id_vector_type::iterator i;
     for(
         i = object_id_vector.begin();
-        i != object_id_vector.end(); 
+        i != object_id_vector.end();
         ++i
     ){
         if(i->loaded_as_pointer){
@@ -293,7 +293,7 @@ basic_iarchive_impl::delete_created_pointers()
             const int j = i->class_id;
             const cobject_id & co = cobject_id_vector[j];
             //const cobject_id & co = cobject_id_vector[i->class_id];
-            // with the appropriate input serializer, 
+            // with the appropriate input serializer,
             // delete the indicated object
             co.bis_ptr->destroy(i->address);
         }
@@ -393,7 +393,7 @@ basic_iarchive_impl::load_object(
     this_id = object_id_type(object_id_vector.size());
 
     // if we tracked this object when the archive was saved
-    if(tracking){ 
+    if(tracking){
         // if it was already read
         if(!track(ar, t))
             // we're done
@@ -490,7 +490,7 @@ basic_iarchive_impl::load_pointer(
 
         serialization::state_saver<object_id_type> w_end(m_moveable_objects.end);
 
-        
+
         // add to list of serialized objects so that we can properly handle
         // cyclic strucures
         object_id_vector.push_back(aobject(t, cid));
@@ -518,47 +518,45 @@ namespace autoboost {
 namespace archive {
 namespace detail {
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_iarchive::next_object_pointer(void *t){
     pimpl->next_object_pointer(t);
 }
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
-basic_iarchive::basic_iarchive(unsigned int flags) : 
+AUTOBOOST_ARCHIVE_DECL
+basic_iarchive::basic_iarchive(unsigned int flags) :
     pimpl(new basic_iarchive_impl(flags))
 {}
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 basic_iarchive::~basic_iarchive()
-{
-    delete pimpl;
-}
+{}
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_iarchive::set_library_version(library_version_type archive_library_version){
     pimpl->set_library_version(archive_library_version);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_iarchive::reset_object_address(
-    const void * new_address, 
+    const void * new_address,
     const void * old_address
 ){
     pimpl->reset_object_address(new_address, old_address);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_iarchive::load_object(
-    void *t, 
+    void *t,
     const basic_iserializer & bis
 ){
     pimpl->load_object(*this, t, bis);
 }
 
 // load a pointer object
-AUTOBOOST_ARCHIVE_DECL(const basic_pointer_iserializer *)
+AUTOBOOST_ARCHIVE_DECL const basic_pointer_iserializer *
 basic_iarchive::load_pointer(
-    void * &t, 
+    void * &t,
     const basic_pointer_iserializer * bpis_ptr,
     const basic_pointer_iserializer * (*finder)(
         const autoboost::serialization::extended_type_info & type_
@@ -568,23 +566,23 @@ basic_iarchive::load_pointer(
     return pimpl->load_pointer(*this, t, bpis_ptr, finder);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_iarchive::register_basic_serializer(const basic_iserializer & bis){
     pimpl->register_type(bis);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_iarchive::delete_created_pointers()
 {
     pimpl->delete_created_pointers();
 }
 
-AUTOBOOST_ARCHIVE_DECL(autoboost::archive::library_version_type) 
+AUTOBOOST_ARCHIVE_DECL autoboost::archive::library_version_type
 basic_iarchive::get_library_version() const{
     return pimpl->m_archive_library_version;
 }
 
-AUTOBOOST_ARCHIVE_DECL(unsigned int) 
+AUTOBOOST_ARCHIVE_DECL unsigned int
 basic_iarchive::get_flags() const{
     return pimpl->m_flags;
 }

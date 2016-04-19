@@ -21,7 +21,7 @@ struct require<void(*)(Model)>
 #  define AUTOBOOST_CONCEPT_ASSERT_FN( ModelFnPtr )         \
   enum                                                  \
   {                                                     \
-      AUTOBOOST_PP_CAT(boost_concept_check,__LINE__) =      \
+      AUTOBOOST_PP_CAT(autoboost_concept_check,__LINE__) =      \
       autoboost::concepts::require<ModelFnPtr>::instantiate  \
   }
 

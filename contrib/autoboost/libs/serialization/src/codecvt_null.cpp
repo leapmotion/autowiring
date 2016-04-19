@@ -2,7 +2,7 @@
 // codecvt_null.cpp
 
 // Copyright (c) 2004 Robert Ramey, Indiana University (garcia@osl.iu.edu)
-// Andrew Lumsdaine, Indiana University (lums@osl.iu.edu). 
+// Andrew Lumsdaine, Indiana University (lums@osl.iu.edu).
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -17,14 +17,14 @@
 namespace autoboost {
 namespace archive {
 
-AUTOBOOST_WARCHIVE_DECL(std::codecvt_base::result)
+AUTOBOOST_WARCHIVE_DECL std::codecvt_base::result
 codecvt_null<wchar_t>::do_out(
     std::mbstate_t & /*state*/,
-    const wchar_t * first1, 
+    const wchar_t * first1,
     const wchar_t * last1,
     const wchar_t * & next1,
-    char * first2, 
-    char * last2, 
+    char * first2,
+    char * last2,
     char * & next2
 ) const {
     while(first1 != last1){
@@ -45,11 +45,11 @@ codecvt_null<wchar_t>::do_out(
     return std::codecvt_base::ok;
 }
 
-AUTOBOOST_WARCHIVE_DECL(std::codecvt_base::result)
+AUTOBOOST_WARCHIVE_DECL std::codecvt_base::result
 codecvt_null<wchar_t>::do_in(
     std::mbstate_t & /*state*/,
-    const char * first1, 
-    const char * last1, 
+    const char * first1,
+    const char * last1,
     const char * & next1,
     wchar_t * first2,
     wchar_t * last2,
@@ -60,16 +60,16 @@ codecvt_null<wchar_t>::do_in(
     // enough to construct another output character,
     // or we've run out of place for output characters.
     while(first2 != last2){
-        // Have we converted all input characters? 
+        // Have we converted all input characters?
         // Return with 'ok', if so.
         if (first1 == last1)
              break;
         // Do we have less input characters than needed
-        // for a single output character?        
+        // for a single output character?
         if(static_cast<int>(sizeof(wchar_t)) > (last1 - first1)){
             next1 = first1;
             next2 = first2;
-            return std::codecvt_base::partial; 
+            return std::codecvt_base::partial;
         }
         *first2++ = * reinterpret_cast<const wchar_t *>(first1);
         first1 += sizeof(wchar_t);

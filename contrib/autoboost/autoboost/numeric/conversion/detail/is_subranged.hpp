@@ -6,7 +6,7 @@
 //  See library home page at http://www.boost.org/libs/numeric/conversion
 //
 // Contact the author at: fernando_cacciola@hotmail.com
-// 
+//
 #ifndef AUTOBOOST_NUMERIC_CONVERSION_DETAIL_IS_SUBRANGED_FLC_12NOV2002_HPP
 #define AUTOBOOST_NUMERIC_CONVERSION_DETAIL_IS_SUBRANGED_FLC_12NOV2002_HPP
 
@@ -200,13 +200,13 @@ namespace autoboost { namespace numeric { namespace convdetail
       typedef mpl::identity<Udt2Udt    > Udt2UdtQ     ;
 
       typedef typename get_udt_builtin_mixture<T,S>::type udt_builtin_mixture ;
-      
+
       typedef typename
         for_udt_builtin_mixture<udt_builtin_mixture, BuiltIn2BuiltInQ, BuiltIn2UdtQ, Udt2BuiltInQ, Udt2UdtQ>::type
           selected ;
 
       typedef typename selected::type selected2 ;
- 
+
       typedef typename selected2::type type ;
     } ;
 
@@ -221,9 +221,9 @@ namespace autoboost { namespace numeric { namespace convdetail
     typedef mpl::identity<mpl::false_> trivial_case ;
 
     typedef is_same<T,S> is_trivial ;
-   
+
     typedef typename mpl::if_<is_trivial,trivial_case,non_trivial_case>::type selected ;
-    
+
     typedef typename selected::type type ;
   } ;
 

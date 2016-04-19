@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-//  feed_args.hpp :  functions for processing each argument 
+//  feed_args.hpp :  functions for processing each argument
 //                      (feed, feed_manip, and distribute)
 // ----------------------------------------------------------------------------
 
@@ -27,14 +27,14 @@ namespace io {
 namespace detail {
 
     template<class Ch, class Tr, class Alloc>
-    void mk_str( std::basic_string<Ch,Tr, Alloc> & res, 
+    void mk_str( std::basic_string<Ch,Tr, Alloc> & res,
                  const Ch * beg,
                  typename std::basic_string<Ch,Tr,Alloc>::size_type size,
-                 std::streamsize w, 
+                 std::streamsize w,
                  const Ch fill_char,
-                 std::ios_base::fmtflags f, 
+                 std::ios_base::fmtflags f,
                  const Ch prefix_space, // 0 if no space-padding
-                 bool center) 
+                 bool center)
     // applies centered/left/right  padding  to the string  [beg, beg+size[
     // Effects : the result is placed in res.
     {
@@ -43,37 +43,37 @@ namespace detail {
         if(w<=0 || static_cast<size_type>(w) <=size) {
             // no need to pad.
             res.reserve(size + !!prefix_space);
-            if(prefix_space) 
+            if(prefix_space)
               res.append(1, prefix_space);
             if (size)
               res.append(beg, size);
         }
-        else { 
+        else {
             std::streamsize n=static_cast<std::streamsize>(w-size-!!prefix_space);
-            std::streamsize n_after = 0, n_before = 0; 
+            std::streamsize n_after = 0, n_before = 0;
             res.reserve(static_cast<size_type>(w)); // allocate once for the 2 inserts
-            if(center) 
-                n_after = n/2, n_before = n - n_after; 
-            else 
+            if(center)
+                n_after = n/2, n_before = n - n_after;
+            else
                 if(f & std::ios_base::left)
                     n_after = n;
                 else
                     n_before = n;
             // now make the res string :
             if(n_before) res.append(static_cast<size_type>(n_before), fill_char);
-            if(prefix_space) 
+            if(prefix_space)
               res.append(1, prefix_space);
-            if (size)  
+            if (size)
               res.append(beg, size);
             if(n_after) res.append(static_cast<size_type>(n_after), fill_char);
         }
-    } // -mk_str(..) 
+    } // -mk_str(..)
 
 
 #if AUTOBOOST_WORKAROUND(__DECCXX_VER, AUTOBOOST_TESTED_AT(60590042))
 // __DECCXX needs to be tricked to disambiguate this simple overload..
 // the trick is in "autoboost/format/msvc_disambiguater.hpp"
-  
+
     template< class Ch, class Tr, class T> inline
     void put_head (AUTOBOOST_IO_STD basic_ostream<Ch, Tr> & os, const T& x ) {
         disambiguater<Ch, Tr, T>::put_head(os, x, 1L);
@@ -83,7 +83,7 @@ namespace detail {
         disambiguater<Ch, Tr, T>::put_last(os, x, 1L);
     }
 
-#else  
+#else
 
     template< class Ch, class Tr, class T> inline
     void put_head (AUTOBOOST_IO_STD basic_ostream<Ch, Tr> &, const T& ) {
@@ -104,7 +104,7 @@ namespace detail {
         os << group_last(x.a1_); // this selects the last element
     }
 
-#ifndef AUTOBOOST_NO_OVERLOAD_FOR_NON_CONST 
+#ifndef AUTOBOOST_NO_OVERLOAD_FOR_NON_CONST
     template< class Ch, class Tr, class T> inline
     void put_head( AUTOBOOST_IO_STD basic_ostream<Ch, Tr> &, T& ) {
     }
@@ -138,22 +138,22 @@ namespace detail {
         void (*put_head)(AUTOBOOST_IO_STD basic_ostream<Ch, Tr> & os, const void* x);
         void (*put_last)(AUTOBOOST_IO_STD basic_ostream<Ch, Tr> & os, const void* x);
     };
-    
+
     template< class Ch, class Tr> inline
     void put_head( AUTOBOOST_IO_STD basic_ostream<Ch, Tr> & os, const put_holder<Ch, Tr>& t) {
         t.put_head(os, t.arg);
     }
-    
+
     template< class Ch, class Tr> inline
     void put_last( AUTOBOOST_IO_STD basic_ostream<Ch, Tr> & os, const put_holder<Ch, Tr>& t) {
         t.put_last(os, t.arg);
     }
 
 
-    template< class Ch, class Tr, class Alloc, class T> 
-    void put( T x, 
-              const format_item<Ch, Tr, Alloc>& specs, 
-              typename basic_format<Ch, Tr, Alloc>::string_type& res, 
+    template< class Ch, class Tr, class Alloc, class T>
+    void put( T x,
+              const format_item<Ch, Tr, Alloc>& specs,
+              typename basic_format<Ch, Tr, Alloc>::string_type& res,
               typename basic_format<Ch, Tr, Alloc>::internal_streambuf_t & buf,
               io::detail::locale_t *loc_p = NULL)
     {
@@ -172,33 +172,37 @@ namespace detail {
         typedef typename string_type::size_type size_type;
 
         basic_oaltstringstream<Ch, Tr, Alloc>  oss( &buf);
+
+        if(loc_p != NULL)
+            oss.imbue(*loc_p);
+
         specs.fmtstate_.apply_on(oss, loc_p);
 
         // the stream format state can be modified by manipulators in the argument :
         put_head( oss, x );
-        // in case x is a group, apply the manip part of it, 
+        // in case x is a group, apply the manip part of it,
         // in order to find width
 
         const std::ios_base::fmtflags fl=oss.flags();
         const bool internal = (fl & std::ios_base::internal) != 0;
         const std::streamsize w = oss.width();
         const bool two_stepped_padding= internal && (w!=0);
-      
+
         res.resize(0);
         if(! two_stepped_padding) {
-            if(w>0) // handle padding via mk_str, not natively in stream 
+            if(w>0) // handle padding via mk_str, not natively in stream
                 oss.width(0);
             put_last( oss, x);
             const Ch * res_beg = buf.pbase();
             Ch prefix_space = 0;
             if(specs.pad_scheme_ & format_item_t::spacepad)
-                if(buf.pcount()== 0 || 
+                if(buf.pcount()== 0 ||
                    (res_beg[0] !=oss.widen('+') && res_beg[0] !=oss.widen('-')  ))
                     prefix_space = oss.widen(' ');
             size_type res_size = (std::min)(
-                static_cast<size_type>(specs.truncate_ - !!prefix_space), 
+                static_cast<size_type>(specs.truncate_ - !!prefix_space),
                 buf.pcount() );
-            mk_str(res, res_beg, res_size, w, oss.fill(), fl, 
+            mk_str(res, res_beg, res_size, w, oss.fill(), fl,
                    prefix_space, (specs.pad_scheme_ & format_item_t::centered) !=0 );
         }
         else  { // 2-stepped padding
@@ -210,7 +214,7 @@ namespace detail {
             size_type res_size = buf.pcount();
             bool prefix_space=false;
             if(specs.pad_scheme_ & format_item_t::spacepad)
-                if(buf.pcount()== 0 || 
+                if(buf.pcount()== 0 ||
                    (res_beg[0] !=oss.widen('+') && res_beg[0] !=oss.widen('-')  ))
                     prefix_space = true;
             if(res_size == static_cast<size_type>(w) && w<=specs.truncate_ && !prefix_space) {
@@ -223,7 +227,7 @@ namespace detail {
                 // Note that res_size<w is possible  (in case of bad user-defined formatting)
                 res.assign(res_beg, res_size);
                 res_beg=NULL;  // invalidate pointers.
-                
+
                 // make a new stream, to start re-formatting from scratch :
                 buf.clear_buffer();
                 basic_oaltstringstream<Ch, Tr, Alloc>  oss2( &buf);
@@ -242,9 +246,9 @@ namespace detail {
                 const Ch * tmp_beg = buf.pbase();
                 size_type tmp_size = (std::min)(static_cast<size_type>(specs.truncate_),
                                                 buf.pcount() );
-                                                    
-                
-                if(static_cast<size_type>(w) <= tmp_size) { 
+
+
+                if(static_cast<size_type>(w) <= tmp_size) {
                     // minimal length is already >= w, so no padding (cool!)
                         res.assign(tmp_beg, tmp_size);
                 }
@@ -259,7 +263,7 @@ namespace detail {
                                         AUTOBOOST_ASSERT(d>0);
                     res.append(static_cast<size_type>( d ), oss2.fill());
                     res.append(tmp_beg+i, tmp_size-i);
-                    AUTOBOOST_ASSERT(i+(tmp_size-i)+(std::max)(d,(std::streamsize)0) 
+                    AUTOBOOST_ASSERT(i+(tmp_size-i)+(std::max)(d,(std::streamsize)0)
                                  == static_cast<size_type>(w));
                     AUTOBOOST_ASSERT(res.size() == static_cast<size_type>(w));
                 }
@@ -272,24 +276,24 @@ namespace detail {
     } // end- put(..)
 
 
-    template< class Ch, class Tr, class Alloc, class T> 
+    template< class Ch, class Tr, class Alloc, class T>
     void distribute (basic_format<Ch,Tr, Alloc>& self, T x) {
-        // call put(x, ..) on every occurence of the current argument :
+        // call put(x, ..) on every occurrence of the current argument :
         if(self.cur_arg_ >= self.num_args_)  {
             if( self.exceptions() & too_many_args_bit )
-                autoboost::throw_exception(too_many_args(self.cur_arg_, self.num_args_)); 
+                autoboost::throw_exception(too_many_args(self.cur_arg_, self.num_args_));
             else return;
         }
         for(unsigned long i=0; i < self.items_.size(); ++i) {
             if(self.items_[i].argN_ == self.cur_arg_) {
-                put<Ch, Tr, Alloc, T> (x, self.items_[i], self.items_[i].res_, 
+                put<Ch, Tr, Alloc, T> (x, self.items_[i], self.items_[i].res_,
                                 self.buf_, autoboost::get_pointer(self.loc_) );
             }
         }
     }
 
-    template<class Ch, class Tr, class Alloc, class T> 
-    basic_format<Ch, Tr, Alloc>&  
+    template<class Ch, class Tr, class Alloc, class T>
+    basic_format<Ch, Tr, Alloc>&
     feed_impl (basic_format<Ch,Tr, Alloc>& self, T x) {
         if(self.dumped_) self.clear();
         distribute<Ch, Tr, Alloc, T> (self, x);
@@ -302,11 +306,11 @@ namespace detail {
     }
 
     template<class Ch, class Tr, class Alloc, class T> inline
-    basic_format<Ch, Tr, Alloc>&  
+    basic_format<Ch, Tr, Alloc>&
     feed (basic_format<Ch,Tr, Alloc>& self, T x) {
         return feed_impl<Ch, Tr, Alloc, const put_holder<Ch, Tr>&>(self, put_holder<Ch, Tr>(x));
     }
-    
+
 } // namespace detail
 } // namespace io
 } // namespace autoboost

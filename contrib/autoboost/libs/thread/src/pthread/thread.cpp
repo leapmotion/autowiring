@@ -35,8 +35,7 @@
 #include <string>
 #include <set>
 #include <vector>
-
-#include "./timeconv.inl"
+#include <string.h> // memcmp.
 
 namespace autoboost
 {
@@ -81,7 +80,9 @@ namespace autoboost
             {
                 static void tls_destructor(void* data)
                 {
-                    autoboost::detail::thread_data_base* thread_info=static_cast<autoboost::detail::thread_data_base*>(data);
+                    //autoboost::detail::thread_data_base* thread_info=static_cast<autoboost::detail::thread_data_base*>(data);
+                    autoboost::detail::thread_data_ptr thread_info = static_cast<autoboost::detail::thread_data_base*>(data)->shared_from_this();
+
                     if(thread_info)
                     {
                         while(!thread_info->tss_data.empty() || thread_info->thread_exit_callbacks)
@@ -98,13 +99,10 @@ namespace autoboost
                                 }
                                 delete current_node;
                             }
-                            for(std::map<void const*,tss_data_node>::iterator next=thread_info->tss_data.begin(),
-                                    current,
-                                    end=thread_info->tss_data.end();
-                                next!=end;)
+                            while (!thread_info->tss_data.empty())
                             {
-                                current=next;
-                                ++next;
+                                std::map<void const*,detail::tss_data_node>::iterator current
+                                    = thread_info->tss_data.begin();
                                 if(current->second.func && (current->second.value!=0))
                                 {
                                     (*current->second.func)(current->second.value);
@@ -112,15 +110,10 @@ namespace autoboost
                                 thread_info->tss_data.erase(current);
                             }
                         }
-                        if (thread_info) // fixme: should we test this?
-                        {
-                          thread_info->self.reset();
-                        }
+                        thread_info->self.reset();
                     }
                 }
             }
-
-#if defined AUTOBOOST_THREAD_PATCH
 
             struct  delete_current_thread_tls_key_on_dlclose_t
             {
@@ -129,14 +122,14 @@ namespace autoboost
                 }
                 ~delete_current_thread_tls_key_on_dlclose_t()
                 {
-                    if (current_thread_tls_init_flag.epoch!=AUTOBOOST_ONCE_INITIAL_FLAG_VALUE)
+                    const autoboost::once_flag uninitialized = AUTOBOOST_ONCE_INIT;
+                    if (memcmp(&current_thread_tls_init_flag, &uninitialized, sizeof(autoboost::once_flag)))
                     {
                         pthread_key_delete(current_thread_tls_key);
                     }
                 }
             };
             delete_current_thread_tls_key_on_dlclose_t delete_current_thread_tls_key_on_dlclose;
-#endif
 
             void create_current_thread_tls_key()
             {
@@ -163,7 +156,8 @@ namespace autoboost
         {
             static void* thread_proxy(void* param)
             {
-                autoboost::detail::thread_data_ptr thread_info = static_cast<autoboost::detail::thread_data_base*>(param)->self;
+                //autoboost::detail::thread_data_ptr thread_info = static_cast<autoboost::detail::thread_data_base*>(param)->self;
+                autoboost::detail::thread_data_ptr thread_info = static_cast<autoboost::detail::thread_data_base*>(param)->shared_from_this();
                 thread_info->self.reset();
                 detail::set_current_thread_data(thread_info.get());
 #if defined AUTOBOOST_THREAD_PROVIDES_INTERRUPTIONS
@@ -216,7 +210,7 @@ namespace autoboost
             }
             void run()
             {}
-            void notify_all_autoboostat_thread_exit(condition_variable*, mutex*)
+            void notify_all_at_thread_exit(condition_variable*, mutex*)
             {}
 
         private:
@@ -257,7 +251,6 @@ namespace autoboost
         {
             thread_info->self.reset();
             return false;
-//            autoboost::throw_exception(thread_resource_error(res, "boost thread: failed in pthread_create"));
         }
         return true;
     }
@@ -271,7 +264,6 @@ namespace autoboost
         {
             thread_info->self.reset();
             return false;
-//            autoboost::throw_exception(thread_resource_error(res, "boost thread: failed in pthread_create"));
         }
         int detached_state;
         res = pthread_attr_getdetachstate(h, &detached_state);
@@ -279,7 +271,6 @@ namespace autoboost
         {
             thread_info->self.reset();
             return false;
-//            autoboost::throw_exception(thread_resource_error(res, "boost thread: failed in pthread_attr_getdetachstate"));
         }
         if (PTHREAD_CREATE_DETACHED==detached_state)
         {
@@ -826,22 +817,22 @@ namespace autoboost
         }
     }
 
-    AUTOBOOST_THREAD_DECL void notify_all_autoboostat_thread_exit(condition_variable& cond, unique_lock<mutex> lk)
+    AUTOBOOST_THREAD_DECL void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk)
     {
       detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());
       if(current_thread_data)
       {
-        current_thread_data->notify_all_autoboostat_thread_exit(&cond, lk.release());
+        current_thread_data->notify_all_at_thread_exit(&cond, lk.release());
       }
     }
 namespace detail {
 
-    void AUTOBOOST_THREAD_DECL make_ready_autoboostat_thread_exit(shared_ptr<shared_state_base> as)
+    void AUTOBOOST_THREAD_DECL make_ready_at_thread_exit(shared_ptr<shared_state_base> as)
     {
       detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());
       if(current_thread_data)
       {
-        current_thread_data->make_ready_autoboostat_thread_exit(as);
+        current_thread_data->make_ready_at_thread_exit(as);
       }
     }
 }

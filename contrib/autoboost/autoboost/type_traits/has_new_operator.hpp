@@ -11,14 +11,11 @@
 
 #include <new> // std::nothrow_t
 #include <cstddef> // std::size_t
-#include <autoboost/type_traits/config.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
 #include <autoboost/type_traits/detail/yes_no_type.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
+#include <autoboost/detail/workaround.hpp>
 
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
-
-#if defined(new) 
+#if defined(new)
 #  if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1310)
 #     define AUTOBOOST_TT_AUX_MACRO_NEW_DEFINED
 #     pragma push_macro("new")
@@ -30,14 +27,14 @@
 
 namespace autoboost {
 namespace detail {
-    template <class U, U x> 
+    template <class U, U x>
     struct test;
 
     template <typename T>
     struct has_new_operator_impl {
         template<class U>
         static type_traits::yes_type check_sig1(
-            U*, 
+            U*,
             test<
             void *(*)(std::size_t),
                 &U::operator new
@@ -48,7 +45,7 @@ namespace detail {
 
         template<class U>
         static type_traits::yes_type check_sig2(
-            U*, 
+            U*,
             test<
             void *(*)(std::size_t, const std::nothrow_t&),
                 &U::operator new
@@ -59,7 +56,7 @@ namespace detail {
 
         template<class U>
         static type_traits::yes_type check_sig3(
-            U*, 
+            U*,
             test<
             void *(*)(std::size_t, void*),
                 &U::operator new
@@ -71,7 +68,7 @@ namespace detail {
 
         template<class U>
         static type_traits::yes_type check_sig4(
-            U*, 
+            U*,
             test<
             void *(*)(std::size_t),
                 &U::operator new[]
@@ -82,7 +79,7 @@ namespace detail {
 
         template<class U>
         static type_traits::yes_type check_sig5(
-            U*, 
+            U*,
             test<
             void *(*)(std::size_t, const std::nothrow_t&),
                 &U::operator new[]
@@ -93,7 +90,7 @@ namespace detail {
 
         template<class U>
         static type_traits::yes_type check_sig6(
-            U*, 
+            U*,
             test<
             void *(*)(std::size_t, void*),
                 &U::operator new[]
@@ -128,27 +125,23 @@ namespace detail {
                 #pragma warning(pop)
             #endif
         #endif
-        AUTOBOOST_STATIC_CONSTANT(bool, value = 
-           (::autoboost::type_traits::ice_or<
-            (s1 == sizeof(type_traits::yes_type)),
-            (s2 == sizeof(type_traits::yes_type)),
-            (s3 == sizeof(type_traits::yes_type)),
-            (s4 == sizeof(type_traits::yes_type)),
-            (s5 == sizeof(type_traits::yes_type)),
+        AUTOBOOST_STATIC_CONSTANT(bool, value =
+            (s1 == sizeof(type_traits::yes_type)) ||
+            (s2 == sizeof(type_traits::yes_type)) ||
+            (s3 == sizeof(type_traits::yes_type)) ||
+            (s4 == sizeof(type_traits::yes_type)) ||
+            (s5 == sizeof(type_traits::yes_type)) ||
             (s6 == sizeof(type_traits::yes_type))
-           >::value)
         );
     };
 } // namespace detail
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(has_new_operator,T,::autoboost::detail::has_new_operator_impl<T>::value)
+template <class T> struct has_new_operator : public integral_constant<bool, ::autoboost::detail::has_new_operator_impl<T>::value>{};
 
 } // namespace autoboost
 
 #if defined(AUTOBOOST_TT_AUX_MACRO_NEW_DEFINED)
 #  pragma pop_macro("new")
 #endif
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_HAS_NEW_OPERATOR_HPP_INCLUDED

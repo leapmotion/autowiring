@@ -21,9 +21,9 @@ namespace autoboost {
 //  trim iterator helper -----------------------------------------------//
 
             template< typename ForwardIteratorT, typename PredicateT >
-            inline ForwardIteratorT trim_end_iter_select( 
-                ForwardIteratorT InBegin, 
-                ForwardIteratorT InEnd, 
+            inline ForwardIteratorT trim_end_iter_select(
+                ForwardIteratorT InBegin,
+                ForwardIteratorT InEnd,
                 PredicateT IsSpace,
                 std::forward_iterator_tag )
             {
@@ -31,7 +31,7 @@ namespace autoboost {
 
                 for( ForwardIteratorT It=InBegin; It!=InEnd; ++It )
                 {
-                    if ( !IsSpace(*It) ) 
+                    if ( !IsSpace(*It) )
                     {
                         TrimIt=It;
                         ++TrimIt;
@@ -42,9 +42,9 @@ namespace autoboost {
             }
 
             template< typename ForwardIteratorT, typename PredicateT >
-            inline ForwardIteratorT trim_end_iter_select( 
-                ForwardIteratorT InBegin, 
-                ForwardIteratorT InEnd, 
+            inline ForwardIteratorT trim_end_iter_select(
+                ForwardIteratorT InBegin,
+                ForwardIteratorT InEnd,
                 PredicateT IsSpace,
                 std::bidirectional_iterator_tag )
             {
@@ -58,9 +58,9 @@ namespace autoboost {
             }
    // Search for first non matching character from the beginning of the sequence
             template< typename ForwardIteratorT, typename PredicateT >
-            inline ForwardIteratorT trim_begin( 
-                ForwardIteratorT InBegin, 
-                ForwardIteratorT InEnd, 
+            inline ForwardIteratorT trim_begin(
+                ForwardIteratorT InBegin,
+                ForwardIteratorT InEnd,
                 PredicateT IsSpace )
             {
                 ForwardIteratorT It=InBegin;
@@ -75,9 +75,9 @@ namespace autoboost {
 
             // Search for first non matching character from the end of the sequence
             template< typename ForwardIteratorT, typename PredicateT >
-            inline ForwardIteratorT trim_end( 
-                ForwardIteratorT InBegin, 
-                ForwardIteratorT InEnd, 
+            inline ForwardIteratorT trim_end(
+                ForwardIteratorT InBegin,
+                ForwardIteratorT InEnd,
                 PredicateT IsSpace )
             {
                 typedef AUTOBOOST_STRING_TYPENAME autoboost::detail::

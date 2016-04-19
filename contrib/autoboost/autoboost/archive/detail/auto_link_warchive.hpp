@@ -16,13 +16,32 @@
 
 //  See library home page at http://www.boost.org/libs/serialization
 
-//----------------------------------------------------------------------------// 
+//----------------------------------------------------------------------------//
 
 // This header implements separate compilation features as described in
 // http://www.boost.org/more/separate_compilation.html
 
-//  enable automatic library variant selection  ------------------------------// 
+//  enable automatic library variant selection  ------------------------------//
 
 #include <autoboost/archive/detail/decl.hpp>
+
+#if !defined(AUTOBOOST_WARCHIVE_SOURCE) \
+&& !defined(AUTOBOOST_ALL_NO_LIB) && !defined(AUTOBOOST_SERIALIZATION_NO_LIB)
+
+// Set the name of our library, this will get undef'ed by auto_link.hpp
+// once it's done with it:
+//
+#define AUTOBOOST_LIB_NAME autoboost_wserialization
+//
+// If we're importing code from a dll, then tell auto_link.hpp about it:
+//
+#if defined(AUTOBOOST_ALL_DYN_LINK) || defined(AUTOBOOST_SERIALIZATION_DYN_LINK)
+#  define AUTOBOOST_DYN_LINK
+#endif
+//
+// And include the header that does the work:
+//
+#include <autoboost/config/auto_link.hpp>
+#endif  // auto-linking disabled
 
 #endif // ARCHIVE_DETAIL_AUTO_LINK_ARCHIVE_HPP

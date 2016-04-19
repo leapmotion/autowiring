@@ -8,8 +8,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2008
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -70,11 +70,11 @@ struct quote_impl
 {
     typedef typename T::type type;
 };
-# else 
+# else
     : T
 {
 };
-# endif 
+# endif
 
 template< typename T >
 struct quote_impl<T,false>
@@ -100,7 +100,7 @@ template<> struct quote_impl<false>
     };
 };
 
-#endif 
+#endif
 
 #define AUTOBOOST_PP_ITERATION_PARAMS_1 \
     (3,(1, AUTOBOOST_MPL_LIMIT_METAFUNCTION_ARITY, <autoboost/mpl/quote.hpp>))

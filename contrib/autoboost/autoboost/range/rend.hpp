@@ -59,7 +59,7 @@ const_rend( const T& r )
     return autoboost::rend( r );
 }
 
-} // namespace 'boost'
+} // namespace 'autoboost'
 
 #endif
 

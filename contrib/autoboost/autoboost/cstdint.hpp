@@ -1,4 +1,4 @@
-//  boost cstdint.hpp header file  ------------------------------------------//
+//  autoboost cstdint.hpp header file  ------------------------------------------//
 
 //  (C) Copyright Beman Dawes 1999.
 //  (C) Copyright Jens Mauer 2001
@@ -39,7 +39,7 @@
 // Note that GLIBC is a bit inconsistent about whether int64_t is defined or not
 // depending upon what headers happen to have been included first...
 // so we disable use of stdint.h when GLIBC does not define __GLIBC_HAVE_LONG_LONG.
-// See https://svn.boost.org/trac/boost/ticket/3548 and http://sources.redhat.com/bugzilla/show_bug.cgi?id=10990
+// See https://svn.boost.org/trac/autoboost/ticket/3548 and http://sources.redhat.com/bugzilla/show_bug.cgi?id=10990
 //
 #if defined(AUTOBOOST_HAS_STDINT_H)					\
   && (!defined(__GLIBC__)					\
@@ -69,7 +69,7 @@
 
 # endif
 
-#ifdef __QNX__
+#if defined(__QNX__) && defined(__EXT_QNX)
 
 // QNX (Dinkumware stdlib) defines these as non-standard names.
 // Reflect to the standard names.
@@ -140,7 +140,7 @@ namespace autoboost
 
 } // namespace autoboost
 
-#elif defined(__FreeBSD__) && (__FreeBSD__ <= 4) || defined(__osf__) || defined(__VMS)
+#elif defined(__FreeBSD__) && (__FreeBSD__ <= 4) || defined(__osf__) || defined(__VMS) || defined(__SOLARIS9__) || defined(__NetBSD__)
 // FreeBSD and Tru64 have an <inttypes.h> that contains much of what we need.
 # include <inttypes.h>
 
@@ -215,7 +215,7 @@ namespace autoboost
      typedef unsigned char   uint_least8_t;
      typedef unsigned char   uint_fast8_t;
 # else
-#    error defaults not correct; you must hand modify boost/cstdint.hpp
+#    error defaults not correct; you must hand modify autoboost/cstdint.hpp
 # endif
 
 //  16-bit types  -----------------------------------------------------------//
@@ -254,7 +254,7 @@ namespace autoboost
      typedef unsigned short  uint_least16_t;
      typedef unsigned short  uint_fast16_t;
 # else
-#    error defaults not correct; you must hand modify boost/cstdint.hpp
+#    error defaults not correct; you must hand modify autoboost/cstdint.hpp
 # endif
 
 //  32-bit types  -----------------------------------------------------------//
@@ -289,7 +289,7 @@ namespace autoboost
       typedef unsigned __int32  uint_least32_t;
       typedef unsigned __int32  uint_fast32_t;
 # else
-#    error defaults not correct; you must hand modify boost/cstdint.hpp
+#    error defaults not correct; you must hand modify autoboost/cstdint.hpp
 # endif
 
 //  64-bit types + intmax_t and uintmax_t  ----------------------------------//
@@ -303,7 +303,7 @@ namespace autoboost
 #    elif (defined(ULLONG_MAX) && ULLONG_MAX == 18446744073709551615ULL) || (defined(ULONG_LONG_MAX) && ULONG_LONG_MAX == 18446744073709551615ULL) || (defined(ULONGLONG_MAX) && ULONGLONG_MAX == 18446744073709551615ULL)
                                                                  // 2**64 - 1
 #    else
-#       error defaults not correct; you must hand modify boost/cstdint.hpp
+#       error defaults not correct; you must hand modify autoboost/cstdint.hpp
 #    endif
 
      typedef  ::autoboost::long_long_type            intmax_t;
@@ -327,7 +327,7 @@ namespace autoboost
      typedef unsigned long        uint_least64_t;
      typedef unsigned long        uint_fast64_t;
 #    else
-#       error defaults not correct; you must hand modify boost/cstdint.hpp
+#       error defaults not correct; you must hand modify autoboost/cstdint.hpp
 #    endif
 # elif defined(__GNUC__) && defined(AUTOBOOST_HAS_LONG_LONG)
      __extension__ typedef long long            intmax_t;
@@ -374,7 +374,7 @@ namespace autoboost
     || (defined(_XOPEN_UNIX) && (_XOPEN_UNIX+0 > 0) && !defined(__UCLIBC__)) \
     || defined(__CYGWIN__) \
     || defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__) \
-    || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
+    || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(sun)
 
 namespace autoboost {
     using ::intptr_t;
@@ -415,7 +415,7 @@ INT#_C macros if they're not already defined (John Maddock).
 //
 // For the following code we get several warnings along the lines of:
 //
-// boost/cstdint.hpp:428:35: error: use of C99 long long integer constant
+// autoboost/cstdint.hpp:428:35: error: use of C99 long long integer constant
 //
 // So we declare this a system header to suppress these warnings.
 //
@@ -492,7 +492,7 @@ INT#_C macros if they're not already defined (John Maddock).
 //  64-bit types + intmax_t and uintmax_t  ----------------------------------//
 #ifndef INT64_C
 #  if defined(AUTOBOOST_HAS_LONG_LONG) && \
-    (defined(ULLONG_MAX) || defined(ULONG_LONG_MAX) || defined(ULONGLONG_MAX) || defined(_LLONG_MAX))
+    (defined(ULLONG_MAX) || defined(ULONG_LONG_MAX) || defined(ULONGLONG_MAX) || defined(_ULLONG_MAX) || defined(_LLONG_MAX))
 
 #    if defined(__hpux)
         // HP-UX's value of ULONG_LONG_MAX is unusable in preprocessor expressions
@@ -501,12 +501,13 @@ INT#_C macros if they're not already defined (John Maddock).
 #    elif (defined(ULLONG_MAX) && ULLONG_MAX == 18446744073709551615ULL) ||  \
         (defined(ULONG_LONG_MAX) && ULONG_LONG_MAX == 18446744073709551615ULL) ||  \
         (defined(ULONGLONG_MAX) && ULONGLONG_MAX == 18446744073709551615ULL) || \
-        (defined(_LLONG_MAX) && _LLONG_MAX == 18446744073709551615ULL)
+        (defined(_ULLONG_MAX) && _ULLONG_MAX == 18446744073709551615ULL) || \
+        (defined(_LLONG_MAX) && _LLONG_MAX == 9223372036854775807LL)
 
 #       define INT64_C(value) value##LL
 #       define UINT64_C(value) value##uLL
 #    else
-#       error defaults not correct; you must hand modify boost/cstdint.hpp
+#       error defaults not correct; you must hand modify autoboost/cstdint.hpp
 #    endif
 #  elif ULONG_MAX != 0xffffffff
 
@@ -514,7 +515,7 @@ INT#_C macros if they're not already defined (John Maddock).
 #       define INT64_C(value) value##L
 #       define UINT64_C(value) value##uL
 #    else
-#       error defaults not correct; you must hand modify boost/cstdint.hpp
+#       error defaults not correct; you must hand modify autoboost/cstdint.hpp
 #    endif
 #  elif defined(AUTOBOOST_HAS_LONG_LONG)
      // Usual macros not defined, work things out for ourselves:
@@ -522,10 +523,10 @@ INT#_C macros if they're not already defined (John Maddock).
 #       define INT64_C(value) value##LL
 #       define UINT64_C(value) value##uLL
 #    else
-#       error defaults not correct; you must hand modify boost/cstdint.hpp
+#       error defaults not correct; you must hand modify autoboost/cstdint.hpp
 #    endif
 #  else
-#    error defaults not correct; you must hand modify boost/cstdint.hpp
+#    error defaults not correct; you must hand modify autoboost/cstdint.hpp
 #  endif
 
 #  ifdef AUTOBOOST_NO_INT64_T

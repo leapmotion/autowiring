@@ -22,7 +22,7 @@
     typedef typename autoboost::type_of::encode_type<\
         AUTOBOOST_PP_CAT(V, n),\
         AUTOBOOST_PP_CAT(P, n)\
-    >::type AUTOBOOST_PP_CAT(V, AUTOBOOST_PP_INC(n)); 
+    >::type AUTOBOOST_PP_CAT(V, AUTOBOOST_PP_INC(n));
 
 #define AUTOBOOST_TYPEOF_TYPE_PARAM_DECODE(This, n)\
     typedef autoboost::type_of::decode_type< AUTOBOOST_PP_CAT(iter, n) > AUTOBOOST_PP_CAT(d, n);\

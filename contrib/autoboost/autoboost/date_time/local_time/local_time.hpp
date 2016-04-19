@@ -1,8 +1,8 @@
-#ifndef AB_LOCAL_TIME_LOCAL_TIME_HPP__
-#define AB_LOCAL_TIME_LOCAL_TIME_HPP__
+#ifndef LOCAL_TIME_LOCAL_TIME_HPP__
+#define LOCAL_TIME_LOCAL_TIME_HPP__
 
 /* Copyright (c) 2003-2004 CrystalClear Software, Inc.
- * Subject to the Boost Software License, Version 1.0. 
+ * Subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
  * $Date$

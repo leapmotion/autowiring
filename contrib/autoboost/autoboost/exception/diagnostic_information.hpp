@@ -3,8 +3,8 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef AB_UUID_0552D49838DD11DD90146B8956D89593
-#define AB_UUID_0552D49838DD11DD90146B8956D89593
+#ifndef UUID_0552D49838DD11DD90146B8956D89593
+#define UUID_0552D49838DD11DD90146B8956D89593
 #if (__GNUC__*100+__GNUC_MINOR__>301) && !defined(AUTOBOOST_EXCEPTION_ENABLE_WARNINGS)
 #pragma GCC system_header
 #endif
@@ -56,14 +56,14 @@ autoboost
         {
         inline
         exception const *
-        get_boost_exception( exception const * e )
+        get_autoboost_exception( exception const * e )
             {
             return e;
             }
 
         inline
         exception const *
-        get_boost_exception( ... )
+        get_autoboost_exception( ... )
             {
             return 0;
             }
@@ -167,7 +167,7 @@ autoboost
     std::string
     diagnostic_information( T const & e, bool verbose=true )
         {
-        return exception_detail::diagnostic_information_impl(exception_detail::get_boost_exception(&e),exception_detail::get_std_exception(&e),true,verbose);
+        return exception_detail::diagnostic_information_impl(exception_detail::get_autoboost_exception(&e),exception_detail::get_std_exception(&e),true,verbose);
         }
 
     inline

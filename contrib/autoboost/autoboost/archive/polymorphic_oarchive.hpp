@@ -17,7 +17,7 @@
 //  See http://www.boost.org for updates, documentation, and revision history.
 
 #include <cstddef> // size_t
-#include <climits> // ULONG_MAX 
+#include <climits> // ULONG_MAX
 #include <string>
 
 #include <autoboost/config.hpp>
@@ -28,7 +28,6 @@ namespace std{
 #endif
 
 #include <autoboost/cstdint.hpp>
-#include <autoboost/serialization/pfto.hpp>
 #include <autoboost/archive/detail/oserializer.hpp>
 #include <autoboost/archive/detail/interface_oarchive.hpp>
 #include <autoboost/serialization/nvp.hpp>
@@ -43,13 +42,13 @@ namespace serialization {
 } // namespace serialization
 namespace archive {
 namespace detail {
-    class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_oarchive;
-    class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_oserializer;
+    class basic_oarchive;
+    class basic_oserializer;
 }
 
 class polymorphic_oarchive;
 
-class polymorphic_oarchive_impl :
+class AUTOBOOST_SYMBOL_VISIBLE polymorphic_oarchive_impl :
     public detail::interface_oarchive<polymorphic_oarchive>
 {
 #ifdef AUTOBOOST_NO_MEMBER_TEMPLATE_FRIENDS
@@ -98,23 +97,21 @@ public:
     virtual void save_start(const char * name) = 0;
     virtual void save_end(const char * name) = 0;
     virtual void register_basic_serializer(const detail::basic_oserializer & bos) = 0;
+    virtual detail::helper_collection & get_helper_collection() = 0;
 
     virtual void end_preamble() = 0;
 
     // msvc and borland won't automatically pass these to the base class so
     // make it explicit here
     template<class T>
-    void save_override(T & t, AUTOBOOST_PFTO int)
+    void save_override(T & t)
     {
         archive::save(* this->This(), t);
     }
     // special treatment for name-value pairs.
     template<class T>
     void save_override(
-                #ifndef AUTOBOOST_NO_FUNCTION_TEMPLATE_ORDERING
-                const
-                #endif
-                ::autoboost::serialization::nvp< T > & t, int
+            const ::autoboost::serialization::nvp< T > & t
         ){
         save_start(t.name());
         archive::save(* this->This(), t.const_value());
@@ -139,7 +136,7 @@ public:
 };
 
 // note: preserve naming symmetry
-class polymorphic_oarchive : 
+class AUTOBOOST_SYMBOL_VISIBLE polymorphic_oarchive :
     public polymorphic_oarchive_impl
 {
 public:

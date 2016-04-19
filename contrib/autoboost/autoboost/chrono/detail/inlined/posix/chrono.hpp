@@ -38,9 +38,9 @@ namespace chrono
         if (AUTOBOOST_CHRONO_IS_THROWS(ec))
         {
             autoboost::throw_exception(
-                    system::system_error( 
-                            errno, 
-                            AUTOBOOST_CHRONO_SYSTEM_CATEGORY, 
+                    system::system_error(
+                            errno,
+                            AUTOBOOST_CHRONO_SYSTEM_CATEGORY,
                             "chrono::system_clock" ));
         }
         else
@@ -50,7 +50,7 @@ namespace chrono
         }
     }
 
-    if (!AUTOBOOST_CHRONO_IS_THROWS(ec)) 
+    if (!AUTOBOOST_CHRONO_IS_THROWS(ec))
     {
         ec.clear();
     }
@@ -92,9 +92,9 @@ namespace chrono
         if (AUTOBOOST_CHRONO_IS_THROWS(ec))
         {
             autoboost::throw_exception(
-                    system::system_error( 
-                            errno, 
-                            AUTOBOOST_CHRONO_SYSTEM_CATEGORY, 
+                    system::system_error(
+                            errno,
+                            AUTOBOOST_CHRONO_SYSTEM_CATEGORY,
                             "chrono::steady_clock" ));
         }
         else
@@ -104,7 +104,7 @@ namespace chrono
         }
     }
 
-    if (!AUTOBOOST_CHRONO_IS_THROWS(ec)) 
+    if (!AUTOBOOST_CHRONO_IS_THROWS(ec))
     {
         ec.clear();
     }

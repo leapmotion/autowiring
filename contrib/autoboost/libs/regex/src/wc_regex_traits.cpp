@@ -3,8 +3,8 @@
  * Copyright (c) 2004
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -86,8 +86,8 @@ namespace std{
 
 namespace autoboost{
 
-c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::transform(const wchar_t* p1, const wchar_t* p2) 
-{ 
+c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::transform(const wchar_t* p1, const wchar_t* p2)
+{
    std::size_t r;
    std::size_t s = 10;
    std::wstring src(p1, p2);
@@ -111,13 +111,13 @@ c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t
       s = result.size();
    }
    result.erase(r);
-   return result; 
+   return result;
 }
 
-c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::transform_primary(const wchar_t* p1, const wchar_t* p2) 
+c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::transform_primary(const wchar_t* p1, const wchar_t* p2)
 {
    static wchar_t s_delim;
-   static const int s_collate_type = ::autoboost::re_detail::find_sort_syntax(static_cast<const c_regex_traits<wchar_t>*>(0), &s_delim);
+   static const int s_collate_type = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::find_sort_syntax(static_cast<const c_regex_traits<wchar_t>*>(0), &s_delim);
    std::wstring result;
    //
    // What we do here depends upon the format of the sort key returned by
@@ -125,8 +125,8 @@ c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t
    //
    switch(s_collate_type)
    {
-   case ::autoboost::re_detail::sort_C:
-   case ::autoboost::re_detail::sort_unknown:
+   case ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::sort_C:
+   case ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::sort_unknown:
       // the best we can do is translate to lower case, then get a regular sort key:
       {
          result.assign(p1, p2);
@@ -135,14 +135,14 @@ c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t
          result = c_regex_traits<wchar_t>::transform(&*result.begin(), &*result.begin() + result.size());
          break;
       }
-   case ::autoboost::re_detail::sort_fixed:
+   case ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::sort_fixed:
       {
          // get a regular sort key, and then truncate it:
          result = c_regex_traits<wchar_t>::transform(&*result.begin(), &*result.begin() + result.size());
          result.erase(s_delim);
          break;
       }
-   case ::autoboost::re_detail::sort_delim:
+   case ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::sort_delim:
          // get a regular sort key, and then truncate everything after the delim:
          result = c_regex_traits<wchar_t>::transform(&*result.begin(), &*result.begin() + result.size());
          if(result.size() && (result[0] == s_delim))
@@ -161,12 +161,12 @@ c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t
    return result;
 }
 
-c_regex_traits<wchar_t>::char_class_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::lookup_classname(const wchar_t* p1, const wchar_t* p2) 
+c_regex_traits<wchar_t>::char_class_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::lookup_classname(const wchar_t* p1, const wchar_t* p2)
 {
-   static const char_class_type masks[] = 
+   static const char_class_type masks[] =
    {
       0,
-      char_class_alnum, 
+      char_class_alnum,
       char_class_alpha,
       char_class_blank,
       char_class_cntrl,
@@ -184,24 +184,24 @@ c_regex_traits<wchar_t>::char_class_type AUTOBOOST_REGEX_CALL c_regex_traits<wch
       char_class_unicode,
       char_class_upper,
       char_class_vertical,
-      char_class_alnum | char_class_word, 
-      char_class_alnum | char_class_word, 
+      char_class_alnum | char_class_word,
+      char_class_alnum | char_class_word,
       char_class_xdigit,
    };
 
-   int idx = ::autoboost::re_detail::get_default_class_id(p1, p2);
+   int idx = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::get_default_class_id(p1, p2);
    if(idx < 0)
    {
       std::wstring s(p1, p2);
       for(std::wstring::size_type i = 0; i < s.size(); ++i)
          s[i] = (std::towlower)(s[i]);
-      idx = ::autoboost::re_detail::get_default_class_id(&*s.begin(), &*s.begin() + s.size());
+      idx = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::get_default_class_id(&*s.begin(), &*s.begin() + s.size());
    }
    AUTOBOOST_ASSERT(idx+1 < static_cast<int>(sizeof(masks) / sizeof(masks[0])));
    return masks[idx+1];
 }
 
-bool AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::isctype(wchar_t c, char_class_type mask) 
+bool AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::isctype(wchar_t c, char_class_type mask)
 {
    return
       ((mask & char_class_space) && (std::iswspace)(c))
@@ -213,14 +213,14 @@ bool AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::isctype(wchar_t c, char_class
       || ((mask & char_class_digit) && (std::iswdigit)(c))
       || ((mask & char_class_punct) && (std::iswpunct)(c))
       || ((mask & char_class_xdigit) && (std::iswxdigit)(c))
-      || ((mask & char_class_blank) && (std::iswspace)(c) && !::autoboost::re_detail::is_separator(c))
+      || ((mask & char_class_blank) && (std::iswspace)(c) && !::autoboost::AUTOBOOST_REGEX_DETAIL_NS::is_separator(c))
       || ((mask & char_class_word) && (c == '_'))
       || ((mask & char_class_unicode) && (c & ~static_cast<wchar_t>(0xff)))
-      || ((mask & char_class_vertical) && (::autoboost::re_detail::is_separator(c) || (c == L'\v')))
-      || ((mask & char_class_horizontal) && (std::iswspace)(c) && !::autoboost::re_detail::is_separator(c) && (c != L'\v'));
+      || ((mask & char_class_vertical) && (::autoboost::AUTOBOOST_REGEX_DETAIL_NS::is_separator(c) || (c == L'\v')))
+      || ((mask & char_class_horizontal) && (std::iswspace)(c) && !::autoboost::AUTOBOOST_REGEX_DETAIL_NS::is_separator(c) && (c != L'\v'));
 }
 
-c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::lookup_collatename(const wchar_t* p1, const wchar_t* p2) 
+c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::lookup_collatename(const wchar_t* p1, const wchar_t* p2)
 {
 #if !defined(AUTOBOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS)\
                && !AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1300)\
@@ -232,7 +232,7 @@ c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t
    while(p0 != p2)
       name.append(1, char(*p0++));
 #endif
-   name = ::autoboost::re_detail::lookup_default_collate_name(name);
+   name = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::lookup_default_collate_name(name);
 #if !defined(AUTOBOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS)\
                && !AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1300)\
                && !AUTOBOOST_WORKAROUND(__BORLANDC__, <= 0x0551)
@@ -255,7 +255,7 @@ c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t
    return string_type();
 }
 
-int AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::value(wchar_t c, int radix) 
+int AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::value(wchar_t c, int radix)
 {
 #ifdef __BORLANDC__
    // workaround for broken wcstol:

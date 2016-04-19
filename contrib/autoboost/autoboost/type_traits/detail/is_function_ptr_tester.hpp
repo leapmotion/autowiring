@@ -1,6 +1,6 @@
 
-//  (C) Copyright Dave Abrahams, Steve Cleary, Beman Dawes, 
-//  Aleksey Gurtovoy, Howard Hinnant & John Maddock 2000.  
+//  (C) Copyright Dave Abrahams, Steve Cleary, Beman Dawes,
+//  Aleksey Gurtovoy, Howard Hinnant & John Maddock 2000.
 //  Use, modification and distribution are subject to the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt).
@@ -15,12 +15,21 @@
 #define AUTOBOOST_TT_DETAIL_IS_FUNCTION_PTR_TESTER_HPP_INCLUDED
 
 #include <autoboost/type_traits/detail/yes_no_type.hpp>
-#include <autoboost/type_traits/config.hpp>
 
 #if defined(AUTOBOOST_TT_PREPROCESSING_MODE)
-#   include <autoboost/preprocessor/iterate.hpp>
-#   include <autoboost/preprocessor/enum_params.hpp>
-#   include <autoboost/preprocessor/comma_if.hpp>
+//
+// Hide include dependencies from analysers since they're
+// only require in maintenance mode:
+//
+#define PP1 <autoboost/preprocessor/iterate.hpp>
+#define PP2 <autoboost/preprocessor/enum_params.hpp>
+#define PP3 <autoboost/preprocessor/comma_if.hpp>
+#include PP1
+#include PP2
+#include PP3
+#undef PP1
+#undef PP2
+#undef PP3
 #endif
 
 namespace autoboost {
@@ -31,7 +40,7 @@ namespace type_traits {
 no_type AUTOBOOST_TT_DECL is_function_ptr_tester(...);
 
 #if !defined(AUTOBOOST_TT_PREPROCESSING_MODE)
-// pre-processed code, don't edit, try GNU cpp with 
+// pre-processed code, don't edit, try GNU cpp with
 // cpp -I../../../ -DAUTOBOOST_TT_PREPROCESSING_MODE -x c++ -P filename
 
 template <class R >

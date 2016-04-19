@@ -8,8 +8,12 @@
 #ifndef AUTOBOOST_TT_INTRINSICS_HPP_INCLUDED
 #define AUTOBOOST_TT_INTRINSICS_HPP_INCLUDED
 
+#ifndef AUTOBOOST_TT_DISABLE_INTRINSICS
+
+#include <autoboost/config.hpp>
+
 #ifndef AUTOBOOST_TT_CONFIG_HPP_INCLUDED
-#include <autoboost/type_traits/config.hpp>
+#include <autoboost/type_traits/detail/config.hpp>
 #endif
 
 //
@@ -32,6 +36,8 @@
 // AUTOBOOST_HAS_NOTHROW_COPY(T) should evaluate to true if T(t) can not throw
 // AUTOBOOST_HAS_NOTHROW_ASSIGN(T) should evaluate to true if t = u can not throw
 // AUTOBOOST_HAS_VIRTUAL_DESTRUCTOR(T) should evaluate to true T has a virtual destructor
+// AUTOBOOST_IS_NOTHROW_MOVE_CONSTRUCT(T) should evaluate to true if T has a non-throwing move constructor.
+// AUTOBOOST_IS_NOTHROW_MOVE_ASSIGN(T) should evaluate to true if T has a non-throwing move assignment operator.
 //
 // The following can also be defined: when detected our implementation is greatly simplified.
 //
@@ -42,6 +48,9 @@
 // AUTOBOOST_IS_ENUM(T) true is T is an enum
 // AUTOBOOST_IS_POLYMORPHIC(T) true if T is a polymorphic type
 // AUTOBOOST_ALIGNMENT_OF(T) should evaluate to the alignment requirements of type T.
+//
+// define AUTOBOOST_TT_DISABLE_INTRINSICS to prevent any intrinsics being used (mostly used when testing)
+//
 
 #ifdef AUTOBOOST_HAS_SGI_TYPE_TRAITS
     // Hook into SGI's __type_traits class, this will pick up user supplied
@@ -69,7 +78,7 @@
 #if defined(__MSL_CPP__) && (__MSL_CPP__ >= 0x8000)
     // Metrowerks compiler is acquiring intrinsic type traits support
     // post version 8.  We hook into the published interface to pick up
-    // user defined specializations as well as compiler intrinsics as 
+    // user defined specializations as well as compiler intrinsics as
     // and when they become available:
 #   include <msl_utility>
 #   define AUTOBOOST_IS_UNION(T) AUTOBOOST_STD_EXTENSION_NAMESPACE::is_union<T>::value
@@ -83,18 +92,25 @@
 
 #if (defined(AUTOBOOST_MSVC) && defined(AUTOBOOST_MSVC_FULL_VER) && (AUTOBOOST_MSVC_FULL_VER >=140050215))\
          || (defined(AUTOBOOST_INTEL) && defined(_MSC_VER) && (_MSC_VER >= 1500))
-#   include <autoboost/type_traits/is_same.hpp>
-#   include <autoboost/type_traits/is_function.hpp>
-
+//
+// Note that even though these intrinsics rely on other type traits classes
+// we do not #include those here as it produces cyclic dependencies and
+// can cause the intrinsics to not even be used at all!
+//
 #   define AUTOBOOST_IS_UNION(T) __is_union(T)
 #   define AUTOBOOST_IS_POD(T) (__is_pod(T) && __has_trivial_constructor(T))
 #   define AUTOBOOST_IS_EMPTY(T) __is_empty(T)
 #   define AUTOBOOST_HAS_TRIVIAL_CONSTRUCTOR(T) __has_trivial_constructor(T)
-#   define AUTOBOOST_HAS_TRIVIAL_COPY(T) (__has_trivial_copy(T)|| ( ::autoboost::is_pod<T>::value && !::autoboost::is_volatile<T>::value))
 #   define AUTOBOOST_HAS_TRIVIAL_ASSIGN(T) (__has_trivial_assign(T) || ( ::autoboost::is_pod<T>::value && ! ::autoboost::is_const<T>::value && !::autoboost::is_volatile<T>::value))
 #   define AUTOBOOST_HAS_TRIVIAL_DESTRUCTOR(T) (__has_trivial_destructor(T) || ::autoboost::is_pod<T>::value)
 #   define AUTOBOOST_HAS_NOTHROW_CONSTRUCTOR(T) (__has_nothrow_constructor(T) || ::autoboost::has_trivial_constructor<T>::value)
-#   define AUTOBOOST_HAS_NOTHROW_COPY(T) (__has_nothrow_copy(T) || ::autoboost::has_trivial_copy<T>::value)
+#if !defined(AUTOBOOST_INTEL)
+#   define AUTOBOOST_HAS_NOTHROW_COPY(T) ((__has_nothrow_copy(T) || ::autoboost::has_trivial_copy<T>::value) && !is_array<T>::value)
+#   define AUTOBOOST_HAS_TRIVIAL_COPY(T) (__has_trivial_copy(T) || ::autoboost::is_pod<T>::value)
+#elif (_MSC_VER >= 1900)
+#   define AUTOBOOST_HAS_NOTHROW_COPY(T) ((__is_nothrow_constructible(T, typename add_lvalue_reference<typename add_const<T>::type>::type)) && !is_array<T>::value)
+#   define AUTOBOOST_HAS_TRIVIAL_COPY(T) (__is_trivially_constructible(T, typename add_lvalue_reference<typename add_const<T>::type>::type))
+#endif
 #   define AUTOBOOST_HAS_NOTHROW_ASSIGN(T) (__has_nothrow_assign(T) || ::autoboost::has_trivial_assign<T>::value)
 #   define AUTOBOOST_HAS_VIRTUAL_DESTRUCTOR(T) __has_virtual_destructor(T)
 
@@ -103,16 +119,22 @@
 #   define AUTOBOOST_IS_CLASS(T) __is_class(T)
 #   define AUTOBOOST_IS_CONVERTIBLE(T,U) ((__is_convertible_to(T,U) || (is_same<T,U>::value && !is_function<U>::value)) && !__is_abstract(U))
 #   define AUTOBOOST_IS_ENUM(T) __is_enum(T)
-//  This one doesn't quite always do the right thing:
-//  #   define AUTOBOOST_IS_POLYMORPHIC(T) __is_polymorphic(T)
 //  This one fails if the default alignment has been changed with /Zp:
 //  #   define AUTOBOOST_ALIGNMENT_OF(T) __alignof(T)
 
 #   if defined(_MSC_VER) && (_MSC_VER >= 1700)
-#       define AUTOBOOST_HAS_TRIVIAL_MOVE_CONSTRUCTOR(T) ((__has_trivial_move_constructor(T) || __is_pod(T)) && !::autoboost::is_volatile<T>::value && !::autoboost::is_reference<T>::value)
-#       define AUTOBOOST_HAS_TRIVIAL_MOVE_ASSIGN(T) ((__has_trivial_move_assign(T) || __is_pod(T)) && ! ::autoboost::is_const<T>::value && !::autoboost::is_volatile<T>::value && !::autoboost::is_reference<T>::value)
+#       define AUTOBOOST_HAS_TRIVIAL_MOVE_CONSTRUCTOR(T) ((__has_trivial_move_constructor(T) || autoboost::is_pod<T>::value) && ! ::autoboost::is_volatile<T>::value && ! ::autoboost::is_reference<T>::value)
+#       define AUTOBOOST_HAS_TRIVIAL_MOVE_ASSIGN(T) ((__has_trivial_move_assign(T) || autoboost::is_pod<T>::value) && ! ::autoboost::is_const<T>::value && !::autoboost::is_volatile<T>::value && ! ::autoboost::is_reference<T>::value)
 #   endif
-
+#ifndef AUTOBOOST_NO_CXX11_FINAL
+//  This one doesn't quite always do the right thing on older VC++ versions
+//  we really need it when the final keyword is supporyted though:
+#   define AUTOBOOST_IS_POLYMORPHIC(T) __is_polymorphic(T)
+#endif
+#if _MSC_FULL_VER >= 180020827
+#   define AUTOBOOST_IS_NOTHROW_MOVE_ASSIGN(T) (__is_nothrow_assignable(T&, T&&))
+#   define AUTOBOOST_IS_NOTHROW_MOVE_CONSTRUCT(T) (__is_nothrow_constructible(T, T&&))
+#endif
 #   define AUTOBOOST_HAS_TYPE_TRAITS_INTRINSICS
 #endif
 
@@ -132,11 +154,19 @@
 #   define AUTOBOOST_HAS_TYPE_TRAITS_INTRINSICS
 #endif
 
-#if defined(AUTOBOOST_CLANG) && defined(__has_feature)
+#if defined(AUTOBOOST_CLANG) && defined(__has_feature) && !defined(__CUDACC__)
+//
+// Note that these intrinsics are disabled for the CUDA meta-compiler as it appears
+// to not support them, even though the underlying clang compiler does so.
+// This is a rubbish fix as it basically stops type traits from working correctly,
+// but maybe the best we can do for now.  See https://svn.boost.org/trac/autoboost/ticket/10694
+//
+//
+// Note that even though these intrinsics rely on other type traits classes
+// we do not #include those here as it produces cyclic dependencies and
+// can cause the intrinsics to not even be used at all!
+//
 #   include <cstddef>
-#   include <autoboost/type_traits/is_same.hpp>
-#   include <autoboost/type_traits/is_reference.hpp>
-#   include <autoboost/type_traits/is_volatile.hpp>
 
 #   if __has_feature(is_union)
 #     define AUTOBOOST_IS_UNION(T) __is_union(T)
@@ -151,22 +181,22 @@
 #     define AUTOBOOST_HAS_TRIVIAL_CONSTRUCTOR(T) __has_trivial_constructor(T)
 #   endif
 #   if __has_feature(has_trivial_copy)
-#     define AUTOBOOST_HAS_TRIVIAL_COPY(T) (__has_trivial_copy(T) && !is_reference<T>::value && !is_volatile<T>::value)
+#     define AUTOBOOST_HAS_TRIVIAL_COPY(T) (__has_trivial_copy(T) && !is_reference<T>::value)
 #   endif
 #   if __has_feature(has_trivial_assign)
-#     define AUTOBOOST_HAS_TRIVIAL_ASSIGN(T) (__has_trivial_assign(T) && !is_volatile<T>::value)
+#     define AUTOBOOST_HAS_TRIVIAL_ASSIGN(T) (__has_trivial_assign(T) && !is_volatile<T>::value && is_assignable<T&, const T&>::value)
 #   endif
 #   if __has_feature(has_trivial_destructor)
-#     define AUTOBOOST_HAS_TRIVIAL_DESTRUCTOR(T) __has_trivial_destructor(T)
+#     define AUTOBOOST_HAS_TRIVIAL_DESTRUCTOR(T) (__has_trivial_destructor(T)  && is_destructible<T>::value)
 #   endif
 #   if __has_feature(has_nothrow_constructor)
-#     define AUTOBOOST_HAS_NOTHROW_CONSTRUCTOR(T) __has_nothrow_constructor(T)
+#     define AUTOBOOST_HAS_NOTHROW_CONSTRUCTOR(T) (__has_nothrow_constructor(T) && is_default_constructible<T>::value)
 #   endif
 #   if __has_feature(has_nothrow_copy)
-#     define AUTOBOOST_HAS_NOTHROW_COPY(T) (__has_nothrow_copy(T) && !is_volatile<T>::value && !is_reference<T>::value)
+#     define AUTOBOOST_HAS_NOTHROW_COPY(T) (__has_nothrow_copy(T) && !is_volatile<T>::value && !is_reference<T>::value && is_copy_constructible<T>::value)
 #   endif
 #   if __has_feature(has_nothrow_assign)
-#     define AUTOBOOST_HAS_NOTHROW_ASSIGN(T) (__has_nothrow_assign(T) && !is_volatile<T>::value)
+#     define AUTOBOOST_HAS_NOTHROW_ASSIGN(T) (__has_nothrow_assign(T) && !is_volatile<T>::value && is_assignable<T&, const T&>::value)
 #   endif
 #   if __has_feature(has_virtual_destructor)
 #     define AUTOBOOST_HAS_VIRTUAL_DESTRUCTOR(T) __has_virtual_destructor(T)
@@ -190,12 +220,17 @@
 #     define AUTOBOOST_IS_POLYMORPHIC(T) __is_polymorphic(T)
 #   endif
 #   if __has_feature(has_trivial_move_constructor)
-#     define AUTOBOOST_HAS_TRIVIAL_MOVE_CONSTRUCTOR(T) __has_trivial_move_constructor(T)
+#     define AUTOBOOST_HAS_TRIVIAL_MOVE_CONSTRUCTOR(T) (__has_trivial_move_constructor(T)  && is_constructible<T, T&&>::value && !::autoboost::is_volatile<T>::value)
 #   endif
 #   if __has_feature(has_trivial_move_assign)
-#     define AUTOBOOST_HAS_TRIVIAL_MOVE_ASSIGN(T) __has_trivial_move_assign(T)
+#     define AUTOBOOST_HAS_TRIVIAL_MOVE_ASSIGN(T) (__has_trivial_move_assign(T) && is_assignable<T&, T&&>::value && !::autoboost::is_volatile<T>::value)
 #   endif
-#   define AUTOBOOST_ALIGNMENT_OF(T) __alignof(T)
+#   if (!defined(unix) && !defined(__unix__)) || defined(__LP64__) || !defined(__GNUC__)
+// GCC sometimes lies about alignment requirements
+// of type double on 32-bit unix platforms, use the
+// old implementation instead in that case:
+#     define AUTOBOOST_ALIGNMENT_OF(T) __alignof(T)
+#   endif
 #   if __has_feature(is_final)
 #     define AUTOBOOST_IS_FINAL(T) __is_final(T)
 #   endif
@@ -204,9 +239,11 @@
 #endif
 
 #if defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3) && !defined(__GCCXML__))) && !defined(AUTOBOOST_CLANG)
-#   include <autoboost/type_traits/is_same.hpp>
-#   include <autoboost/type_traits/is_reference.hpp>
-#   include <autoboost/type_traits/is_volatile.hpp>
+//
+// Note that even though these intrinsics rely on other type traits classes
+// we do not #include those here as it produces cyclic dependencies and
+// can cause the intrinsics to not even be used at all!
+//
 
 #ifdef AUTOBOOST_INTEL
 #  define AUTOBOOST_INTEL_TT_OPTS || is_pod<T>::value
@@ -218,12 +255,20 @@
 #   define AUTOBOOST_IS_POD(T) __is_pod(T)
 #   define AUTOBOOST_IS_EMPTY(T) __is_empty(T)
 #   define AUTOBOOST_HAS_TRIVIAL_CONSTRUCTOR(T) ((__has_trivial_constructor(T) AUTOBOOST_INTEL_TT_OPTS) && ! ::autoboost::is_volatile<T>::value)
-#   define AUTOBOOST_HAS_TRIVIAL_COPY(T) ((__has_trivial_copy(T) AUTOBOOST_INTEL_TT_OPTS) && !is_reference<T>::value && ! ::autoboost::is_volatile<T>::value)
+#   define AUTOBOOST_HAS_TRIVIAL_COPY(T) ((__has_trivial_copy(T) AUTOBOOST_INTEL_TT_OPTS) && !is_reference<T>::value)
+#if (__GNUC__ * 100 + __GNUC_MINOR__) >= 409
+#   define AUTOBOOST_HAS_TRIVIAL_ASSIGN(T) ((__has_trivial_assign(T) AUTOBOOST_INTEL_TT_OPTS) && ! ::autoboost::is_volatile<T>::value && ! ::autoboost::is_const<T>::value && is_assignable<T&, const T&>::value)
+#   define AUTOBOOST_HAS_TRIVIAL_DESTRUCTOR(T) (__has_trivial_destructor(T) AUTOBOOST_INTEL_TT_OPTS && is_destructible<T>::value)
+#   define AUTOBOOST_HAS_NOTHROW_CONSTRUCTOR(T) (__has_nothrow_constructor(T) && is_default_constructible<T>::value AUTOBOOST_INTEL_TT_OPTS)
+#   define AUTOBOOST_HAS_NOTHROW_COPY(T) ((__has_nothrow_copy(T) AUTOBOOST_INTEL_TT_OPTS) && !is_volatile<T>::value && !is_reference<T>::value && is_copy_constructible<T>::value)
+#   define AUTOBOOST_HAS_NOTHROW_ASSIGN(T) ((__has_nothrow_assign(T) AUTOBOOST_INTEL_TT_OPTS) && !is_volatile<T>::value && !is_const<T>::value && is_assignable<T&, const T&>::value)
+#else
 #   define AUTOBOOST_HAS_TRIVIAL_ASSIGN(T) ((__has_trivial_assign(T) AUTOBOOST_INTEL_TT_OPTS) && ! ::autoboost::is_volatile<T>::value && ! ::autoboost::is_const<T>::value)
 #   define AUTOBOOST_HAS_TRIVIAL_DESTRUCTOR(T) (__has_trivial_destructor(T) AUTOBOOST_INTEL_TT_OPTS)
 #   define AUTOBOOST_HAS_NOTHROW_CONSTRUCTOR(T) (__has_nothrow_constructor(T) AUTOBOOST_INTEL_TT_OPTS)
-#   define AUTOBOOST_HAS_NOTHROW_COPY(T) ((__has_nothrow_copy(T) AUTOBOOST_INTEL_TT_OPTS) && !is_volatile<T>::value && !is_reference<T>::value)
-#   define AUTOBOOST_HAS_NOTHROW_ASSIGN(T) ((__has_nothrow_assign(T) AUTOBOOST_INTEL_TT_OPTS) && !is_volatile<T>::value && !is_const<T>::value)
+#   define AUTOBOOST_HAS_NOTHROW_COPY(T) ((__has_nothrow_copy(T) AUTOBOOST_INTEL_TT_OPTS) && !is_volatile<T>::value && !is_reference<T>::value && !is_array<T>::value)
+#   define AUTOBOOST_HAS_NOTHROW_ASSIGN(T) ((__has_nothrow_assign(T) AUTOBOOST_INTEL_TT_OPTS) && !is_volatile<T>::value && !is_const<T>::value && !is_array<T>::value)
+#endif
 #   define AUTOBOOST_HAS_VIRTUAL_DESTRUCTOR(T) __has_virtual_destructor(T)
 
 #   define AUTOBOOST_IS_ABSTRACT(T) __is_abstract(T)
@@ -241,6 +286,36 @@
 #     define AUTOBOOST_IS_FINAL(T) __is_final(T)
 #   endif
 
+#   if (__GNUC__ >= 5) && (__cplusplus >= 201103)
+#     define AUTOBOOST_HAS_TRIVIAL_MOVE_ASSIGN(T) (__is_trivially_assignable(T&, T&&) && is_assignable<T&, T&&>::value && !::autoboost::is_volatile<T>::value)
+#     define AUTOBOOST_HAS_TRIVIAL_MOVE_CONSTRUCTOR(T) (__is_trivially_constructible(T, T&&) && is_constructible<T, T&&>::value && !::autoboost::is_volatile<T>::value)
+#   endif
+
+#   define AUTOBOOST_HAS_TYPE_TRAITS_INTRINSICS
+#endif
+
+#if defined(__SUNPRO_CC) && (__SUNPRO_CC >= 0x5130)
+#   define AUTOBOOST_IS_UNION(T) __oracle_is_union(T)
+#   define AUTOBOOST_IS_POD(T) (__oracle_is_pod(T) && !is_function<T>::value)
+#   define AUTOBOOST_IS_EMPTY(T) __oracle_is_empty(T)
+#   define AUTOBOOST_HAS_TRIVIAL_CONSTRUCTOR(T) (__oracle_has_trivial_constructor(T) && ! ::autoboost::is_volatile<T>::value)
+#   define AUTOBOOST_HAS_TRIVIAL_COPY(T) (__oracle_has_trivial_copy(T) && !is_reference<T>::value)
+#   define AUTOBOOST_HAS_TRIVIAL_ASSIGN(T) ((__oracle_has_trivial_assign(T) || __oracle_is_trivial(T)) && ! ::autoboost::is_volatile<T>::value && ! ::autoboost::is_const<T>::value && is_assignable<T&, const T&>::value)
+#   define AUTOBOOST_HAS_TRIVIAL_DESTRUCTOR(T) (__oracle_has_trivial_destructor(T) && is_destructible<T>::value)
+#   define AUTOBOOST_HAS_NOTHROW_CONSTRUCTOR(T) ((__oracle_has_nothrow_constructor(T) || __oracle_has_trivial_constructor(T) || __oracle_is_trivial(T)) && is_default_constructible<T>::value)
+//  __oracle_has_nothrow_copy appears to behave the same as __oracle_has_nothrow_assign, disabled for now:
+//#   define AUTOBOOST_HAS_NOTHROW_COPY(T) ((__oracle_has_nothrow_copy(T) || __oracle_has_trivial_copy(T) || __oracle_is_trivial(T)) && !is_volatile<T>::value && !is_reference<T>::value && is_copy_constructible<T>::value)
+#   define AUTOBOOST_HAS_NOTHROW_ASSIGN(T) ((__oracle_has_nothrow_assign(T) || __oracle_has_trivial_assign(T) || __oracle_is_trivial(T)) && !is_volatile<T>::value && !is_const<T>::value && is_assignable<T&, const T&>::value)
+#   define AUTOBOOST_HAS_VIRTUAL_DESTRUCTOR(T) __oracle_has_virtual_destructor(T)
+
+#   define AUTOBOOST_IS_ABSTRACT(T) __oracle_is_abstract(T)
+//#   define AUTOBOOST_IS_BASE_OF(T,U) (__is_base_of(T,U) && !is_same<T,U>::value)
+#   define AUTOBOOST_IS_CLASS(T) __oracle_is_class(T)
+#   define AUTOBOOST_IS_ENUM(T) __oracle_is_enum(T)
+#   define AUTOBOOST_IS_POLYMORPHIC(T) __oracle_is_polymorphic(T)
+#   define AUTOBOOST_ALIGNMENT_OF(T) __alignof__(T)
+#   define AUTOBOOST_IS_FINAL(T) __oracle_is_final(T)
+
 #   define AUTOBOOST_HAS_TYPE_TRAITS_INTRINSICS
 #endif
 
@@ -253,7 +328,7 @@
 #   define AUTOBOOST_IS_POD(T) __is_pod(T)
 #   define AUTOBOOST_IS_EMPTY(T) __is_empty(T)
 #   define AUTOBOOST_HAS_TRIVIAL_CONSTRUCTOR(T) __has_trivial_constructor(T)
-#   define AUTOBOOST_HAS_TRIVIAL_COPY(T) (__has_trivial_copy(T) && !is_reference<T>::value && !is_volatile<T>::value)
+#   define AUTOBOOST_HAS_TRIVIAL_COPY(T) (__has_trivial_copy(T) && !is_reference<T>::value)
 #   define AUTOBOOST_HAS_TRIVIAL_ASSIGN(T) (__has_trivial_assign(T) && !is_volatile<T>::value)
 #   define AUTOBOOST_HAS_TRIVIAL_DESTRUCTOR(T) __has_trivial_destructor(T)
 #   define AUTOBOOST_HAS_NOTHROW_CONSTRUCTOR(T) __has_nothrow_constructor(T)
@@ -280,7 +355,7 @@
 #   define AUTOBOOST_IS_POD(T) __is_pod(T)
 #   define AUTOBOOST_IS_EMPTY(T) __is_empty(T)
 #   define AUTOBOOST_HAS_TRIVIAL_CONSTRUCTOR(T) (__has_trivial_default_constructor(T))
-#   define AUTOBOOST_HAS_TRIVIAL_COPY(T) (__has_trivial_copy_constructor(T) && !is_volatile<T>::value && !is_reference<T>::value)
+#   define AUTOBOOST_HAS_TRIVIAL_COPY(T) (__has_trivial_copy_constructor(T) && !is_reference<T>::value)
 #   define AUTOBOOST_HAS_TRIVIAL_ASSIGN(T) (__has_trivial_assign(T) && !is_volatile<T>::value)
 #   define AUTOBOOST_HAS_TRIVIAL_DESTRUCTOR(T) (__has_trivial_destructor(T))
 #   define AUTOBOOST_HAS_NOTHROW_CONSTRUCTOR(T) (__has_nothrow_default_constructor(T))
@@ -299,11 +374,7 @@
 #   define AUTOBOOST_HAS_TYPE_TRAITS_INTRINSICS
 #endif
 
+#endif // AUTOBOOST_TT_DISABLE_INTRINSICS
+
 #endif // AUTOBOOST_TT_INTRINSICS_HPP_INCLUDED
-
-
-
-
-
-
 

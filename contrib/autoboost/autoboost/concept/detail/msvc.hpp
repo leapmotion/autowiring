@@ -43,7 +43,7 @@ struct check<failed ************ Model::************>
 # endif
 
 # ifdef AUTOBOOST_OLD_CONCEPT_SUPPORT
-  
+
 namespace detail
 {
   // No need for a virtual function here, since evaluating
@@ -61,23 +61,23 @@ struct require
       , check<Model>
 # else
       , check<failed ************ Model::************>
-# endif 
+# endif
         >::type
 {};
-      
+
 # else
-  
+
 template <class Model>
 struct require
 # ifndef AUTOBOOST_NO_PARTIAL_SPECIALIZATION
     : check<Model>
 # else
     : check<failed ************ Model::************>
-# endif 
-{};
-  
 # endif
-    
+{};
+
+# endif
+
 # if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, == 1310)
 
 //
@@ -96,23 +96,23 @@ struct require<void(*)(Model)>
 # define AUTOBOOST_CONCEPT_ASSERT_FN( ModelFnPtr )      \
 enum                                                \
 {                                                   \
-    AUTOBOOST_PP_CAT(boost_concept_check,__LINE__) =    \
+    AUTOBOOST_PP_CAT(autoboost_concept_check,__LINE__) =    \
     sizeof(::autoboost::concepts::require<ModelFnPtr>)    \
 }
-  
+
 # else // Not vc-7.1
-  
+
 template <class Model>
 require<Model>
 require_(void(*)(Model));
-  
+
 # define AUTOBOOST_CONCEPT_ASSERT_FN( ModelFnPtr )          \
 enum                                                    \
 {                                                       \
-    AUTOBOOST_PP_CAT(boost_concept_check,__LINE__) =        \
+    AUTOBOOST_PP_CAT(autoboost_concept_check,__LINE__) =        \
       sizeof(::autoboost::concepts::require_((ModelFnPtr)0)) \
 }
-  
+
 # endif
 }}
 

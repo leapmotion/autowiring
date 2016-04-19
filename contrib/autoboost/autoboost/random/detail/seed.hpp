@@ -1,4 +1,4 @@
-/* boost random/detail/seed.hpp header file
+/* autoboost random/detail/seed.hpp header file
  *
  * Copyright Steven Watanabe 2009
  * Distributed under the Boost Software License, Version 1.0. (See
@@ -21,6 +21,7 @@
 
 #include <autoboost/utility/enable_if.hpp>
 #include <autoboost/type_traits/is_arithmetic.hpp>
+#include <autoboost/mpl/bool.hpp>
 
 namespace autoboost {
 namespace random {
@@ -70,44 +71,44 @@ struct disable_constructor<Engine, Engine> {};
     Self(const Self& other) { *this = other; }                          \
     template<class Generator>                                           \
     explicit Self(Generator& gen) {                                     \
-        boost_random_constructor_impl(gen, ::autoboost::is_arithmetic<Generator>());\
+        autoboost_random_constructor_impl(gen, ::autoboost::is_arithmetic<Generator>());\
     }                                                                   \
     template<class Generator>                                           \
-    void boost_random_constructor_impl(Generator& gen, ::autoboost::mpl::false_)
+    void autoboost_random_constructor_impl(Generator& gen, ::autoboost::mpl::false_)
 
 #define AUTOBOOST_RANDOM_DETAIL_GENERATOR_SEED(Self, Generator, gen)    \
     template<class Generator>                                       \
     void seed(Generator& gen) {                                     \
-        boost_random_seed_impl(gen, ::autoboost::is_arithmetic<Generator>());\
+        autoboost_random_seed_impl(gen, ::autoboost::is_arithmetic<Generator>());\
     }\
     template<class Generator>\
-    void boost_random_seed_impl(Generator& gen, ::autoboost::mpl::false_)
+    void autoboost_random_seed_impl(Generator& gen, ::autoboost::mpl::false_)
 
 #define AUTOBOOST_RANDOM_DETAIL_SEED_SEQ_CONSTRUCTOR(Self, SeedSeq, seq)    \
     Self(Self& other) { *this = other; }                                \
     Self(const Self& other) { *this = other; }                          \
     template<class SeedSeq>                                             \
     explicit Self(SeedSeq& seq) {                                       \
-        boost_random_constructor_impl(seq, ::autoboost::is_arithmetic<SeedSeq>());\
+        autoboost_random_constructor_impl(seq, ::autoboost::is_arithmetic<SeedSeq>());\
     }                                                                   \
     template<class SeedSeq>                                             \
-    void boost_random_constructor_impl(SeedSeq& seq, ::autoboost::mpl::false_)
+    void autoboost_random_constructor_impl(SeedSeq& seq, ::autoboost::mpl::false_)
 
 #define AUTOBOOST_RANDOM_DETAIL_SEED_SEQ_SEED(Self, SeedSeq, seq)           \
     template<class SeedSeq>                                             \
     void seed(SeedSeq& seq) {                                           \
-        boost_random_seed_impl(seq, ::autoboost::is_arithmetic<SeedSeq>()); \
+        autoboost_random_seed_impl(seq, ::autoboost::is_arithmetic<SeedSeq>()); \
     }                                                                   \
     template<class SeedSeq>                                             \
-    void boost_random_seed_impl(SeedSeq& seq, ::autoboost::mpl::false_)
+    void autoboost_random_seed_impl(SeedSeq& seq, ::autoboost::mpl::false_)
 
 #define AUTOBOOST_RANDOM_DETAIL_ARITHMETIC_CONSTRUCTOR(Self, T, x)  \
-    explicit Self(const T& x) { boost_random_constructor_impl(x, ::autoboost::mpl::true_()); }\
-    void boost_random_constructor_impl(const T& x, ::autoboost::mpl::true_)
+    explicit Self(const T& x) { autoboost_random_constructor_impl(x, ::autoboost::mpl::true_()); }\
+    void autoboost_random_constructor_impl(const T& x, ::autoboost::mpl::true_)
 
 #define AUTOBOOST_RANDOM_DETAIL_ARITHMETIC_SEED(Self, T, x) \
-    void seed(const T& x) { boost_random_seed_impl(x, ::autoboost::mpl::true_()); }\
-    void boost_random_seed_impl(const T& x, ::autoboost::mpl::true_)
+    void seed(const T& x) { autoboost_random_seed_impl(x, ::autoboost::mpl::true_()); }\
+    void autoboost_random_seed_impl(const T& x, ::autoboost::mpl::true_)
 
 #endif
 

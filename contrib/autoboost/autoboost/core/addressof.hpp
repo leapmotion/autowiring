@@ -107,7 +107,7 @@ template<class T>
 AUTOBOOST_FORCEINLINE
 T * addressof( T & v )
 {
-#if (defined( __BORLANDC__ ) && AUTOBOOST_WORKAROUND( __BORLANDC__, AUTOBOOST_TESTED_AT( 0x610 ) ) ) || defined( __SUNPRO_CC )
+#if (defined( __BORLANDC__ ) && AUTOBOOST_WORKAROUND( __BORLANDC__, AUTOBOOST_TESTED_AT( 0x610 ) ) ) || (defined(__SUNPRO_CC) && AUTOBOOST_WORKAROUND(__SUNPRO_CC, <= 0x5120))
 
     return autoboost::detail::addressof_impl<T>::f( v, 0 );
 

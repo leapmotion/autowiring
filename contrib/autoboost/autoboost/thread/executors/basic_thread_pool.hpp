@@ -4,7 +4,7 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 // 2013/09 Vicente J. Botet Escriba
-//    Adapt to boost from CCIA C++11 implementation
+//    Adapt to autoboost from CCIA C++11 implementation
 //    first implementation of a simple pool thread using a vector of threads and a sync_queue.
 
 #ifndef AUTOBOOST_THREAD_EXECUTORS_BASIC_THREAD_POOL_HPP
@@ -13,8 +13,8 @@
 #include <autoboost/thread/detail/config.hpp>
 #include <autoboost/thread/detail/delete.hpp>
 #include <autoboost/thread/detail/move.hpp>
-#include <autoboost/thread/scoped_thread.hpp>
-#include <autoboost/thread/sync_queue.hpp>
+#include <autoboost/thread/thread.hpp>
+#include <autoboost/thread/concurrent_queues/sync_queue.hpp>
 #include <autoboost/thread/executors/work.hpp>
 #include <autoboost/thread/csbl/vector.hpp>
 
@@ -30,15 +30,14 @@ namespace executors
     /// type-erasure to store the works to do
     typedef  executors::work work;
   private:
-    /// the kind of stored threads are scoped threads to ensure that the threads are joined.
+    typedef thread thread_t;
     /// A move aware vector type
-    typedef scoped_thread<> thread_t;
     typedef csbl::vector<thread_t> thread_vector;
 
-    /// the thread safe work queue
-    sync_queue<work > work_queue;
     /// A move aware vector
     thread_vector threads;
+    /// the thread safe work queue
+    concurrent::sync_queue<work > work_queue;
 
   public:
     /**
@@ -48,23 +47,20 @@ namespace executors
      */
     bool try_executing_one()
     {
-      work task;
       try
       {
-        if (work_queue.try_pull_front(task) == queue_op_status::success)
+        work task;
+        if (work_queue.try_pull(task) == queue_op_status::success)
         {
           task();
           return true;
         }
         return false;
       }
-      catch (std::exception& )
-      {
-        return false;
-      }
       catch (...)
       {
-        return false;
+        std::terminate();
+        //return false;
       }
     }
     /**
@@ -90,17 +86,16 @@ namespace executors
         for(;;)
         {
           work task;
-          queue_op_status st = work_queue.wait_pull_front(task);
-          if (st == queue_op_status::closed) return;
+          queue_op_status st = work_queue.wait_pull(task);
+          if (st == queue_op_status::closed) {
+            return;
+          }
           task();
         }
       }
-      catch (std::exception& )
-      {
-        return;
-      }
       catch (...)
       {
+        std::terminate();
         return;
       }
     }
@@ -134,7 +129,7 @@ namespace executors
      *
      * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
-    basic_thread_pool(unsigned const thread_count = thread::hardware_concurrency())
+    basic_thread_pool(unsigned const thread_count = thread::hardware_concurrency()+1)
     {
       try
       {
@@ -228,7 +223,8 @@ namespace executors
     {
       // signal to all the worker threads that there will be no more submissions.
       close();
-      // joins all the threads as the threads were scoped_threads
+      // joins all the threads before destroying the thread pool resources (e.g. the queue).
+      join();
     }
 
     /**
@@ -270,23 +266,28 @@ namespace executors
      * \b Throws: \c sync_queue_is_closed if the thread pool is closed.
      * Whatever exception that can be throw while storing the closure.
      */
+    void submit(AUTOBOOST_THREAD_RV_REF(work) closure)  {
+      work_queue.push(autoboost::move(closure));
+    }
 
 #if defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES)
     template <typename Closure>
     void submit(Closure & closure)
     {
-      work_queue.push_back(work(closure));
+      submit(work(closure));
     }
 #endif
     void submit(void (*closure)())
     {
-      work_queue.push_back(work(closure));
+      submit(work(closure));
     }
 
     template <typename Closure>
-    void submit(AUTOBOOST_THREAD_RV_REF(Closure) closure)
+    void submit(AUTOBOOST_THREAD_FWD_REF(Closure) closure)
     {
-      work_queue.push_back(work(autoboost::forward<Closure>(closure)));
+      //submit(work(autoboost::forward<Closure>(closure)));
+      work w((autoboost::forward<Closure>(closure)));
+      submit(autoboost::move(w));
     }
 
     /**

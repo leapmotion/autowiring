@@ -3,21 +3,15 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef FILE_boost_type_traits_integral_promotion_hpp_INCLUDED
-#define FILE_boost_type_traits_integral_promotion_hpp_INCLUDED
+#ifndef FILE_autoboost_type_traits_integral_promotion_hpp_INCLUDED
+#define FILE_autoboost_type_traits_integral_promotion_hpp_INCLUDED
 
 #include <autoboost/config.hpp>
-
-#include <autoboost/mpl/eval_if.hpp>
-#include <autoboost/mpl/identity.hpp>
 #include <autoboost/type_traits/integral_constant.hpp>
 #include <autoboost/type_traits/is_const.hpp>
 #include <autoboost/type_traits/is_enum.hpp>
 #include <autoboost/type_traits/is_volatile.hpp>
 #include <autoboost/type_traits/remove_cv.hpp>
-
-// Should be the last #include
-#include <autoboost/type_traits/detail/type_trait_def.hpp>
 
 namespace autoboost {
 
@@ -41,7 +35,7 @@ template<> struct need_promotion<unsigned short int> : public true_type {};
     template<> struct need_promotion<T>          \
         : public integral_constant<bool, (sizeof(T) < sizeof(int))> {};
 
-// Same set of integral types as in boost/type_traits/is_integral.hpp.
+// Same set of integral types as in autoboost/type_traits/is_integral.hpp.
 // Please, keep in sync.
 #if (defined(AUTOBOOST_INTEL_CXX_VERSION) && defined(_MSC_VER) && (AUTOBOOST_INTEL_CXX_VERSION <= 600)) \
     || (defined(__BORLANDC__) && (__BORLANDC__ == 0x600) && (_MSC_VER < 1300))
@@ -168,27 +162,20 @@ struct integral_promotion_impl
       >::type type;
 };
 
-template<class T>
-struct integral_promotion
-  : public autoboost::mpl::eval_if<
-        need_promotion<AUTOBOOST_DEDUCED_TYPENAME remove_cv<T>::type>
-      , integral_promotion_impl<T>
-      , autoboost::mpl::identity<T>
-      >
-{
-};
+template<class T, bool b> struct integral_promotion { typedef T type; };
+template<class T> struct integral_promotion<T, true> : public integral_promotion_impl<T>{};
 
 } }
 
-AUTOBOOST_TT_AUX_TYPE_TRAIT_DEF1(
-      integral_promotion
-    , T
-    , AUTOBOOST_DEDUCED_TYPENAME
-        autoboost::type_traits::detail::integral_promotion<T>::type
-    )
+template <class T> struct integral_promotion
+{
+private:
+   typedef autoboost::type_traits::detail::need_promotion<typename remove_cv<T>::type> tag_type;
+public:
+   typedef typename autoboost::type_traits::detail::integral_promotion<T, tag_type::value>::type type;
+};
+
 }
 
-#include <autoboost/type_traits/detail/type_trait_undef.hpp>
-
-#endif // #ifndef FILE_boost_type_traits_integral_promotion_hpp_INCLUDED
+#endif // #ifndef FILE_autoboost_type_traits_integral_promotion_hpp_INCLUDED
 

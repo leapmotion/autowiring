@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // common_oarchive.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -32,7 +32,7 @@ namespace detail {
 
 // note: referred to as Curiously Recurring Template Patter (CRTP)
 template<class Archive>
-class common_oarchive : 
+class common_oarchive :
     public basic_oarchive,
     public interface_oarchive<Archive>
 {
@@ -65,12 +65,12 @@ private:
 protected:
     // default processing - invoke serialization library
     template<class T>
-    void save_override(T & t, AUTOBOOST_PFTO int){
+    void save_override(T & t){
         archive::save(* this->This(), t);
     }
     void save_start(const char * /*name*/){}
     void save_end(const char * /*name*/){}
-    common_oarchive(unsigned int flags = 0) : 
+    common_oarchive(unsigned int flags = 0) :
         basic_oarchive(flags),
         interface_oarchive<Archive>()
     {}
