@@ -250,7 +250,7 @@ struct extended_header {
         int offset = copy_payload(payload_size);
 
         // Copy Masking Key
-        *(uint32_t*)bytes[offset] = masking_key;
+        *(uint32_t*)(bytes + offset) = masking_key;
     }
 
     uint8_t bytes[MAX_EXTENDED_HEADER_LENGTH];
