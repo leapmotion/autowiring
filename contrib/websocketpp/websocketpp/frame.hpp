@@ -69,6 +69,11 @@ union uint64_converter {
     uint8_t  c[8];
 };
 
+union sizet_converter {
+    size_t i;
+    uint8_t c[sizeof(size_t)];
+};
+
 /// Constants and utility functions related to WebSocket opcodes
 /**
  * WebSocket Opcodes are 4 bits. See RFC6455 section 5.2.
@@ -825,7 +830,7 @@ inline size_t word_mask_circ(uint8_t* data, size_t length, size_t prepared_key){
 inline size_t byte_mask_circ(uint8_t * input, uint8_t * output, size_t length,
     size_t prepared_key)
 {
-    uint32_converter key;
+    sizet_converter key;
     key.i = prepared_key;
 
     for (size_t i = 0; i < length; ++i) {
