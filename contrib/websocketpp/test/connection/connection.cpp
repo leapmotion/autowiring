@@ -26,7 +26,7 @@
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE connection
-#include <autoboost/test/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include "connection_tu2.hpp"
 

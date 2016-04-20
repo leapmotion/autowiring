@@ -26,7 +26,7 @@
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE transport_asio_timers
-#include <autoboost/test/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <exception>
 #include <iostream>
@@ -47,23 +47,23 @@
 #include <websocketpp/logger/stub.hpp>
 //#include <websocketpp/logger/basic.hpp>
 
-#include <autoboost/asio.hpp>
+#include <boost/asio.hpp>
 
 // Accept a connection, read data, and discard until EOF
 void run_dummy_server(int port) {
-    using autoboost::asio::ip::tcp;
+    using boost::asio::ip::tcp;
 
     try {
-        autoboost::asio::io_service io_service;
+        boost::asio::io_service io_service;
         tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v6(), port));
         tcp::socket socket(io_service);
 
         acceptor.accept(socket);
         for (;;) {
             char data[512];
-            autoboost::system::error_code ec;
-            socket.read_some(autoboost::asio::buffer(data), ec);
-            if (ec == autoboost::asio::error::eof) {
+            boost::system::error_code ec;
+            socket.read_some(boost::asio::buffer(data), ec);
+            if (ec == boost::asio::error::eof) {
                 break;
             } else if (ec) {
                 // other error
@@ -72,16 +72,16 @@ void run_dummy_server(int port) {
         }
     } catch (std::exception & e) {
         std::cout << e.what() << std::endl;
-    } catch (autoboost::system::error_code & ec) {
+    } catch (boost::system::error_code & ec) {
         std::cout << ec.message() << std::endl;
     }
 }
 
 // Wait for the specified time period then fail the test
 void run_test_timer(long value) {
-    autoboost::asio::io_service ios;
-    autoboost::asio::deadline_timer t(ios,autoboost::posix_time::milliseconds(value));
-    autoboost::system::error_code ec;
+    boost::asio::io_service ios;
+    boost::asio::deadline_timer t(ios,boost::posix_time::milliseconds(value));
+    boost::system::error_code ec;
     t.wait(ec);
     BOOST_FAIL( "Test timed out" );
 }
@@ -106,9 +106,9 @@ struct config {
 };
 
 // Mock context that does no validation
-typedef websocketpp::lib::shared_ptr<autoboost::asio::ssl::context> context_ptr;
+typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
 context_ptr on_tls_init(websocketpp::connection_hdl) {
-    return context_ptr(new autoboost::asio::ssl::context(autoboost::asio::ssl::context::sslv23));
+    return context_ptr(new boost::asio::ssl::context(boost::asio::ssl::context::sslv23));
 }
 
 // Mock connection

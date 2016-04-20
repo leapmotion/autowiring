@@ -26,7 +26,7 @@
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE transport_integration
-#include <autoboost/test/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <websocketpp/common/thread.hpp>
 
@@ -218,19 +218,19 @@ void run_time_limited_client(client & c, std::string uri, long timeout,
 }
 
 void run_dummy_server(int port) {
-    using autoboost::asio::ip::tcp;
+    using boost::asio::ip::tcp;
 
     try {
-        autoboost::asio::io_service io_service;
+        boost::asio::io_service io_service;
         tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v6(), port));
         tcp::socket socket(io_service);
 
         acceptor.accept(socket);
         for (;;) {
             char data[512];
-            autoboost::system::error_code ec;
-            socket.read_some(autoboost::asio::buffer(data), ec);
-            if (ec == autoboost::asio::error::eof) {
+            boost::system::error_code ec;
+            socket.read_some(boost::asio::buffer(data), ec);
+            if (ec == boost::asio::error::eof) {
                 break;
             } else if (ec) {
                 // other error
@@ -239,27 +239,27 @@ void run_dummy_server(int port) {
         }
     } catch (std::exception & e) {
         std::cout << e.what() << std::endl;
-    } catch (autoboost::system::error_code & ec) {
+    } catch (boost::system::error_code & ec) {
         std::cout << ec.message() << std::endl;
     }
 }
 
 void run_dummy_client(std::string port) {
-    using autoboost::asio::ip::tcp;
+    using boost::asio::ip::tcp;
 
     try {
-        autoboost::asio::io_service io_service;
+        boost::asio::io_service io_service;
         tcp::resolver resolver(io_service);
         tcp::resolver::query query("localhost", port);
         tcp::resolver::iterator iterator = resolver.resolve(query);
         tcp::socket socket(io_service);
 
-        autoboost::asio::connect(socket, iterator);
+        boost::asio::connect(socket, iterator);
         for (;;) {
             char data[512];
-            autoboost::system::error_code ec;
-            socket.read_some(autoboost::asio::buffer(data), ec);
-            if (ec == autoboost::asio::error::eof) {
+            boost::system::error_code ec;
+            socket.read_some(boost::asio::buffer(data), ec);
+            if (ec == boost::asio::error::eof) {
                 break;
             } else if (ec) {
                 // other error
@@ -268,7 +268,7 @@ void run_dummy_client(std::string port) {
         }
     } catch (std::exception & e) {
         std::cout << e.what() << std::endl;
-    } catch (autoboost::system::error_code & ec) {
+    } catch (boost::system::error_code & ec) {
         std::cout << ec.message() << std::endl;
     }
 }

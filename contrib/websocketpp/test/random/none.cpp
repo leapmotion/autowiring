@@ -26,7 +26,7 @@
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE random_none
-#include <autoboost/test/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <websocketpp/common/stdint.hpp>
 #include <websocketpp/random/none.hpp>
