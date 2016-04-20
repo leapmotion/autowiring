@@ -35,8 +35,8 @@ template <class Then, class Else> struct IF<false, Then, Else> {
 
 // An if construct that doesn't instantiate the non-matching template:
 
-// Called as: 
-//  IF_type<condition, A, B>::type 
+// Called as:
+//  IF_type<condition, A, B>::type
 // The matching template must define the typeded 'type'
 // I.e. A::type if condition is true, B::type if condition is false
 // Idea from Vesa Karvonen (from C&E as well I guess)
@@ -100,9 +100,9 @@ template<class T> struct remove_reference_and_cv {
 };
 
 
-   
+
 // returns a reference to the element of tuple T
-template<int N, class T> struct tuple_element_as_reference {   
+template<int N, class T> struct tuple_element_as_reference {
   typedef typename
      autoboost::tuples::access_traits<
        typename autoboost::tuples::element<N, T>::type
@@ -110,34 +110,34 @@ template<int N, class T> struct tuple_element_as_reference {
 };
 
 // returns the cv and reverence stripped type of a tuple element
-template<int N, class T> struct tuple_element_stripped {   
+template<int N, class T> struct tuple_element_stripped {
   typedef typename
      remove_reference_and_cv<
        typename autoboost::tuples::element<N, T>::type
      >::type type;
 };
 
-// is_lambda_functor -------------------------------------------------   
+// is_lambda_functor -------------------------------------------------
 
 template <class T> struct is_lambda_functor_ {
   AUTOBOOST_STATIC_CONSTANT(bool, value = false);
 };
-   
+
 template <class Arg> struct is_lambda_functor_<lambda_functor<Arg> > {
   AUTOBOOST_STATIC_CONSTANT(bool, value = true);
 };
-   
+
 } // end detail
 
-   
+
 template <class T> struct is_lambda_functor {
-  AUTOBOOST_STATIC_CONSTANT(bool, 
-     value = 
+  AUTOBOOST_STATIC_CONSTANT(bool,
+     value =
        detail::is_lambda_functor_<
          typename detail::remove_reference_and_cv<T>::type
        >::value);
 };
-   
+
 
 namespace detail {
 
@@ -148,7 +148,7 @@ namespace detail {
 
 // The conversions performed are:
 // references -> compile_time_error
-// T1 -> T2, 
+// T1 -> T2,
 // reference_wrapper<T> -> T&
 // const array -> ref to const array
 // array -> ref to array
@@ -156,14 +156,14 @@ namespace detail {
 
 // ------------------------------------------------------------------------
 
-template<class T1, class T2> 
+template<class T1, class T2>
 struct parameter_traits_ {
   typedef T2 type;
 };
 
 // Do not instantiate with reference types
 template<class T, class Any> struct parameter_traits_<T&, Any> {
-  typedef typename 
+  typedef typename
     generate_error<T&>::
       parameter_traits_class_instantiated_with_reference_type type;
 };
@@ -172,38 +172,38 @@ template<class T, class Any> struct parameter_traits_<T&, Any> {
 template<class T, int n, class Any> struct parameter_traits_<T[n], Any> {
   typedef T (&type)[n];
 };
-   
-template<class T, int n, class Any> 
+
+template<class T, int n, class Any>
 struct parameter_traits_<const T[n], Any> {
   typedef const T (&type)[n];
 };
 
-template<class T, int n, class Any> 
+template<class T, int n, class Any>
 struct parameter_traits_<volatile T[n], Any> {
   typedef volatile  T (&type)[n];
 };
-template<class T, int n, class Any> 
+template<class T, int n, class Any>
 struct parameter_traits_<const volatile T[n], Any> {
   typedef const volatile T (&type)[n];
 };
 
 
-template<class T, class Any> 
+template<class T, class Any>
 struct parameter_traits_<autoboost::reference_wrapper<T>, Any >{
   typedef T& type;
 };
 
-template<class T, class Any> 
+template<class T, class Any>
 struct parameter_traits_<const autoboost::reference_wrapper<T>, Any >{
   typedef T& type;
 };
 
-template<class T, class Any> 
+template<class T, class Any>
 struct parameter_traits_<volatile autoboost::reference_wrapper<T>, Any >{
   typedef T& type;
 };
 
-template<class T, class Any> 
+template<class T, class Any>
 struct parameter_traits_<const volatile autoboost::reference_wrapper<T>, Any >{
   typedef T& type;
 };
@@ -238,39 +238,39 @@ struct parameter_traits_<const volatile lambda_functor<Arg>, Any > {
 
 
 // ------------------------------------------------------------------------
-// traits classes for lambda expressions (bind functions, operators ...)   
+// traits classes for lambda expressions (bind functions, operators ...)
 
 // must be instantiated with non-reference types
 
 // The default is const plain type -------------------------
-// const T -> const T, 
-// T -> const T, 
+// const T -> const T,
+// T -> const T,
 // references -> compile_time_error
 // reference_wrapper<T> -> T&
 // array -> const ref array
 template<class T>
 struct const_copy_argument {
-  typedef typename 
+  typedef typename
     detail::parameter_traits_<
       T,
       typename detail::IF<autoboost::is_function<T>::value, T&, const T>::RET
     >::type type;
 };
 
-// T may be a function type. Without the IF test, const would be added 
+// T may be a function type. Without the IF test, const would be added
 // to a function type, which is illegal.
 
 // all arrays are converted to const.
-// This traits template is used for 'const T&' parameter passing 
-// and thus the knowledge of the potential 
-// non-constness of an actual argument is lost.   
+// This traits template is used for 'const T&' parameter passing
+// and thus the knowledge of the potential
+// non-constness of an actual argument is lost.
 template<class T, int n>  struct const_copy_argument <T[n]> {
   typedef const T (&type)[n];
 };
 template<class T, int n>  struct const_copy_argument <volatile T[n]> {
      typedef const volatile T (&type)[n];
 };
-   
+
 template<class T>
 struct const_copy_argument<T&> {};
 // do not instantiate with references
@@ -286,27 +286,27 @@ struct const_copy_argument<void> {
 // Does the same as const_copy_argument, but passes references through as such
 template<class T>
 struct bound_argument_conversion {
-  typedef typename const_copy_argument<T>::type type; 
+  typedef typename const_copy_argument<T>::type type;
 };
 
 template<class T>
 struct bound_argument_conversion<T&> {
-  typedef T& type; 
+  typedef T& type;
 };
-   
+
 // The default is non-const reference -------------------------
-// const T -> const T&, 
-// T -> T&, 
+// const T -> const T&,
+// T -> T&,
 // references -> compile_time_error
 // reference_wrapper<T> -> T&
 template<class T>
 struct reference_argument {
-  typedef typename detail::parameter_traits_<T, T&>::type type; 
+  typedef typename detail::parameter_traits_<T, T&>::type type;
 };
 
 template<class T>
 struct reference_argument<T&> {
-  typedef typename detail::generate_error<T&>::references_not_allowed type; 
+  typedef typename detail::generate_error<T&>::references_not_allowed type;
 };
 
 template<class Arg>
@@ -336,28 +336,28 @@ struct reference_argument<void> {
 };
 
 namespace detail {
-   
+
 // Array to pointer conversion
 template <class T>
-struct array_to_pointer { 
+struct array_to_pointer {
   typedef T type;
 };
 
 template <class T, int N>
-struct array_to_pointer <const T[N]> { 
+struct array_to_pointer <const T[N]> {
   typedef const T* type;
 };
 template <class T, int N>
-struct array_to_pointer <T[N]> { 
+struct array_to_pointer <T[N]> {
   typedef T* type;
 };
 
 template <class T, int N>
-struct array_to_pointer <const T (&) [N]> { 
+struct array_to_pointer <const T (&) [N]> {
   typedef const T* type;
 };
 template <class T, int N>
-struct array_to_pointer <T (&) [N]> { 
+struct array_to_pointer <T (&) [N]> {
   typedef T* type;
 };
 
@@ -376,8 +376,8 @@ struct array_to_pointer <T (&) [N]> {
 
 // Conversions:
 // T -> const T,
-// cv T -> cv T, 
-// T& -> T& 
+// cv T -> cv T,
+// T& -> T&
 // reference_wrapper<T> -> T&
 // const reference_wrapper<T> -> T&
 // array -> const ref array
@@ -387,12 +387,12 @@ struct array_to_pointer <T (&) [N]> {
 // as copies
 template<class T>
 struct bind_traits {
-  typedef const T type; 
+  typedef const T type;
 };
 
 template<class T>
 struct bind_traits<T&> {
-  typedef T& type; 
+  typedef T& type;
 };
 
 // null_types are an exception, we always want to store them as non const
@@ -402,7 +402,7 @@ struct bind_traits<null_type> {
   typedef null_type type;
 };
 
-// the bind_tuple_mapper, bind_type_generators may 
+// the bind_tuple_mapper, bind_type_generators may
 // introduce const to null_type
 template<>
 struct bind_traits<const null_type> {
@@ -411,13 +411,13 @@ struct bind_traits<const null_type> {
 
 // Arrays can't be stored as plain types; convert them to references.
 // All arrays are converted to const. This is because bind takes its
-// parameters as const T& and thus the knowledge of the potential 
+// parameters as const T& and thus the knowledge of the potential
 // non-constness of actual argument is lost.
 template<class T, int n>  struct bind_traits <T[n]> {
   typedef const T (&type)[n];
 };
 
-template<class T, int n> 
+template<class T, int n>
 struct bind_traits<const T[n]> {
   typedef const T (&type)[n];
 };
@@ -426,7 +426,7 @@ template<class T, int n>  struct bind_traits<volatile T[n]> {
   typedef const volatile T (&type)[n];
 };
 
-template<class T, int n> 
+template<class T, int n>
 struct bind_traits<const volatile T[n]> {
   typedef const volatile T (&type)[n];
 };
@@ -481,12 +481,12 @@ struct bind_traits<R(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9)> {
     typedef R(&type)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9);
 };
 
-template<class T> 
+template<class T>
 struct bind_traits<reference_wrapper<T> >{
   typedef T& type;
 };
 
-template<class T> 
+template<class T>
 struct bind_traits<const reference_wrapper<T> >{
   typedef T& type;
 };
@@ -499,20 +499,20 @@ struct bind_traits<void> {
 
 
 template <
-  class T0 = null_type, class T1 = null_type, class T2 = null_type, 
-  class T3 = null_type, class T4 = null_type, class T5 = null_type, 
-  class T6 = null_type, class T7 = null_type, class T8 = null_type, 
+  class T0 = null_type, class T1 = null_type, class T2 = null_type,
+  class T3 = null_type, class T4 = null_type, class T5 = null_type,
+  class T6 = null_type, class T7 = null_type, class T8 = null_type,
   class T9 = null_type
 >
 struct bind_tuple_mapper {
   typedef
-    tuple<typename bind_traits<T0>::type, 
-          typename bind_traits<T1>::type, 
-          typename bind_traits<T2>::type, 
-          typename bind_traits<T3>::type, 
-          typename bind_traits<T4>::type, 
-          typename bind_traits<T5>::type, 
-          typename bind_traits<T6>::type, 
+    tuple<typename bind_traits<T0>::type,
+          typename bind_traits<T1>::type,
+          typename bind_traits<T2>::type,
+          typename bind_traits<T3>::type,
+          typename bind_traits<T4>::type,
+          typename bind_traits<T5>::type,
+          typename bind_traits<T6>::type,
           typename bind_traits<T7>::type,
           typename bind_traits<T8>::type,
           typename bind_traits<T9>::type> type;
@@ -532,9 +532,9 @@ struct bind_tuple_mapper {
 
 // maps the bind argument types to the resulting lambda functor type
 template <
-  class T0 = null_type, class T1 = null_type, class T2 = null_type, 
-  class T3 = null_type, class T4 = null_type, class T5 = null_type, 
-  class T6 = null_type, class T7 = null_type, class T8 = null_type, 
+  class T0 = null_type, class T1 = null_type, class T2 = null_type,
+  class T3 = null_type, class T4 = null_type, class T5 = null_type,
+  class T6 = null_type, class T7 = null_type, class T8 = null_type,
   class T9 = null_type
 >
 class bind_type_generator {
@@ -546,9 +546,9 @@ class bind_type_generator {
 
   AUTOBOOST_STATIC_CONSTANT(int, nof_elems = autoboost::tuples::length<args_t>::value);
 
-  typedef 
+  typedef
     action<
-      nof_elems, 
+      nof_elems,
       function_action<nof_elems>
     > action_type;
 
@@ -556,17 +556,17 @@ public:
   typedef
     lambda_functor<
       lambda_functor_base<
-        action_type, 
+        action_type,
         args_t
       >
-    > type; 
-    
+    > type;
+
 };
 
 
-   
+
 } // detail
-   
+
 template <class T> inline const T&  make_const(const T& t) { return t; }
 
 
@@ -574,5 +574,5 @@ template <class T> inline const T&  make_const(const T& t) { return t; }
 } // end of namespace autoboost
 
 
-   
+
 #endif // AUTOBOOST_LAMBDA_TRAITS_HPP

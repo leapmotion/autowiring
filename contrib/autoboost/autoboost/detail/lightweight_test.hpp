@@ -10,7 +10,7 @@
 #define AUTOBOOST_DETAIL_LIGHTWEIGHT_TEST_HPP
 
 // The header file at this path is deprecated;
-// use boost/core/lightweight_test.hpp instead.
+// use autoboost/core/lightweight_test.hpp instead.
 
 #include <autoboost/core/lightweight_test.hpp>
 

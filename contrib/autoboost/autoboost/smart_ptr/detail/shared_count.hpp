@@ -31,7 +31,7 @@
 #include <autoboost/detail/workaround.hpp>
 // In order to avoid circular dependencies with Boost.TR1
 // we make sure that our include of <memory> doesn't try to
-// pull in the TR1 headers: that's why we use this header 
+// pull in the TR1 headers: that's why we use this header
 // rather than including <memory> directly:
 #include <autoboost/config/no_tr1/memory.hpp>  // std::auto_ptr
 #include <functional>       // std::less
@@ -66,7 +66,7 @@ template< class D > struct sp_inplace_tag
 #if !defined( AUTOBOOST_NO_CXX11_SMART_PTR )
 
 template< class T > class sp_reference_wrapper
-{ 
+{
 public:
 
     explicit sp_reference_wrapper( T & t): t_( autoboost::addressof( t ) )
@@ -409,7 +409,7 @@ public:
         r.release();
     }
 
-#endif 
+#endif
 
 #if !defined( AUTOBOOST_NO_CXX11_SMART_PTR )
 

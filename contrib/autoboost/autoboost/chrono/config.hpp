@@ -1,4 +1,4 @@
-//  boost/chrono/config.hpp  -------------------------------------------------//
+//  autoboost/chrono/config.hpp  -------------------------------------------------//
 
 //  Copyright Beman Dawes 2003, 2006, 2008
 //  Copyright 2009-2011 Vicente J. Botet Escriba
@@ -173,7 +173,7 @@
 //  enable dynamic linking on Windows  ---------------------------------------//
 
 // we need to import/export our code only if the user has specifically
-// asked for it by defining either AUTOBOOST_ALL_DYN_LINK if they want all boost
+// asked for it by defining either AUTOBOOST_ALL_DYN_LINK if they want all autoboost
 // libraries to be dynamically linked, or AUTOBOOST_CHRONO_DYN_LINK
 // if they want just this one to be dynamically liked:
 #if defined(AUTOBOOST_ALL_DYN_LINK) || defined(AUTOBOOST_CHRONO_DYN_LINK)

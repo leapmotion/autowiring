@@ -56,6 +56,6 @@ namespace autoboost
         return error_condition(underlying_cast<int>(e), autoboost::future_category());
     }
   } // system
-} // boost
+} // autoboost
 
 #endif // header

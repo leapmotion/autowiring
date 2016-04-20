@@ -78,7 +78,7 @@ namespace {
     {
       //std::cout << " result is " << static_cast<int>(res) << std::endl;
       AUTOBOOST_FILESYSTEM_THROW(bs::system_error(res, fs::codecvt_error_category(),
-        "boost::filesystem::path codecvt to wstring"));
+        "autoboost::filesystem::path codecvt to wstring"));
     }
     target.append(to, to_next);
   }
@@ -112,7 +112,7 @@ namespace {
     {
       //std::cout << " result is " << static_cast<int>(res) << std::endl;
       AUTOBOOST_FILESYSTEM_THROW(bs::system_error(res, fs::codecvt_error_category(),
-        "boost::filesystem::path codecvt to string"));
+        "autoboost::filesystem::path codecvt to string"));
     }
     target.append(to, to_next);
   }

@@ -46,25 +46,25 @@ extern "C" {
       HANDLE    hEvent;
     } OVERLAPPED, *LPOVERLAPPED;
 
-    
-    __declspec(dllimport) void * __stdcall 
+
+    __declspec(dllimport) void * __stdcall
         CreateFileA (const char *, unsigned long, unsigned long, struct SECURITY_ATTRIBUTES_*, unsigned long, unsigned long, void *);
-    __declspec(dllimport) int __stdcall    
+    __declspec(dllimport) int __stdcall
         DeleteFileA (const char *);
-    __declspec(dllimport) void *__stdcall 
+    __declspec(dllimport) void *__stdcall
         FindFirstFileA(const char *lpFileName, win32_find_data_t *lpFindFileData);
-    __declspec(dllimport) int   __stdcall 
+    __declspec(dllimport) int   __stdcall
         FindNextFileA(void *hFindFile, win32_find_data_t *lpFindFileData);
-    __declspec(dllimport) int   __stdcall 
+    __declspec(dllimport) int   __stdcall
         FindClose(void *hFindFile);
-    __declspec(dllimport) BOOL __stdcall 
+    __declspec(dllimport) BOOL __stdcall
         GetFileSizeEx(
             HANDLE_ hFile,
             PLARGE_INTEGER_ lpFileSize
     );
-    __declspec(dllimport) int __stdcall    
+    __declspec(dllimport) int __stdcall
         MoveFileExA (const char *, const char *, unsigned long);
-    __declspec(dllimport) BOOL_ __stdcall 
+    __declspec(dllimport) BOOL_ __stdcall
         SetFileValidData(
             HANDLE_ hFile,
             LONGLONG_ ValidDataLength

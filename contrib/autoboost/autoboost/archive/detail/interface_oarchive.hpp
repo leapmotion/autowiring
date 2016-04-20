@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // interface_oarchive.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -32,7 +32,7 @@ namespace detail {
 class AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_pointer_oserializer;
 
 template<class Archive>
-class interface_oarchive 
+class interface_oarchive
 {
 protected:
     interface_oarchive(){};
@@ -48,7 +48,7 @@ public:
     }
 
     template<class T>
-    const basic_pointer_oserializer * 
+    const basic_pointer_oserializer *
     register_type(const T * = NULL){
         const basic_pointer_oserializer & bpos =
             autoboost::serialization::singleton<
@@ -63,8 +63,8 @@ public:
         this->This()->save_override(t, 0);
         return * this->This();
     }
-    
-    // the & operator 
+
+    // the & operator
     template<class T>
     Archive & operator&(T & t){
         #ifndef AUTOBOOST_NO_FUNCTION_TEMPLATE_ORDERING

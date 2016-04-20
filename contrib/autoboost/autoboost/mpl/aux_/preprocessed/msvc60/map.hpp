@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -31,7 +31,7 @@ struct map_chooser<0>
     struct result_
     {
         typedef map0<
-             
+
             >::type type;
 
     };
@@ -502,15 +502,15 @@ template<
 struct map_count_args
 {
     AUTOBOOST_STATIC_CONSTANT(int, value =
-          is_map_arg<T1>::value + is_map_arg<T2>::value 
-        + is_map_arg<T3>::value + is_map_arg<T4>::value 
-        + is_map_arg<T5>::value + is_map_arg<T6>::value 
-        + is_map_arg<T7>::value + is_map_arg<T8>::value 
-        + is_map_arg<T9>::value + is_map_arg<T10>::value 
-        + is_map_arg<T11>::value + is_map_arg<T12>::value 
-        + is_map_arg<T13>::value + is_map_arg<T14>::value 
-        + is_map_arg<T15>::value + is_map_arg<T16>::value 
-        + is_map_arg<T17>::value + is_map_arg<T18>::value 
+          is_map_arg<T1>::value + is_map_arg<T2>::value
+        + is_map_arg<T3>::value + is_map_arg<T4>::value
+        + is_map_arg<T5>::value + is_map_arg<T6>::value
+        + is_map_arg<T7>::value + is_map_arg<T8>::value
+        + is_map_arg<T9>::value + is_map_arg<T10>::value
+        + is_map_arg<T11>::value + is_map_arg<T12>::value
+        + is_map_arg<T13>::value + is_map_arg<T14>::value
+        + is_map_arg<T15>::value + is_map_arg<T16>::value
+        + is_map_arg<T17>::value + is_map_arg<T18>::value
         + is_map_arg<T19>::value + is_map_arg<T20>::value
         );
 

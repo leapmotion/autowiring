@@ -40,7 +40,7 @@ inline void atomic_increment( int *pw )
    __lwsync();
    __fetch_and_add(pw, 1);
    __isync();
-} 
+}
 
 inline int atomic_decrement( int *pw )
 {
@@ -140,7 +140,7 @@ public:
 
     long use_count() const // nothrow
     {
-        return *const_cast<volatile int*>(&use_count_); 
+        return *const_cast<volatile int*>(&use_count_);
     }
 };
 

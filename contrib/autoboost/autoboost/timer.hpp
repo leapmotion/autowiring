@@ -1,4 +1,4 @@
-//  boost timer.hpp header file  ---------------------------------------------//
+//  autoboost timer.hpp header file  ---------------------------------------------//
 
 //  Copyright Beman Dawes 1994-99.  Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
@@ -9,10 +9,10 @@
 //  Revision History
 //  01 Apr 01  Modified to use new <autoboost/limits.hpp> header. (JMaddock)
 //  12 Jan 01  Change to inline implementation to allow use without library
-//             builds. See docs for more rationale. (Beman Dawes) 
+//             builds. See docs for more rationale. (Beman Dawes)
 //  25 Sep 99  elapsed_max() and elapsed_min() added (John Maddock)
 //  16 Jul 99  Second beta
-//   6 Jul 99  Initial boost version
+//   6 Jul 99  Initial autoboost version
 
 #ifndef AUTOBOOST_TIMER_HPP
 #define AUTOBOOST_TIMER_HPP
@@ -57,7 +57,7 @@ class timer
   // where std::clock_t overflows or resets at surprising values.
   {
     return (double((std::numeric_limits<std::clock_t>::max)())
-       - double(_start_time)) / double(CLOCKS_PER_SEC); 
+       - double(_start_time)) / double(CLOCKS_PER_SEC);
   }
 
   double elapsed_min() const            // return minimum value for elapsed()

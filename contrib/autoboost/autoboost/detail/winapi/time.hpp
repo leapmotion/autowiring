@@ -38,7 +38,7 @@ namespace winapi {
     #endif
     using ::GetSystemTime;
     using ::SystemTimeToFileTime;
-    
+
     #if AUTOBOOST_PLAT_WINDOWS_DESKTOP
     using ::GetTickCount;
     #endif

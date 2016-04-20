@@ -24,7 +24,7 @@ namespace autoboost {
         namespace detail {
 
 //  insert helpers  -------------------------------------------------//
-        
+
             template< typename InputT, typename ForwardIteratorT >
             inline void insert(
                 InputT& Input,
@@ -43,7 +43,7 @@ namespace autoboost {
             {
                 ::autoboost::algorithm::detail::insert( Input, At, ::autoboost::begin(Insert), ::autoboost::end(Insert) );
             }
-           
+
 //  erase helper  ---------------------------------------------------//
 
             // Erase a range in the sequence
@@ -108,7 +108,7 @@ namespace autoboost {
                     AUTOBOOST_STRING_TYPENAME InputT::iterator From,
                     AUTOBOOST_STRING_TYPENAME InputT::iterator To,
                     ForwardIteratorT Begin,
-                    ForwardIteratorT End ) 
+                    ForwardIteratorT End )
                 {
                     AUTOBOOST_STRING_TYPENAME InputT::iterator At=Input.erase( From, To );
                     if ( Begin!=End )
@@ -135,9 +135,9 @@ namespace autoboost {
                     AUTOBOOST_STRING_TYPENAME InputT::iterator From,
                     AUTOBOOST_STRING_TYPENAME InputT::iterator To,
                     ForwardIteratorT Begin,
-                    ForwardIteratorT End ) 
+                    ForwardIteratorT End )
                 {
-                    replace_const_time_helper< 
+                    replace_const_time_helper<
                         autoboost::mpl::and_<
                             has_const_time_insert<InputT>,
                             has_const_time_erase<InputT> >::value >()(
@@ -162,7 +162,7 @@ namespace autoboost {
             };
 
 //  replace helper  -------------------------------------------------//
-        
+
             template< typename InputT, typename ForwardIteratorT >
             inline void replace(
                 InputT& Input,

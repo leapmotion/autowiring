@@ -72,7 +72,7 @@ namespace autoboost {
                 begin += 3;
                 if (end != begin) {
                     /* It is 'nan(...)' or some bad input*/
-                    
+
                     if (end - begin < 2) return false; // bad input
                     -- end;
                     if (*begin != opening_brace || *end != closing_brace) return false; // bad input

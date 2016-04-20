@@ -60,7 +60,7 @@
 // We disable this if the compiler is really nvcc as it
 // doesn't actually support __int128 as of CUDA_VERSION=5000
 // even though it defines __SIZEOF_INT128__.
-// See https://svn.boost.org/trac/boost/ticket/10418
+// See https://svn.boost.org/trac/autoboost/ticket/10418
 // Only re-enable this for nvcc if you're absolutely sure
 // of the circumstances under which it's supported.
 // Similarly __SIZEOF_INT128__ is defined when targetting msvc
@@ -241,7 +241,7 @@
 // Therefore we don't care such case.
 //
 // Note that we can't check Clang version directly as the numbering system changes depending who's
-// creating the Clang release (see https://github.com/boostorg/config/pull/39#issuecomment-59927873)
+// creating the Clang release (see https://github.com/autoboostorg/config/pull/39#issuecomment-59927873)
 // so instead verify that we have a feature that was introduced at the same time as working C++14
 // constexpr (generic lambda's in this case):
 //

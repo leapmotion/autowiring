@@ -1,4 +1,4 @@
-/* boost random/detail/disable_warnings.hpp header file
+/* autoboost random/detail/disable_warnings.hpp header file
  *
  * Copyright Steven Watanabe 2009
  * Distributed under the Boost Software License, Version 1.0. (See

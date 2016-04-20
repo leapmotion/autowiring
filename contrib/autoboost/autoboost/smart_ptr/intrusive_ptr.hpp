@@ -40,7 +40,7 @@ namespace autoboost
 //  A smart pointer that uses intrusive reference counting.
 //
 //  Relies on unqualified calls to
-//  
+//
 //      void intrusive_ptr_add_ref(T * p);
 //      void intrusive_ptr_release(T * p);
 //
@@ -310,7 +310,7 @@ using std::basic_ostream;
 template<class E, class T, class Y> basic_ostream<E, T> & operator<< (basic_ostream<E, T> & os, intrusive_ptr<Y> const & p)
 # else
 template<class E, class T, class Y> std::basic_ostream<E, T> & operator<< (std::basic_ostream<E, T> & os, intrusive_ptr<Y> const & p)
-# endif 
+# endif
 {
     os << p.get();
     return os;

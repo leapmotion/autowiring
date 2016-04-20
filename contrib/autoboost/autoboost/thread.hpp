@@ -2,7 +2,7 @@
 // William E. Kempf
 // (C) Copyright 2008-9 Anthony Williams
 //
-// Distributed under the Boost Software License, Version 1.0. (See accompanying 
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //  See www.boost.org/libs/thread for documentation.

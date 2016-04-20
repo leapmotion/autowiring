@@ -5,8 +5,8 @@
 // Copyright Aleksey Gurtovoy 2001-2004
 // Copyright David Abrahams 2001-2002
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -81,8 +81,8 @@ struct iter_fold_if_step_impl<false>
     };
 };
 
-// agurt, 25/jun/02: MSVC 6.5 workaround, had to get rid of inheritance 
-// here and in 'iter_fold_if_backward_step', because sometimes it interfered 
+// agurt, 25/jun/02: MSVC 6.5 workaround, had to get rid of inheritance
+// here and in 'iter_fold_if_backward_step', because sometimes it interfered
 // with the "early template instantiation bug" in _really_ ugly ways
 template<
       typename Iterator
@@ -170,7 +170,7 @@ struct iter_fold_if_impl
         , AUX_ITER_FOLD_FORWARD_STEP
         , unused
         )
-    
+
     typedef typename if_<
           typename AUX_LAST_FORWARD_STEP::not_last
         , iter_fold_if_impl<

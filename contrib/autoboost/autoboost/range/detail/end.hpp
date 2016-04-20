@@ -81,6 +81,6 @@ namespace autoboost
         }
     } // namespace range_adl_barrier
 
-} // namespace 'boost'
+} // namespace 'autoboost'
 
 #endif

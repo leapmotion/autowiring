@@ -1,4 +1,4 @@
-//  boost/system/config.hpp  -----------------------------------------------------------//
+//  autoboost/system/config.hpp  -----------------------------------------------------------//
 
 //  Copyright Beman Dawes 2003, 2006
 
@@ -7,7 +7,7 @@
 
 //  See http://www.boost.org/libs/system for documentation.
 
-#ifndef AUTOBOOST_SYSTEM_CONFIG_HPP                  
+#ifndef AUTOBOOST_SYSTEM_CONFIG_HPP
 #define AUTOBOOST_SYSTEM_CONFIG_HPP
 
 #include <autoboost/config.hpp>
@@ -25,9 +25,9 @@
 #endif
 
 #if defined(AUTOBOOST_ALL_DYN_LINK) && !defined(AUTOBOOST_SYSTEM_DYN_LINK)
-# define AUTOBOOST_SYSTEM_DYN_LINK 
+# define AUTOBOOST_SYSTEM_DYN_LINK
 #elif defined(AUTOBOOST_ALL_STATIC_LINK) && !defined(AUTOBOOST_SYSTEM_STATIC_LINK)
-# define AUTOBOOST_SYSTEM_STATIC_LINK 
+# define AUTOBOOST_SYSTEM_STATIC_LINK
 #endif
 
 #if defined(AUTOBOOST_SYSTEM_DYN_LINK) && defined(AUTOBOOST_SYSTEM_STATIC_LINK)
@@ -39,7 +39,7 @@
 #if defined(AUTOBOOST_ALL_DYN_LINK) || defined(AUTOBOOST_SYSTEM_DYN_LINK)
 # if defined(AUTOBOOST_SYSTEM_SOURCE)
 #   define AUTOBOOST_SYSTEM_DECL AUTOBOOST_SYMBOL_EXPORT
-# else 
+# else
 #   define AUTOBOOST_SYSTEM_DECL AUTOBOOST_SYMBOL_IMPORT
 # endif
 #else

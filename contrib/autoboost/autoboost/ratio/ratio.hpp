@@ -54,7 +54,7 @@ time2_demo contained this comment:
 //
 // We simply cannot include this header on gcc without getting copious warnings of the kind:
 //
-// boost/integer.hpp:77:30: warning: use of C99 long long integer constant
+// autoboost/integer.hpp:77:30: warning: use of C99 long long integer constant
 //
 // And yet there is no other reasonable implementation, so we declare this a system header
 // to suppress these warnings.

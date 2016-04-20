@@ -25,9 +25,9 @@ namespace winapi
 typedef ::SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES_;
 typedef ::PSECURITY_ATTRIBUTES PSECURITY_ATTRIBUTES_;
 typedef ::LPSECURITY_ATTRIBUTES LPSECURITY_ATTRIBUTES_;
-    
+
 #else
-extern "C" { 
+extern "C" {
     struct SECURITY_DESCRIPTOR_;
     typedef SECURITY_DESCRIPTOR_* PSECURITY_DESCRIPTOR_;
     typedef struct _ACL {
@@ -44,12 +44,12 @@ extern "C" {
       BOOL_   bInheritHandle;
     } SECURITY_ATTRIBUTES_, *PSECURITY_ATTRIBUTES_, *LPSECURITY_ATTRIBUTES_;
 
-    __declspec(dllimport) BOOL_ __stdcall 
+    __declspec(dllimport) BOOL_ __stdcall
         InitializeSecurityDescriptor(
             PSECURITY_DESCRIPTOR_ pSecurityDescriptor,
             DWORD_ dwRevision
     );
-    __declspec(dllimport) BOOL_ __stdcall 
+    __declspec(dllimport) BOOL_ __stdcall
         SetSecurityDescriptorDacl(
             PSECURITY_DESCRIPTOR_ pSecurityDescriptor,
             BOOL_ bDaclPresent,

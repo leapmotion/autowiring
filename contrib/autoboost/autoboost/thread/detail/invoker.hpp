@@ -8,7 +8,7 @@
 //    Make use of Boost.Move
 //    Make use of Boost.Tuple (movable)
 // 2012/11 Vicente J. Botet Escriba
-//    Adapt to boost libc++ implementation
+//    Adapt to autoboost libc++ implementation
 
 //===----------------------------------------------------------------------===//
 //

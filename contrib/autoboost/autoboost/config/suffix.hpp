@@ -605,7 +605,7 @@ namespace std{ using ::type_info; }
      // Clang also defines __GNUC__ (as 4)
 #    if defined(__CUDACC__)
        // nvcc doesn't always parse __noinline__,
-       // see: https://svn.boost.org/trac/boost/ticket/9392
+       // see: https://svn.boost.org/trac/autoboost/ticket/9392
 #      define AUTOBOOST_NOINLINE __attribute__ ((noinline))
 #    else
 #      define AUTOBOOST_NOINLINE __attribute__ ((__noinline__))

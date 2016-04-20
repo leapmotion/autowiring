@@ -26,8 +26,8 @@
     Due to a language restriction, it is not currently possible to define specializations for
     stl containers without including the corresponding header. To decrease the overhead
     needed by this inclusion, user can selectively include a specialization
-    header for a specific container. They are located in boost/algorithm/string/stl
-    directory. Alternatively she can include boost/algorithm/string/std_collection_traits.hpp
+    header for a specific container. They are located in autoboost/algorithm/string/stl
+    directory. Alternatively she can include autoboost/algorithm/string/std_collection_traits.hpp
     header which contains specializations for all stl containers.
 */
 

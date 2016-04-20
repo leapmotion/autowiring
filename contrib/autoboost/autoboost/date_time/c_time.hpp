@@ -62,7 +62,7 @@ namespace date_time {
  	if(!localtime_r(t,&tmp))
             result = 0;
 	else
-            *result = tmp;	
+            *result = tmp;
  	#else
         result = localtime_r(t, result);
 	#endif
@@ -80,7 +80,7 @@ namespace date_time {
  	if(!gmtime_r(t,&tmp))
           result = 0;
         else
-          *result = tmp;	
+          *result = tmp;
 	#else
         result = gmtime_r(t, result);
 	#endif

@@ -70,7 +70,7 @@ inline int atomic_conditional_increment( int * pw )
          "     cmp.ne       p7,p0=%0,%2       ;; \n"
          "(p7) br.cond.spnt 0b                \n"
          "     mov          %0=%1             ;; \n"
-         "1:" : 
+         "1:" :
          "=&r"(rv), "=&r"(tmp), "=&r"(tmp2), "=m"(*pw) :
          "m"( *pw ) :
          "ar.ccv", "p7");

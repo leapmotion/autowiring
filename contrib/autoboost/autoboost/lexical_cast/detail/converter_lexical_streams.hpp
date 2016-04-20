@@ -110,7 +110,7 @@ namespace autoboost {
     namespace detail
     {
         struct do_not_construct_out_stream_t{};
-        
+
         template <class CharT, class Traits>
         struct out_stream_helper_trait {
 #if defined(AUTOBOOST_NO_STRINGSTREAM)
@@ -120,12 +120,12 @@ namespace autoboost {
             typedef std::ostringstream                              out_stream_t;
             typedef basic_unlockedbuf<std::streambuf, char>         buffer_t;
 #else
-            typedef std::basic_ostringstream<CharT, Traits> 
+            typedef std::basic_ostringstream<CharT, Traits>
                 out_stream_t;
-            typedef basic_unlockedbuf<std::basic_streambuf<CharT, Traits>, CharT>  
+            typedef basic_unlockedbuf<std::basic_streambuf<CharT, Traits>, CharT>
                 buffer_t;
 #endif
-        };   
+        };
     }
 
     namespace detail // optimized stream wrappers
@@ -141,7 +141,7 @@ namespace autoboost {
 
             typedef AUTOBOOST_DEDUCED_TYPENAME out_stream_helper_trait<CharT, Traits>::out_stream_t
                 out_stream_t;
-    
+
             typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::mpl::if_c<
                 RequiresStringbuffer,
                 out_stream_t,
@@ -153,7 +153,7 @@ namespace autoboost {
             CharT   buffer[CharacterBufferSize];
 
             // After the `operator <<`  finishes, `[start, finish)` is
-            // the range to output by `operator >>` 
+            // the range to output by `operator >>`
             const CharT*  start;
             const CharT*  finish;
 
@@ -162,7 +162,7 @@ namespace autoboost {
               : start(buffer)
               , finish(buffer + CharacterBufferSize)
             {}
-    
+
             const CharT* cbegin() const AUTOBOOST_NOEXCEPT {
                 return start;
             }
@@ -214,7 +214,7 @@ namespace autoboost {
                     "Use autoboost::locale instead" );
                 return shl_input_streamable(str);
             }
-            
+
             bool shl_char_array_limited(CharT const* str, std::size_t max_size) AUTOBOOST_NOEXCEPT {
                 start = str;
                 finish = std::find(start, start + max_size, Traits::to_char_type(0));
@@ -283,7 +283,7 @@ namespace autoboost {
 #if defined(_MSC_VER) && (_MSC_VER >= 1400) && !defined(__SGI_STL_PORT) && !defined(_STLPORT_VERSION)
                     sprintf_s(begin, CharacterBufferSize,
 #else
-                    sprintf(begin, 
+                    sprintf(begin,
 #endif
                     "%.*g", static_cast<int>(autoboost::detail::lcast_get_precision<float>()), val_as_double);
                 return finish > start;
@@ -295,7 +295,7 @@ namespace autoboost {
 #if defined(_MSC_VER) && (_MSC_VER >= 1400) && !defined(__SGI_STL_PORT) && !defined(_STLPORT_VERSION)
                     sprintf_s(begin, CharacterBufferSize,
 #else
-                    sprintf(begin, 
+                    sprintf(begin,
 #endif
                     "%.*g", static_cast<int>(autoboost::detail::lcast_get_precision<double>()), val);
                 return finish > start;
@@ -308,7 +308,7 @@ namespace autoboost {
 #if defined(_MSC_VER) && (_MSC_VER >= 1400) && !defined(__SGI_STL_PORT) && !defined(_STLPORT_VERSION)
                     sprintf_s(begin, CharacterBufferSize,
 #else
-                    sprintf(begin, 
+                    sprintf(begin,
 #endif
                     "%.*Lg", static_cast<int>(autoboost::detail::lcast_get_precision<long double>()), val );
                 return finish > start;
@@ -376,15 +376,15 @@ namespace autoboost {
             }
 
             template <class C>
-            AUTOBOOST_DEDUCED_TYPENAME autoboost::disable_if<autoboost::is_const<C>, bool>::type 
+            AUTOBOOST_DEDUCED_TYPENAME autoboost::disable_if<autoboost::is_const<C>, bool>::type
             operator<<(const iterator_range<C*>& rng) AUTOBOOST_NOEXCEPT {
                 return (*this) << iterator_range<const C*>(rng.begin(), rng.end());
             }
-            
+
             bool operator<<(const iterator_range<const CharT*>& rng) AUTOBOOST_NOEXCEPT {
                 start = rng.begin();
                 finish = rng.end();
-                return true; 
+                return true;
             }
 
             bool operator<<(const iterator_range<const signed char*>& rng) AUTOBOOST_NOEXCEPT {
@@ -455,43 +455,43 @@ namespace autoboost {
                 return shl_real(static_cast<double>(val));
 #endif
             }
-            
+
             // Adding constness to characters. Constness does not change layout
             template <class C, std::size_t N>
             AUTOBOOST_DEDUCED_TYPENAME autoboost::disable_if<autoboost::is_const<C>, bool>::type
-            operator<<(autoboost::array<C, N> const& input) AUTOBOOST_NOEXCEPT { 
+            operator<<(autoboost::array<C, N> const& input) AUTOBOOST_NOEXCEPT {
                 AUTOBOOST_STATIC_ASSERT_MSG(
                     (sizeof(autoboost::array<const C, N>) == sizeof(autoboost::array<C, N>)),
                     "autoboost::array<C, N> and autoboost::array<const C, N> must have exactly the same layout."
                 );
-                return ((*this) << reinterpret_cast<autoboost::array<const C, N> const& >(input)); 
+                return ((*this) << reinterpret_cast<autoboost::array<const C, N> const& >(input));
             }
 
             template <std::size_t N>
-            bool operator<<(autoboost::array<const CharT, N> const& input) AUTOBOOST_NOEXCEPT { 
-                return shl_char_array_limited(input.begin(), N); 
+            bool operator<<(autoboost::array<const CharT, N> const& input) AUTOBOOST_NOEXCEPT {
+                return shl_char_array_limited(input.begin(), N);
             }
 
             template <std::size_t N>
-            bool operator<<(autoboost::array<const unsigned char, N> const& input) AUTOBOOST_NOEXCEPT { 
-                return ((*this) << reinterpret_cast<autoboost::array<const char, N> const& >(input)); 
+            bool operator<<(autoboost::array<const unsigned char, N> const& input) AUTOBOOST_NOEXCEPT {
+                return ((*this) << reinterpret_cast<autoboost::array<const char, N> const& >(input));
             }
 
             template <std::size_t N>
-            bool operator<<(autoboost::array<const signed char, N> const& input) AUTOBOOST_NOEXCEPT { 
-                return ((*this) << reinterpret_cast<autoboost::array<const char, N> const& >(input)); 
+            bool operator<<(autoboost::array<const signed char, N> const& input) AUTOBOOST_NOEXCEPT {
+                return ((*this) << reinterpret_cast<autoboost::array<const char, N> const& >(input));
             }
- 
+
 #ifndef AUTOBOOST_NO_CXX11_HDR_ARRAY
             // Making a Boost.Array from std::array
             template <class C, std::size_t N>
-            bool operator<<(std::array<C, N> const& input) AUTOBOOST_NOEXCEPT { 
+            bool operator<<(std::array<C, N> const& input) AUTOBOOST_NOEXCEPT {
                 AUTOBOOST_STATIC_ASSERT_MSG(
                     (sizeof(std::array<C, N>) == sizeof(autoboost::array<C, N>)),
                     "std::array and autoboost::array must have exactly the same layout. "
                     "Bug in implementation of std::array or autoboost::array."
                 );
-                return ((*this) << reinterpret_cast<autoboost::array<C, N> const& >(input)); 
+                return ((*this) << reinterpret_cast<autoboost::array<C, N> const& >(input));
             }
 #endif
             template <class InStreamable>
@@ -501,7 +501,7 @@ namespace autoboost {
 
         template <class CharT, class Traits>
         class lexical_ostream_limited_src: autoboost::noncopyable {
-            //`[start, finish)` is the range to output by `operator >>` 
+            //`[start, finish)` is the range to output by `operator >>`
             const CharT*        start;
             const CharT* const  finish;
 
@@ -583,7 +583,7 @@ namespace autoboost {
 #else
 
                 buffer_t buf;
-                // Usually `istream` and `basic_istream` do not modify 
+                // Usually `istream` and `basic_istream` do not modify
                 // content of buffer; `buffer_t` assures that this is true
                 buf.setbuf(const_cast<CharT*>(start), finish - start);
 #if defined(AUTOBOOST_NO_STD_LOCALE)
@@ -600,7 +600,7 @@ namespace autoboost {
                 stream.unsetf(std::ios::skipws);
                 lcast_set_precision(stream, static_cast<InputStreamable*>(0));
 
-                return (stream >> output) 
+                return (stream >> output)
                     && (stream.get() == Traits::eof());
 
 #ifndef AUTOBOOST_NO_EXCEPTIONS
@@ -628,7 +628,7 @@ namespace autoboost {
             bool shr_std_array(ArrayT& output) AUTOBOOST_NOEXCEPT {
                 using namespace std;
                 const std::size_t size = static_cast<std::size_t>(finish - start);
-                if (size > N - 1) { // `-1` because we need to store \0 at the end 
+                if (size > N - 1) { // `-1` because we need to store \0 at the end
                     return false;
                 }
 
@@ -671,33 +671,33 @@ namespace autoboost {
             bool operator>>(char32_t& output)                   { return shr_xchar(output); }
 #endif
             template<class Alloc>
-            bool operator>>(std::basic_string<CharT,Traits,Alloc>& str) { 
-                str.assign(start, finish); return true; 
+            bool operator>>(std::basic_string<CharT,Traits,Alloc>& str) {
+                str.assign(start, finish); return true;
             }
 
             template<class Alloc>
-            bool operator>>(autoboost::container::basic_string<CharT,Traits,Alloc>& str) { 
-                str.assign(start, finish); return true; 
+            bool operator>>(autoboost::container::basic_string<CharT,Traits,Alloc>& str) {
+                str.assign(start, finish); return true;
             }
 
             template <std::size_t N>
-            bool operator>>(autoboost::array<CharT, N>& output) AUTOBOOST_NOEXCEPT { 
-                return shr_std_array<N>(output); 
+            bool operator>>(autoboost::array<CharT, N>& output) AUTOBOOST_NOEXCEPT {
+                return shr_std_array<N>(output);
             }
 
             template <std::size_t N>
-            bool operator>>(autoboost::array<unsigned char, N>& output) AUTOBOOST_NOEXCEPT { 
-                return ((*this) >> reinterpret_cast<autoboost::array<char, N>& >(output)); 
+            bool operator>>(autoboost::array<unsigned char, N>& output) AUTOBOOST_NOEXCEPT {
+                return ((*this) >> reinterpret_cast<autoboost::array<char, N>& >(output));
             }
 
             template <std::size_t N>
-            bool operator>>(autoboost::array<signed char, N>& output) AUTOBOOST_NOEXCEPT { 
-                return ((*this) >> reinterpret_cast<autoboost::array<char, N>& >(output)); 
+            bool operator>>(autoboost::array<signed char, N>& output) AUTOBOOST_NOEXCEPT {
+                return ((*this) >> reinterpret_cast<autoboost::array<char, N>& >(output));
             }
- 
+
 #ifndef AUTOBOOST_NO_CXX11_HDR_ARRAY
             template <class C, std::size_t N>
-            bool operator>>(std::array<C, N>& output) AUTOBOOST_NOEXCEPT { 
+            bool operator>>(std::array<C, N>& output) AUTOBOOST_NOEXCEPT {
                 AUTOBOOST_STATIC_ASSERT_MSG(
                     (sizeof(autoboost::array<C, N>) == sizeof(autoboost::array<C, N>)),
                     "std::array<C, N> and autoboost::array<C, N> must have exactly the same layout."
@@ -804,8 +804,8 @@ namespace autoboost {
             // Generic istream-based algorithm.
             // lcast_streambuf_for_target<InputStreamable>::value is true.
             template <typename InputStreamable>
-            bool operator>>(InputStreamable& output) { 
-                return shr_using_base_class(output); 
+            bool operator>>(InputStreamable& output) {
+                return shr_using_base_class(output);
             }
         };
     }

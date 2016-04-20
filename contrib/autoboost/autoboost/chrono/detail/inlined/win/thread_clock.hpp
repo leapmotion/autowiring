@@ -1,4 +1,4 @@
-//  boost thread_clock.cpp  -----------------------------------------------------------//
+//  autoboost thread_clock.cpp  -----------------------------------------------------------//
 
 //  Copyright 2010 Vicente J. Botet Escriba
 
@@ -42,7 +42,7 @@ thread_clock::time_point thread_clock::now( system::error_code & ec )
                 ((static_cast<duration::rep>(system_time.dwHighDateTime) << 32)
                         | system_time.dwLowDateTime) * 100 );
 
-        if (!AUTOBOOST_CHRONO_IS_THROWS(ec)) 
+        if (!AUTOBOOST_CHRONO_IS_THROWS(ec))
         {
             ec.clear();
         }
@@ -51,15 +51,15 @@ thread_clock::time_point thread_clock::now( system::error_code & ec )
     }
     else
     {
-        if (AUTOBOOST_CHRONO_IS_THROWS(ec)) 
+        if (AUTOBOOST_CHRONO_IS_THROWS(ec))
         {
             autoboost::throw_exception(
-                    system::system_error( 
-                            autoboost::detail::winapi::GetLastError(), 
-                            AUTOBOOST_CHRONO_SYSTEM_CATEGORY, 
+                    system::system_error(
+                            autoboost::detail::winapi::GetLastError(),
+                            AUTOBOOST_CHRONO_SYSTEM_CATEGORY,
                             "chrono::thread_clock" ));
-        } 
-        else 
+        }
+        else
         {
             ec.assign( autoboost::detail::winapi::GetLastError(), AUTOBOOST_CHRONO_SYSTEM_CATEGORY );
             return thread_clock::time_point(duration(0));
@@ -74,7 +74,7 @@ thread_clock::time_point thread_clock::now() AUTOBOOST_NOEXCEPT
     //  note that Windows uses 100 nanosecond ticks for FILETIME
     autoboost::detail::winapi::FILETIME_ creation, exit, user_time, system_time;
 
-    if ( autoboost::detail::winapi::GetThreadTimes( 
+    if ( autoboost::detail::winapi::GetThreadTimes(
             autoboost::detail::winapi::GetCurrentThread (), &creation, &exit,
             &system_time, &user_time ) )
     {

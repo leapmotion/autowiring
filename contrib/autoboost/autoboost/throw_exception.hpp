@@ -14,7 +14,7 @@
 #endif
 
 //
-//  boost/throw_exception.hpp
+//  autoboost/throw_exception.hpp
 //
 //  Copyright (c) 2002 Peter Dimov and Multi Media Ltd.
 //  Copyright (c) 2008-2009 Emil Dotchevski and Reverge Studios, Inc.
@@ -61,7 +61,7 @@ inline void throw_exception_assert_compatibility( std::exception const & ) { }
 
 template<class E> AUTOBOOST_NORETURN inline void throw_exception( E const & e )
 {
-    //All boost exceptions are required to derive from std::exception,
+    //All autoboost exceptions are required to derive from std::exception,
     //to ensure compatibility with AUTOBOOST_NO_EXCEPTIONS.
     throw_exception_assert_compatibility(e);
 

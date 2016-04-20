@@ -17,7 +17,7 @@
 
 //  See http://www.boost.org for updates, documentation, and revision history.
 
-// note derived from boost/io/ios_state.hpp
+// note derived from autoboost/io/ios_state.hpp
 // Copyright 2002, 2005 Daryle Walker.  Use, modification, and distribution
 // are subject to the Boost Software License, Version 1.0.  (See accompanying
 // file LICENSE_1_0.txt or a copy at <http://www.boost.org/LICENSE_1_0.txt>.)
@@ -63,7 +63,7 @@ private:
 };
 
 } // archive
-} // boost
+} // autoboost
 
 #ifdef AUTOBOOST_MSVC
 #pragma warning(pop)

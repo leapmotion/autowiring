@@ -30,7 +30,7 @@
 #ifdef AUTOBOOST_MSVC
 # pragma warning(push)
 # pragma warning(disable:4512)
-#endif 
+#endif
 namespace autoboost
 {
 
@@ -105,7 +105,7 @@ namespace details
       typedef typename call_traits<first_type>::const_reference  first_const_reference;
       typedef typename call_traits<second_type>::const_reference second_const_reference;
 
-      compressed_pair_imp() {} 
+      compressed_pair_imp() {}
 
       compressed_pair_imp(first_param_type x, second_param_type y)
          : first_(x), second_(y) {}
@@ -412,7 +412,7 @@ public:
             compressed_pair() : base() {}
             compressed_pair(first_param_type x, second_param_type y) : base(x, y) {}
 #if !(defined(__SUNPRO_CC) && (__SUNPRO_CC <= 0x530))
-   explicit 
+   explicit
 #endif
       compressed_pair(first_param_type x) : base(x) {}
 
@@ -433,11 +433,11 @@ swap(compressed_pair<T1, T2>& x, compressed_pair<T1, T2>& y)
    x.swap(y);
 }
 
-} // boost
+} // autoboost
 
 #ifdef AUTOBOOST_MSVC
 # pragma warning(pop)
-#endif 
+#endif
 
 #endif // AUTOBOOST_DETAIL_COMPRESSED_PAIR_HPP
 

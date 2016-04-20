@@ -5,7 +5,7 @@
 
 //  Based on Peter Dimov's proposal
 //  http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2005/n1756.pdf
-//  issue 6.18. 
+//  issue 6.18.
 
 // This implements the extensions to the standard.
 // It's undocumented, so you shouldn't use it....

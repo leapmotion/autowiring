@@ -14,9 +14,9 @@
 #include <cstring>
 #include <cstddef> // size_t
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE) && ! defined(__LIBCOMO__)
-namespace std{ 
+namespace std{
     using ::strlen;
-    using ::size_t; 
+    using ::size_t;
 } // namespace std
 #endif
 

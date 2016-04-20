@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2002-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -28,7 +28,7 @@ template< typename T > struct is_class_helper
     typedef int (T::* type)();
 };
 
-// MSVC 6.x-specific lightweight 'is_class' implementation; 
+// MSVC 6.x-specific lightweight 'is_class' implementation;
 // Distinguishing feature: does not instantiate the type being tested.
 template< typename T >
 struct msvc_is_class_impl

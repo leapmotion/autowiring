@@ -1,6 +1,6 @@
-// Copyright David Abrahams, Daniel Wallin 2003. Use, modification and 
-// distribution is subject to the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Copyright David Abrahams, Daniel Wallin 2003. Use, modification and
+// distribution is subject to the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
 #ifndef AUTOBOOST_PARAMETERS_031014_HPP
@@ -55,7 +55,7 @@ namespace parameter_
   {
       AUTOBOOST_MPL_ASSERT((autoboost::is_same<T,void>));
       typedef int type;
-  }; 
+  };
 } // namespace parameter_
 
 namespace autoboost {
@@ -232,7 +232,7 @@ namespace aux
         , is_tagged_argument<T>
       >
   {};
-  
+
   // Returns mpl::true_ iff the given ParameterRequirements are
   // satisfied by ArgList.
   template <class ArgList, class ParameterRequirements>
@@ -345,7 +345,7 @@ namespace aux
   };
 
   // Tries to deduced a keyword tag for a given Argument.
-  // Returns an mpl::pair<> consisting of the tagged_argument<>, 
+  // Returns an mpl::pair<> consisting of the tagged_argument<>,
   // and an mpl::set<> where the new tag has been inserted.
   //
   //  Argument: The argument type to be tagged.
@@ -431,8 +431,8 @@ namespace aux
       // parameter, we turn off positional matching.
       typedef mpl::and_<
           mpl::not_<
-              mpl::or_<is_deduced<parameter_spec>, is_tagged> 
-          > 
+              mpl::or_<is_deduced<parameter_spec>, is_tagged>
+          >
         , Positional
       > positional;
 
@@ -659,7 +659,7 @@ namespace aux
 #define AUTOBOOST_PARAMETER_make_arg_list(z, n, names)      \
       AUTOBOOST_PP_SEQ_ELEM(0,names)<                       \
           AUTOBOOST_PP_CAT(AUTOBOOST_PP_SEQ_ELEM(1,names), n),  \
-          AUTOBOOST_PP_CAT(AUTOBOOST_PP_SEQ_ELEM(2,names), n), 
+          AUTOBOOST_PP_CAT(AUTOBOOST_PP_SEQ_ELEM(2,names), n),
 
 #define AUTOBOOST_PARAMETER_right_angle(z, n, text) >
 
@@ -727,7 +727,7 @@ struct parameters
 
 #if ! defined(AUTOBOOST_NO_SFINAE) && ! AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x592))
     // If NamedList satisfies the PS0, PS1, ..., this is a
-    // metafunction returning parameters.  Otherwise it 
+    // metafunction returning parameters.  Otherwise it
     // has no nested ::type.
     template <class ArgumentPackAndError>
     struct match_base
@@ -738,7 +738,7 @@ struct parameters
             //       aux::satisfies_requirements_of<NamedList,PS1>...
             //           ..., mpl::true_
             // ...> >
-            
+
 # define AUTOBOOST_PARAMETER_satisfies(z, n, text)                                      \
             mpl::and_<                                                              \
                 aux::satisfies_requirements_of<                                     \
@@ -759,7 +759,7 @@ struct parameters
         >
     {};
 #endif
-    
+
     // Specializations are to be used as an optional argument to
     // eliminate overloads via SFINAE
     template<
@@ -768,7 +768,7 @@ struct parameters
         // class templates.  People wishing to write portable code can
         // explicitly specify AUTOBOOST_PARAMETER_MAX_ARITY arguments
         AUTOBOOST_PP_ENUM_PARAMS(AUTOBOOST_PARAMETER_MAX_ARITY, class A)
-#else 
+#else
         AUTOBOOST_PP_ENUM_BINARY_PARAMS(
             AUTOBOOST_PARAMETER_MAX_ARITY, class A, = void_ AUTOBOOST_PP_INTERCEPT
         )
@@ -788,10 +788,10 @@ struct parameters
         >::type
     {};
 # else
-    { 
+    {
         typedef parameters<
             AUTOBOOST_PP_ENUM_PARAMS(AUTOBOOST_PARAMETER_MAX_ARITY, PS)
-        > type; 
+        > type;
     };
 # endif
 
@@ -806,11 +806,11 @@ struct parameters
         // class templates.  People wishing to write portable code can
         // explicitly specify AUTOBOOST_PARAMETER_MAX_ARITY arguments
         AUTOBOOST_PP_ENUM_PARAMS(AUTOBOOST_PARAMETER_MAX_ARITY, class A)
-#else 
+#else
         AUTOBOOST_PP_ENUM_BINARY_PARAMS(
             AUTOBOOST_PARAMETER_MAX_ARITY, class A, = void_ AUTOBOOST_PP_INTERCEPT
         )
-#endif            
+#endif
     >
     struct bind
     {

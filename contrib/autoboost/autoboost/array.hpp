@@ -32,11 +32,11 @@
 
 #include <autoboost/detail/workaround.hpp>
 
-#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1400)  
-# pragma warning(push)  
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1400)
+# pragma warning(push)
 # pragma warning(disable:4996) // 'std::equal': Function call with parameters that may be unsafe
-# pragma warning(disable:4510) // autoboost::array<T,N>' : default constructor could not be generated 
-# pragma warning(disable:4610) // warning C4610: class 'autoboost::array<T,N>' can never be instantiated - user defined constructor required 
+# pragma warning(disable:4510) // autoboost::array<T,N>' : default constructor could not be generated
+# pragma warning(disable:4610) // warning C4610: class 'autoboost::array<T,N>' can never be instantiated - user defined constructor required
 #endif
 
 #include <cstddef>
@@ -75,7 +75,7 @@ namespace autoboost {
         iterator        begin()       { return elems; }
         const_iterator  begin() const { return elems; }
         const_iterator cbegin() const { return elems; }
-        
+
         iterator        end()       { return elems+N; }
         const_iterator  end() const { return elems+N; }
         const_iterator cend() const { return elems+N; }
@@ -90,9 +90,9 @@ namespace autoboost {
                                       reference, iterator, reference> > reverse_iterator;
         typedef std::reverse_iterator<std::_Ptrit<value_type, difference_type, const_iterator,
                                       const_reference, iterator, reference> > const_reverse_iterator;
-#elif defined(_RWSTD_NO_CLASS_PARTIAL_SPEC) 
-        typedef std::reverse_iterator<iterator, std::random_access_iterator_tag, 
-              value_type, reference, iterator, difference_type> reverse_iterator; 
+#elif defined(_RWSTD_NO_CLASS_PARTIAL_SPEC)
+        typedef std::reverse_iterator<iterator, std::random_access_iterator_tag,
+              value_type, reference, iterator, difference_type> reverse_iterator;
         typedef std::reverse_iterator<const_iterator, std::random_access_iterator_tag,
               value_type, const_reference, const_iterator, difference_type> const_reverse_iterator;
 #else
@@ -118,41 +118,41 @@ namespace autoboost {
         }
 
         // operator[]
-        reference operator[](size_type i) 
-        { 
+        reference operator[](size_type i)
+        {
             AUTOBOOST_ASSERT_MSG( i < N, "out of range" );
             return elems[i];
         }
-        
-        const_reference operator[](size_type i) const 
-        {     
+
+        const_reference operator[](size_type i) const
+        {
             AUTOBOOST_ASSERT_MSG( i < N, "out of range" );
-            return elems[i]; 
+            return elems[i];
         }
 
         // at() with range check
         reference at(size_type i) { rangecheck(i); return elems[i]; }
         const_reference at(size_type i) const { rangecheck(i); return elems[i]; }
-    
+
         // front() and back()
-        reference front() 
-        { 
-            return elems[0]; 
-        }
-        
-        const_reference front() const 
+        reference front()
         {
             return elems[0];
         }
-        
-        reference back() 
-        { 
-            return elems[N-1]; 
+
+        const_reference front() const
+        {
+            return elems[0];
         }
-        
-        const_reference back() const 
-        { 
-            return elems[N-1]; 
+
+        reference back()
+        {
+            return elems[N-1];
+        }
+
+        const_reference back() const
+        {
+            return elems[N-1];
         }
 
         // size is constant
@@ -231,9 +231,9 @@ namespace autoboost {
                                       reference, iterator, reference> > reverse_iterator;
         typedef std::reverse_iterator<std::_Ptrit<value_type, difference_type, const_iterator,
                                       const_reference, iterator, reference> > const_reverse_iterator;
-#elif defined(_RWSTD_NO_CLASS_PARTIAL_SPEC) 
-        typedef std::reverse_iterator<iterator, std::random_access_iterator_tag, 
-              value_type, reference, iterator, difference_type> reverse_iterator; 
+#elif defined(_RWSTD_NO_CLASS_PARTIAL_SPEC)
+        typedef std::reverse_iterator<iterator, std::random_access_iterator_tag,
+              value_type, reference, iterator, difference_type> reverse_iterator;
         typedef std::reverse_iterator<const_iterator, std::random_access_iterator_tag,
               value_type, const_reference, const_iterator, difference_type> const_reverse_iterator;
 #else
@@ -319,7 +319,7 @@ namespace autoboost {
         // assign one value to all elements
         void assign (const T& value) { fill ( value ); }
         void fill   (const T& ) {}
-        
+
         // check range (may be private because it is static)
         static reference failed_rangecheck () {
                 std::out_of_range e("attempt to access element of an empty array");
@@ -372,16 +372,16 @@ namespace autoboost {
 #if defined(__SUNPRO_CC)
 //  Trac ticket #4757; the Sun Solaris compiler can't handle
 //  syntax like 'T(&get_c_array(autoboost::array<T,N>& arg))[N]'
-//  
-//  We can't just use this for all compilers, because the 
-//      borland compilers can't handle this form. 
+//
+//  We can't just use this for all compilers, because the
+//      borland compilers can't handle this form.
     namespace detail {
        template <typename T, std::size_t N> struct c_array
        {
            typedef T type[N];
        };
     }
-    
+
    // Specific for autoboost::array: simply returns its elems data member.
    template <typename T, std::size_t N>
    typename detail::c_array<T,N>::type& get_c_array(autoboost::array<T,N>& arg)
@@ -402,7 +402,7 @@ namespace autoboost {
     {
         return arg.elems;
     }
-    
+
     // Const version.
     template <typename T, std::size_t N>
     const T(&get_c_array(const autoboost::array<T,N>& arg))[N]
@@ -410,7 +410,7 @@ namespace autoboost {
         return arg.elems;
     }
 #endif
-    
+
 #if 0
     // Overload for std::array, assuming that std::array will have
     // explicit conversion functions as discussed at the WG21 meeting
@@ -420,7 +420,7 @@ namespace autoboost {
     {
         return static_cast<T(&)[N]>(arg);
     }
-    
+
     // Const version.
     template <typename T, std::size_t N>
     const T(&get_c_array(const std::array<T,N>& arg))[N]
@@ -439,8 +439,8 @@ namespace autoboost {
 } /* namespace autoboost */
 
 
-#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1400)  
-# pragma warning(pop)  
-#endif 
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1400)
+# pragma warning(pop)
+#endif
 
 #endif /*AUTOBOOST_ARRAY_HPP*/

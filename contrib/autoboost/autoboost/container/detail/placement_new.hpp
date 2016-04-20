@@ -15,13 +15,13 @@
 #  pragma once
 #endif
 
-struct boost_container_new_t{};
+struct autoboost_container_new_t{};
 
 //avoid including <new>
-inline void *operator new(std::size_t, void *p, boost_container_new_t)
+inline void *operator new(std::size_t, void *p, autoboost_container_new_t)
 {  return p;  }
 
-inline void operator delete(void *, void *, boost_container_new_t)
+inline void operator delete(void *, void *, autoboost_container_new_t)
 {}
 
 #endif   //AUTOBOOST_CONTAINER_DETAIL_PLACEMENT_NEW_HPP

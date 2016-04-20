@@ -3,12 +3,12 @@
  * Copyright (c) 1998-2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
- 
+
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE:        wide_posix_api.cpp
@@ -138,7 +138,7 @@ AUTOBOOST_REGEX_DECL int AUTOBOOST_REGEX_CCALL regcompW(regex_tW* expression, co
       expression->re_nsub = static_cast<wc_regex_type*>(expression->guts)->mark_count();
       result = static_cast<wc_regex_type*>(expression->guts)->error_code();
 #ifndef AUTOBOOST_NO_EXCEPTIONS
-   } 
+   }
    catch(const autoboost::regex_error& be)
    {
       result = be.code();
@@ -243,7 +243,7 @@ AUTOBOOST_REGEX_DECL int AUTOBOOST_REGEX_CCALL regexecW(const regex_tW* expressi
    const wchar_t* end;
    const wchar_t* start;
    wcmatch m;
-   
+
    if(eflags & REG_NOTBOL)
       flags |= match_not_bol;
    if(eflags & REG_NOTEOL)

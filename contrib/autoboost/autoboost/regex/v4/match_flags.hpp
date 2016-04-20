@@ -3,12 +3,12 @@
  * Copyright (c) 1998-2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
- 
+
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         match_flags.hpp
@@ -46,7 +46,7 @@ typedef enum _match_flags
    match_continuous = match_not_null << 1,           /* each grep match must continue from */
                                                      /* uninterupted from the previous one */
    match_partial = match_continuous << 1,            /* find partial matches */
-   
+
    match_stop = match_partial << 1,                  /* stop after first match (grep) V3 only */
    match_not_initial_null = match_stop,              /* don't match initial null, V4 only */
    match_all = match_stop << 1,                      /* must find the whole of input even if match_any is set */
@@ -98,7 +98,7 @@ inline match_flags& operator^=(match_flags& m1, match_flags m2)
 #ifdef __cplusplus
 } /* namespace regex_constants */
 /*
- * import names into boost for backwards compatiblity:
+ * import names into autoboost for backwards compatiblity:
  */
 using regex_constants::match_flag_type;
 using regex_constants::match_default;

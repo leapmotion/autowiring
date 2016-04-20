@@ -5,8 +5,8 @@
 // Copyright Aleksey Gurtovoy 2003-2004
 // Copyright David Abrahams 2003-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -60,11 +60,11 @@ struct at_impl< aux::map_tag >
 };
 
 // agurt 31/jan/04: two-step implementation for the sake of GCC 3.x
-template< typename Map, long order > 
+template< typename Map, long order >
 struct item_by_order_impl
 {
     typedef __typeof__( AUTOBOOST_MPL_AUX_OVERLOAD_CALL_ITEM_BY_ORDER(
-          Map 
+          Map
         , AUTOBOOST_MPL_AUX_STATIC_CAST(long_<order>*, 0)
         ) ) type;
 };
@@ -109,7 +109,7 @@ struct at_impl< aux::map_tag >
 {
     template< typename Map, typename Key > struct apply
     {
-        typedef typename m_at< Map, (x_order_impl<Map,Key>::value - 2) >::type item_;       
+        typedef typename m_at< Map, (x_order_impl<Map,Key>::value - 2) >::type item_;
         typedef typename eval_if<
               is_void_<item_>
             , void_
@@ -120,7 +120,7 @@ struct at_impl< aux::map_tag >
 
 template< typename Map, long order > struct is_item_masked
 {
-    AUTOBOOST_STATIC_CONSTANT(bool, value = 
+    AUTOBOOST_STATIC_CONSTANT(bool, value =
           sizeof( AUTOBOOST_MPL_AUX_OVERLOAD_CALL_IS_MASKED(
               Map
             , AUTOBOOST_MPL_AUX_STATIC_CAST(long_<order>*, 0)
@@ -129,8 +129,8 @@ template< typename Map, long order > struct is_item_masked
 };
 
 template< typename Map, long order > struct item_by_order
-{    
-    typedef typename eval_if_c< 
+{
+    typedef typename eval_if_c<
           is_item_masked<Map,order>::value
         , void_
         , m_at<Map,(order - 2)>

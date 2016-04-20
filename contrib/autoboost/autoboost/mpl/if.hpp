@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -55,7 +55,7 @@ template<
 struct if_
 {
  private:
-    // agurt, 02/jan/03: two-step 'type' definition for the sake of aCC 
+    // agurt, 02/jan/03: two-step 'type' definition for the sake of aCC
     typedef if_c<
 #if defined(AUTOBOOST_MPL_CFG_BCC_INTEGRAL_CONSTANTS)
           AUTOBOOST_MPL_AUX_VALUE_WKND(T1)::value
@@ -65,10 +65,10 @@ struct if_
         , T2
         , T3
         > almost_type_;
- 
+
  public:
     typedef typename almost_type_::type type;
-    
+
     AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT(3,if_,(T1,T2,T3))
 };
 
@@ -91,7 +91,7 @@ template<>
 struct if_impl<false>
 {
     template< typename T1, typename T2 > struct result_
-    { 
+    {
         typedef T2 type;
     };
 };
@@ -109,7 +109,7 @@ struct if_c
         ::template result_<T1,T2>::type type;
 };
 
-// (almost) copy & paste in order to save one more 
+// (almost) copy & paste in order to save one more
 // recursively nested template instantiation to user
 template<
       typename AUTOBOOST_MPL_AUX_NA_PARAM(C_)

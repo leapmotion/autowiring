@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -56,7 +56,7 @@ template<> struct fold_chunk<1>
         typedef State state0;
         typedef typename apply2< ForwardOp, state0, typename deref<iter0>::type >::type state1;
         typedef typename mpl::next<iter0>::type iter1;
-        
+
 
         typedef state1 state;
         typedef iter1 iterator;
@@ -79,7 +79,7 @@ template<> struct fold_chunk<2>
         typedef typename mpl::next<iter0>::type iter1;
         typedef typename apply2< ForwardOp, state1, typename deref<iter1>::type >::type state2;
         typedef typename mpl::next<iter1>::type iter2;
-        
+
 
         typedef state2 state;
         typedef iter2 iterator;
@@ -104,7 +104,7 @@ template<> struct fold_chunk<3>
         typedef typename mpl::next<iter1>::type iter2;
         typedef typename apply2< ForwardOp, state2, typename deref<iter2>::type >::type state3;
         typedef typename mpl::next<iter2>::type iter3;
-        
+
 
         typedef state3 state;
         typedef iter3 iterator;
@@ -131,7 +131,7 @@ template<> struct fold_chunk<4>
         typedef typename mpl::next<iter2>::type iter3;
         typedef typename apply2< ForwardOp, state3, typename deref<iter3>::type >::type state4;
         typedef typename mpl::next<iter3>::type iter4;
-        
+
 
         typedef state4 state;
         typedef iter4 iterator;

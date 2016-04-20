@@ -164,7 +164,7 @@ struct function_traits_helper<R (*)(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>
 } // end namespace detail
 
 template<typename Function>
-struct function_traits : 
+struct function_traits :
   public autoboost::detail::function_traits_helper<typename autoboost::add_pointer<Function>::type>
 {
 };

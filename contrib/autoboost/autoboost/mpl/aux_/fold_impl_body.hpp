@@ -5,8 +5,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -55,7 +55,7 @@ template<
     , typename Last
     , typename State
     , typename ForwardOp
-    > 
+    >
 struct AUX778076_FOLD_IMPL_NAME;
 
 #if !defined(AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
@@ -73,7 +73,7 @@ template<
     , typename Last
     , typename State
     , typename ForwardOp
-    > 
+    >
 struct AUX778076_FOLD_IMPL_NAME
 {
     typedef AUX778076_FOLD_IMPL_NAME<
@@ -91,7 +91,7 @@ struct AUX778076_FOLD_IMPL_NAME
         , typename chunk_::state
         , ForwardOp
         > res_;
-        
+
     typedef typename res_::state state;
     typedef typename res_::iterator iterator;
 };
@@ -102,7 +102,7 @@ template<
     , typename Last
     , typename State
     , typename ForwardOp
-    > 
+    >
 struct AUX778076_FOLD_IMPL_NAME<-1,First,Last,State,ForwardOp>
     : AUX778076_FOLD_IMPL_NAME<
           -1
@@ -118,7 +118,7 @@ template<
       typename Last
     , typename State
     , typename ForwardOp
-    > 
+    >
 struct AUX778076_FOLD_IMPL_NAME<-1,Last,Last,State,ForwardOp>
 {
     typedef State state;
@@ -135,7 +135,7 @@ template<
     , typename Last
     , typename State
     , typename ForwardOp
-    > 
+    >
 struct AUX778076_FOLD_IMPL_NAME
 {
     typedef AUX778076_FOLD_IMPL_NAME<
@@ -156,7 +156,7 @@ template<
      , typename Last
     , typename State
     , typename ForwardOp
-    > 
+    >
 struct AUX778076_FOLD_IMPL_NAME<N,Last,Last,State,ForwardOp >
 {
     typedef State state;
@@ -165,7 +165,7 @@ struct AUX778076_FOLD_IMPL_NAME<N,Last,Last,State,ForwardOp >
 };
 
 #   endif // AUTOBOOST_WORKAROUND(__BORLANDC__, < 0x600)
- 
+
 #else // AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
 
 template< AUTOBOOST_MPL_AUX_NTTP_DECL(int, N) >
@@ -176,7 +176,7 @@ struct AUX778076_FOLD_CHUNK_NAME;
 #   include AUTOBOOST_PP_ITERATE()
 
 // implementation for N that exceeds AUTOBOOST_MPL_LIMIT_UNROLLING
-template< AUTOBOOST_MPL_AUX_NTTP_DECL(int, N) > 
+template< AUTOBOOST_MPL_AUX_NTTP_DECL(int, N) >
 struct AUX778076_FOLD_CHUNK_NAME
 {
     template<
@@ -184,7 +184,7 @@ struct AUX778076_FOLD_CHUNK_NAME
         , typename Last
         , typename State
         , typename ForwardOp
-        > 
+        >
     struct result_
     {
         typedef AUX778076_FOLD_IMPL_NAME<
@@ -214,7 +214,7 @@ template<
     , typename Last
     , typename State
     , typename ForwardOp
-    > 
+    >
 struct AUTOBOOST_PP_CAT(AUX778076_FOLD_IMPL_NAME_PREFIX,_step);
 
 template<
@@ -227,7 +227,7 @@ struct AUTOBOOST_PP_CAT(AUX778076_FOLD_IMPL_NAME_PREFIX,_null_step)
     typedef State state;
 };
 
-template<> 
+template<>
 struct AUX778076_FOLD_CHUNK_NAME<-1>
 {
     template<
@@ -235,7 +235,7 @@ struct AUX778076_FOLD_CHUNK_NAME<-1>
         , typename Last
         , typename State
         , typename ForwardOp
-        > 
+        >
     struct result_
     {
         typedef typename if_<
@@ -263,7 +263,7 @@ template<
     , typename Last
     , typename State
     , typename ForwardOp
-    > 
+    >
 struct AUTOBOOST_PP_CAT(AUX778076_FOLD_IMPL_NAME_PREFIX,_step)
 {
     // can't inherit here - it breaks MSVC 7.0
@@ -284,7 +284,7 @@ template<
     , typename Last
     , typename State
     , typename ForwardOp
-    > 
+    >
 struct AUX778076_FOLD_IMPL_NAME
     : AUX778076_FOLD_CHUNK_NAME<N>
         ::template result_<First,Last,State,ForwardOp>

@@ -189,7 +189,7 @@ struct node_alloc_holder
       node_deallocator.release();
       //This does not throw
       typedef typename Node::hook_type hook_type;
-      ::new(static_cast<hook_type*>(container_detail::to_raw_pointer(p)), boost_container_new_t()) hook_type;
+      ::new(static_cast<hook_type*>(container_detail::to_raw_pointer(p)), autoboost_container_new_t()) hook_type;
       return (p);
    }
 
@@ -207,7 +207,7 @@ struct node_alloc_holder
             AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _));              \
       node_deallocator.release();                                                         \
       typedef typename Node::hook_type hook_type;                                         \
-      ::new(static_cast<hook_type*>(container_detail::to_raw_pointer(p)), boost_container_new_t()) hook_type;      \
+      ::new(static_cast<hook_type*>(container_detail::to_raw_pointer(p)), autoboost_container_new_t()) hook_type;      \
       return (p);                                                                         \
    }                                                                                      \
    //!
@@ -225,7 +225,7 @@ struct node_alloc_holder
       node_deallocator.release();
       //This does not throw
       typedef typename Node::hook_type hook_type;
-      ::new(static_cast<hook_type*>(container_detail::to_raw_pointer(p)), boost_container_new_t()) hook_type;
+      ::new(static_cast<hook_type*>(container_detail::to_raw_pointer(p)), autoboost_container_new_t()) hook_type;
       return (p);
    }
 
@@ -270,7 +270,7 @@ struct node_alloc_holder
                ++beg;
                //This does not throw
                typedef typename Node::hook_type hook_type;
-               ::new(static_cast<hook_type*>(p), boost_container_new_t()) hook_type;
+               ::new(static_cast<hook_type*>(p), autoboost_container_new_t()) hook_type;
                //This can throw in some containers (predicate might throw).
                //(sdestructor will destruct the node and node_deallocator will deallocate it in case of exception)
                inserter(*p);

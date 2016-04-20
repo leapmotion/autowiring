@@ -1,5 +1,5 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
-// shared_ptr_helper.hpp: serialization for boost shared pointern
+// shared_ptr_helper.hpp: serialization for autoboost shared pointern
 
 // (C) Copyright 2004-2009 Robert Ramey, Martin Ecker and Takatoshi Kondo
 // Use, modification and distribution is subject to the Boost Software

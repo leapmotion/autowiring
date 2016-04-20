@@ -51,7 +51,7 @@ namespace autoboost
         //Called automatically by Boost.Threads when
             //a method for doing so has been discovered.
         //Must not be omitted; may be called multiple times.
-    
+
     void autoboosttss_cleanup_implemented();
         //Dummy function used both to detect whether tss cleanup
             //cleanup has been implemented and to force

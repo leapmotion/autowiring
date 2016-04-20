@@ -56,14 +56,14 @@ autoboost
         {
         inline
         exception const *
-        get_boost_exception( exception const * e )
+        get_autoboost_exception( exception const * e )
             {
             return e;
             }
 
         inline
         exception const *
-        get_boost_exception( ... )
+        get_autoboost_exception( ... )
             {
             return 0;
             }
@@ -167,7 +167,7 @@ autoboost
     std::string
     diagnostic_information( T const & e, bool verbose=true )
         {
-        return exception_detail::diagnostic_information_impl(exception_detail::get_boost_exception(&e),exception_detail::get_std_exception(&e),true,verbose);
+        return exception_detail::diagnostic_information_impl(exception_detail::get_autoboost_exception(&e),exception_detail::get_std_exception(&e),true,verbose);
         }
 
     inline

@@ -27,7 +27,7 @@ namespace detail {
 template <typename T>
 struct is_stateless_impl
 {
-  AUTOBOOST_STATIC_CONSTANT(bool, value = 
+  AUTOBOOST_STATIC_CONSTANT(bool, value =
     (::autoboost::type_traits::ice_and<
        ::autoboost::has_trivial_constructor<T>::value,
        ::autoboost::has_trivial_copy<T>::value,

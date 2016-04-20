@@ -46,7 +46,7 @@ template<class T>
 struct is_reference_to_const<T const volatile&> : mpl::true_
 {
 };
-#   endif 
+#   endif
 
 template <class T>
 struct is_reference_to_function : mpl::false_
@@ -139,7 +139,7 @@ template <class T>
 struct is_reference_to_volatile<T const volatile&> : mpl::true_
 {
 };
-#   endif 
+#   endif
 
 
 template <class T>

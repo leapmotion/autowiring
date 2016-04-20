@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2001-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -41,7 +41,7 @@
     /**/
 
 // agurt, 07/mar/03: restore an old revision for the sake of SGI MIPSpro C++
-#if AUTOBOOST_WORKAROUND(__EDG_VERSION__, <= 238) 
+#if AUTOBOOST_WORKAROUND(__EDG_VERSION__, <= 238)
 
 #   define AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT(i, name, params) \
     typedef AUTOBOOST_MPL_AUX_ADL_BARRIER_NAMESPACE::int_<i> arity; \
@@ -66,7 +66,7 @@
 
 #elif AUTOBOOST_WORKAROUND(__EDG_VERSION__, <= 244) && !defined(AUTOBOOST_INTEL_CXX_VERSION)
 // agurt, 18/jan/03: old EDG-based compilers actually enforce 11.4 para 9
-// (in strict mode), so we have to provide an alternative to the 
+// (in strict mode), so we have to provide an alternative to the
 // MSVC-optimized implementation
 
 #   define AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT_SPEC(i, name, params) \

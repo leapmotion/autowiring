@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2003-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -27,7 +27,7 @@ template<>
 struct contains_impl< aux::map_tag >
 {
     template< typename Map, typename Pair > struct apply
-        : is_same< 
+        : is_same<
               typename at_impl<aux::map_tag>::apply<
                   Map
                 , typename Pair::first

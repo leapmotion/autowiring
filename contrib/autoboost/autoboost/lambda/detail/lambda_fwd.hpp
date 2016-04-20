@@ -13,28 +13,28 @@
 #ifndef AUTOBOOST_LAMBDA_FWD_HPP
 #define AUTOBOOST_LAMBDA_FWD_HPP
 
-namespace autoboost { 
-namespace lambda { 
+namespace autoboost {
+namespace lambda {
 
 namespace detail {
 
 template<class T> struct generate_error;
 
-}   
+}
 // -- placeholders --------------------------------------------
 
 template <int I> struct placeholder;
 
 // function_adaptors
-template <class Func> 
+template <class Func>
 struct function_adaptor;
 
 template <int I, class Act> class action;
 
-template <class Base> 
+template <class Base>
 class lambda_functor;
 
-template <class Act, class Args> 
+template <class Act, class Args>
 class lambda_functor_base;
 
 } // namespace lambda
@@ -63,7 +63,7 @@ void do_nothing(A1&, A2&, A3&, A4&) {}
 
 } // detail
 } // lambda
-} // boost
+} // autoboost
 
 // prevent the warnings from unused arguments
 #define CALL_USE_ARGS \

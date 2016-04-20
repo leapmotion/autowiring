@@ -17,7 +17,7 @@
 //  See http://www.boost.org for updates, documentation, and revision history.
 
 #include <cstddef> // std::size_t
-#include <climits> // ULONG_MAX 
+#include <climits> // ULONG_MAX
 #include <string>
 
 #include <autoboost/config.hpp>
@@ -156,7 +156,7 @@ public:
 namespace autoboost {
 namespace archive {
 
-class polymorphic_iarchive : 
+class polymorphic_iarchive :
     public polymorphic_iarchive_impl
 {
 public:

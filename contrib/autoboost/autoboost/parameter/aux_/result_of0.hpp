@@ -12,7 +12,7 @@
 #ifndef AUTOBOOST_NO_RESULT_OF
 
 # include <autoboost/utility/result_of.hpp>
-namespace autoboost { namespace parameter { namespace aux { 
+namespace autoboost { namespace parameter { namespace aux {
 template <class F>
 struct result_of0 : result_of<F()>
 {};
@@ -21,7 +21,7 @@ struct result_of0 : result_of<F()>
 
 #else
 
-namespace autoboost { namespace parameter { namespace aux { 
+namespace autoboost { namespace parameter { namespace aux {
 template <class F>
 struct result_of0
 {
@@ -30,7 +30,7 @@ struct result_of0
 
 }}} // namespace autoboost::parameter::aux_
 
-#endif 
+#endif
 
 
 #endif // AUTOBOOST_PARAMETER_AUX_RESULT_OF0_DWA2005511_HPP

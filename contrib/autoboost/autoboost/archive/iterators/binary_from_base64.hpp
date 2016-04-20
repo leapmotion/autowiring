@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // binary_from_base64.hpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -25,7 +25,7 @@
 #include <autoboost/iterator/transform_iterator.hpp>
 #include <autoboost/archive/iterators/dataflow_exception.hpp>
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 namespace iterators {
 
@@ -79,7 +79,7 @@ struct to_6_bit {
 // ideal.  This is also addressed here.
 
 template<
-    class Base, 
+    class Base,
     class CharType = typename autoboost::iterator_value<Base>::type
 >
 class binary_from_base64 : public
@@ -98,12 +98,12 @@ public:
     template<class T>
     binary_from_base64(AUTOBOOST_PFTO_WRAPPER(T)  start) :
         super_t(
-            Base(AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast< T >(start))), 
+            Base(AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast< T >(start))),
             detail::to_6_bit<CharType>()
         )
     {}
     // intel 7.1 doesn't like default copy constructor
-    binary_from_base64(const binary_from_base64 & rhs) : 
+    binary_from_base64(const binary_from_base64 & rhs) :
         super_t(
             Base(rhs.base_reference()),
             detail::to_6_bit<CharType>()

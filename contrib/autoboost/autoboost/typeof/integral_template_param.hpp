@@ -59,7 +59,7 @@
         AUTOBOOST_PP_CAT(V, n),\
         AUTOBOOST_TYPEOF_INTEGRAL_PARAM_GETTYPE(This),\
         AUTOBOOST_PP_CAT(P, n)\
-    >::type AUTOBOOST_PP_CAT(V, AUTOBOOST_PP_INC(n)); 
+    >::type AUTOBOOST_PP_CAT(V, AUTOBOOST_PP_INC(n));
 
 #define AUTOBOOST_TYPEOF_INTEGRAL_PARAM_DECODE(This, n)\
     typedef autoboost::type_of::decode_integral<AUTOBOOST_TYPEOF_INTEGRAL_PARAM_GETTYPE(This), AUTOBOOST_PP_CAT(iter, n)> AUTOBOOST_PP_CAT(d, n);\

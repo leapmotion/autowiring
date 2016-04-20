@@ -2,17 +2,17 @@
 #define AB_POSIX_TIME_PRE133_OPERATORS_HPP___
 
 /* Copyright (c) 2002-2004 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
- * Author: Jeff Garland, Bart Garst 
+ * Author: Jeff Garland, Bart Garst
  * $Date$
  */
 
 /*! @file posix_time_pre133_operators.hpp
- * These input and output operators are for use with the 
- * pre 1.33 version of the date_time libraries io facet code. 
- * The operators used in version 1.33 and later can be found 
+ * These input and output operators are for use with the
+ * pre 1.33 version of the date_time libraries io facet code.
+ * The operators used in version 1.33 and later can be found
  * in posix_time_io.hpp */
 
 #include <iostream>
@@ -100,7 +100,7 @@ namespace posix_time {
     return is;
   }
 
-  /** operator>> for time_period. time_period must be in 
+  /** operator>> for time_period. time_period must be in
    * "[date time_duration/date time_duration]" format. */
   template<class charT>
   inline
@@ -120,7 +120,7 @@ namespace posix_time {
     }
     // get first time_duration & second date string, remove the '/'
     // and split into 2 strings
-    is >> s; 
+    is >> s;
     {
       std::basic_stringstream<charT> ss;
       ss << s.substr(0, s.find('/'));

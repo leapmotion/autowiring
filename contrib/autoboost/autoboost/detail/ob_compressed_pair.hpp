@@ -322,7 +322,7 @@ public:
             compressed_pair_5(first_param_type x, second_param_type y) : _first(x), _second(y) {}
    // only one single argument constructor since T1 == T2
    explicit compressed_pair_5(first_param_type x) : _first(x), _second(x) {}
-   compressed_pair_5(const ::autoboost::compressed_pair<T1,T2>& c) 
+   compressed_pair_5(const ::autoboost::compressed_pair<T1,T2>& c)
       : _first(c.first()), _second(c.second()) {}
 
    first_reference       first()       { return _first; }
@@ -491,7 +491,7 @@ inline void swap(compressed_pair<T1, T2>& x, compressed_pair<T1, T2>& y)
 
 #endif
 
-} // boost
+} // autoboost
 
 #endif // AUTOBOOST_OB_COMPRESSED_PAIR_HPP
 

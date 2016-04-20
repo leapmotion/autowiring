@@ -112,7 +112,7 @@ namespace autoboost {
     namespace hash_detail {
 
         // Returned by dummy versions of the float functions.
-    
+
         struct not_found {
             // Implicitly convertible to float and long double in order to avoid
             // a compile error when the dummy float functions are used.
@@ -120,7 +120,7 @@ namespace autoboost {
             inline operator float() const { return 0; }
             inline operator long double() const { return 0; }
         };
-          
+
         // A type for detecting the return type of functions.
 
         template <typename T> struct is;
@@ -128,7 +128,7 @@ namespace autoboost {
         template <> struct is<double> { char x[20]; };
         template <> struct is<long double> { char x[30]; };
         template <> struct is<autoboost::hash_detail::not_found> { char x[40]; };
-            
+
         // Used to convert the return type of a function to a type for sizeof.
 
         template <typename T> is<T> float_type(T);
@@ -136,11 +136,11 @@ namespace autoboost {
         // call_ldexp
         //
         // This will get specialized for float and long double
-        
+
         template <typename Float> struct call_ldexp
         {
             typedef double float_type;
-            
+
             inline double operator()(double a, int b) const
             {
                 using namespace std;
@@ -155,7 +155,7 @@ namespace autoboost {
         template <typename Float> struct call_frexp
         {
             typedef double float_type;
-            
+
             inline double operator()(double a, int* b) const
             {
                 using namespace std;
@@ -164,17 +164,17 @@ namespace autoboost {
         };
     }
 }
-            
+
 // A namespace for dummy functions to detect when the actual function we want
 // isn't available. ldexpl, ldexpf etc. might be added tby the macros below.
 //
-// AFAICT these have to be outside of the boost namespace, as if they're in
-// the boost namespace they'll always be preferable to any other function
+// AFAICT these have to be outside of the autoboost namespace, as if they're in
+// the autoboost namespace they'll always be preferable to any other function
 // (since the arguments are built in types, ADL can't be used).
 
 namespace autoboost_hash_detect_float_functions {
     template <class Float> autoboost::hash_detail::not_found ldexp(Float, int);
-    template <class Float> autoboost::hash_detail::not_found frexp(Float, int*);    
+    template <class Float> autoboost::hash_detail::not_found frexp(Float, int*);
 }
 
 // Macros for generating specializations of call_ldexp and call_frexp.
@@ -322,12 +322,12 @@ namespace autoboost
         //
         // If there is support for a particular floating point type, use that
         // otherwise use double (there's always support for double).
-             
+
         template <typename Float>
         struct select_hash_type : select_hash_type_impl<
                 AUTOBOOST_DEDUCED_TYPENAME call_ldexp<Float>::float_type,
                 AUTOBOOST_DEDUCED_TYPENAME call_frexp<Float>::float_type
-            > {};            
+            > {};
     }
 }
 

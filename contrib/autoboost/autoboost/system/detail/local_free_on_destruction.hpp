@@ -6,7 +6,7 @@
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
 
-//  This is derived from boost/asio/detail/local_free_on_block_exit.hpp to avoid
+//  This is derived from autoboost/asio/detail/local_free_on_block_exit.hpp to avoid
 //  a dependency on asio. Thanks to Chris Kohlhoff for pointing it out.
 
 #ifndef AUTOBOOST_SYSTEM_LOCAL_FREE_ON_EXIT_HPP

@@ -18,11 +18,11 @@
 #include <autoboost/mpl/identity.hpp>
 #include <autoboost/type_traits/is_same.hpp>
 
-namespace autoboost 
+namespace autoboost
 {
     namespace range_detail
     {
-        
+
         template< typename Case1 = mpl::true_,
                   typename Type1 = mpl::void_,
                   typename Case2 = mpl::true_,
@@ -90,7 +90,7 @@ namespace autoboost
                         Case19, mpl::identity<Type19>, mpl::if_<
                         Case20, Type20, mpl::void_ > > > > > > > > >
                     > result2;
-            typedef typename    
+            typedef typename
                     mpl::eval_if<
                         is_same<result1, mpl::void_>,
                         result2,
@@ -151,7 +151,7 @@ namespace autoboost
 
     } // namespace 'range_detail'
 
-} // namespace 'boost'
+} // namespace 'autoboost'
 
 
 #endif

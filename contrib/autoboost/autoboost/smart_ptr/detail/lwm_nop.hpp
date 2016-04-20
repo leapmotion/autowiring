@@ -8,7 +8,7 @@
 #endif
 
 //
-//  boost/detail/lwm_nop.hpp
+//  autoboost/detail/lwm_nop.hpp
 //
 //  Copyright (c) 2002 Peter Dimov and Multi Media Ltd.
 //

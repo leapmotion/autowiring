@@ -2,7 +2,7 @@
 #define AB__DATE_TIME_DATE_GENERATOR_FORMATTER__HPP___
 
 /* Copyright (c) 2004 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
@@ -19,7 +19,7 @@ namespace autoboost {
 namespace date_time {
 
   //! Formats date_generators for output
-  /*! Formatting of date_generators follows specific orders for the 
+  /*! Formatting of date_generators follows specific orders for the
    * various types of date_generators.
    * - partial_date                     => "dd Month"
    * - nth_day_of_the_week_in_month     => "nth weekday of month"
@@ -27,11 +27,11 @@ namespace date_time {
    * - last_day_of_the_week_in_month    => "last weekday of month"
    * - first_day_of_the_week_after      => "weekday after"
    * - first_day_of_the_week_before     => "weekday before"
-   * While the order of the elements in these phrases cannot be changed, 
+   * While the order of the elements in these phrases cannot be changed,
    * the elements themselves can be. Weekday and Month get their formats
-   * and names from the date_facet. The remaining elements are stored in 
+   * and names from the date_facet. The remaining elements are stored in
    * the date_generator_formatter and can be customized upon construction
-   * or via a member function. The default elements are those shown in the 
+   * or via a member function. The default elements are those shown in the
    * examples above.
    */
   template <class date_type, class CharT, class OutItrT = std::ostreambuf_iterator<CharT, std::char_traits<CharT> > >
@@ -100,15 +100,15 @@ namespace date_time {
 
       //! Replace the set of phrase elements with those contained in new_strings
       /*! The order of the strings in the given collection is important.
-       * They must follow: 
-       *  - first, second, third, fourth, fifth, last, before, after, of. 
+       * They must follow:
+       *  - first, second, third, fourth, fifth, last, before, after, of.
        *
-       * It is not necessary to send in a complete set if only a few 
+       * It is not necessary to send in a complete set if only a few
        * elements are to be replaced as long as the correct beg_pos is used.
        *
-       * Ex: To keep the default first through fifth elements, but replace 
-       * the rest with a collection of: 
-       *  - "final", "prior", "following", "in". 
+       * Ex: To keep the default first through fifth elements, but replace
+       * the rest with a collection of:
+       *  - "final", "prior", "following", "in".
        * The beg_pos of date_generator_formatter::last would be used.
        */
       void elements(const collection_type& new_strings,
@@ -226,39 +226,39 @@ namespace date_time {
 
   template<class date_type, class CharT, class OutItrT>
   const typename date_generator_formatter<date_type, CharT, OutItrT>::char_type
-  date_generator_formatter<date_type, CharT, OutItrT>::first_string[6] = 
+  date_generator_formatter<date_type, CharT, OutItrT>::first_string[6] =
     {'f','i','r','s','t'};
   template<class date_type, class CharT, class OutItrT>
   const typename date_generator_formatter<date_type, CharT, OutItrT>::char_type
-  date_generator_formatter<date_type, CharT, OutItrT>::second_string[7] = 
+  date_generator_formatter<date_type, CharT, OutItrT>::second_string[7] =
     {'s','e','c','o','n','d'};
   template<class date_type, class CharT, class OutItrT>
   const typename date_generator_formatter<date_type, CharT, OutItrT>::char_type
-  date_generator_formatter<date_type, CharT, OutItrT>::third_string[6] = 
+  date_generator_formatter<date_type, CharT, OutItrT>::third_string[6] =
     {'t','h','i','r','d'};
   template<class date_type, class CharT, class OutItrT>
   const typename date_generator_formatter<date_type, CharT, OutItrT>::char_type
-  date_generator_formatter<date_type, CharT, OutItrT>::fourth_string[7] = 
+  date_generator_formatter<date_type, CharT, OutItrT>::fourth_string[7] =
     {'f','o','u','r','t','h'};
   template<class date_type, class CharT, class OutItrT>
   const typename date_generator_formatter<date_type, CharT, OutItrT>::char_type
-  date_generator_formatter<date_type, CharT, OutItrT>::fifth_string[6] = 
+  date_generator_formatter<date_type, CharT, OutItrT>::fifth_string[6] =
     {'f','i','f','t','h'};
   template<class date_type, class CharT, class OutItrT>
   const typename date_generator_formatter<date_type, CharT, OutItrT>::char_type
-  date_generator_formatter<date_type, CharT, OutItrT>::last_string[5] = 
+  date_generator_formatter<date_type, CharT, OutItrT>::last_string[5] =
     {'l','a','s','t'};
   template<class date_type, class CharT, class OutItrT>
   const typename date_generator_formatter<date_type, CharT, OutItrT>::char_type
-  date_generator_formatter<date_type, CharT, OutItrT>::before_string[8] = 
+  date_generator_formatter<date_type, CharT, OutItrT>::before_string[8] =
     {'b','e','f','o','r','e'};
   template<class date_type, class CharT, class OutItrT>
   const typename date_generator_formatter<date_type, CharT, OutItrT>::char_type
-  date_generator_formatter<date_type, CharT, OutItrT>::after_string[6] = 
+  date_generator_formatter<date_type, CharT, OutItrT>::after_string[6] =
     {'a','f','t','e','r'};
   template<class date_type, class CharT, class OutItrT>
   const typename date_generator_formatter<date_type, CharT, OutItrT>::char_type
-  date_generator_formatter<date_type, CharT, OutItrT>::of_string[3] = 
+  date_generator_formatter<date_type, CharT, OutItrT>::of_string[3] =
     {'o','f'};
 } } // namespaces
 

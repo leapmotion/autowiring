@@ -7,7 +7,7 @@
 
 //
 // This is a temporary workaround until the bulk of this is
-// available in boost config.
+// available in autoboost config.
 // 23/02/03 thw
 //
 
@@ -21,4 +21,4 @@
 # undef AUTOBOOST_ITERATOR_CONFIG_DEF
 #else
 # error missing or nested #include config_def
-#endif 
+#endif

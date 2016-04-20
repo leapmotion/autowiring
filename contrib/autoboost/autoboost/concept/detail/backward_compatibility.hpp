@@ -10,7 +10,7 @@ namespace autoboost
 
 # if defined(AUTOBOOST_HAS_CONCEPTS) && !defined(AUTOBOOST_CONCEPT_NO_BACKWARD_KEYWORD)
   namespace concept = concepts;
-# endif 
+# endif
 } // namespace autoboost::concept
 
 #endif // AUTOBOOST_CONCEPT_BACKWARD_COMPATIBILITY_DWA200968_HPP

@@ -5,8 +5,8 @@
 // Copyright Eric Friedman 2002-2003
 // Copyright Aleksey Gurtovoy 2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -25,7 +25,7 @@
 namespace autoboost { namespace mpl {
 
 namespace aux {
- 
+
 template <
       typename Sequence
     , typename Pred
@@ -37,7 +37,7 @@ struct stable_partition_impl
     : fold<
           Sequence
         , pair< typename In1::state, typename In2::state >
-        , protect< partition_op< 
+        , protect< partition_op<
               Pred
             , typename In1::operation
             , typename In2::operation
@@ -57,7 +57,7 @@ struct reverse_stable_partition_impl
     : reverse_fold<
           Sequence
         , pair< typename In1::state, typename In2::state >
-        , protect< partition_op< 
+        , protect< partition_op<
               Pred
             , typename In1::operation
             , typename In2::operation

@@ -5,7 +5,7 @@
 // Copyright Aleksey Gurtovoy 2000-2004
 //
 // Distributed under the Boost Software License, Version 1.0.
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -26,23 +26,23 @@
 namespace autoboost { namespace mpl {
 
 
-namespace aux { 
+namespace aux {
 
-template< typename Sequence > 
-struct begin_type 
-{ 
-    typedef typename Sequence::begin type; 
+template< typename Sequence >
+struct begin_type
+{
+    typedef typename Sequence::begin type;
 };
-template< typename Sequence > 
+template< typename Sequence >
 struct end_type
-{ 
-    typedef typename Sequence::end type; 
+{
+    typedef typename Sequence::end type;
 };
 
 }
 
-// default implementation; conrete sequences might override it by 
-// specializing either the 'begin_impl/end_impl' or the primary 
+// default implementation; conrete sequences might override it by
+// specializing either the 'begin_impl/end_impl' or the primary
 // 'begin/end' templates
 
 template< typename Tag >
@@ -82,8 +82,8 @@ struct name##_impl<tag> \
 AUX778076_IMPL_SPEC(begin, nested_begin_end_tag, typename Sequence::begin)
 AUX778076_IMPL_SPEC(end, nested_begin_end_tag, typename Sequence::end)
 
-// if a type 'T' does not contain 'begin/end' or 'tag' members 
-// and doesn't specialize either 'begin/end' or 'begin_impl/end_impl' 
+// if a type 'T' does not contain 'begin/end' or 'tag' members
+// and doesn't specialize either 'begin/end' or 'begin_impl/end_impl'
 // templates, then we end up here
 AUX778076_IMPL_SPEC(begin, non_sequence_tag, void_)
 AUX778076_IMPL_SPEC(end, non_sequence_tag, void_)

@@ -124,7 +124,7 @@
 #endif
 
 /*
- * If Win32 support has been disabled for boost in general, then
+ * If Win32 support has been disabled for autoboost in general, then
  * it is for regex in particular:
  */
 #if defined(AUTOBOOST_DISABLE_WIN32) && !defined(AUTOBOOST_REGEX_NO_W32)

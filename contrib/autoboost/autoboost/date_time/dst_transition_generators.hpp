@@ -1,5 +1,5 @@
 /* Copyright (c) 2002,2003,2005 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
@@ -12,9 +12,9 @@
 namespace autoboost {
 namespace date_time {
 
-    //! Defines base interface for calculating start and end date of daylight savings 
+    //! Defines base interface for calculating start and end date of daylight savings
     template<class date_type>
-    class dst_day_calc_rule 
+    class dst_day_calc_rule
     {
     public:
       typedef typename date_type::year_type year_type;
@@ -28,7 +28,7 @@ namespace date_time {
 
     //! Canonical form for a class that provides day rule calculation
     /*! This class is used to generate specific sets of dst rules
-     *  
+     *
      *@param spec Provides a specifiction of the function object types used
      *            to generate start and end days of daylight savings as well
      *            as the date type.

@@ -11,19 +11,19 @@
 
 namespace autoboost { namespace type_of {
 
-    template<class T> 
+    template<class T>
         T& ensure_obj(const T&);
 
 }}
 
 #else
 
-#include <autoboost/type_traits/is_function.hpp> 
+#include <autoboost/type_traits/is_function.hpp>
 #include <autoboost/utility/enable_if.hpp>
 
 namespace autoboost { namespace type_of {
 # ifdef AUTOBOOST_NO_SFINAE
-    template<class T> 
+    template<class T>
     T& ensure_obj(const T&);
 # else
     template<typename T>

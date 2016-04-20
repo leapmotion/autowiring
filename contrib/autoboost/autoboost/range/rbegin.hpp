@@ -59,7 +59,7 @@ const_rbegin( const T& r )
     return autoboost::rbegin( r );
 }
 
-} // namespace 'boost'
+} // namespace 'autoboost'
 
 #endif
 

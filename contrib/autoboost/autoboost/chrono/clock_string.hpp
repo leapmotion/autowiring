@@ -20,6 +20,6 @@ namespace autoboost
 
   } // chrono
 
-} // boost
+} // autoboost
 
 #endif  // AUTOBOOST_CHRONO_CLOCK_STRING_HPP

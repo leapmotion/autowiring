@@ -54,7 +54,7 @@ struct has_key_
 {
     typedef typename mpl::find<Set, K>::type iter;
     typedef mpl::not_<
-        is_same<iter, typename mpl::end<Set>::type> 
+        is_same<iter, typename mpl::end<Set>::type>
     > type;
 };
 

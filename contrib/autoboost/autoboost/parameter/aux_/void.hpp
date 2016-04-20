@@ -6,13 +6,13 @@
 #ifndef AUTOBOOST_PARAMETER_VOID_050329_HPP
 #define AUTOBOOST_PARAMETER_VOID_050329_HPP
 
-namespace autoboost { namespace parameter { 
+namespace autoboost { namespace parameter {
 
 // A placemarker for "no argument passed."
 // MAINTAINER NOTE: Do not make this into a metafunction
-struct void_ {}; 
+struct void_ {};
 
-namespace aux 
+namespace aux
 {
 
   inline void_& void_reference()

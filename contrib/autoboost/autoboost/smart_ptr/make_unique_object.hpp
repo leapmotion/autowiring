@@ -4,7 +4,7 @@
  *
  * Distributed under the Boost Software License,
  * Version 1.0. (See accompanying file LICENSE_1_0.txt
- * or copy at http://boost.org/LICENSE_1_0.txt)
+ * or copy at http://autoboost.org/LICENSE_1_0.txt)
  */
 #ifndef AUTOBOOST_SMART_PTR_MAKE_UNIQUE_OBJECT_HPP
 #define AUTOBOOST_SMART_PTR_MAKE_UNIQUE_OBJECT_HPP
@@ -28,7 +28,7 @@ namespace autoboost {
         return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
     }
 #endif
-    
+
     template<class T>
     inline typename autoboost::detail::up_if_not_array<T>::type
     make_unique(typename add_rvalue_reference<T>::type value) {

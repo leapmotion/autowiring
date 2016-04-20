@@ -25,7 +25,7 @@
 
 //----------------------------------------------------------------------------//
 #if defined(AUTOBOOST_NO_CXX11_DECLTYPE) && !defined(AUTOBOOST_COMMON_TYPE_DONT_USE_TYPEOF)
-#include <autoboost/typeof/typeof.hpp>   // boost wonders never cease!
+#include <autoboost/typeof/typeof.hpp>   // autoboost wonders never cease!
 #endif
 
 //----------------------------------------------------------------------------//
@@ -104,7 +104,7 @@ namespace type_traits_detail {
         static bool declval_bool();  // workaround gcc bug; not required by std
         static typename add_rvalue_reference<T>::type declval_T();  // workaround gcc bug; not required by std
         static typename add_rvalue_reference<U>::type declval_U();  // workaround gcc bug; not required by std
-        static typename add_rvalue_reference<bool>::type declval_b();  
+        static typename add_rvalue_reference<bool>::type declval_b();
 
 #if !defined(AUTOBOOST_NO_CXX11_DECLTYPE)
     public:

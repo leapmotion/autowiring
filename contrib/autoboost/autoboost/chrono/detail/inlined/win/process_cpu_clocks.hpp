@@ -1,4 +1,4 @@
-//  boost process_timer.cpp  -----------------------------------------------------------//
+//  autoboost process_timer.cpp  -----------------------------------------------------------//
 
 //  Copyright Beman Dawes 1994, 2006, 2008
 //  Copyright 2009-2010 Vicente J. Botet Escriba

@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -48,7 +48,7 @@ struct pop_front_impl< aux::vector_tag<1> >
     template< typename Vector > struct apply
     {
         typedef vector0<
-             
+
             > type;
     };
 };
@@ -59,7 +59,7 @@ struct push_back_impl< aux::vector_tag<0> >
     template< typename Vector, typename T > struct apply
     {
         typedef vector1<
-             
+
               T
             > type;
     };
@@ -71,7 +71,7 @@ struct pop_back_impl< aux::vector_tag<1> >
     template< typename Vector > struct apply
     {
         typedef vector0<
-             
+
             > type;
     };
 };
@@ -91,7 +91,7 @@ struct vector2
     typedef vector2 type;
     typedef T0 item0;
     typedef T1 item1;
-    
+
 
     typedef void_ item2;
     typedef T1 back;
@@ -163,7 +163,7 @@ struct vector3
     typedef T0 item0;
     typedef T1 item1;
     typedef T2 item2;
-    
+
 
     typedef void_ item3;
     typedef T2 back;
@@ -236,7 +236,7 @@ struct vector4
     typedef T1 item1;
     typedef T2 item2;
     typedef T3 item3;
-    
+
 
     typedef void_ item4;
     typedef T3 back;
@@ -314,7 +314,7 @@ struct vector5
     typedef T2 item2;
     typedef T3 item3;
     typedef T4 item4;
-    
+
 
     typedef void_ item5;
     typedef T4 back;
@@ -394,7 +394,7 @@ struct vector6
     typedef T3 item3;
     typedef T4 item4;
     typedef T5 item5;
-    
+
 
     typedef void_ item6;
     typedef T5 back;
@@ -479,7 +479,7 @@ struct vector7
     typedef T4 item4;
     typedef T5 item5;
     typedef T6 item6;
-    
+
 
     typedef void_ item7;
     typedef T6 back;
@@ -565,7 +565,7 @@ struct vector8
     typedef T5 item5;
     typedef T6 item6;
     typedef T7 item7;
-    
+
 
     typedef void_ item8;
     typedef T7 back;
@@ -656,7 +656,7 @@ struct vector9
     typedef T6 item6;
     typedef T7 item7;
     typedef T8 item8;
-    
+
 
     typedef void_ item9;
     typedef T8 back;
@@ -748,7 +748,7 @@ struct vector10
     typedef T7 item7;
     typedef T8 item8;
     typedef T9 item9;
-    
+
 
     typedef void_ item10;
     typedef T9 back;

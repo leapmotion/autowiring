@@ -7,7 +7,7 @@
 # pragma once
 #endif
 
-//  boost/detail/lightweight_thread.hpp
+//  autoboost/detail/lightweight_thread.hpp
 //
 //  Copyright (c) 2002 Peter Dimov and Multi Media Ltd.
 //  Copyright (c) 2008 Peter Dimov

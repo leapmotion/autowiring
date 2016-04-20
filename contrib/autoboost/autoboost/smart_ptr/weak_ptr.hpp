@@ -13,7 +13,7 @@
 //  See http://www.boost.org/libs/smart_ptr/weak_ptr.htm for documentation.
 //
 
-#include <memory> // boost.TR1 include order fix
+#include <memory> // autoboost.TR1 include order fix
 #include <autoboost/smart_ptr/detail/shared_count.hpp>
 #include <autoboost/smart_ptr/shared_ptr.hpp>
 

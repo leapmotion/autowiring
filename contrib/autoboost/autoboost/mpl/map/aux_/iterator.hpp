@@ -5,8 +5,8 @@
 // Copyright Aleksey Gurtovoy 2003-2004
 // Copyright David Abrahams 2003-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -31,13 +31,13 @@ namespace autoboost { namespace mpl {
 
 #if !defined(AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
 
-template< 
+template<
       typename Map
     , long order
     , long max_order
     >
 struct next_order
-    : if_< 
+    : if_<
           is_void_< typename item_by_order<Map,order>::type >
         , next_order<Map,(order+1),max_order>
         , long_<order>
@@ -45,7 +45,7 @@ struct next_order
 {
 };
 
-template< 
+template<
       typename Map
     , long max_order
     >
@@ -69,7 +69,7 @@ struct m_iter<Map,max_order,max_order>
 };
 
 
-template< typename Map, long order, long max_order > 
+template< typename Map, long order, long max_order >
 struct next< m_iter<Map,order,max_order> >
 {
     typedef m_iter<
@@ -79,27 +79,27 @@ struct next< m_iter<Map,order,max_order> >
         > type;
 };
 
-template< typename Map, long max_order > 
+template< typename Map, long max_order >
 struct next< m_iter<Map,max_order,max_order> >
 {
 };
 
 #else
 
-template< 
+template<
       typename Map
     , AUTOBOOST_MPL_AUX_NTTP_DECL(long, order)
     , AUTOBOOST_MPL_AUX_NTTP_DECL(long, max_order)
     >
 struct next_order;
 
-template< 
+template<
       typename Map
     , AUTOBOOST_MPL_AUX_NTTP_DECL(long, order)
     , AUTOBOOST_MPL_AUX_NTTP_DECL(long, max_order)
     >
 struct next_order_impl
-    : if_< 
+    : if_<
           is_void_< typename item_by_order<Map,order>::type >
         , next_order<Map,(order+1),max_order>
         , long_<order>
@@ -107,7 +107,7 @@ struct next_order_impl
     {
     };
 
-template< 
+template<
       typename Map
     , AUTOBOOST_MPL_AUX_NTTP_DECL(long, order)
     , AUTOBOOST_MPL_AUX_NTTP_DECL(long, max_order)
@@ -131,7 +131,7 @@ struct m_iter;
 
 struct m_iter_empty_base {};
 
-template< 
+template<
       typename Map
     , AUTOBOOST_MPL_AUX_NTTP_DECL(long, order)
     , AUTOBOOST_MPL_AUX_NTTP_DECL(long, max_order)
@@ -139,7 +139,7 @@ template<
 struct m_iter_base
 {
     typedef typename item_by_order<Map,order>::type type;
-    
+
     typedef m_iter<
           Map
         , next_order<Map,order+1,max_order>::value

@@ -10,12 +10,12 @@
 # include <autoboost/type_traits/is_convertible.hpp>
 # include <autoboost/type_traits/is_reference.hpp>
 
-namespace autoboost { namespace parameter { 
+namespace autoboost { namespace parameter {
 
-namespace aux 
+namespace aux
 {
 
-  struct template_keyword_tag {}; 
+  struct template_keyword_tag {};
 
   template <class T, class U>
   struct is_pointer_convertible

@@ -238,7 +238,7 @@ autoboost
 #ifdef AUTOBOOST_NO_RTTI
         template <class T>
         autoboost::exception const *
-        get_boost_exception( T const * )
+        get_autoboost_exception( T const * )
             {
             try
                 {
@@ -257,7 +257,7 @@ autoboost
 #else
         template <class T>
         autoboost::exception const *
-        get_boost_exception( T const * x )
+        get_autoboost_exception( T const * x )
             {
             return dynamic_cast<autoboost::exception const *>(x);
             }
@@ -268,7 +268,7 @@ autoboost
         exception_ptr
         current_exception_std_exception( T const & e1 )
             {
-            if( autoboost::exception const * e2 = get_boost_exception(&e1) )
+            if( autoboost::exception const * e2 = get_autoboost_exception(&e1) )
                 return autoboost::copy_exception(current_exception_std_exception_wrapper<T>(e1,*e2));
             else
                 return autoboost::copy_exception(current_exception_std_exception_wrapper<T>(e1));
@@ -283,7 +283,7 @@ autoboost
 
         inline
         exception_ptr
-        current_exception_unknown_boost_exception( autoboost::exception const & e )
+        current_exception_unknown_autoboost_exception( autoboost::exception const & e )
             {
             return autoboost::copy_exception(unknown_exception(e));
             }
@@ -292,8 +292,8 @@ autoboost
         exception_ptr
         current_exception_unknown_std_exception( std::exception const & e )
             {
-            if( autoboost::exception const * be = get_boost_exception(&e) )
-                return current_exception_unknown_boost_exception(*be);
+            if( autoboost::exception const * be = get_autoboost_exception(&e) )
+                return current_exception_unknown_autoboost_exception(*be);
             else
                 return autoboost::copy_exception(unknown_exception(e));
             }
@@ -419,7 +419,7 @@ autoboost
                     catch(
                     autoboost::exception & e )
                         {
-                        return exception_detail::current_exception_unknown_boost_exception(e);
+                        return exception_detail::current_exception_unknown_autoboost_exception(e);
                         }
                     catch(
                     ... )

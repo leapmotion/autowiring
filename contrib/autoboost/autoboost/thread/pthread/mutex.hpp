@@ -116,7 +116,7 @@ namespace autoboost
             int res = posix::pthread_mutex_lock(&m);
             if (res)
             {
-                autoboost::throw_exception(lock_error(res,"boost: mutex lock failed in pthread_mutex_lock"));
+                autoboost::throw_exception(lock_error(res,"autoboost: mutex lock failed in pthread_mutex_lock"));
             }
         }
 
@@ -125,7 +125,7 @@ namespace autoboost
             int res = posix::pthread_mutex_unlock(&m);
             if (res)
             {
-                autoboost::throw_exception(lock_error(res,"boost: mutex unlock failed in pthread_mutex_unlock"));
+                autoboost::throw_exception(lock_error(res,"autoboost: mutex unlock failed in pthread_mutex_unlock"));
             }
         }
 
@@ -212,7 +212,7 @@ namespace autoboost
             int res = posix::pthread_mutex_lock(&m);
             if (res)
             {
-                autoboost::throw_exception(lock_error(res,"boost: mutex lock failed in pthread_mutex_lock"));
+                autoboost::throw_exception(lock_error(res,"autoboost: mutex lock failed in pthread_mutex_lock"));
             }
         }
 
@@ -221,7 +221,7 @@ namespace autoboost
             int res = posix::pthread_mutex_unlock(&m);
             if (res)
             {
-                autoboost::throw_exception(lock_error(res,"boost: mutex unlock failed in pthread_mutex_unlock"));
+                autoboost::throw_exception(lock_error(res,"autoboost: mutex unlock failed in pthread_mutex_unlock"));
             }
         }
 

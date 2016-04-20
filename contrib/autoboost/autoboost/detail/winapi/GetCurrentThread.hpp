@@ -20,7 +20,7 @@ namespace detail {
 namespace winapi {
 #if defined( UNDER_CE )
 // Windows CE define GetCurrentThread as an inline function in kfuncs.h
-inline HANDLE_ GetCurrentThread() 
+inline HANDLE_ GetCurrentThread()
 {
   return ::GetCurrentThread();
 }

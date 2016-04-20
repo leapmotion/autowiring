@@ -4,8 +4,8 @@
 
 // Copyright Eric Friedman 2002-2003
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -36,7 +36,7 @@ namespace autoboost { namespace mpl { namespace aux {
 template< typename Seq, typename Pred >
 struct quick_sort;
 
-// agurt, 10/nov/04: for the sake of deficeint compilers 
+// agurt, 10/nov/04: for the sake of deficeint compilers
 template< typename Pred, typename Pivot >
 struct quick_sort_pred
 {
@@ -46,7 +46,7 @@ struct quick_sort_pred
     };
 };
 
-template< 
+template<
       typename Seq
     , typename Pred
     >
@@ -54,7 +54,7 @@ struct quick_sort_impl
 {
     typedef typename begin<Seq>::type pivot;
     typedef typename partition<
-          iterator_range< 
+          iterator_range<
               typename next<pivot>::type
             , typename end<Seq>::type
             >
@@ -66,13 +66,13 @@ struct quick_sort_impl
     typedef typename quick_sort< typename partitioned::first, Pred >::type part1;
     typedef typename quick_sort< typename partitioned::second, Pred >::type part2;
 
-    typedef joint_view< 
+    typedef joint_view<
               joint_view< part1, single_view< typename deref<pivot>::type > >
             , part2
             > type;
 };
 
-template< 
+template<
       typename Seq
     , typename Pred
     >
@@ -93,11 +93,11 @@ template <
     >
 struct sort_impl
 {
-    typedef typename quick_sort< 
+    typedef typename quick_sort<
           Sequence
         , typename if_na<Pred,less<> >::type
         >::type result_;
-        
+
     typedef typename copy<result_,In>::type type;
 };
 
@@ -108,11 +108,11 @@ template <
     >
 struct reverse_sort_impl
 {
-    typedef typename quick_sort< 
+    typedef typename quick_sort<
           Sequence
         , typename if_na<Pred,less<> >::type
         >::type result_;
-        
+
     typedef typename reverse_copy<result_,In>::type type;
 };
 

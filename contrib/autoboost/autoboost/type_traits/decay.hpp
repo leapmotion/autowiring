@@ -18,7 +18,7 @@
 #include <autoboost/mpl/eval_if.hpp>
 #include <autoboost/mpl/identity.hpp>
 
-namespace autoboost 
+namespace autoboost
 {
 
     template< class T >
@@ -27,17 +27,17 @@ namespace autoboost
     private:
         typedef AUTOBOOST_DEDUCED_TYPENAME remove_reference<T>::type Ty;
     public:
-        typedef AUTOBOOST_DEDUCED_TYPENAME mpl::eval_if< 
+        typedef AUTOBOOST_DEDUCED_TYPENAME mpl::eval_if<
             is_array<Ty>,
             mpl::identity<AUTOBOOST_DEDUCED_TYPENAME remove_bounds<Ty>::type*>,
-            AUTOBOOST_DEDUCED_TYPENAME mpl::eval_if< 
+            AUTOBOOST_DEDUCED_TYPENAME mpl::eval_if<
                 is_function<Ty>,
                 add_pointer<Ty>,
                 mpl::identity<Ty>
             >
         >::type type;
     };
-    
+
 } // namespace autoboost
 
 

@@ -1,4 +1,4 @@
-//  boost utility/base_from_member.hpp header file  --------------------------//
+//  autoboost utility/base_from_member.hpp header file  --------------------------//
 
 //  Copyright 2001, 2003, 2004, 2012 Daryle Walker.  Use, modification, and
 //  distribution are subject to the Boost Software License, Version 1.0.  (See

@@ -1,4 +1,4 @@
-/* boost random/detail/generator_bits.hpp header file
+/* autoboost random/detail/generator_bits.hpp header file
  *
  * Copyright Steven Watanabe 2011
  * Distributed under the Boost Software License, Version 1.0. (See

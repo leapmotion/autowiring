@@ -236,7 +236,7 @@ struct is_same
 {
    static const bool value = false;
 };
- 
+
 template<class T>
 struct is_same<T, T>
 {

@@ -2,7 +2,7 @@
 #define AB_LOCAL_TIME_DST_TRANSITION_DAY_RULES_HPP__
 
 /* Copyright (c) 2003-2004 CrystalClear Software, Inc.
- * Subject to the Boost Software License, Version 1.0. 
+ * Subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
  * $Date$
@@ -14,21 +14,21 @@
 
 namespace autoboost {
 namespace local_time {
-   
+
     //! Provides rule of the form starting Apr 30 ending Oct 21
     typedef date_time::dst_day_calc_rule<gregorian::date> dst_calc_rule;
 
-    struct partial_date_rule_spec 
+    struct partial_date_rule_spec
     {
       typedef gregorian::date date_type;
       typedef gregorian::partial_date start_rule;
       typedef gregorian::partial_date end_rule;
     };
-    
+
     //! Provides rule of the form first Sunday in April, last Saturday in Oct
     typedef date_time::day_calc_dst_rule<partial_date_rule_spec> partial_date_dst_rule;
 
-    struct first_last_rule_spec 
+    struct first_last_rule_spec
     {
       typedef gregorian::date date_type;
       typedef gregorian::first_kday_of_month start_rule;
@@ -38,7 +38,7 @@ namespace local_time {
     //! Provides rule of the form first Sunday in April, last Saturday in Oct
     typedef date_time::day_calc_dst_rule<first_last_rule_spec> first_last_dst_rule;
 
-    struct last_last_rule_spec 
+    struct last_last_rule_spec
     {
       typedef gregorian::date date_type;
       typedef gregorian::last_kday_of_month start_rule;
@@ -57,7 +57,7 @@ namespace local_time {
 
     //! Provides rule in form of [1st|2nd|3rd|4th] Sunday in April, last Sunday in Oct
     typedef date_time::day_calc_dst_rule<nth_last_rule_spec> nth_last_dst_rule;
-    
+
     struct nth_kday_rule_spec
     {
       typedef gregorian::date date_type;

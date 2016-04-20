@@ -12,7 +12,7 @@
 #include <cstring> // memcpy
 #include <cstddef> // NULL
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
+namespace std{
     using ::memcpy;
 } // namespace std
 #endif
@@ -20,7 +20,7 @@ namespace std{
 #ifndef AUTOBOOST_NO_CWCHAR
 #include <cstdlib> // mbtowc
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
+namespace std{
     using ::mbtowc;
  } // namespace std
 #endif
@@ -59,7 +59,7 @@ xml_iarchive_impl<Archive>::load(std::wstring &ws){
         autoboost::serialization::throw_exception(
             xml_archive_exception(xml_archive_exception::xml_archive_parsing_error)
         );
-    
+
     #if AUTOBOOST_WORKAROUND(_RWSTD_VER, AUTOBOOST_TESTED_AT(20101))
     if(NULL != ws.data())
     #endif
@@ -93,7 +93,7 @@ xml_iarchive_impl<Archive>::load(wchar_t * ws){
         autoboost::serialization::throw_exception(
             xml_archive_exception(xml_archive_exception::xml_archive_parsing_error)
         );
-        
+
     const char * start = s.data();
     const char * end = start + s.size();
     while(start < end){
@@ -168,7 +168,7 @@ xml_iarchive_impl<Archive>::xml_iarchive_impl(
     unsigned int flags
 ) :
     basic_text_iprimitive<std::istream>(
-        is_, 
+        is_,
         0 != (flags & no_codecvt)
     ),
     basic_xml_iarchive<Archive>(flags),

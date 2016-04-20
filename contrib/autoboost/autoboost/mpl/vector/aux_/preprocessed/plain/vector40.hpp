@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -55,7 +55,7 @@ struct vector31
     typedef T28 item28;
     typedef T29 item29;
     typedef T30 item30;
-    
+
 
     typedef void_ item31;
     typedef T30 back;
@@ -218,7 +218,7 @@ struct vector32
     typedef T29 item29;
     typedef T30 item30;
     typedef T31 item31;
-    
+
 
     typedef void_ item32;
     typedef T31 back;
@@ -386,7 +386,7 @@ struct vector33
     typedef T30 item30;
     typedef T31 item31;
     typedef T32 item32;
-    
+
 
     typedef void_ item33;
     typedef T32 back;
@@ -555,7 +555,7 @@ struct vector34
     typedef T31 item31;
     typedef T32 item32;
     typedef T33 item33;
-    
+
 
     typedef void_ item34;
     typedef T33 back;
@@ -729,7 +729,7 @@ struct vector35
     typedef T32 item32;
     typedef T33 item33;
     typedef T34 item34;
-    
+
 
     typedef void_ item35;
     typedef T34 back;
@@ -905,7 +905,7 @@ struct vector36
     typedef T33 item33;
     typedef T34 item34;
     typedef T35 item35;
-    
+
 
     typedef void_ item36;
     typedef T35 back;
@@ -1086,7 +1086,7 @@ struct vector37
     typedef T34 item34;
     typedef T35 item35;
     typedef T36 item36;
-    
+
 
     typedef void_ item37;
     typedef T36 back;
@@ -1268,7 +1268,7 @@ struct vector38
     typedef T35 item35;
     typedef T36 item36;
     typedef T37 item37;
-    
+
 
     typedef void_ item38;
     typedef T37 back;
@@ -1455,7 +1455,7 @@ struct vector39
     typedef T36 item36;
     typedef T37 item37;
     typedef T38 item38;
-    
+
 
     typedef void_ item39;
     typedef T38 back;
@@ -1643,7 +1643,7 @@ struct vector40
     typedef T37 item37;
     typedef T38 item38;
     typedef T39 item39;
-    
+
 
     typedef void_ item40;
     typedef T39 back;

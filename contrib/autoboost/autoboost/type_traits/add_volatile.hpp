@@ -28,13 +28,13 @@ namespace autoboost {
 // references with MSVC6.
 #   pragma warning(push)
 #   pragma warning(disable:4181) // warning C4181: qualifier applied to reference type ignored
-#endif 
+#endif
 
 AUTOBOOST_TT_AUX_TYPE_TRAIT_DEF1(add_volatile,T,T volatile)
 
 #if defined(AUTOBOOST_MSVC)
 #   pragma warning(pop)
-#endif 
+#endif
 
 AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_1(typename T,add_volatile,T&,T&)
 

@@ -34,23 +34,23 @@ inline Iterator is_sorted_until (Iterator first, Iterator last) {
   typedef typename autoboost::detail::iterator_traits<Iterator>::value_type
     value_type;
 
-  typedef std::less<value_type> c; 
+  typedef std::less<value_type> c;
 
-  return ::autoboost::detail::is_sorted_until(first, last, c()); 
+  return ::autoboost::detail::is_sorted_until(first, last, c());
 }
 
 template<class Iterator, class Comp>
 inline bool is_sorted (Iterator first, Iterator last, Comp c) {
   return ::autoboost::detail::is_sorted_until(first, last, c) == last;
-} 
+}
 
 template<class Iterator>
 inline bool is_sorted (Iterator first, Iterator last) {
   return ::autoboost::detail::is_sorted_until(first, last) == last;
-} 
+}
 
 } // detail
-} // boost
+} // autoboost
 
 #endif // AUTOBOOST_DETAIL_SORTED_HPP
 

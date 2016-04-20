@@ -12,7 +12,7 @@
 #include <autoboost/config.hpp>
 #include <autoboost/detail/workaround.hpp>
 
-// With boost release 1.33, date_time will be using a different,
+// With autoboost release 1.33, date_time will be using a different,
 // more flexible, IO system. This new system is not compatible with
 // old compilers. The original date_time IO system remains for those
 // compilers. They must define this macro to use the legacy IO.
@@ -30,7 +30,7 @@
 
 #include <autoboost/date_time/locale_config.hpp> //set up locale configurations
 
-//Set up a configuration parameter for platforms that have 
+//Set up a configuration parameter for platforms that have
 //GetTimeOfDay
 #if defined(AUTOBOOST_HAS_GETTIMEOFDAY) || defined(AUTOBOOST_HAS_FTIME)
 #define AUTOBOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK
@@ -75,11 +75,11 @@ namespace std {
 }
 #endif
 
-// workaround for errors associated with output for date classes 
-// modifications and input streaming for time classes. 
+// workaround for errors associated with output for date classes
+// modifications and input streaming for time classes.
 // Compilers affected are:
 // gcc295, msvc (neither with STLPort), any borland
-// 
+//
 #if (((defined(__GNUC__) && (__GNUC__ < 3)) || \
       (defined(_MSC_VER) && (_MSC_VER < 1300)) ) && \
       !defined(_STLP_OWN_IOSTREAMS) ) || \
@@ -109,17 +109,17 @@ namespace std {
 
 /* The following handles the definition of the necessary macros
  * for dll building on Win32 platforms.
- * 
- * For code that will be placed in the date_time .dll, 
+ *
+ * For code that will be placed in the date_time .dll,
  * it must be properly prefixed with AUTOBOOST_DATE_TIME_DECL.
  * The corresponding .cpp file must have AUTOBOOST_DATE_TIME_SOURCE
  * defined before including its header. For examples see:
  * greg_month.hpp & greg_month.cpp
- * 
+ *
  */
 
 // we need to import/export our code only if the user has specifically
-// asked for it by defining either AUTOBOOST_ALL_DYN_LINK if they want all boost
+// asked for it by defining either AUTOBOOST_ALL_DYN_LINK if they want all autoboost
 // libraries to be dynamically linked, or AUTOBOOST_DATE_TIME_DYN_LINK
 // if they want just this one to be dynamically liked:
 #if defined(AUTOBOOST_ALL_DYN_LINK) || defined(AUTOBOOST_DATE_TIME_DYN_LINK)
@@ -136,7 +136,7 @@ namespace std {
 #  define AUTOBOOST_DATE_TIME_DECL
 #endif
 
-#if defined(AUTOBOOST_HAS_THREADS) 
+#if defined(AUTOBOOST_HAS_THREADS)
 #  if defined(_MSC_VER) || defined(__MWERKS__) || defined(__MINGW32__) ||  defined(__BORLANDC__)
      //no reentrant posix functions (eg: localtime_r)
 #  elif (!defined(__hpux) || (defined(__hpux) && defined(_REENTRANT)))

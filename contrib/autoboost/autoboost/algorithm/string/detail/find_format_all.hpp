@@ -24,7 +24,7 @@ namespace autoboost {
 
 // find_format_all_copy (iterator variant) implementation ---------------------------//
 
-           template< 
+           template<
                 typename OutputIteratorT,
                 typename InputT,
                 typename FinderT,
@@ -38,12 +38,12 @@ namespace autoboost {
                 FormatterT Formatter,
                 const FindResultT& FindResult,
                 const FormatResultT& FormatResult )
-            {       
-                typedef AUTOBOOST_STRING_TYPENAME 
-                    range_const_iterator<InputT>::type input_iterator_type; 
+            {
+                typedef AUTOBOOST_STRING_TYPENAME
+                    range_const_iterator<InputT>::type input_iterator_type;
 
                 typedef find_format_store<
-                        input_iterator_type, 
+                        input_iterator_type,
                         FormatterT,
                         FormatResultT > store_type;
 
@@ -72,7 +72,7 @@ namespace autoboost {
                 return Output;
             }
 
-            template< 
+            template<
                 typename OutputIteratorT,
                 typename InputT,
                 typename FinderT,
@@ -84,9 +84,9 @@ namespace autoboost {
                 FinderT Finder,
                 FormatterT Formatter,
                 const FindResultT& FindResult )
-            {   
+            {
                 if( ::autoboost::algorithm::detail::check_find_result(Input, FindResult) ) {
-                    return ::autoboost::algorithm::detail::find_format_all_copy_impl2( 
+                    return ::autoboost::algorithm::detail::find_format_all_copy_impl2(
                         Output,
                         Input,
                         Finder,
@@ -100,8 +100,8 @@ namespace autoboost {
 
  // find_format_all_copy implementation ----------------------------------------------//
 
-           template< 
-                typename InputT, 
+           template<
+                typename InputT,
                 typename FinderT,
                 typename FormatterT,
                 typename FindResultT,
@@ -113,11 +113,11 @@ namespace autoboost {
                 const FindResultT& FindResult,
                 const FormatResultT& FormatResult)
             {
-                typedef AUTOBOOST_STRING_TYPENAME 
-                    range_const_iterator<InputT>::type input_iterator_type; 
+                typedef AUTOBOOST_STRING_TYPENAME
+                    range_const_iterator<InputT>::type input_iterator_type;
 
                 typedef find_format_store<
-                        input_iterator_type, 
+                        input_iterator_type,
                         FormatterT,
                         FormatResultT > store_type;
 
@@ -149,8 +149,8 @@ namespace autoboost {
                 return Output;
             }
 
-            template< 
-                typename InputT, 
+            template<
+                typename InputT,
                 typename FinderT,
                 typename FormatterT,
                 typename FindResultT >
@@ -173,30 +173,30 @@ namespace autoboost {
             }
 
  // find_format_all implementation ------------------------------------------------//
-        
+
             template<
                 typename InputT,
                 typename FinderT,
                 typename FormatterT,
                 typename FindResultT,
                 typename FormatResultT >
-            inline void find_format_all_impl2( 
+            inline void find_format_all_impl2(
                 InputT& Input,
                 FinderT Finder,
                 FormatterT Formatter,
                 FindResultT FindResult,
                 FormatResultT FormatResult)
             {
-                typedef AUTOBOOST_STRING_TYPENAME 
-                    range_iterator<InputT>::type input_iterator_type; 
+                typedef AUTOBOOST_STRING_TYPENAME
+                    range_iterator<InputT>::type input_iterator_type;
                 typedef find_format_store<
-                        input_iterator_type, 
+                        input_iterator_type,
                         FormatterT,
                         FormatResultT > store_type;
 
                 // Create store for the find result
                 store_type M( FindResult, FormatResult, Formatter );
-          
+
                 // Instantiate replacement storage
                 std::deque<
                     AUTOBOOST_STRING_TYPENAME range_value<InputT>::type> Storage;
@@ -204,17 +204,17 @@ namespace autoboost {
                 // Initialize replacement iterators
                 input_iterator_type InsertIt=::autoboost::begin(Input);
                 input_iterator_type SearchIt=::autoboost::begin(Input);
-                
+
                 while( M )
                 {
                     // process the segment
-                    InsertIt=process_segment( 
+                    InsertIt=process_segment(
                         Storage,
                         Input,
                         InsertIt,
                         SearchIt,
                         M.begin() );
-                    
+
                     // Adjust search iterator
                     SearchIt=M.end();
 
@@ -226,13 +226,13 @@ namespace autoboost {
                 }
 
                 // process the last segment
-                InsertIt=::autoboost::algorithm::detail::process_segment( 
+                InsertIt=::autoboost::algorithm::detail::process_segment(
                     Storage,
                     Input,
                     InsertIt,
                     SearchIt,
                     ::autoboost::end(Input) );
-                
+
                 if ( Storage.empty() )
                 {
                     // Truncate input
@@ -250,7 +250,7 @@ namespace autoboost {
                 typename FinderT,
                 typename FormatterT,
                 typename FindResultT >
-            inline void find_format_all_impl( 
+            inline void find_format_all_impl(
                 InputT& Input,
                 FinderT Finder,
                 FormatterT Formatter,

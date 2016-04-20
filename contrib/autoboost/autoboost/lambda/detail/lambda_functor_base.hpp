@@ -19,7 +19,7 @@
 #include "autoboost/lambda/detail/lambda_fwd.hpp"
 #include "autoboost/lambda/detail/lambda_traits.hpp"
 
-namespace autoboost { 
+namespace autoboost {
 namespace lambda {
 
 #if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1400)
@@ -34,7 +34,7 @@ class identity {
 
   T elem;
 public:
-  
+
   typedef T element_t;
 
   // take all parameters as const references. Note that non-const references
@@ -45,7 +45,7 @@ public:
 
   explicit identity(par_t t) : elem(t) {}
 
-  template <typename SigArgs> 
+  template <typename SigArgs>
   struct sig { typedef typename autoboost::remove_const<element_t>::type type; };
 
   template<class RET, CALL_TEMPLATE_ARGS>
@@ -56,11 +56,11 @@ public:
 #pragma warning(pop)
 #endif
 
-template <class T> 
+template <class T>
 inline lambda_functor<identity<T&> > var(T& t) { return identity<T&>(t); }
 
   // for lambda functors, var is an identity operator. It was forbidden
-  // at some point, but we might want to var something that can be a 
+  // at some point, but we might want to var something that can be a
   // non-lambda functor or a lambda functor.
 template <class T>
 lambda_functor<T> var(const lambda_functor<T>& t) { return t; }
@@ -70,76 +70,76 @@ template <class T> struct var_type {
 };
 
 
-template <class T> 
-inline 
+template <class T>
+inline
 lambda_functor<identity<typename bound_argument_conversion<const T>::type> >
-constant(const T& t) { 
-  return identity<typename bound_argument_conversion<const T>::type>(t); 
+constant(const T& t) {
+  return identity<typename bound_argument_conversion<const T>::type>(t);
 }
 template <class T>
 lambda_functor<T> constant(const lambda_functor<T>& t) { return t; }
 
 template <class T> struct constant_type {
-  typedef 
+  typedef
    lambda_functor<
-     identity<typename bound_argument_conversion<const T>::type> 
+     identity<typename bound_argument_conversion<const T>::type>
    > type;
 };
 
 
 
-template <class T> 
-inline lambda_functor<identity<const T&> > constant_ref(const T& t) { 
-  return identity<const T&>(t); 
+template <class T>
+inline lambda_functor<identity<const T&> > constant_ref(const T& t) {
+  return identity<const T&>(t);
 }
 template <class T>
 lambda_functor<T> constant_ref(const lambda_functor<T>& t) { return t; }
 
 template <class T> struct constant_ref_type {
-  typedef 
+  typedef
    lambda_functor<identity<const T&> > type;
 };
 
 
 
-  // as_lambda_functor turns any types to lambda functors 
+  // as_lambda_functor turns any types to lambda functors
   // non-lambda_functors will be bound argument types
 template <class T>
-struct as_lambda_functor { 
-  typedef typename 
+struct as_lambda_functor {
+  typedef typename
     detail::remove_reference_and_cv<T>::type plain_T;
-  typedef typename 
-    detail::IF<is_lambda_functor<plain_T>::value, 
+  typedef typename
+    detail::IF<is_lambda_functor<plain_T>::value,
       plain_T,
       lambda_functor<
-        identity<typename bound_argument_conversion<T>::type> 
+        identity<typename bound_argument_conversion<T>::type>
       >
-    >::RET type; 
+    >::RET type;
 };
 
 // turns arbitrary objects into lambda functors
-template <class T> 
-inline 
-lambda_functor<identity<typename bound_argument_conversion<const T>::type> > 
-to_lambda_functor(const T& t) { 
+template <class T>
+inline
+lambda_functor<identity<typename bound_argument_conversion<const T>::type> >
+to_lambda_functor(const T& t) {
   return identity<typename bound_argument_conversion<const T>::type>(t);
 }
 
-template <class T> 
-inline lambda_functor<T> 
-to_lambda_functor(const lambda_functor<T>& t) { 
+template <class T>
+inline lambda_functor<T>
+to_lambda_functor(const lambda_functor<T>& t) {
   return t;
 }
 
-namespace detail {   
+namespace detail {
 
 
 
 // In a call constify_rvals<T>::go(x)
 // x should be of type T. If T is a non-reference type, do
-// returns x as const reference. 
+// returns x as const reference.
 // Otherwise the type doesn't change.
-// The purpose of this class is to avoid 
+// The purpose of this class is to avoid
 // 'cannot bind temporaries to non-const references' errors.
 template <class T> struct constify_rvals {
   template<class U>
@@ -155,10 +155,10 @@ template <class T> struct constify_rvals<T&> {
   // null_type. Needed, because the compiler goes ahead and instantiates
   // sig template for nullary case even if the nullary operator() is not
   // called
-template <class T> struct is_null_type 
+template <class T> struct is_null_type
 { AUTOBOOST_STATIC_CONSTANT(bool, value = false); };
 
-template <> struct is_null_type<null_type> 
+template <> struct is_null_type<null_type>
 { AUTOBOOST_STATIC_CONSTANT(bool, value = true); };
 
 template<class Tuple> struct has_null_type {
@@ -175,11 +175,11 @@ template<> struct has_null_type<null_type> {
 template<class Args, class SigArgs>
 class deduce_argument_types_ {
   typedef typename as_lambda_functor<typename Args::head_type>::type lf_t;
-  typedef typename lf_t::inherited::template sig<SigArgs>::type el_t;  
+  typedef typename lf_t::inherited::template sig<SigArgs>::type el_t;
 public:
   typedef
     autoboost::tuples::cons<
-      el_t, 
+      el_t,
       typename deduce_argument_types_<typename Args::tail_type, SigArgs>::type
     > type;
 };
@@ -187,12 +187,12 @@ public:
 template<class SigArgs>
 class deduce_argument_types_<null_type, SigArgs> {
 public:
-  typedef null_type type; 
+  typedef null_type type;
 };
 
 
 //  // note that tuples cannot have plain function types as elements.
-//  // Hence, all other types will be non-const, except references to 
+//  // Hence, all other types will be non-const, except references to
 //  // functions.
 //  template <class T> struct remove_reference_except_from_functions {
 //    typedef typename autoboost::remove_reference<T>::type t;
@@ -202,12 +202,12 @@ public:
 template<class Args, class SigArgs>
 class deduce_non_ref_argument_types_ {
   typedef typename as_lambda_functor<typename Args::head_type>::type lf_t;
-  typedef typename lf_t::inherited::template sig<SigArgs>::type el_t;  
+  typedef typename lf_t::inherited::template sig<SigArgs>::type el_t;
 public:
   typedef
     autoboost::tuples::cons<
-  //      typename detail::remove_reference_except_from_functions<el_t>::type, 
-      typename autoboost::remove_reference<el_t>::type, 
+  //      typename detail::remove_reference_except_from_functions<el_t>::type,
+      typename autoboost::remove_reference<el_t>::type,
       typename deduce_non_ref_argument_types_<typename Args::tail_type, SigArgs>::type
     > type;
 };
@@ -215,12 +215,12 @@ public:
 template<class SigArgs>
 class deduce_non_ref_argument_types_<null_type, SigArgs> {
 public:
-  typedef null_type type; 
+  typedef null_type type;
 };
 
   // -------------
 
-// take stored Args and Open Args, and return a const list with 
+// take stored Args and Open Args, and return a const list with
 // deduced elements (real return types)
 template<class Args, class SigArgs>
 class deduce_argument_types {
@@ -228,10 +228,10 @@ class deduce_argument_types {
 public:
   typedef typename detail::IF<
     has_null_type<t1>::value, null_type, t1
-  >::RET type; 
+  >::RET type;
 };
 
-// take stored Args and Open Args, and return a const list with 
+// take stored Args and Open Args, and return a const list with
 // deduced elements (references are stripped from the element types)
 
 template<class Args, class SigArgs>
@@ -240,18 +240,18 @@ class deduce_non_ref_argument_types {
 public:
   typedef typename detail::IF<
     has_null_type<t1>::value, null_type, t1
-  >::RET type; 
+  >::RET type;
 };
 
 template <int N, class Args, class SigArgs>
 struct nth_return_type_sig {
-  typedef typename 
+  typedef typename
           as_lambda_functor<
-            typename autoboost::tuples::element<N, Args>::type 
-  //            typename tuple_element_as_reference<N, Args>::type 
+            typename autoboost::tuples::element<N, Args>::type
+  //            typename tuple_element_as_reference<N, Args>::type
         >::type lf_type;
 
-  typedef typename lf_type::inherited::template sig<SigArgs>::type type;  
+  typedef typename lf_type::inherited::template sig<SigArgs>::type type;
 };
 
 template<int N, class Tuple> struct element_or_null {
@@ -263,15 +263,15 @@ template<int N> struct element_or_null<N, null_type> {
 };
 
 
-   
-   
+
+
 } // end detail
-   
+
  // -- lambda_functor base ---------------------
 
 // the explicit_return_type_action case -----------------------------------
 template<class RET, class Args>
-class lambda_functor_base<explicit_return_type_action<RET>, Args> 
+class lambda_functor_base<explicit_return_type_action<RET>, Args>
 {
 public:
   Args args;
@@ -283,7 +283,7 @@ public:
   template <class SigArgs> struct sig { typedef RET type; };
 
   template<class RET_, CALL_TEMPLATE_ARGS>
-  RET call(CALL_FORMAL_ARGS) const 
+  RET call(CALL_FORMAL_ARGS) const
   {
     return detail::constify_rvals<RET>::go(
      detail::r_select<RET>::go(autoboost::tuples::get<0>(args), CALL_ACTUAL_ARGS));
@@ -302,13 +302,13 @@ public:
 
 
   template<class RET, CALL_TEMPLATE_ARGS>
-  RET call(CALL_FORMAL_ARGS) const 
+  RET call(CALL_FORMAL_ARGS) const
   {
      CALL_USE_ARGS;
      return autoboost::tuples::get<0>(args);
   }
 
-  template<class SigArgs> struct sig { 
+  template<class SigArgs> struct sig {
     //    typedef typename detail::tuple_element_as_reference<0, SigArgs>::type type;
     typedef typename autoboost::tuples::element<0, Args>::type type;
   };
@@ -330,7 +330,7 @@ public:
   }
 
   template<class SigArgs> struct sig { typedef void type; };
-};  
+};
 
 
 //  These specializations provide a shorter notation to define actions.
@@ -348,30 +348,30 @@ public:
 //  Function actions, casts, throws,... all go via these classes.
 
 
-template<class Act, class Args>  
-class lambda_functor_base<action<0, Act>, Args>           
-{  
-public:  
+template<class Act, class Args>
+class lambda_functor_base<action<0, Act>, Args>
+{
+public:
 //  Args args; not needed
-  explicit lambda_functor_base(const Args& /*a*/) {}  
-  
-  template<class SigArgs> struct sig {  
+  explicit lambda_functor_base(const Args& /*a*/) {}
+
+  template<class SigArgs> struct sig {
     typedef typename return_type_N<Act, null_type>::type type;
   };
-  
-  template<class RET, CALL_TEMPLATE_ARGS>  
-  RET call(CALL_FORMAL_ARGS) const {  
+
+  template<class RET, CALL_TEMPLATE_ARGS>
+  RET call(CALL_FORMAL_ARGS) const {
     CALL_USE_ARGS;
     return Act::template apply<RET>();
   }
 };
 
 
-#if defined AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART  
-#error "Multiple defines of AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART"  
-#endif  
-  
-  
+#if defined AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART
+#error "Multiple defines of AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART"
+#endif
+
+
 #define AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(ARITY)             \
 template<class Act, class Args>                                        \
 class lambda_functor_base<action<ARITY, Act>, Args>                    \
@@ -396,7 +396,7 @@ public:                                                                \
     using detail::constify_rvals;                                      \
     using detail::r_select;                                            \
     using detail::element_or_null;                                     \
-    using detail::deduce_argument_types;                                
+    using detail::deduce_argument_types;
 
 AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(1)
 
@@ -412,8 +412,8 @@ AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(1)
 
 
 AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(2)
-  
-  typedef typename 
+
+  typedef typename
     deduce_argument_types<Args, tuple<CALL_REFERENCE_TYPES> >::type rets_t;
   typedef typename element_or_null<0, rets_t>::type rt0;
   typedef typename element_or_null<1, rets_t>::type rt1;
@@ -427,7 +427,7 @@ AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(2)
 
 AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(3)
 
-  typedef typename 
+  typedef typename
     deduce_argument_types<Args, tuple<CALL_REFERENCE_TYPES> >::type rets_t;
 
   typedef typename element_or_null<0, rets_t>::type rt0;
@@ -443,7 +443,7 @@ AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(3)
 };
 
 AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(4)
-  typedef typename 
+  typedef typename
     deduce_argument_types<Args, tuple<CALL_REFERENCE_TYPES> >::type rets_t;
   typedef typename element_or_null<0, rets_t>::type rt0;
   typedef typename element_or_null<1, rets_t>::type rt1;
@@ -460,7 +460,7 @@ AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(4)
 };
 
 AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(5)
-  typedef typename 
+  typedef typename
     deduce_argument_types<Args, tuple<CALL_REFERENCE_TYPES> >::type rets_t;
   typedef typename element_or_null<0, rets_t>::type rt0;
   typedef typename element_or_null<1, rets_t>::type rt1;
@@ -480,7 +480,7 @@ AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(5)
 
 AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(6)
 
-  typedef typename 
+  typedef typename
     deduce_argument_types<Args, tuple<CALL_REFERENCE_TYPES> >::type rets_t;
   typedef typename element_or_null<0, rets_t>::type rt0;
   typedef typename element_or_null<1, rets_t>::type rt1;
@@ -496,13 +496,13 @@ AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(6)
     constify_rvals<rt2>::go(r_select<rt2>::go(get<2>(args), CALL_ACTUAL_ARGS)),
     constify_rvals<rt3>::go(r_select<rt3>::go(get<3>(args), CALL_ACTUAL_ARGS)),
     constify_rvals<rt4>::go(r_select<rt4>::go(get<4>(args), CALL_ACTUAL_ARGS)),
-    constify_rvals<rt5>::go(r_select<rt5>::go(get<5>(args), CALL_ACTUAL_ARGS)) 
+    constify_rvals<rt5>::go(r_select<rt5>::go(get<5>(args), CALL_ACTUAL_ARGS))
     );
   }
 };
 
 AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(7)
-  typedef typename 
+  typedef typename
     deduce_argument_types<Args, tuple<CALL_REFERENCE_TYPES> >::type rets_t;
   typedef typename element_or_null<0, rets_t>::type rt0;
   typedef typename element_or_null<1, rets_t>::type rt1;
@@ -526,7 +526,7 @@ AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(7)
 };
 
 AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(8)
-  typedef typename 
+  typedef typename
     deduce_argument_types<Args, tuple<CALL_REFERENCE_TYPES> >::type rets_t;
   typedef typename element_or_null<0, rets_t>::type rt0;
   typedef typename element_or_null<1, rets_t>::type rt1;
@@ -551,7 +551,7 @@ AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(8)
 };
 
 AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(9)
-  typedef typename 
+  typedef typename
     deduce_argument_types<Args, tuple<CALL_REFERENCE_TYPES> >::type rets_t;
   typedef typename element_or_null<0, rets_t>::type rt0;
   typedef typename element_or_null<1, rets_t>::type rt1;
@@ -577,8 +577,8 @@ AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(9)
   }
 };
 
-AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(10) 
-  typedef typename 
+AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(10)
+  typedef typename
     deduce_argument_types<Args, tuple<CALL_REFERENCE_TYPES> >::type rets_t;
   typedef typename element_or_null<0, rets_t>::type rt0;
   typedef typename element_or_null<1, rets_t>::type rt1;
@@ -601,7 +601,7 @@ AUTOBOOST_LAMBDA_LAMBDA_FUNCTOR_BASE_FIRST_PART(10)
     constify_rvals<rt6>::go(r_select<rt6>::go(get<6>(args), CALL_ACTUAL_ARGS)),
     constify_rvals<rt7>::go(r_select<rt7>::go(get<7>(args), CALL_ACTUAL_ARGS)),
     constify_rvals<rt8>::go(r_select<rt8>::go(get<8>(args), CALL_ACTUAL_ARGS)),
-    constify_rvals<rt9>::go(r_select<rt9>::go(get<9>(args), CALL_ACTUAL_ARGS)) 
+    constify_rvals<rt9>::go(r_select<rt9>::go(get<9>(args), CALL_ACTUAL_ARGS))
     );
   }
 };

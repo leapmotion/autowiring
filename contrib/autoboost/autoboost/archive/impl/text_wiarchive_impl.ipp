@@ -12,8 +12,8 @@
 
 #include <autoboost/config.hpp>
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
-    using ::size_t; 
+namespace std{
+    using ::size_t;
 } // namespace std
 #endif
 
@@ -22,7 +22,7 @@ namespace std{
 #ifndef AUTOBOOST_NO_STD_WSTREAMBUF
 #include <autoboost/archive/basic_text_iprimitive.hpp>
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 
 //////////////////////////////////////////////////////////////////////
@@ -97,13 +97,13 @@ text_wiarchive_impl<Archive>::load(std::wstring &ws)
 #endif
 
 template<class Archive>
-AUTOBOOST_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
+AUTOBOOST_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
 text_wiarchive_impl<Archive>::text_wiarchive_impl(
-    std::wistream & is, 
+    std::wistream & is,
     unsigned int flags
 ) :
     basic_text_iprimitive<std::wistream>(
-        is, 
+        is,
         0 != (flags & no_codecvt)
     ),
     basic_text_iarchive<Archive>(flags)
@@ -113,6 +113,6 @@ text_wiarchive_impl<Archive>::text_wiarchive_impl(
 }
 
 } // archive
-} // boost
+} // autoboost
 
 #endif // AUTOBOOST_NO_STD_WSTREAMBUF

@@ -8,7 +8,7 @@
 #endif
 
 //
-//  boost/detail/sp_interlocked.hpp
+//  autoboost/detail/sp_interlocked.hpp
 //
 //  Copyright 2005, 2014 Peter Dimov
 //

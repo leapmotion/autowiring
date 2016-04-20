@@ -81,9 +81,9 @@ namespace autoboost {
                 const RangeT& Input,
                 FunctorT Functor)
             {
-                return std::transform( 
-                    ::autoboost::begin(Input), 
-                    ::autoboost::end(Input), 
+                return std::transform(
+                    ::autoboost::begin(Input),
+                    ::autoboost::end(Input),
                     Output,
                     Functor);
             }
@@ -94,16 +94,16 @@ namespace autoboost {
                 const RangeT& Input,
                 FunctorT Functor)
             {
-                std::transform( 
-                    ::autoboost::begin(Input), 
-                    ::autoboost::end(Input), 
+                std::transform(
+                    ::autoboost::begin(Input),
+                    ::autoboost::end(Input),
                     ::autoboost::begin(Input),
                     Functor);
             }
 
             template<typename SequenceT, typename RangeT, typename FunctorT>
-            inline SequenceT transform_range_copy( 
-                const RangeT& Input, 
+            inline SequenceT transform_range_copy(
+                const RangeT& Input,
                 FunctorT Functor)
             {
                 return SequenceT(
@@ -111,7 +111,7 @@ namespace autoboost {
                         ::autoboost::begin(Input),
                         Functor),
                     ::autoboost::make_transform_iterator(
-                        ::autoboost::end(Input), 
+                        ::autoboost::end(Input),
                         Functor));
             }
 

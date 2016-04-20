@@ -1,4 +1,4 @@
-//  boost/system/api_config.hpp  -------------------------------------------------------//
+//  autoboost/system/api_config.hpp  -------------------------------------------------------//
 
 //  Copyright Beman Dawes 2003, 2006, 2010
 
@@ -21,7 +21,7 @@
 
 //--------------------------------------------------------------------------------------//
 
-#ifndef AUTOBOOST_SYSTEM_API_CONFIG_HPP                  
+#ifndef AUTOBOOST_SYSTEM_API_CONFIG_HPP
 #define AUTOBOOST_SYSTEM_API_CONFIG_HPP
 
 # if defined(AUTOBOOST_POSIX_API) || defined(AUTOBOOST_WINDOWS_API)
@@ -36,7 +36,7 @@
 # if defined(_WIN32) || defined(__CYGWIN__) // Windows default, including MinGW and Cygwin
 #   define AUTOBOOST_WINDOWS_API
 # else
-#   define AUTOBOOST_POSIX_API 
+#   define AUTOBOOST_POSIX_API
 # endif
-                                     
-#endif  // AUTOBOOST_SYSTEM_API_CONFIG_HPP 
+
+#endif  // AUTOBOOST_SYSTEM_API_CONFIG_HPP

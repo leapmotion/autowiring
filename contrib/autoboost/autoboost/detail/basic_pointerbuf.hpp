@@ -1,10 +1,10 @@
 //-----------------------------------------------------------------------------
-// boost detail/templated_streams.hpp header file
+// autoboost detail/templated_streams.hpp header file
 // See http://www.boost.org for updates, documentation, and revision history.
 //-----------------------------------------------------------------------------
 //
 // Copyright (c) 2013 John Maddock, Antony Polukhin
-// 
+//
 //
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at

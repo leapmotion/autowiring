@@ -8,9 +8,9 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-//Thread launching functions are adapted from boost/detail/lightweight_thread.hpp
+//Thread launching functions are adapted from autoboost/detail/lightweight_thread.hpp
 //
-//  boost/detail/lightweight_thread.hpp
+//  autoboost/detail/lightweight_thread.hpp
 //
 //  Copyright (c) 2002 Peter Dimov and Multi Media Ltd.
 //  Copyright (c) 2008 Peter Dimov

@@ -1,6 +1,6 @@
 #ifndef AUTOBOOST_THREAD_TIME_HPP
 #define AUTOBOOST_THREAD_TIME_HPP
-//  (C) Copyright 2007 Anthony Williams 
+//  (C) Copyright 2007 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -15,7 +15,7 @@
 namespace autoboost
 {
     typedef autoboost::posix_time::ptime system_time;
-    
+
     inline system_time get_system_time()
     {
 #if defined(AUTOBOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK)
@@ -47,7 +47,7 @@ namespace autoboost
         }
 
     }
-    
+
 }
 
 #include <autoboost/config/abi_suffix.hpp>

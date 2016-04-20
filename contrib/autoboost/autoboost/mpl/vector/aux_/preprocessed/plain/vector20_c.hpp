@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -20,7 +20,7 @@ struct vector11_c
           integral_c< T,C0 >, integral_c< T,C1 >, integral_c< T,C2 >
         , integral_c< T,C3 >, integral_c< T,C4 >, integral_c< T,C5 >, integral_c< T,C6 >
         , integral_c< T,C7 >, integral_c< T,C8 >, integral_c< T,C9 >, integral_c<T
-        , C10> 
+        , C10>
  >
 {
     typedef vector11_c type;
@@ -37,7 +37,7 @@ struct vector12_c
           integral_c< T,C0 >, integral_c< T,C1 >, integral_c< T,C2 >
         , integral_c< T,C3 >, integral_c< T,C4 >, integral_c< T,C5 >, integral_c< T,C6 >
         , integral_c< T,C7 >, integral_c< T,C8 >, integral_c< T,C9 >
-        , integral_c< T,C10 >, integral_c< T,C11 > 
+        , integral_c< T,C10 >, integral_c< T,C11 >
  >
 {
     typedef vector12_c type;
@@ -54,7 +54,7 @@ struct vector13_c
           integral_c< T,C0 >, integral_c< T,C1 >, integral_c< T,C2 >
         , integral_c< T,C3 >, integral_c< T,C4 >, integral_c< T,C5 >, integral_c< T,C6 >
         , integral_c< T,C7 >, integral_c< T,C8 >, integral_c< T,C9 >
-        , integral_c< T,C10 >, integral_c< T,C11 >, integral_c< T,C12 > 
+        , integral_c< T,C10 >, integral_c< T,C11 >, integral_c< T,C12 >
  >
 {
     typedef vector13_c type;
@@ -72,7 +72,7 @@ struct vector14_c
         , integral_c< T,C3 >, integral_c< T,C4 >, integral_c< T,C5 >, integral_c< T,C6 >
         , integral_c< T,C7 >, integral_c< T,C8 >, integral_c< T,C9 >
         , integral_c< T,C10 >, integral_c< T,C11 >, integral_c< T,C12 >, integral_c<T
-        , C13> 
+        , C13>
  >
 {
     typedef vector14_c type;
@@ -90,7 +90,7 @@ struct vector15_c
         , integral_c< T,C3 >, integral_c< T,C4 >, integral_c< T,C5 >, integral_c< T,C6 >
         , integral_c< T,C7 >, integral_c< T,C8 >, integral_c< T,C9 >
         , integral_c< T,C10 >, integral_c< T,C11 >, integral_c< T,C12 >
-        , integral_c< T,C13 >, integral_c< T,C14 > 
+        , integral_c< T,C13 >, integral_c< T,C14 >
  >
 {
     typedef vector15_c type;
@@ -108,7 +108,7 @@ struct vector16_c
         , integral_c< T,C3 >, integral_c< T,C4 >, integral_c< T,C5 >, integral_c< T,C6 >
         , integral_c< T,C7 >, integral_c< T,C8 >, integral_c< T,C9 >
         , integral_c< T,C10 >, integral_c< T,C11 >, integral_c< T,C12 >
-        , integral_c< T,C13 >, integral_c< T,C14 >, integral_c< T,C15 > 
+        , integral_c< T,C13 >, integral_c< T,C14 >, integral_c< T,C15 >
  >
 {
     typedef vector16_c type;
@@ -127,7 +127,7 @@ struct vector17_c
         , integral_c< T,C7 >, integral_c< T,C8 >, integral_c< T,C9 >
         , integral_c< T,C10 >, integral_c< T,C11 >, integral_c< T,C12 >
         , integral_c< T,C13 >, integral_c< T,C14 >, integral_c< T,C15 >, integral_c<T
-        , C16> 
+        , C16>
  >
 {
     typedef vector17_c type;
@@ -146,7 +146,7 @@ struct vector18_c
         , integral_c< T,C7 >, integral_c< T,C8 >, integral_c< T,C9 >
         , integral_c< T,C10 >, integral_c< T,C11 >, integral_c< T,C12 >
         , integral_c< T,C13 >, integral_c< T,C14 >, integral_c< T,C15 >
-        , integral_c< T,C16 >, integral_c< T,C17 > 
+        , integral_c< T,C16 >, integral_c< T,C17 >
  >
 {
     typedef vector18_c type;
@@ -165,7 +165,7 @@ struct vector19_c
         , integral_c< T,C7 >, integral_c< T,C8 >, integral_c< T,C9 >
         , integral_c< T,C10 >, integral_c< T,C11 >, integral_c< T,C12 >
         , integral_c< T,C13 >, integral_c< T,C14 >, integral_c< T,C15 >
-        , integral_c< T,C16 >, integral_c< T,C17 >, integral_c< T,C18 > 
+        , integral_c< T,C16 >, integral_c< T,C17 >, integral_c< T,C18 >
  >
 {
     typedef vector19_c type;
@@ -185,7 +185,7 @@ struct vector20_c
         , integral_c< T,C10 >, integral_c< T,C11 >, integral_c< T,C12 >
         , integral_c< T,C13 >, integral_c< T,C14 >, integral_c< T,C15 >
         , integral_c< T,C16 >, integral_c< T,C17 >, integral_c< T,C18 >, integral_c<T
-        , C19> 
+        , C19>
  >
 {
     typedef vector20_c type;

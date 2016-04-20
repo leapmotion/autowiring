@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // archive/archive_exception.hpp:
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -20,7 +20,7 @@
 #include <autoboost/assert.hpp>
 #include <string>
 
-#include <autoboost/config.hpp> 
+#include <autoboost/config.hpp>
 #include <autoboost/preprocessor/empty.hpp>
 #include <autoboost/archive/detail/decl.hpp>
 
@@ -28,9 +28,9 @@
 // includes #define exception_code _exception_code (arrrgghhhh!).
 // the most expedient way to address this is be sure that this
 // header is always included whenever this header file is included.
-#if defined(AUTOBOOST_WINDOWS) 
-#include <excpt.h> 
-#endif 
+#if defined(AUTOBOOST_WINDOWS)
+#include <excpt.h>
+#endif
 
 #include <autoboost/archive/detail/abi_prefix.hpp> // must be the last header
 
@@ -40,7 +40,7 @@ namespace archive {
 //////////////////////////////////////////////////////////////////////
 // exceptions thrown by archives
 //
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) archive_exception : 
+class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) archive_exception :
     public virtual std::exception
 {
 protected:
@@ -57,8 +57,8 @@ public:
                             // subsequent to this one
         pointer_conflict,   // an attempt has been made to directly
                             // serialize an object which has
-                            // already been serialized through a pointer.  
-                            // Were this permitted, the archive load would result 
+                            // already been serialized through a pointer.
+                            // Were this permitted, the archive load would result
                             // in the creation of an extra copy of the obect.
         incompatible_native_format, // attempt to read native binary format
                             // on incompatible platform
@@ -67,9 +67,9 @@ public:
         invalid_class_name, // class name greater than the maximum permitted.
                             // most likely a corrupted archive or an attempt
                             // to insert virus via buffer overrun method.
-        unregistered_cast,   // base - derived relationship not registered with 
+        unregistered_cast,   // base - derived relationship not registered with
                             // void_cast_register
-        unsupported_class_version, // type saved with a version # greater than the 
+        unsupported_class_version, // type saved with a version # greater than the
                             // one used by the program.  This indicates that the program
                             // needs to be rebuilt.
         multiple_code_instantiation, // code for implementing serialization for some
@@ -79,7 +79,7 @@ public:
 public:
     exception_code code;
     archive_exception(
-        exception_code c, 
+        exception_code c,
         const char * e1 = NULL,
         const char * e2 = NULL
     );

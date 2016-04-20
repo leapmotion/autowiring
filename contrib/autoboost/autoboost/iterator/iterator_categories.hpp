@@ -169,7 +169,7 @@ struct pure_traversal_tag
 };
 
 // This import is needed for backward compatibility with Boost.Range:
-// boost/range/detail/demote_iterator_traversal_tag.hpp
+// autoboost/range/detail/demote_iterator_traversal_tag.hpp
 // It should be removed when that header is fixed.
 namespace detail {
 using iterators::pure_traversal_tag;
@@ -209,7 +209,7 @@ using iterators::iterator_category_to_traversal;
 using iterators::iterator_traversal;
 
 // This import is needed for backward compatibility with Boost.Range:
-// boost/range/detail/demote_iterator_traversal_tag.hpp
+// autoboost/range/detail/demote_iterator_traversal_tag.hpp
 // It should be removed when that header is fixed.
 namespace detail {
 using iterators::pure_traversal_tag;

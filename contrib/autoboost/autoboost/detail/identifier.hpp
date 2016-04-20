@@ -1,4 +1,4 @@
-//  boost/identifier.hpp  ----------------------------------------------------//
+//  autoboost/identifier.hpp  ----------------------------------------------------//
 
 //  Copyright Beman Dawes 2006
 
@@ -45,7 +45,7 @@ namespace autoboost
       bool operator> ( const D & rhs ) const   { return m_value >  rhs.m_value; }
       bool operator>=( const D & rhs ) const   { return m_value >= rhs.m_value; }
 
-      typedef void (*unspecified_bool_type)(D); // without the D, unspecified_bool_type 
+      typedef void (*unspecified_bool_type)(D); // without the D, unspecified_bool_type
       static void unspecified_bool_true(D){}    // conversion allows relational operators
                                                 // between different identifier types
 
@@ -64,14 +64,14 @@ namespace autoboost
   //#ifndef AUTOBOOST_NO_SFINAE
 
   //  template <class Ostream, class Id>
-  //    typename enable_if< is_base_of< identifier< typename Id::value_type, Id >, Id >, 
+  //    typename enable_if< is_base_of< identifier< typename Id::value_type, Id >, Id >,
   //      Ostream & >::type operator<<( Ostream & os, const Id & id )
   //  {
   //    return os << id.value();
   //  }
 
   //  template <class Istream, class Id>
-  //    typename enable_if< is_base_of< identifier< typename Id::value_type, Id >, Id >, 
+  //    typename enable_if< is_base_of< identifier< typename Id::value_type, Id >, Id >,
   //      Istream & >::type operator>>( Istream & is, Id & id )
   //  {
   //    typename Id::value_type v;

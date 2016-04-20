@@ -1,4 +1,4 @@
-//  boost process_cpu_clocks.cpp  -----------------------------------------------------------//
+//  autoboost process_cpu_clocks.cpp  -----------------------------------------------------------//
 
 //  Copyright 2009-2010 Vicente J. Botet Escriba
 

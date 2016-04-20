@@ -10,7 +10,7 @@
 #define AUTOBOOST_DETAIL_NO_EXCEPTIONS_SUPPORT_HPP
 
 // The header file at this path is deprecated;
-// use boost/core/no_exceptions_support.hpp instead.
+// use autoboost/core/no_exceptions_support.hpp instead.
 
 #include <autoboost/core/no_exceptions_support.hpp>
 

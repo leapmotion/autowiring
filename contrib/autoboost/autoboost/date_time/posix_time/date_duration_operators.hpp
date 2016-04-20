@@ -1,9 +1,9 @@
 #ifndef AB_DATE_DURATION_OPERATORS_HPP___
 #define AB_DATE_DURATION_OPERATORS_HPP___
-                                                                                
+
 /* Copyright (c) 2004 CrystalClear Software, Inc.
- * Subject to the Boost Software License, Version 1.0. 
- * (See accompanying file LICENSE_1_0.txt or 
+ * Subject to the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or
  * http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
  * $Date$
@@ -14,95 +14,95 @@
 
 namespace autoboost {
 namespace posix_time {
-  
-  /*!@file date_duration_operators.hpp Operators for ptime and 
-   * optional gregorian types. Operators use snap-to-end-of-month behavior. 
-   * Further details on this behavior can be found in reference for 
-   * date_time/date_duration_types.hpp and documentation for 
+
+  /*!@file date_duration_operators.hpp Operators for ptime and
+   * optional gregorian types. Operators use snap-to-end-of-month behavior.
+   * Further details on this behavior can be found in reference for
+   * date_time/date_duration_types.hpp and documentation for
    * month and year iterators.
    */
- 
 
-  /*! Adds a months object and a ptime. Result will be same 
+
+  /*! Adds a months object and a ptime. Result will be same
    * day-of-month as ptime unless original day was the last day of month.
    * see date_time::months_duration for more details */
   inline
-  ptime 
+  ptime
   operator+(const ptime& t, const autoboost::gregorian::months& m)
   {
     return t + m.get_offset(t.date());
   }
-  
-  /*! Adds a months object to a ptime. Result will be same 
+
+  /*! Adds a months object to a ptime. Result will be same
    * day-of-month as ptime unless original day was the last day of month.
    * see date_time::months_duration for more details */
   inline
-  ptime 
+  ptime
   operator+=(ptime& t, const autoboost::gregorian::months& m)
   {
     // get_neg_offset returns a negative duration, so we add
     return t += m.get_offset(t.date());
   }
 
-  /*! Subtracts a months object and a ptime. Result will be same 
+  /*! Subtracts a months object and a ptime. Result will be same
    * day-of-month as ptime unless original day was the last day of month.
    * see date_time::months_duration for more details */
   inline
-  ptime 
+  ptime
   operator-(const ptime& t, const autoboost::gregorian::months& m)
   {
     // get_neg_offset returns a negative duration, so we add
     return t + m.get_neg_offset(t.date());
   }
-  
-  /*! Subtracts a months object from a ptime. Result will be same 
+
+  /*! Subtracts a months object from a ptime. Result will be same
    * day-of-month as ptime unless original day was the last day of month.
    * see date_time::months_duration for more details */
   inline
-  ptime 
+  ptime
   operator-=(ptime& t, const autoboost::gregorian::months& m)
   {
     return t += m.get_neg_offset(t.date());
   }
 
   // ptime & years
-  
-  /*! Adds a years object and a ptime. Result will be same 
-   * month and day-of-month as ptime unless original day was the 
+
+  /*! Adds a years object and a ptime. Result will be same
+   * month and day-of-month as ptime unless original day was the
    * last day of month. see date_time::years_duration for more details */
   inline
-  ptime 
+  ptime
   operator+(const ptime& t, const autoboost::gregorian::years& y)
   {
     return t + y.get_offset(t.date());
   }
 
-  /*! Adds a years object to a ptime. Result will be same 
-   * month and day-of-month as ptime unless original day was the 
+  /*! Adds a years object to a ptime. Result will be same
+   * month and day-of-month as ptime unless original day was the
    * last day of month. see date_time::years_duration for more details */
   inline
-  ptime 
+  ptime
   operator+=(ptime& t, const autoboost::gregorian::years& y)
   {
     return t += y.get_offset(t.date());
   }
 
-  /*! Subtracts a years object and a ptime. Result will be same 
-   * month and day-of-month as ptime unless original day was the 
+  /*! Subtracts a years object and a ptime. Result will be same
+   * month and day-of-month as ptime unless original day was the
    * last day of month. see date_time::years_duration for more details */
   inline
-  ptime 
+  ptime
   operator-(const ptime& t, const autoboost::gregorian::years& y)
   {
     // get_neg_offset returns a negative duration, so we add
     return t + y.get_neg_offset(t.date());
   }
 
-  /*! Subtracts a years object from a ptime. Result will be same 
-   * month and day-of-month as ptime unless original day was the 
+  /*! Subtracts a years object from a ptime. Result will be same
+   * month and day-of-month as ptime unless original day was the
    * last day of month. see date_time::years_duration for more details */
   inline
-  ptime 
+  ptime
   operator-=(ptime& t, const autoboost::gregorian::years& y)
   {
     // get_neg_offset returns a negative duration, so we add

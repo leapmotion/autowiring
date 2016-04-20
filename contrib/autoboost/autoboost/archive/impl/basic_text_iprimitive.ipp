@@ -13,8 +13,8 @@
 
 #include <autoboost/config.hpp>
 #if defined(AUTOBOOST_NO_STDC_NAMESPACE)
-namespace std{ 
-    using ::size_t; 
+namespace std{
+    using ::size_t;
 } // namespace std
 #endif
 
@@ -55,19 +55,19 @@ namespace detail {
 template<class IStream>
 AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
 basic_text_iprimitive<IStream>::load_binary(
-    void *address, 
+    void *address,
     std::size_t count
 ){
     typedef typename IStream::char_type CharType;
-    
+
     if(0 == count)
         return;
-        
+
     AUTOBOOST_ASSERT(
         static_cast<std::size_t>((std::numeric_limits<std::streamsize>::max)())
         > (count + sizeof(CharType) - 1)/sizeof(CharType)
     );
-        
+
     if(is.fail())
         autoboost::serialization::throw_exception(
             archive_exception(archive_exception::input_stream_error)
@@ -84,9 +84,9 @@ basic_text_iprimitive<IStream>::load_binary(
             ,8
             ,6
             ,CharType
-        > 
+        >
         binary;
-        
+
     binary i = binary(
         AUTOBOOST_MAKE_PFTO_WRAPPER(
             iterators::istream_iterator<CharType>(is)
@@ -94,7 +94,7 @@ basic_text_iprimitive<IStream>::load_binary(
     );
 
     char * caddr = static_cast<char *>(address);
-    
+
     // take care that we don't increment anymore than necessary
     while(count-- > 0){
         *caddr++ = static_cast<char>(*i++);
@@ -110,7 +110,7 @@ basic_text_iprimitive<IStream>::load_binary(
             break;
     }
 }
-    
+
 template<class IStream>
 AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
 basic_text_iprimitive<IStream>::basic_text_iprimitive(
@@ -127,7 +127,7 @@ basic_text_iprimitive<IStream>::basic_text_iprimitive(
     if(! no_codecvt){
         archive_locale.reset(
             add_facet(
-                std::locale::classic(), 
+                std::locale::classic(),
                 new codecvt_null<typename IStream::char_type>
             )
         );

@@ -25,7 +25,7 @@ namespace detail {
 
 template <typename T>
 struct is_scalar_impl
-{ 
+{
    AUTOBOOST_STATIC_CONSTANT(bool, value =
       (::autoboost::type_traits::ice_or<
          ::autoboost::is_arithmetic<T>::value,
@@ -35,7 +35,7 @@ struct is_scalar_impl
       >::value));
 };
 
-// these specializations are only really needed for compilers 
+// these specializations are only really needed for compilers
 // without partial specialization support:
 template <> struct is_scalar_impl<void>{ AUTOBOOST_STATIC_CONSTANT(bool, value = false ); };
 #ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS

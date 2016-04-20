@@ -179,7 +179,7 @@ inline typename std::iterator_traits<Iterator>::pointer
 {  return i.operator->();  }
 
 template <class Iterator>
-inline 
+inline
    typename autoboost::intrusive::pointer_traits
       <typename std::iterator_traits<Iterator>::pointer>::element_type*
    iterator_to_raw_pointer(const Iterator &i)

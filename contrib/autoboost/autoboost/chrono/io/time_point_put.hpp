@@ -256,6 +256,6 @@ namespace autoboost
     std::locale::id time_point_put<CharT, OutputIterator>::id;
 
   } // chrono
-} // boost
+} // autoboost
 
 #endif  // header

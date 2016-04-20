@@ -3,8 +3,8 @@
  * Copyright (c) 1998-2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -38,10 +38,10 @@ namespace autoboost{
 // find all non-overlapping matches within the sequence first last:
 //
 template <class Predicate, class BidiIterator, class charT, class traits>
-inline unsigned int regex_grep(Predicate foo, 
-                               BidiIterator first, 
-                               BidiIterator last, 
-                               const basic_regex<charT, traits>& e, 
+inline unsigned int regex_grep(Predicate foo,
+                               BidiIterator first,
+                               BidiIterator last,
+                               const basic_regex<charT, traits>& e,
                                match_flag_type flags = match_default)
 {
    if(e.flags() & regex_constants::failbit)
@@ -92,45 +92,45 @@ inline unsigned int regex_grep(Predicate foo,
 // overloading - if the compiler doesn't support partial specialisation
 // then it really won't support this either:
 template <class Predicate, class charT, class traits>
-inline unsigned int regex_grep(Predicate foo, const charT* str, 
-                        const basic_regex<charT, traits>& e, 
+inline unsigned int regex_grep(Predicate foo, const charT* str,
+                        const basic_regex<charT, traits>& e,
                         match_flag_type flags = match_default)
 {
    return regex_grep(foo, str, str + traits::length(str), e, flags);
 }
 
 template <class Predicate, class ST, class SA, class charT, class traits>
-inline unsigned int regex_grep(Predicate foo, const std::basic_string<charT, ST, SA>& s, 
-                 const basic_regex<charT, traits>& e, 
+inline unsigned int regex_grep(Predicate foo, const std::basic_string<charT, ST, SA>& s,
+                 const basic_regex<charT, traits>& e,
                  match_flag_type flags = match_default)
 {
    return regex_grep(foo, s.begin(), s.end(), e, flags);
 }
 #else  // partial specialisation
-inline unsigned int regex_grep(bool (*foo)(const cmatch&), const char* str, 
-                        const regex& e, 
+inline unsigned int regex_grep(bool (*foo)(const cmatch&), const char* str,
+                        const regex& e,
                         match_flag_type flags = match_default)
 {
    return regex_grep(foo, str, str + regex::traits_type::length(str), e, flags);
 }
 #ifndef AUTOBOOST_NO_WREGEX
-inline unsigned int regex_grep(bool (*foo)(const wcmatch&), const wchar_t* str, 
-                        const wregex& e, 
+inline unsigned int regex_grep(bool (*foo)(const wcmatch&), const wchar_t* str,
+                        const wregex& e,
                         match_flag_type flags = match_default)
 {
    return regex_grep(foo, str, str + wregex::traits_type::length(str), e, flags);
 }
 #endif
 inline unsigned int regex_grep(bool (*foo)(const match_results<std::string::const_iterator>&), const std::string& s,
-                        const regex& e, 
+                        const regex& e,
                         match_flag_type flags = match_default)
 {
    return regex_grep(foo, s.begin(), s.end(), e, flags);
 }
 #if !defined(AUTOBOOST_NO_WREGEX)
-inline unsigned int regex_grep(bool (*foo)(const match_results<std::basic_string<wchar_t>::const_iterator>&), 
-                     const std::basic_string<wchar_t>& s, 
-                        const wregex& e, 
+inline unsigned int regex_grep(bool (*foo)(const match_results<std::basic_string<wchar_t>::const_iterator>&),
+                     const std::basic_string<wchar_t>& s,
+                        const wregex& e,
                         match_flag_type flags = match_default)
 {
    return regex_grep(foo, s.begin(), s.end(), e, flags);

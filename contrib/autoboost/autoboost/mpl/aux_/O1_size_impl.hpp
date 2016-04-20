@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -26,7 +26,7 @@
 namespace autoboost { namespace mpl {
 
 // default implementation - returns 'Sequence::size' if sequence has a 'size'
-// member, and -1 otherwise; conrete sequences might override it by 
+// member, and -1 otherwise; conrete sequences might override it by
 // specializing either the 'O1_size_impl' or the primary 'O1_size' template
 
 #   if !AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1300) \

@@ -39,12 +39,12 @@ AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,char,true)
 
 #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
 // If the following line fails to compile and you're using the Intel
-// compiler, see http://lists.boost.org/MailArchives/boost-users/msg06567.php,
+// compiler, see http://lists.boost.org/MailArchives/autoboost-users/msg06567.php,
 // and define AUTOBOOST_NO_INTRINSIC_WCHAR_T on the command line.
 AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,wchar_t,true)
 #endif
 
-// Same set of integral types as in boost/type_traits/integral_promotion.hpp.
+// Same set of integral types as in autoboost/type_traits/integral_promotion.hpp.
 // Please, keep in sync. -- Alexander Nasonov
 #if (defined(AUTOBOOST_INTEL_CXX_VERSION) && defined(_MSC_VER) && (AUTOBOOST_INTEL_CXX_VERSION <= 600)) \
     || (defined(__BORLANDC__) && (__BORLANDC__ == 0x600) && (_MSC_VER < 1300))
@@ -67,7 +67,7 @@ AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral, ::autoboost::long_long_type,tr
 AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,unsigned __int64,true)
 AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,__int64,true)
 #endif
-        
+
 #ifdef AUTOBOOST_HAS_INT128
 AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,autoboost::int128_type,true)
 AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,autoboost::uint128_type,true)

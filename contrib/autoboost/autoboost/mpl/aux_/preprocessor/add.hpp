@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2002-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -59,7 +59,7 @@
 #   define AUTOBOOST_MPL_PP_ADD(i,j) \
     AUTOBOOST_PP_ADD(i,j) \
     /**/
-    
-#endif 
+
+#endif
 
 #endif // AUTOBOOST_MPL_AUX_PREPROCESSOR_ADD_HPP_INCLUDED

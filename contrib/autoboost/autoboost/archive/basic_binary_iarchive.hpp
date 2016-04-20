@@ -16,7 +16,7 @@
 // IN GENERAL, ARCHIVES CREATED WITH THIS CLASS WILL NOT BE READABLE
 // ON PLATFORM APART FROM THE ONE THEY ARE CREATED ON
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -41,7 +41,7 @@
 
 #include <autoboost/archive/detail/abi_prefix.hpp> // must be the last header
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 
 namespace detail {
@@ -51,7 +51,7 @@ namespace detail {
 /////////////////////////////////////////////////////////////////////////
 // class basic_binary_iarchive - read serialized objects from a input binary stream
 template<class Archive>
-class basic_binary_iarchive : 
+class basic_binary_iarchive :
     public detail::common_iarchive<Archive>
 {
 #ifdef AUTOBOOST_NO_MEMBER_TEMPLATE_FRIENDS
@@ -67,7 +67,7 @@ protected:
     #endif
 #endif
     // intermediate level to support override of operators
-    // fot templates in the absence of partial function 
+    // fot templates in the absence of partial function
     // template ordering. If we get here pass to base class
     // note extra nonsense to sneak it pass the borland compiers
     typedef detail::common_iarchive<Archive> detail_common_iarchive;
@@ -85,7 +85,7 @@ protected:
     AUTOBOOST_STATIC_ASSERT(sizeof(object_id_type) == sizeof(uint_least32_t));
     AUTOBOOST_STATIC_ASSERT(sizeof(object_reference_type) == sizeof(uint_least32_t));
 
-    // binary files don't include the optional information 
+    // binary files don't include the optional information
     void load_override(class_id_optional_type & /* t */, int){}
 
     void load_override(tracking_type & t, int /*version*/){
@@ -203,14 +203,14 @@ protected:
             unsigned int x=0;
             * this->This() >> x;
             t = serialization::collection_size_type(x);
-        } 
+        }
     }
 
     AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
     load_override(class_name_type & t, int);
     AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
     init();
-   
+
     basic_binary_iarchive(unsigned int flags) :
         detail::common_iarchive<Archive>(flags)
     {}

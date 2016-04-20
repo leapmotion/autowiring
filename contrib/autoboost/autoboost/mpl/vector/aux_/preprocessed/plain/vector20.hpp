@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -31,7 +31,7 @@ struct vector11
     typedef T8 item8;
     typedef T9 item9;
     typedef T10 item10;
-    
+
 
     typedef void_ item11;
     typedef T10 back;
@@ -130,7 +130,7 @@ struct vector12
     typedef T9 item9;
     typedef T10 item10;
     typedef T11 item11;
-    
+
 
     typedef void_ item12;
     typedef T11 back;
@@ -234,7 +234,7 @@ struct vector13
     typedef T10 item10;
     typedef T11 item11;
     typedef T12 item12;
-    
+
 
     typedef void_ item13;
     typedef T12 back;
@@ -339,7 +339,7 @@ struct vector14
     typedef T11 item11;
     typedef T12 item12;
     typedef T13 item13;
-    
+
 
     typedef void_ item14;
     typedef T13 back;
@@ -449,7 +449,7 @@ struct vector15
     typedef T12 item12;
     typedef T13 item13;
     typedef T14 item14;
-    
+
 
     typedef void_ item15;
     typedef T14 back;
@@ -561,7 +561,7 @@ struct vector16
     typedef T13 item13;
     typedef T14 item14;
     typedef T15 item15;
-    
+
 
     typedef void_ item16;
     typedef T15 back;
@@ -678,7 +678,7 @@ struct vector17
     typedef T14 item14;
     typedef T15 item15;
     typedef T16 item16;
-    
+
 
     typedef void_ item17;
     typedef T16 back;
@@ -796,7 +796,7 @@ struct vector18
     typedef T15 item15;
     typedef T16 item16;
     typedef T17 item17;
-    
+
 
     typedef void_ item18;
     typedef T17 back;
@@ -919,7 +919,7 @@ struct vector19
     typedef T16 item16;
     typedef T17 item17;
     typedef T18 item18;
-    
+
 
     typedef void_ item19;
     typedef T18 back;
@@ -1043,7 +1043,7 @@ struct vector20
     typedef T17 item17;
     typedef T18 item18;
     typedef T19 item19;
-    
+
 
     typedef void_ item20;
     typedef T19 back;

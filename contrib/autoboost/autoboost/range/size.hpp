@@ -62,6 +62,6 @@ namespace autoboost
         return range_calculate_size(rng);
     }
 
-} // namespace 'boost'
+} // namespace 'autoboost'
 
 #endif

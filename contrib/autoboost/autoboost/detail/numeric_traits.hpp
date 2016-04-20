@@ -47,7 +47,7 @@
 //               (David Abrahams)
 // 10 Feb 2001 - Rolled in supposed Borland fixes from John Maddock, but
 //               not seeing any improvement yet (David Abrahams)
-// 06 Feb 2001 - Factored if_true out into boost/detail/select_type.hpp
+// 06 Feb 2001 - Factored if_true out into autoboost/detail/select_type.hpp
 //               (David Abrahams)
 // 23 Jan 2001 - Fixed logic of difference_type selection, which was
 //               completely wack. In the process, added digit_traits<>
@@ -135,7 +135,7 @@ namespace autoboost { namespace detail {
                  // digits is the number of no-sign bits
                   || (int(x::digits) + 1 >= digit_traits<autoboost::intmax_t>::digits)))>::template then<
         Integer,
-          
+
       typename if_true<(int(x::digits) + 1 < digit_traits<signed int>::digits)>::template then<
         signed int,
 
@@ -150,7 +150,7 @@ namespace autoboost { namespace detail {
 
       typedef typename
       if_true<(sizeof(Integer) >= sizeof(intmax_t))>::template then<
-               
+
         typename if_true<(is_signed<Integer>::value)>::template then<
           Integer,
           intmax_t

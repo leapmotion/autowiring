@@ -3,8 +3,8 @@
 
 // Copyright Aleksey Gurtovoy 2002-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
 // $Source$
@@ -19,7 +19,7 @@
 
 //
 // Unfortunately some libraries have started using this header without
-// cleaning up afterwards: so we'd better undef the macros just in case 
+// cleaning up afterwards: so we'd better undef the macros just in case
 // they've been defined already....
 //
 #ifdef AUTOBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL
@@ -53,7 +53,7 @@
 
 #ifndef AUTOBOOST_TT_AUX_BOOL_C_BASE
 #   define AUTOBOOST_TT_AUX_BOOL_C_BASE(C) : public ::autoboost::integral_constant<bool,C>
-#endif 
+#endif
 
 
 #define AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(trait,T,C) \

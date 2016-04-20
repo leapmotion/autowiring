@@ -16,22 +16,22 @@
 #include "autoboost/type_traits/cv_traits.hpp"
 #include "autoboost/type_traits/transform_traits.hpp"
 
-namespace autoboost { 
+namespace autoboost {
 namespace lambda {
 
-// These constants state, whether a lambda_functor instantiation results from 
-// an expression which contains no placeholders (NONE), 
-// only free1 placeholders (FIRST), 
+// These constants state, whether a lambda_functor instantiation results from
+// an expression which contains no placeholders (NONE),
+// only free1 placeholders (FIRST),
 // free2 placeholders and maybe free1 placeholders (SECOND),
 // free3 and maybe free1 and free2 placeholders (THIRD),
 // freeE placeholders and maybe free1 and free2  (EXCEPTION).
 // RETHROW means, that a rethrow expression is used somewhere in the lambda_functor.
 
 enum { NONE             = 0x00, // Notice we are using bits as flags here.
-       FIRST            = 0x01, 
-       SECOND           = 0x02, 
-       THIRD            = 0x04, 
-       EXCEPTION        = 0x08, 
+       FIRST            = 0x01,
+       SECOND           = 0x02,
+       THIRD            = 0x04,
+       EXCEPTION        = 0x08,
        RETHROW          = 0x10};
 
 
@@ -72,7 +72,7 @@ struct get_arity_<placeholder<I> > {
   AUTOBOOST_STATIC_CONSTANT(int, value = I);
 };
 
-} // detail 
+} // detail
 
 template<class T>
 struct get_tuple_arity {
@@ -91,7 +91,7 @@ struct get_tuple_arity<null_type> {
 template<class T, int I>
 struct has_placeholder {
   AUTOBOOST_STATIC_CONSTANT(bool, value = (get_arity<T>::value & I) != 0);
-}; 
+};
 
 template<int I, int J>
 struct includes_placeholder {

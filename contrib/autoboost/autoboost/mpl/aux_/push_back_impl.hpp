@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2008
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -27,7 +27,7 @@ namespace autoboost { namespace mpl {
 
 struct has_push_back_arg {};
 
-// agurt 05/feb/04: no default implementation; the stub definition is needed 
+// agurt 05/feb/04: no default implementation; the stub definition is needed
 // to enable the default 'has_push_back' implementation below
 template< typename Tag >
 struct push_back_impl
@@ -35,7 +35,7 @@ struct push_back_impl
     template< typename Sequence, typename T > struct apply
     {
         // should be instantiated only in the context of 'has_push_back_impl';
-        // if you've got an assert here, you are requesting a 'push_back' 
+        // if you've got an assert here, you are requesting a 'push_back'
         // specialization that doesn't exist.
         AUTOBOOST_MPL_ASSERT_MSG(
               ( autoboost::is_same< T, has_push_back_arg >::value )
@@ -55,7 +55,7 @@ struct has_push_back_impl
 #else
     {
         typedef aux::has_type< push_back< Seq, has_push_back_arg > > type;
-        AUTOBOOST_STATIC_CONSTANT(bool, value = 
+        AUTOBOOST_STATIC_CONSTANT(bool, value =
               (aux::has_type< push_back< Seq, has_push_back_arg > >::value)
             );
 #endif

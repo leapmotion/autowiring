@@ -5,7 +5,7 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-//  See http://www.boost.org for updates, documentation, and revision history. 
+//  See http://www.boost.org for updates, documentation, and revision history.
 
 #ifndef AUTOBOOST_INTEGER_INTEGER_MASK_HPP
 #define AUTOBOOST_INTEGER_INTEGER_MASK_HPP
@@ -23,7 +23,7 @@
 //
 // We simply cannot include this header on gcc without getting copious warnings of the kind:
 //
-// boost/integer/integer_mask.hpp:93:35: warning: use of C99 long long integer constant
+// autoboost/integer/integer_mask.hpp:93:35: warning: use of C99 long long integer constant
 //
 // And yet there is no other reasonable implementation, so we declare this a system header
 // to suppress these warnings.

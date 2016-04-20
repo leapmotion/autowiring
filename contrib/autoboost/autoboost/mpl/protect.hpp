@@ -5,8 +5,8 @@
 // Copyright Peter Dimov 2001
 // Copyright Aleksey Gurtovoy 2002-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -36,11 +36,11 @@ struct protect : T
 };
 
 #if defined(AUTOBOOST_MPL_CFG_BROKEN_DEFAULT_PARAMETERS_IN_NESTED_TEMPLATES)
-namespace aux { 
+namespace aux {
 template< AUTOBOOST_MPL_AUX_NTTP_DECL(int, N), typename T >
-struct arity< protect<T>, N > 
+struct arity< protect<T>, N >
     : arity<T,N>
-{ 
+{
 };
 } // namespace aux
 #endif

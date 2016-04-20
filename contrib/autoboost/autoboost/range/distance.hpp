@@ -19,16 +19,16 @@
 #include <autoboost/range/end.hpp>
 #include <autoboost/range/difference_type.hpp>
 
-namespace autoboost 
+namespace autoboost
 {
 
     template< class T >
-    inline AUTOBOOST_DEDUCED_TYPENAME range_difference<T>::type 
+    inline AUTOBOOST_DEDUCED_TYPENAME range_difference<T>::type
     distance( const T& r )
     {
         return std::distance( autoboost::begin( r ), autoboost::end( r ) );
     }
 
-} // namespace 'boost'
+} // namespace 'autoboost'
 
 #endif

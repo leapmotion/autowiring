@@ -26,7 +26,7 @@ struct tagged_argument_base {};
 
 // Holds a reference to an argument of type Arg associated with
 // keyword Keyword
-    
+
 template <class Keyword, class Arg>
 struct tagged_argument : tagged_argument_base
 {
@@ -57,13 +57,13 @@ struct tagged_argument : tagged_argument_base
     template <class Keyword2, class Arg2>
     arg_list<
         tagged_argument<Keyword, Arg>
-      , arg_list<tagged_argument<Keyword2, Arg2> > 
+      , arg_list<tagged_argument<Keyword2, Arg2> >
     >
     operator,(tagged_argument<Keyword2, Arg2> x) const
     {
         return arg_list<
             tagged_argument<Keyword, Arg>
-          , arg_list<tagged_argument<Keyword2, Arg2> > 
+          , arg_list<tagged_argument<Keyword2, Arg2> >
         >(
             *this
           , arg_list<tagged_argument<Keyword2, Arg2> >(x, empty_arg_list())
@@ -96,7 +96,7 @@ struct tagged_argument : tagged_argument_base
     }
 
     template <class KW, class F>
-    typename result_of0<F>::type 
+    typename result_of0<F>::type
     get_with_lazy_default(lazy_default<KW,F> const& x, int) const
     {
         return x.compute_default();
@@ -159,7 +159,7 @@ struct tagged_argument : tagged_argument_base
     // warning suppression
  private:
     void operator=(tagged_argument const&);
- public:    
+ public:
 # endif
     // MPL sequence support
     typedef tagged_argument type;            // Convenience for users

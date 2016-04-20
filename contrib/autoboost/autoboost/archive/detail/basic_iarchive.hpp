@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // basic_iarchive.hpp:
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -71,12 +71,12 @@ public:
         const basic_iserializer & bis
     );
     void load_object(
-        void *t, 
+        void *t,
         const basic_iserializer & bis
     );
-    const basic_pointer_iserializer * 
+    const basic_pointer_iserializer *
     load_pointer(
-        void * & t, 
+        void * & t,
         const basic_pointer_iserializer * bpis_ptr,
         const basic_pointer_iserializer * (*finder)(
             const autoboost::serialization::extended_type_info & eti
@@ -84,15 +84,15 @@ public:
 
     );
     // real public API starts here
-    void 
+    void
     set_library_version(library_version_type archive_library_version);
-    library_version_type 
+    library_version_type
     get_library_version() const;
     unsigned int
     get_flags() const;
-    void 
+    void
     reset_object_address(const void * new_address, const void * old_address);
-    void 
+    void
     delete_created_pointers();
 };
 

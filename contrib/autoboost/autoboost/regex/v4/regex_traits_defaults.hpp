@@ -355,7 +355,7 @@ inline const char* get_escape_R_string<char>()
 }
 
 } // re_detail
-} // boost
+} // autoboost
 
 #ifdef AUTOBOOST_MSVC
 #pragma warning(push)

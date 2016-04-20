@@ -2,7 +2,7 @@
 #define AB_GREGORIAN_FORMATTERS_LIMITED_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
@@ -57,18 +57,18 @@ namespace gregorian {
   inline std::string to_iso_string(const date& d) {
     return date_time::date_formatter<date,date_time::iso_format<char> >::date_to_string(d);
   }
-  
-  
 
-  inline std::string to_sql_string(const date& d) 
+
+
+  inline std::string to_sql_string(const date& d)
   {
     date::ymd_type ymd = d.year_month_day();
     std::ostringstream ss;
     ss << ymd.year << "-"
-       << std::setw(2) << std::setfill('0') 
+       << std::setw(2) << std::setfill('0')
        << ymd.month.as_number() //solves problem with gcc 3.1 hanging
        << "-"
-       << std::setw(2) << std::setfill('0') 
+       << std::setw(2) << std::setfill('0')
        << ymd.day;
     return ss.str();
   }

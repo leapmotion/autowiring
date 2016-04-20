@@ -9,7 +9,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // add_facet.hpp
 
-// (C) Copyright 2003 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2003 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -28,14 +28,14 @@
 #  endif
 #endif
 
-namespace autoboost { 
+namespace autoboost {
 namespace archive {
 
 template<class Facet>
-inline std::locale * 
+inline std::locale *
 add_facet(const std::locale &l, Facet * f){
     return
-        #if defined AUTOBOOST_ARCHIVE_OLD_DINKUMWARE_BENEATH_STLPORT 
+        #if defined AUTOBOOST_ARCHIVE_OLD_DINKUMWARE_BENEATH_STLPORT
             // std namespace used for native locale
             new std::locale(std::_Addfac(l, f));
         #elif AUTOBOOST_WORKAROUND(AUTOBOOST_DINKUMWARE_STDLIB, == 1) // old Dinkumwar

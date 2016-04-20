@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -23,7 +23,7 @@
 
 namespace autoboost { namespace mpl {
 
-// default implementation; conrete sequences might override it by 
+// default implementation; conrete sequences might override it by
 // specializing either the 'erase_impl' or the primary 'erase' template
 
 template< typename Tag >
@@ -37,7 +37,7 @@ struct erase_impl
     struct apply
     {
         typedef typename if_na< Last,typename next<First>::type >::type last_;
-        
+
         // 1st half: [begin, first)
         typedef iterator_range<
               typename begin<Sequence>::type

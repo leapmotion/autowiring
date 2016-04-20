@@ -10,7 +10,7 @@
 // 2012 Vicente J. Botet Escriba
 //    Provide implementation _RET using bind when AUTOBOOST_NO_CXX11_HDR_FUNCTIONAL and AUTOBOOST_NO_SFINAE_EXPR are not defined
 // 2012 Vicente J. Botet Escriba
-//    Adapt to boost libc++ implementation
+//    Adapt to autoboost libc++ implementation
 
 //===----------------------------------------------------------------------===//
 //

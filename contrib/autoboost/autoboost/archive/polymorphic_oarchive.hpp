@@ -17,7 +17,7 @@
 //  See http://www.boost.org for updates, documentation, and revision history.
 
 #include <cstddef> // size_t
-#include <climits> // ULONG_MAX 
+#include <climits> // ULONG_MAX
 #include <string>
 
 #include <autoboost/config.hpp>
@@ -139,7 +139,7 @@ public:
 };
 
 // note: preserve naming symmetry
-class polymorphic_oarchive : 
+class polymorphic_oarchive :
     public polymorphic_oarchive_impl
 {
 public:

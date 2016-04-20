@@ -3,12 +3,12 @@
  * Copyright (c) 1998-2002
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
- 
+
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE:        posix_api.cpp
@@ -128,7 +128,7 @@ AUTOBOOST_REGEX_DECL int AUTOBOOST_REGEX_CCALL regcompA(regex_tA* expression, co
       expression->re_nsub = static_cast<c_regex_type*>(expression->guts)->mark_count();
       result = static_cast<c_regex_type*>(expression->guts)->error_code();
 #ifndef AUTOBOOST_NO_EXCEPTIONS
-   } 
+   }
    catch(const autoboost::regex_error& be)
    {
       result = be.code();
@@ -225,7 +225,7 @@ AUTOBOOST_REGEX_DECL int AUTOBOOST_REGEX_CCALL regexecA(const regex_tA* expressi
    const char* end;
    const char* start;
    cmatch m;
-   
+
    if(eflags & REG_NOTBOL)
       flags |= match_not_bol;
    if(eflags & REG_NOTEOL)

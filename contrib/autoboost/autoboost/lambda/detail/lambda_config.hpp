@@ -13,24 +13,24 @@
 #ifndef AUTOBOOST_LAMBDA_LAMBDA_CONFIG_HPP
 #define AUTOBOOST_LAMBDA_LAMBDA_CONFIG_HPP
 
-// add to boost/config.hpp
+// add to autoboost/config.hpp
 // for now
 
 
 # if defined __GNUC__
-#   if (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) 
+#   if (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
 #     define AUTOBOOST_REF_TO_FUNC_CONFLICTS_WITH_REF_TO_T
 #     define AUTOBOOST_LAMBDA_INCORRECT_BIND_OVERLOADING
 #   endif
-#   if (__GNUC__ == 2 && __GNUC_MINOR__ <= 97) 
+#   if (__GNUC__ == 2 && __GNUC_MINOR__ <= 97)
 #     define AUTOBOOST_NO_TEMPLATED_STREAMS
 #     define AUTOBOOST_LAMBDA_INCORRECT_BIND_OVERLOADING
 #   endif
-#   if (__GNUC__ == 2 && __GNUC_MINOR__ <= 95) 
+#   if (__GNUC__ == 2 && __GNUC_MINOR__ <= 95)
 #     define AUTOBOOST_LAMBDA_FAILS_IN_TEMPLATE_KEYWORD_AFTER_SCOPE_OPER
 #   endif
 # endif  // __GNUC__
- 
+
 
 #if defined __KCC
 

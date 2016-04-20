@@ -9,8 +9,8 @@
 // Copyright Peter Dimov 2001
 // Copyright Aleksey Gurtovoy 2001-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -32,7 +32,7 @@
 #   include <autoboost/mpl/aux_/yes_no.hpp>
 #   if defined(AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
 #       include <autoboost/type_traits/is_reference.hpp>
-#   endif 
+#   endif
 #endif
 
 #include <autoboost/mpl/aux_/config/bind.hpp>
@@ -173,7 +173,7 @@ struct resolve_bind_arg< bind<F,AUX778076_BIND_PARAMS(T)>,AUX778076_BIND_PARAMS(
 
 #else // AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
 
-// agurt, 15/jan/02: it's not a intended to be used as a function class, and 
+// agurt, 15/jan/02: it's not a intended to be used as a function class, and
 // MSVC6.5 has problems with 'apply' name here (the code compiles, but doesn't
 // work), so I went with the 'result_' here, and in all other similar cases
 template< bool >
@@ -185,7 +185,7 @@ struct resolve_arg_impl
     };
 };
 
-template<> 
+template<>
 struct resolve_arg_impl<true>
 {
     template< typename T, AUX778076_BIND_PARAMS(typename U) > struct result_
@@ -200,7 +200,7 @@ struct resolve_arg_impl<true>
 // for 'resolve_bind_arg'
 template< typename T > struct is_bind_template;
 
-template< 
+template<
       typename T, AUX778076_BIND_PARAMS(typename U)
     >
 struct resolve_bind_arg
@@ -211,7 +211,7 @@ struct resolve_bind_arg
 
 #   if !defined(AUTOBOOST_MPL_CFG_NO_UNNAMED_PLACEHOLDER_SUPPORT)
 
-template< typename T > 
+template< typename T >
 struct replace_unnamed_arg_impl
 {
     template< typename Arg > struct result_
@@ -221,7 +221,7 @@ struct replace_unnamed_arg_impl
     };
 };
 
-template<> 
+template<>
 struct replace_unnamed_arg_impl< arg<-1> >
 {
     template< typename Arg > struct result_
@@ -231,7 +231,7 @@ struct replace_unnamed_arg_impl< arg<-1> >
     };
 };
 
-template< typename T, typename Arg > 
+template< typename T, typename Arg >
 struct replace_unnamed_arg
     : replace_unnamed_arg_impl<T>::template result_<Arg>
 {
@@ -247,8 +247,8 @@ aux::no_tag is_bind_helper(...);
 template< typename T > aux::no_tag is_bind_helper(protect<T>*);
 
 // overload for "main" form
-// agurt, 15/mar/02: MSVC 6.5 fails to properly resolve the overload 
-// in case if we use 'aux::type_wrapper< bind<...> >' here, and all 
+// agurt, 15/mar/02: MSVC 6.5 fails to properly resolve the overload
+// in case if we use 'aux::type_wrapper< bind<...> >' here, and all
 // 'bind' instantiations form a complete type anyway
 #if !defined(AUTOBOOST_MPL_CFG_NO_BIND_TEMPLATE)
 template<
@@ -274,8 +274,8 @@ struct is_bind_template_impl<false>
 {
     template< typename T > struct result_
     {
-        AUTOBOOST_STATIC_CONSTANT(bool, value = 
-              sizeof(aux::is_bind_helper(static_cast<T*>(0))) 
+        AUTOBOOST_STATIC_CONSTANT(bool, value =
+              sizeof(aux::is_bind_helper(static_cast<T*>(0)))
                 == sizeof(aux::yes_tag)
             );
     };
@@ -379,7 +379,7 @@ template< AUTOBOOST_MPL_PP_PARAMS(i_, typename T) > struct AUX778076_SPEC_NAME;
 template<
       typename Tag AUX778076_BIND_N_PARAMS(i_, typename T)
     >
-struct AUTOBOOST_PP_CAT(bind,i_)< 
+struct AUTOBOOST_PP_CAT(bind,i_)<
       AUTOBOOST_PP_CAT(quote,i_)<AUX778076_SPEC_NAME,Tag>
     AUX778076_BIND_N_PARAMS(i_,T)
     >
@@ -444,7 +444,7 @@ struct AUTOBOOST_PP_CAT(bind,i_)
 /**/
 
         typedef typename AUTOBOOST_PP_CAT(apply_wrap,i_)<
-              f_ 
+              f_
             AUTOBOOST_PP_COMMA_IF(i_) AUTOBOOST_MPL_PP_REPEAT(i_, AUX778076_ARG, t)
             >::type type;
 
@@ -484,7 +484,7 @@ AUTOBOOST_MPL_AUX_TEMPLATE_ARITY_SPEC(AUTOBOOST_PP_INC(i_), AUTOBOOST_PP_CAT(bin
 
 #   if !defined(AUTOBOOST_MPL_CFG_NO_BIND_TEMPLATE)
 #   if !defined(AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
-    
+
 #if i_ == AUTOBOOST_MPL_LIMIT_METAFUNCTION_ARITY
 /// primary template (not a specialization!)
 template<

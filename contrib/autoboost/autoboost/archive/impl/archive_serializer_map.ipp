@@ -28,7 +28,7 @@ namespace detail {
 
 namespace extra_detail { // anon
     template<class Archive>
-    class map : public basic_serializer_map 
+    class map : public basic_serializer_map
     {};
 }
 
@@ -57,7 +57,7 @@ archive_serializer_map<Archive>::erase(const basic_serializer * bs){
 }
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(const basic_serializer *) 
+AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(const basic_serializer *)
 archive_serializer_map<Archive>::find(
     const autoboost::serialization::extended_type_info & eti
 ) {

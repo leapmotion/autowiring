@@ -1,4 +1,4 @@
-//  boost/system/linux_error.hpp  -------------------------------------------//
+//  autoboost/system/linux_error.hpp  -------------------------------------------//
 
 //  Copyright Beman Dawes 2007
 
@@ -27,7 +27,7 @@ namespace autoboost
 
     //  User code should use the portable "posix" enums for POSIX errors; this
     //  allows such code to be portable to non-POSIX systems. For the non-POSIX
-    //  errno values that POSIX-based systems typically provide in addition to 
+    //  errno values that POSIX-based systems typically provide in addition to
     //  POSIX values, use the system specific enums below.
 
     namespace linux_error
@@ -103,7 +103,7 @@ namespace autoboost
     }
 
   }  // namespace system
-}  // namespace autoboost 
+}  // namespace autoboost
 
 #endif  // Linux
 

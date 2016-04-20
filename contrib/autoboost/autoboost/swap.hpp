@@ -10,7 +10,7 @@
 #define AUTOBOOST_SWAP_HPP
 
 // The header file at this path is deprecated;
-// use boost/core/swap.hpp instead.
+// use autoboost/core/swap.hpp instead.
 
 #include <autoboost/core/swap.hpp>
 

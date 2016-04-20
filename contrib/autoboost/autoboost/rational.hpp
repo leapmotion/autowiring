@@ -5,14 +5,14 @@
 //  in all copies. This software is provided "as is" without express or
 //  implied warranty, and with no claim as to its suitability for any purpose.
 
-// boostinspect:nolicense (don't complain about the lack of a Boost license)
+// autoboostinspect:nolicense (don't complain about the lack of a Boost license)
 // (Paul Moore hasn't been in contact for years, so there's no way to change the
 // license.)
 
 //  See http://www.boost.org/libs/rational for documentation.
 
 //  Credits:
-//  Thanks to the boost mailing list in general for useful comments.
+//  Thanks to the autoboost mailing list in general for useful comments.
 //  Particular contributions included:
 //    Andrew D Jewell, for reminding me to take care to avoid overflow
 //    Ed Brey, for many comments, including picking up on some dreadful typos
@@ -48,7 +48,7 @@
 //  22 Jun 00  Change _MSC_VER to AUTOBOOST_MSVC so other compilers are not
 //             affected (Beman Dawes)
 //   6 Mar 00  Fix operator-= normalization, #include <string> (Jens Maurer)
-//  14 Dec 99  Modifications based on comments from the boost list
+//  14 Dec 99  Modifications based on comments from the autoboost list
 //  09 Dec 99  Initial Version (Paul Moore)
 
 #ifndef AUTOBOOST_RATIONAL_HPP
@@ -169,7 +169,7 @@ public:
     bool operator!() const { return !num; }
 
     // Boolean conversion
-    
+
 #if AUTOBOOST_WORKAROUND(__MWERKS__,<=0x3003)
     // The "ISO C++ Template Parser" option in CW 8.3 chokes on the
     // following, hence we selectively disable that option for the

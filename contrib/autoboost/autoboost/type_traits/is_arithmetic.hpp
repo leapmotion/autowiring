@@ -26,12 +26,12 @@ namespace detail {
 
 template< typename T >
 struct is_arithmetic_impl
-{ 
-    AUTOBOOST_STATIC_CONSTANT(bool, value = 
-        (::autoboost::type_traits::ice_or< 
+{
+    AUTOBOOST_STATIC_CONSTANT(bool, value =
+        (::autoboost::type_traits::ice_or<
             ::autoboost::is_integral<T>::value,
             ::autoboost::is_float<T>::value
-        >::value)); 
+        >::value));
 };
 
 } // namespace detail

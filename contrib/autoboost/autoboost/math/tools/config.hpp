@@ -61,8 +61,8 @@
 //
 // Intel compiler prior to version 10 has sporadic problems
 // calling the long double overloads of the std lib math functions:
-// calling ::powl is OK, but std::pow(long double, long double) 
-// may segfault depending upon the value of the arguments passed 
+// calling ::powl is OK, but std::pow(long double, long double)
+// may segfault depending upon the value of the arguments passed
 // and the specific Linux distribution.
 //
 // We'll be conservative and disable long double support for this compiler.
@@ -187,21 +187,21 @@
 #endif
 
 //
-// The maximum order of polynomial that will be evaluated 
+// The maximum order of polynomial that will be evaluated
 // via an unrolled specialisation:
 //
 #ifndef AUTOBOOST_MATH_MAX_POLY_ORDER
 #  define AUTOBOOST_MATH_MAX_POLY_ORDER 17
-#endif 
+#endif
 //
 // Set the method used to evaluate polynomials and rationals:
 //
 #ifndef AUTOBOOST_MATH_POLY_METHOD
 #  define AUTOBOOST_MATH_POLY_METHOD 1
-#endif 
+#endif
 #ifndef AUTOBOOST_MATH_RATIONAL_METHOD
 #  define AUTOBOOST_MATH_RATIONAL_METHOD 0
-#endif 
+#endif
 //
 // decide whether to store constants as integers or reals:
 //
@@ -217,7 +217,7 @@
 #if defined(_GLIBCXX_USE_FLOAT128) && defined(AUTOBOOST_GCC) && !defined(__STRICT_ANSI__) \
    && !defined(AUTOBOOST_MATH_DISABLE_FLOAT128) || defined(AUTOBOOST_MATH_USE_FLOAT128)
 //
-// Only enable this when the compiler really is GCC as clang and probably 
+// Only enable this when the compiler really is GCC as clang and probably
 // intel too don't support __float128 yet :-(
 //
 #ifndef AUTOBOOST_MATH_USE_FLOAT128
@@ -329,7 +329,7 @@ struct is_integer_for_rounding
 // This code was introduced in response to this glibc bug: http://sourceware.org/bugzilla/show_bug.cgi?id=2445
 // Basically powl and expl can return garbage when the result is small and certain exception flags are set
 // on entrance to these functions.  This appears to have been fixed in Glibc 2.14 (May 2011).
-// Much more information in this message thread: https://groups.google.com/forum/#!topic/boost-list/ZT99wtIFlb4
+// Much more information in this message thread: https://groups.google.com/forum/#!topic/autoboost-list/ZT99wtIFlb4
 //
 
    #include <autoboost/detail/fenv.hpp>
@@ -358,7 +358,7 @@ namespace autoboost{ namespace math{
    }} // namespaces
 
 #    define AUTOBOOST_FPU_EXCEPTION_GUARD autoboost::math::detail::fpu_guard local_guard_object;
-#    define AUTOBOOST_MATH_INSTRUMENT_FPU do{ fexcept_t cpu_flags; fegetexceptflag(&cpu_flags, FE_ALL_EXCEPT); AUTOBOOST_MATH_INSTRUMENT_VARIABLE(cpu_flags); } while(0); 
+#    define AUTOBOOST_MATH_INSTRUMENT_FPU do{ fexcept_t cpu_flags; fegetexceptflag(&cpu_flags, FE_ALL_EXCEPT); AUTOBOOST_MATH_INSTRUMENT_VARIABLE(cpu_flags); } while(0);
 
 #  else
 

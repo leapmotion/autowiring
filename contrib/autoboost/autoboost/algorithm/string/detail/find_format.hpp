@@ -1,7 +1,7 @@
 //  Boost string_algo library find_format.hpp header file  ---------------------------//
 
 //  Copyright Pavol Droba 2002-2003.
-// 
+//
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
@@ -24,7 +24,7 @@ namespace autoboost {
 
 // find_format_copy (iterator variant) implementation -------------------------------//
 
-           template< 
+           template<
                 typename OutputIteratorT,
                 typename InputT,
                 typename FormatterT,
@@ -36,10 +36,10 @@ namespace autoboost {
                 FormatterT Formatter,
                 const FindResultT& FindResult,
                 const FormatResultT& FormatResult )
-            {       
+            {
                 typedef find_format_store<
-                    AUTOBOOST_STRING_TYPENAME 
-                        range_const_iterator<InputT>::type, 
+                    AUTOBOOST_STRING_TYPENAME
+                        range_const_iterator<InputT>::type,
                         FormatterT,
                         FormatResultT > store_type;
 
@@ -64,7 +64,7 @@ namespace autoboost {
                 return Output;
             }
 
-            template< 
+            template<
                 typename OutputIteratorT,
                 typename InputT,
                 typename FormatterT,
@@ -74,9 +74,9 @@ namespace autoboost {
                 const InputT& Input,
                 FormatterT Formatter,
                 const FindResultT& FindResult )
-            {   
+            {
                 if( ::autoboost::algorithm::detail::check_find_result(Input, FindResult) ) {
-                    return ::autoboost::algorithm::detail::find_format_copy_impl2( 
+                    return ::autoboost::algorithm::detail::find_format_copy_impl2(
                         Output,
                         Input,
                         Formatter,
@@ -87,11 +87,11 @@ namespace autoboost {
                 }
             }
 
- 
+
 // find_format_copy implementation --------------------------------------------------//
 
-           template< 
-                typename InputT, 
+           template<
+                typename InputT,
                 typename FormatterT,
                 typename FindResultT,
                 typename FormatResultT >
@@ -102,8 +102,8 @@ namespace autoboost {
                 const FormatResultT& FormatResult)
             {
                 typedef find_format_store<
-                    AUTOBOOST_STRING_TYPENAME 
-                        range_const_iterator<InputT>::type, 
+                    AUTOBOOST_STRING_TYPENAME
+                        range_const_iterator<InputT>::type,
                         FormatterT,
                         FormatResultT > store_type;
 
@@ -127,8 +127,8 @@ namespace autoboost {
                 return Output;
             }
 
-            template< 
-                typename InputT, 
+            template<
+                typename InputT,
                 typename FormatterT,
                 typename FindResultT >
             inline InputT find_format_copy_impl(
@@ -148,21 +148,21 @@ namespace autoboost {
             }
 
  // replace implementation ----------------------------------------------------//
-        
+
             template<
                 typename InputT,
                 typename FormatterT,
                 typename FindResultT,
                 typename FormatResultT >
-            inline void find_format_impl2( 
+            inline void find_format_impl2(
                 InputT& Input,
                 FormatterT Formatter,
                 const FindResultT& FindResult,
                 const FormatResultT& FormatResult)
             {
                 typedef find_format_store<
-                    AUTOBOOST_STRING_TYPENAME 
-                        range_iterator<InputT>::type, 
+                    AUTOBOOST_STRING_TYPENAME
+                        range_iterator<InputT>::type,
                         FormatterT,
                         FormatResultT > store_type;
 
@@ -183,7 +183,7 @@ namespace autoboost {
                 typename InputT,
                 typename FormatterT,
                 typename FindResultT >
-            inline void find_format_impl( 
+            inline void find_format_impl(
                 InputT& Input,
                 FormatterT Formatter,
                 const FindResultT& FindResult)

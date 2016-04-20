@@ -1,8 +1,8 @@
 
 // Copyright Aleksey Gurtovoy 2000-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
@@ -480,15 +480,15 @@ template<
 struct list_c_count_args
 {
     AUTOBOOST_STATIC_CONSTANT(int, value =
-          is_list_c_arg<C1>::value + is_list_c_arg<C2>::value 
-        + is_list_c_arg<C3>::value + is_list_c_arg<C4>::value 
-        + is_list_c_arg<C5>::value + is_list_c_arg<C6>::value 
-        + is_list_c_arg<C7>::value + is_list_c_arg<C8>::value 
-        + is_list_c_arg<C9>::value + is_list_c_arg<C10>::value 
-        + is_list_c_arg<C11>::value + is_list_c_arg<C12>::value 
-        + is_list_c_arg<C13>::value + is_list_c_arg<C14>::value 
-        + is_list_c_arg<C15>::value + is_list_c_arg<C16>::value 
-        + is_list_c_arg<C17>::value + is_list_c_arg<C18>::value 
+          is_list_c_arg<C1>::value + is_list_c_arg<C2>::value
+        + is_list_c_arg<C3>::value + is_list_c_arg<C4>::value
+        + is_list_c_arg<C5>::value + is_list_c_arg<C6>::value
+        + is_list_c_arg<C7>::value + is_list_c_arg<C8>::value
+        + is_list_c_arg<C9>::value + is_list_c_arg<C10>::value
+        + is_list_c_arg<C11>::value + is_list_c_arg<C12>::value
+        + is_list_c_arg<C13>::value + is_list_c_arg<C14>::value
+        + is_list_c_arg<C15>::value + is_list_c_arg<C16>::value
+        + is_list_c_arg<C17>::value + is_list_c_arg<C18>::value
         + is_list_c_arg<C19>::value + is_list_c_arg<C20>::value
         );
 

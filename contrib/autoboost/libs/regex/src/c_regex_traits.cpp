@@ -3,8 +3,8 @@
  * Copyright (c) 2004
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -47,7 +47,7 @@ namespace std{
 namespace autoboost{
 
 c_regex_traits<char>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::transform(const char* p1, const char* p2)
-{ 
+{
    std::string result(10, ' ');
    std::size_t s = result.size();
    std::size_t r;
@@ -71,7 +71,7 @@ c_regex_traits<char>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::tra
       s = result.size();
    }
    result.erase(r);
-   return result; 
+   return result;
 }
 
 c_regex_traits<char>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::transform_primary(const char* p1, const char* p2)
@@ -123,10 +123,10 @@ c_regex_traits<char>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::tra
 
 c_regex_traits<char>::char_class_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::lookup_classname(const char* p1, const char* p2)
 {
-   static const char_class_type masks[] = 
+   static const char_class_type masks[] =
    {
       0,
-      char_class_alnum, 
+      char_class_alnum,
       char_class_alpha,
       char_class_blank,
       char_class_cntrl,
@@ -144,8 +144,8 @@ c_regex_traits<char>::char_class_type AUTOBOOST_REGEX_CALL c_regex_traits<char>:
       char_class_unicode,
       char_class_upper,
       char_class_vertical,
-      char_class_alnum | char_class_word, 
-      char_class_alnum | char_class_word, 
+      char_class_alnum | char_class_word,
+      char_class_alnum | char_class_word,
       char_class_xdigit,
    };
 

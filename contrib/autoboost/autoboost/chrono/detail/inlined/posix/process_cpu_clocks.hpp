@@ -1,4 +1,4 @@
-//  boost process_cpu_clocks.cpp  -----------------------------------------------------------//
+//  autoboost process_cpu_clocks.cpp  -----------------------------------------------------------//
 
 //  Copyright Beman Dawes 1994, 2006, 2008
 //  Copyright Vicente J. Botet Escriba 2009

@@ -1,4 +1,4 @@
-//  boost thread_clock.cpp  -----------------------------------------------------------//
+//  autoboost thread_clock.cpp  -----------------------------------------------------------//
 
 //  Copyright Beman Dawes 1994, 2006, 2008
 //  Copyright Vicente J. Botet Escriba 2009-2011

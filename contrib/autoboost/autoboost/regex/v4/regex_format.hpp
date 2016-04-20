@@ -1,10 +1,10 @@
 /*
  *
  * Copyright (c) 1998-2009 John Maddock
- * Copyright 2008 Eric Niebler. 
+ * Copyright 2008 Eric Niebler.
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
@@ -182,7 +182,7 @@ private:
    {
 #if defined(_MSC_VER) && defined(__INTEL_COMPILER) && ((__INTEL_COMPILER == 9999) || (__INTEL_COMPILER == 1210))
       // Workaround for Intel support issue #656654.
-      // See also https://svn.boost.org/trac/boost/ticket/6359
+      // See also https://svn.boost.org/trac/autoboost/ticket/6359
       return toi(i, j, base, mpl::false_());
 #else
       typedef typename autoboost::is_convertible<ForwardIter, const char_type*&>::type tag_type;
@@ -385,7 +385,7 @@ void basic_regex_formatter<OutputIterator, Results, traits, ForwardIter>::format
 template <class OutputIterator, class Results, class traits, class ForwardIter>
 bool basic_regex_formatter<OutputIterator, Results, traits, ForwardIter>::handle_perl_verb(bool have_brace)
 {
-   // 
+   //
    // We may have a capitalised string containing a Perl action:
    //
    static const char_type MATCH[] = { 'M', 'A', 'T', 'C', 'H' };
@@ -810,10 +810,10 @@ public:
    string_out_iterator& operator++() { return *this; }
    string_out_iterator& operator++(int) { return *this; }
    string_out_iterator& operator*() { return *this; }
-   string_out_iterator& operator=(typename S::value_type v) 
-   { 
-      out->append(1, v); 
-      return *this; 
+   string_out_iterator& operator=(typename S::value_type v)
+   {
+      out->append(1, v);
+      return *this;
    }
 
 #ifdef AUTOBOOST_NO_STD_ITERATOR
@@ -839,8 +839,8 @@ OutputIterator regex_format_imp(OutputIterator out,
    }
 
    re_detail::basic_regex_formatter<
-      OutputIterator, 
-      match_results<Iterator, Alloc>, 
+      OutputIterator,
+      match_results<Iterator, Alloc>,
       traits, ForwardIter> f(out, m, t);
    return f.format(p1, p2, flags);
 }
@@ -849,14 +849,14 @@ OutputIterator regex_format_imp(OutputIterator out,
 
 AUTOBOOST_MPL_HAS_XXX_TRAIT_DEF(const_iterator)
 
-struct any_type 
+struct any_type
 {
    template <class T>
-   any_type(const T&); 
+   any_type(const T&);
    template <class T, class U>
-   any_type(const T&, const U&); 
+   any_type(const T&, const U&);
    template <class T, class U, class V>
-   any_type(const T&, const U&, const V&); 
+   any_type(const T&, const U&, const V&);
 };
 typedef char no_type;
 typedef char (&unary_type)[2];
@@ -931,7 +931,7 @@ template <class F, class M, class O>
 struct format_traits
 {
 public:
-   // 
+   //
    // Type is mpl::int_<N> where N is one of:
    //
    // 0 : F is a pointer to a presumably null-terminated string.
@@ -962,7 +962,7 @@ template <class F, class M, class O>
 struct format_traits
 {
 public:
-   // 
+   //
    // Type is mpl::int_<N> where N is one of:
    //
    // 0 : F is a pointer to a presumably null-terminated string.
@@ -1106,7 +1106,7 @@ struct compute_functor_type
          typename mpl::if_<
             ::autoboost::is_same<tag, mpl::int_<2> >, format_functor1<Func, Match>,
             typename mpl::if_<
-               ::autoboost::is_same<tag, mpl::int_<3> >, format_functor2<Func, Match>, 
+               ::autoboost::is_same<tag, mpl::int_<3> >, format_functor2<Func, Match>,
                format_functor3<Func, Match>
             >::type
          >::type
@@ -1127,8 +1127,8 @@ inline OutputIterator regex_format(OutputIterator out,
 }
 
 template <class Iterator, class Allocator, class Functor>
-inline std::basic_string<typename match_results<Iterator, Allocator>::char_type> regex_format(const match_results<Iterator, Allocator>& m, 
-                                      Functor fmt, 
+inline std::basic_string<typename match_results<Iterator, Allocator>::char_type> regex_format(const match_results<Iterator, Allocator>& m,
+                                      Functor fmt,
                                       match_flag_type flags = format_all)
 {
    return m.format(fmt, flags);

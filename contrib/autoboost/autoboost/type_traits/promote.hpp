@@ -3,8 +3,8 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef FILE_boost_type_traits_promote_hpp_INCLUDED
-#define FILE_boost_type_traits_promote_hpp_INCLUDED
+#ifndef FILE_autoboost_type_traits_promote_hpp_INCLUDED
+#define FILE_autoboost_type_traits_promote_hpp_INCLUDED
 
 #include <autoboost/config.hpp>
 #include <autoboost/type_traits/integral_promotion.hpp>
@@ -36,5 +36,5 @@ AUTOBOOST_TT_AUX_TYPE_TRAIT_DEF1(
 
 #include <autoboost/type_traits/detail/type_trait_undef.hpp>
 
-#endif // #ifndef FILE_boost_type_traits_promote_hpp_INCLUDED
+#endif // #ifndef FILE_autoboost_type_traits_promote_hpp_INCLUDED
 

@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2001-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -23,7 +23,7 @@
 
 namespace autoboost { namespace mpl { namespace aux {
 
-// agurt, 15/mar/02: it's possible to implement the template so that it will 
+// agurt, 15/mar/02: it's possible to implement the template so that it will
 // "just work" and do not require any specialization, but not on the compilers
 // that require the arity workaround in the first place
 template< typename F, AUTOBOOST_MPL_AUX_NTTP_DECL(int, N) >

@@ -18,7 +18,7 @@
 
 #include <autoboost/move/detail/config_begin.hpp>
 
-//boost_move_no_copy_constructor_or_assign typedef
+//autoboost_move_no_copy_constructor_or_assign typedef
 //used to detect noncopyable types for other Boost libraries.
 #if defined(AUTOBOOST_NO_CXX11_DELETED_FUNCTIONS) || defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES)
    #define AUTOBOOST_MOVE_IMPL_NO_COPY_CTOR_OR_ASSIGN(TYPE) \
@@ -26,7 +26,7 @@
       TYPE(TYPE &);\
       TYPE& operator=(TYPE &);\
       public:\
-      typedef int boost_move_no_copy_constructor_or_assign; \
+      typedef int autoboost_move_no_copy_constructor_or_assign; \
       private:\
    //
 #else
@@ -35,7 +35,7 @@
       TYPE(TYPE const &) = delete;\
       TYPE& operator=(TYPE const &) = delete;\
       public:\
-      typedef int boost_move_no_copy_constructor_or_assign; \
+      typedef int autoboost_move_no_copy_constructor_or_assign; \
       private:\
    //
 #endif   //AUTOBOOST_NO_CXX11_DELETED_FUNCTIONS
@@ -274,7 +274,7 @@
    #define AUTOBOOST_MOVABLE_BUT_NOT_COPYABLE(TYPE)\
       AUTOBOOST_MOVE_IMPL_NO_COPY_CTOR_OR_ASSIGN(TYPE)\
       public:\
-      typedef int boost_move_emulation_t;\
+      typedef int autoboost_move_emulation_t;\
    //
 
    //! This macro marks a type as copyable and movable.

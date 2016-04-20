@@ -426,7 +426,7 @@ inline tribool operator!=(tribool x, indeterminate_keyword_t)
 
 } } // end namespace autoboost::logic
 
-// Pull tribool and indeterminate into namespace "boost"
+// Pull tribool and indeterminate into namespace "autoboost"
 namespace autoboost {
   using logic::tribool;
   using logic::indeterminate;

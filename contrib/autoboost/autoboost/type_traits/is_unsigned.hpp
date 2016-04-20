@@ -1,5 +1,5 @@
 
-//  (C) Copyright John Maddock 2005.  
+//  (C) Copyright John Maddock 2005.
 //  Use, modification and distribution are subject to the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt).
@@ -68,10 +68,10 @@ struct is_ununsigned_select_helper<false>
 template <class T>
 struct is_unsigned_imp
 {
-   typedef is_ununsigned_select_helper< 
+   typedef is_ununsigned_select_helper<
       ::autoboost::type_traits::ice_or<
          ::autoboost::is_integral<T>::value,
-         ::autoboost::is_enum<T>::value>::value 
+         ::autoboost::is_enum<T>::value>::value
    > selector;
    typedef typename selector::template rebind<T> binder;
    typedef typename binder::type type;

@@ -4,7 +4,7 @@
 
  Distributed under the Boost Software
  License, Version 1.0.
- http://boost.org/LICENSE_1_0.txt
+ http://autoboost.org/LICENSE_1_0.txt
 */
 #ifndef AUTOBOOST_ALIGN_DETAIL_ALIGN_CXX11_HPP
 #define AUTOBOOST_ALIGN_DETAIL_ALIGN_CXX11_HPP

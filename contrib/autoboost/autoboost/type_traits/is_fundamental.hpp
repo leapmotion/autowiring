@@ -20,13 +20,13 @@ namespace autoboost {
 
 namespace detail {
 
-template <typename T> 
+template <typename T>
 struct is_fundamental_impl
-    : public ::autoboost::type_traits::ice_or< 
+    : public ::autoboost::type_traits::ice_or<
           ::autoboost::is_arithmetic<T>::value
         , ::autoboost::is_void<T>::value
         >
-{ 
+{
 };
 
 } // namespace detail

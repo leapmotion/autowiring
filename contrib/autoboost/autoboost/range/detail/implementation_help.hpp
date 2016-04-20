@@ -26,7 +26,7 @@ namespace autoboost
     namespace range_detail
     {
         template <typename T>
-        inline void boost_range_silence_warning( const T& ) { }
+        inline void autoboost_range_silence_warning( const T& ) { }
 
         /////////////////////////////////////////////////////////////////////
         // end() help
@@ -62,13 +62,13 @@ namespace autoboost
         template< class T, std::size_t sz >
         inline T* array_end( T AUTOBOOST_RANGE_ARRAY_REF()[sz] )
         {
-            return boost_range_array + sz;
+            return autoboost_range_array + sz;
         }
 
         template< class T, std::size_t sz >
         inline const T* array_end( const T AUTOBOOST_RANGE_ARRAY_REF()[sz] )
         {
-            return boost_range_array + sz;
+            return autoboost_range_array + sz;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -84,14 +84,14 @@ namespace autoboost
         template< class T, std::size_t sz >
         inline std::size_t array_size( T AUTOBOOST_RANGE_ARRAY_REF()[sz] )
         {
-            boost_range_silence_warning( boost_range_array );
+            autoboost_range_silence_warning( autoboost_range_array );
             return sz;
         }
 
         template< class T, std::size_t sz >
         inline std::size_t array_size( const T AUTOBOOST_RANGE_ARRAY_REF()[sz] )
         {
-            boost_range_silence_warning( boost_range_array );
+            autoboost_range_silence_warning( autoboost_range_array );
             return sz;
         }
 
@@ -108,7 +108,7 @@ namespace autoboost
 
     } // namespace 'range_detail'
 
-} // namespace 'boost'
+} // namespace 'autoboost'
 
 
 #endif

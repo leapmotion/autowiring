@@ -4,8 +4,8 @@
 
 // Copyright Aleksey Gurtovoy 2001-2004
 //
-// Distributed under the Boost Software License, Version 1.0. 
-// (See accompanying file LICENSE_1_0.txt or copy at 
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/mpl for documentation.
@@ -26,7 +26,7 @@ namespace autoboost { namespace mpl { namespace aux {
 
 template< typename T >
 struct is_msvc_eti_arg
-{ 
+{
     AUTOBOOST_STATIC_CONSTANT(bool, value = false);
 };
 
@@ -39,12 +39,12 @@ struct eti_int_convertible
 
 template< typename T >
 struct is_msvc_eti_arg
-{ 
+{
     static no_tag test(...);
     static yes_tag test(eti_int_convertible);
     static T& get();
 
-    AUTOBOOST_STATIC_CONSTANT(bool, value = 
+    AUTOBOOST_STATIC_CONSTANT(bool, value =
           sizeof(test(get())) == sizeof(yes_tag)
         );
 };
@@ -53,7 +53,7 @@ struct is_msvc_eti_arg
 
 template<>
 struct is_msvc_eti_arg<int>
-{ 
+{
     AUTOBOOST_STATIC_CONSTANT(bool, value = true);
 };
 

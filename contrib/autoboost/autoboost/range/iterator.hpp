@@ -26,37 +26,37 @@
 namespace autoboost
 {
 
-#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, == 1310)  
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, == 1310)
 
-    namespace range_detail_vc7_1  
-    {  
-       template< typename C, typename Sig = void(C) >  
-       struct range_iterator  
-       {  
-           typedef AUTOBOOST_RANGE_DEDUCED_TYPENAME   
-               mpl::eval_if_c< is_const<C>::value,   
-                               range_const_iterator< typename remove_const<C>::type >,  
-                               range_mutable_iterator<C> >::type type;  
-       };  
-    
-       template< typename C, typename T >  
-       struct range_iterator< C, void(T[]) >  
-       {  
-           typedef T* type;  
-       };       
-    }  
-    
-#endif  
+    namespace range_detail_vc7_1
+    {
+       template< typename C, typename Sig = void(C) >
+       struct range_iterator
+       {
+           typedef AUTOBOOST_RANGE_DEDUCED_TYPENAME
+               mpl::eval_if_c< is_const<C>::value,
+                               range_const_iterator< typename remove_const<C>::type >,
+                               range_mutable_iterator<C> >::type type;
+       };
+
+       template< typename C, typename T >
+       struct range_iterator< C, void(T[]) >
+       {
+           typedef T* type;
+       };
+    }
+
+#endif
 
     template< typename C, typename Enabler=void >
     struct range_iterator
     {
 #if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, == 1310)
-  
-        typedef AUTOBOOST_RANGE_DEDUCED_TYPENAME  
-               range_detail_vc7_1::range_iterator<C>::type type;  
-           
-#else  
+
+        typedef AUTOBOOST_RANGE_DEDUCED_TYPENAME
+               range_detail_vc7_1::range_iterator<C>::type type;
+
+#else
 
     private:
         typedef typename remove_reference<C>::type param_t;
@@ -67,10 +67,10 @@ namespace autoboost
             range_const_iterator<typename remove_const<param_t>::type>,
             range_mutable_iterator<param_t>
         >::type type;
-        
-#endif         
+
+#endif
     };
-    
+
 } // namespace autoboost
 
 #endif

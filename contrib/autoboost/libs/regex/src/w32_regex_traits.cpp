@@ -3,12 +3,12 @@
  * Copyright (c) 2004
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
- 
+
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         w32_regex_traits.cpp
@@ -54,7 +54,7 @@ UINT get_code_page_for_locale_id(lcid_type idx)
 #endif
 
 
-void w32_regex_traits_char_layer<char>::init() 
+void w32_regex_traits_char_layer<char>::init()
 {
    // we need to start by initialising our syntax map so we know which
    // character is used for which purpose:
@@ -105,9 +105,9 @@ void w32_regex_traits_char_layer<char>::init()
    {
       if(m_char_map[i] == 0)
       {
-         if(::autoboost::re_detail::w32_is(this->m_locale, 0x0002u, (char)i)) 
+         if(::autoboost::re_detail::w32_is(this->m_locale, 0x0002u, (char)i))
             m_char_map[i] = regex_constants::escape_type_class;
-         else if(::autoboost::re_detail::w32_is(this->m_locale, 0x0001u, (char)i)) 
+         else if(::autoboost::re_detail::w32_is(this->m_locale, 0x0001u, (char)i))
             m_char_map[i] = regex_constants::escape_type_not_class;
       }
    }while(0xFF != i++);
@@ -646,7 +646,7 @@ AUTOBOOST_REGEX_DECL bool AUTOBOOST_REGEX_CALL w32_is(lcid_type idx, autoboost::
 #endif
 
 } // re_detail
-} // boost
+} // autoboost
 
 #endif
 

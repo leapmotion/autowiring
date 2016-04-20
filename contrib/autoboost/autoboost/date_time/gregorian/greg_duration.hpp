@@ -2,10 +2,10 @@
 #define AB_GREG_DURATION_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
- * Author: Jeff Garland, Bart Garst 
+ * Author: Jeff Garland, Bart Garst
  * $Date$
  */
 
@@ -120,7 +120,7 @@ namespace gregorian {
     {
       return date_duration(base_type::unit().get_rep());
     }
-  };      
+  };
 
   //! Shorthand for date_duration
   typedef date_duration days;
