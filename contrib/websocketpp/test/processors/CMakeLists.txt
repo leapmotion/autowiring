@@ -1,5 +1,6 @@
 # Generic processor tests
 file (GLOB SOURCE processor.cpp)
+include_directories(${OPENSSL_INCLUDE_DIR})
 
 init_target (test_processor)
 build_test (${TARGET_NAME} ${SOURCE})

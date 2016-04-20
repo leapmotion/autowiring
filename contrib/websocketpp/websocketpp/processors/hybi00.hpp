@@ -42,6 +42,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <array>
 
 namespace websocketpp {
 namespace processor {

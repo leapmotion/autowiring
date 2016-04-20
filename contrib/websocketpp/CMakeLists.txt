@@ -196,6 +196,10 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
         add_definitions (/DBOOST_TEST_DYN_LINK)
     endif ()
 
+    #use autoboost to...
+    set(AutoBoost_ROOT "../autoboost")
+    include_directories(${AutoBoost_ROOT})
+
     set (Boost_FIND_REQUIRED TRUE)
     set (Boost_FIND_QUIETLY TRUE)
     set (Boost_DEBUG FALSE)
