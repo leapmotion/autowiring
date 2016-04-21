@@ -404,3 +404,16 @@ TEST_F(ObjectPoolTest, PlacementConstructor) {
   auto obj = pool();
   ASSERT_EQ(110, *obj) << "Value was not correctly initialized";
 }
+
+namespace {
+  struct HasNonTrivialCtor {
+    uint64_t value = 0xDEADBEEFBAADF00DULL;
+  };
+}
+
+TEST_F(ObjectPoolTest, DefaultObjectsAreReallyConstructed) {
+  HasNonTrivialCtor sample;
+  ObjectPool<HasNonTrivialCtor> pool;
+  auto pObj = pool.Wait();
+  ASSERT_EQ(sample.value, pObj->value) << "Constructor for object pool member was not correctly invoked";
+}
