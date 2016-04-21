@@ -43,3 +43,4 @@ Autowiring.nuspec
 autowiring.kdev4
 *.opendb
 *.orig
+autowiring.VC.db
