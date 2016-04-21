@@ -151,7 +151,11 @@ protected:
   size_t m_outstanding = 0;
 
   // Allocator, placement ctor:
-  std::function<void(T*)> m_placement{ [](T*) {} };
+  std::function<void(T*)> m_placement{
+    [](T* ptr) {
+      new (ptr) T;
+    }
+  };
 
   /// <summary>
   /// Creates a shared pointer to wrap the specified object while it is issued.
