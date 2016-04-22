@@ -14,6 +14,6 @@ class FileSystemHeaderTest:
 
 TEST_F(FileSystemHeaderTest, PathPropertiesTest) {
   std::filesystem::path p = "abc/def.jpg";
-  ASSERT_STREQ(".jpg", p.extension().c_str());
-  ASSERT_STREQ("def.jpg", p.filename().c_str());
+  ASSERT_STREQ(L".jpg", p.extension().c_str());
+  ASSERT_STREQ(L"def.jpg", p.filename().c_str());
 }

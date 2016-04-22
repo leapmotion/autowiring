@@ -15,13 +15,19 @@ namespace awfsnamespace = autoboost::filesystem;
 
 namespace std {
   namespace filesystem {
+#ifdef _MSC_VER
+#if _MSC_VER >= 1900
     using awfsnamespace::path;
-    using awfsnamespace::wpath;
-    using awfsnamespace::basename;
+#else
+    using path = awfsnamespace::wpath;
+#endif
+#else
+    using path = awfsnamespace::wpath;
+#endif
+
     using awfsnamespace::create_directory;
     using awfsnamespace::current_path;
     using awfsnamespace::exists;
-    using awfsnamespace::initial_path;
     using awfsnamespace::is_directory;
     using awfsnamespace::is_empty;
     using awfsnamespace::remove;
