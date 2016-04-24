@@ -659,7 +659,7 @@ public:
   /// <summary>
   /// Runtime Await variant
   /// </summary>
-  AnySharedPointer Await(auto_id id);
+  const AnySharedPointer& Await(auto_id id);
 
   /// <summary>
   /// Runtime Await variant
