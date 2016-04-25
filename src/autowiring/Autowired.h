@@ -130,6 +130,10 @@ public:
   template<typename U>
   bool operator!=(const std::shared_ptr<U>& rhs) const { return this->m_ptr != rhs; }
 
+  explicit operator bool(void) const {
+    return this->operator const std::shared_ptr<T>&().get() != nullptr;
+  }
+
   operator T*(void) const {
     return this->operator const std::shared_ptr<T>&().get();
   }
