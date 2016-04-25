@@ -45,8 +45,6 @@ public:
 
   ~LifeCycle() {
     ++destructNum;
-    if (stage != pooled)
-      throw std::runtime_error("Destructor called before Finalize");
   }
 
   static ObjectPool<LifeCycle>* NewObjectPool(size_t limit = ~0, size_t maxPooled = ~0) {
