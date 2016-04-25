@@ -640,7 +640,7 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
   }
 }
 
-AnySharedPointer CoreContext::Await(auto_id id) {
+const AnySharedPointer& CoreContext::Await(auto_id id) {
   std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
   MemoEntry& memo = FindByTypeUnsafe(id);
   if (!memo.m_value)
