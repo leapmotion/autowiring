@@ -13,7 +13,7 @@ class FileSystemHeaderTest:
 {};
 
 TEST_F(FileSystemHeaderTest, PathPropertiesTest) {
-  std::filesystem::path p = "abc/def.jpg";
-  ASSERT_EQ(std::filesystem::path{ ".jpg" }, p.extension().c_str());
-  ASSERT_EQ(std::filesystem::path{ "def.jpg" }, p.filename().c_str());
+  std::filesystem::path p{ "abc/def.jpg" };
+  ASSERT_EQ(std::filesystem::path{ L".jpg" }, p.extension());
+  ASSERT_EQ(std::filesystem::path{ L"def.jpg" }, p.filename());
 }

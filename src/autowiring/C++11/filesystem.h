@@ -19,7 +19,35 @@ namespace std {
 #if _MSC_VER >= 1900
     using awfsnamespace::path;
 #else
-    using path = awfsnamespace::wpath;
+    class path :
+      public awfsnamespace::wpath
+    {
+    public:
+      path(void) = default;
+      path(const string_type& _Str) :
+        awfsnamespace::wpath(_Str)
+      {}
+      path(const path& _Right) :
+        awfsnamespace::wpath(_Right)
+      {}
+      path(const char* _Ptr) :
+        awfsnamespace::wpath(_Ptr, _Ptr + strlen(_Ptr))
+      {}
+      path(const wchar_t* _Ptr) :
+        awfsnamespace::wpath(_Ptr)
+      {}
+
+      basic_path& operator=(basic_path&& _Right) { *(awfsnamespace::wpath*)this = std::move(_Right); }
+      basic_path& operator=(const string_type& _Str) { *(awfsnamespace::wpath*)this = _Str; }
+      basic_path& operator=(const wchar_t* _Ptr) { *(awfsnamespace::wpath*)this = _Ptr; }
+
+      path extension(void) const {
+        return{ awfsnamespace::wpath::extension() };
+      }
+      path filename(void) const {
+        return{ awfsnamespace::wpath::filename() };
+      }
+    };
 #endif
 #else
     using path = awfsnamespace::wpath;
