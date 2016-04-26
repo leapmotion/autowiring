@@ -109,8 +109,7 @@ void system_crypt_random(void* buf, std::size_t len, autoboost::system::error_co
 
   if (!errval)
   {
-    BOOL gen_ok = ::CryptGenRandom(handle, len, static_cast<unsigned char*>(buf));
-    if (!gen_ok)
+    if (!::CryptGenRandom(handle, (DWORD)len, static_cast<unsigned char*>(buf)))
       errval = ::GetLastError();
     ::CryptReleaseContext(handle, 0);
   }

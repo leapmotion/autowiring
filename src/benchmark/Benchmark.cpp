@@ -3,7 +3,7 @@
 #include "Benchmark.h"
 #include "PrintableDuration.h"
 
-static const size_t sc_ncbOuterLoop =
+static const int sc_ncbOuterLoop =
 #ifdef _DEBUG
   100;
 #else
@@ -15,7 +15,7 @@ BenchmarkEntry::BenchmarkEntry(const char* name, void(*pfnBM)(Stopwatch&)) :
 {
   // Benchmark the whole function call
   Stopwatch sw;
-  for (size_t i = sc_ncbOuterLoop; i--;)
+  for (int i = sc_ncbOuterLoop; i--;)
     pfnBM(sw);
 
   // Difference over scale
