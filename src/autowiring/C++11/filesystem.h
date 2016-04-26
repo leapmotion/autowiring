@@ -27,6 +27,9 @@ namespace std {
       path(const string_type& _Str) :
         awfsnamespace::wpath(_Str)
       {}
+      path(const awfsnamespace::wpath& _Right) :
+        awfsnamespace::wpath(_Right)
+      {}
       path(const path& _Right) :
         awfsnamespace::wpath(_Right)
       {}
@@ -37,9 +40,9 @@ namespace std {
         awfsnamespace::wpath(_Ptr)
       {}
 
-      basic_path& operator=(basic_path&& _Right) { *(awfsnamespace::wpath*)this = std::move(_Right); }
-      basic_path& operator=(const string_type& _Str) { *(awfsnamespace::wpath*)this = _Str; }
-      basic_path& operator=(const wchar_t* _Ptr) { *(awfsnamespace::wpath*)this = _Ptr; }
+      basic_path& operator=(basic_path&& _Right) { return *(awfsnamespace::wpath*)this = std::move(_Right); }
+      basic_path& operator=(const string_type& _Str) { return *(awfsnamespace::wpath*)this = _Str; }
+      basic_path& operator=(const wchar_t* _Ptr) { return *(awfsnamespace::wpath*)this = _Ptr; }
 
       path extension(void) const {
         return{ awfsnamespace::wpath::extension() };
