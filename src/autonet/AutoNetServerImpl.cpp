@@ -163,6 +163,9 @@ void AutoNetServerImpl::NewContext(CoreContext* pParent, CoreContext& newCtxt) {
   newCtxt.expiredContext += [this, &newCtxt] {
     ExpiredContext(newCtxt);
   };
+  newCtxt.newObject += [this, &newCtxt](const CoreObjectDescriptor& desc) {
+    NewObject(newCtxt, desc);
+  };
 
   *this += [this, pParent, ctxt] {
     Json::object context{
