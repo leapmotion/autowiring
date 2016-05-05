@@ -279,7 +279,9 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
 
   // Recursively mark unsatisfiable any single-output arguments on these subscribers:
   std::vector<const AutoFilterArgument*> unsatOutputArgs;
-  auto MarkOutputsUnsat = [&unsatOutputArgs] (const SatCounter& satCounter) {
+  auto MarkOutputsUnsat = [&unsatOutputArgs] (SatCounter satCounter) {
+    if (!satCounter.Decrement())
+      return;
     const auto* args = satCounter.GetAutoFilterArguments();
     for (size_t i = satCounter.GetArity(); i--;) {
       // Only consider output arguments:
