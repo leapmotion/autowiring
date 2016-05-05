@@ -34,7 +34,7 @@ struct SatCounter:
   /// </summary>
   /// <returns>True if this decrement yielded satisfaction of all arguments</returns>
   bool Decrement(void) {
-    return !--remaining;
+    return remaining && !--remaining;
   }
 
   /// <summary>
