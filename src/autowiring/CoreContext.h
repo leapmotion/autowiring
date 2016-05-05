@@ -683,11 +683,13 @@ public:
     return reg.m_value != nullptr;
   }
 
-  /// \internal
   /// <summary>
-  /// Sends AutowiringEvents to build current state.
+  /// Gets a snapshot of all of the objects currently in the context
   /// </summary>
-  void BuildCurrentState(void);
+  /// <summary>
+  /// The returned vector will only be valid for as long as this CoreContext is
+  /// </summary>
+  std::vector<const autowiring::CoreObjectDescriptor*> BuildObjectState(void) const;
 
   /// <summary>
   /// A copy of the current list of child CoreRunnables of this context.

@@ -45,7 +45,12 @@ class WaitsThenSimulatesResume:
   }
 };
 
+
+struct MySigil {};
+
 TEST_F(BreakpointTest, SimplePauseAndResume) {
+  AutoCreateContextT<MySigil> child;
+
   AutoCurrentContext()->Initiate();
   AutoRequired<ExposedAutoNetServer> autonet;
   AutoRequired<BreakpointThread> thread;
