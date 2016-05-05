@@ -415,7 +415,10 @@ void AutoPacket::PulseSatisfactionUnsafe(std::unique_lock<std::mutex> lk, Decora
 
           // We only care about sat counters that aren't deferred--skip everyone else
           // Deferred calls will be too late.
-          !satCounter->IsDeferred()
+          !satCounter->IsDeferred() &&
+
+          // And we have something to decrement
+          satCounter->remaining
         )
         {
           if (satCounter->Decrement())
