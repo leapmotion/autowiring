@@ -279,7 +279,11 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
 
   // Recursively mark unsatisfiable any single-output arguments on these subscribers:
   std::vector<const AutoFilterArgument*> unsatOutputArgs;
-  auto MarkOutputsUnsat = [&unsatOutputArgs] (const SatCounter& satCounter) {
+  auto MarkOutputsUnsat = [&unsatOutputArgs] (SatCounter& satCounter) {
+    // make sure each satCounter only gets marked once
+    if (!satCounter.remaining)
+      return;
+    satCounter.remaining = 0;
     const auto* args = satCounter.GetAutoFilterArguments();
     for (size_t i = satCounter.GetArity(); i--;) {
       // Only consider output arguments:
@@ -411,7 +415,10 @@ void AutoPacket::PulseSatisfactionUnsafe(std::unique_lock<std::mutex> lk, Decora
 
           // We only care about sat counters that aren't deferred--skip everyone else
           // Deferred calls will be too late.
-          !satCounter->IsDeferred()
+          !satCounter->IsDeferred() &&
+
+          // And we have something to decrement
+          satCounter->remaining
         )
         {
           if (satCounter->Decrement())
