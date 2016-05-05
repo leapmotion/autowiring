@@ -161,9 +161,8 @@ void AutoNetServerImpl::NewContext(CoreContext& newCtxt){
         {"name", autowiring::demangle(ctxt->GetSigilType())}
     };
 
-    if(ctxt->GetParentContext()){
+    if(ctxt != GetContext() && ctxt->GetParentContext())
       context["parent"] = ResolveContextID(ctxt->GetParentContext().get());
-    }
 
     BroadcastMessage("newContext", ResolveContextID(ctxt.get()), context);
   };
@@ -284,12 +283,19 @@ void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
   }
 
   SendMessage(hdl, "subscribed", types);
-  GetContext()->BuildCurrentState();
+
+  for (auto ctxt : ContextEnumerator{ GetContext() }) {
+    // Send update about this newly discovered context
+    NewContext(*ctxt);
+
+    // Build total image of all objects, recursively:
+    for (const auto* pObj : ctxt->BuildObjectState())
+      NewObject(*ctxt, *pObj);
+  }
 
   // Send breakpoint message
-  for(const auto& breakpoint : m_breakpoints) {
+  for(const auto& breakpoint : m_breakpoints)
     SendMessage(hdl, "breakpoint", breakpoint);
-  }
 }
 
 void AutoNetServerImpl::HandleUnsubscribe(websocketpp::connection_hdl hdl) {

@@ -677,25 +677,14 @@ AnySharedPointer CoreContext::Await(auto_id id, std::chrono::nanoseconds timeout
   return memo.m_value;
 }
 
-void CoreContext::BuildCurrentState(void) {
-  auto glbl = GlobalCoreContext::Get();
-  if(m_pParent)
-    m_pParent->newContext(this);
+std::vector<const autowiring::CoreObjectDescriptor*> CoreContext::BuildObjectState(void) const {
+  std::vector<const autowiring::CoreObjectDescriptor*> retVal;
+  retVal.reserve(m_concreteTypes.size());
 
-  // Enumerate objects injected into this context
-  for(auto& object : m_concreteTypes)
-    newObject(object);
-
-  // Recurse on all children
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-  for(const auto& c : m_children) {
-    auto cur = c.lock();
-    if(!cur)
-      continue;
-
-    // Recurse into the child instance:
-    cur->BuildCurrentState();
-  }
+  for(const auto& obj : m_concreteTypes)
+    retVal.push_back(&obj);
+  return retVal;
 }
 
 void CoreContext::Dump(std::ostream& os) const {
