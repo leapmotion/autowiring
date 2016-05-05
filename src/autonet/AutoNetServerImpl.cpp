@@ -20,7 +20,7 @@ AutoNetServerImpl::AutoNetServerImpl(void):
   AutoNetServerImpl(std::unique_ptr<AutoNetTransportHttp>(new AutoNetTransportHttp))
 {
   auto* pCtxt = AutoCurrentContext().get();
-  pCtxt->newContext += [this] (CoreContext* pChild) { NewContext(*pChild); };
+  pCtxt->newContext += [this, pCtxt] (CoreContext* pChild) { NewContext(pCtxt, *pChild); };
   pCtxt->expiredContext += [this, pCtxt] { ExpiredContext(*pCtxt); };
   pCtxt->newObject += [this, pCtxt] (const CoreObjectDescriptor& desc) { NewObject(*pCtxt, desc); };
 }
@@ -153,16 +153,27 @@ void AutoNetServerImpl::Breakpoint(std::string name){
 }
 
 // Update Functions
-void AutoNetServerImpl::NewContext(CoreContext& newCtxt){
+void AutoNetServerImpl::NewContext(CoreContext* pParent, CoreContext& newCtxt) {
   auto ctxt = newCtxt.shared_from_this();
 
-  *this += [this, ctxt] {
+  // Need teardown and child creation notifications
+  newCtxt.newContext += [this, &newCtxt] (CoreContext* pChild) {
+    NewContext(&newCtxt, *pChild);
+  };
+  newCtxt.expiredContext += [this, &newCtxt] {
+    ExpiredContext(newCtxt);
+  };
+  newCtxt.newObject += [this, &newCtxt](const CoreObjectDescriptor& desc) {
+    NewObject(newCtxt, desc);
+  };
+
+  *this += [this, pParent, ctxt] {
     Json::object context{
         {"name", autowiring::demangle(ctxt->GetSigilType())}
     };
 
-    if(ctxt != GetContext() && ctxt->GetParentContext())
-      context["parent"] = ResolveContextID(ctxt->GetParentContext().get());
+    if(pParent)
+      context["parent"] = ResolveContextID(pParent);
 
     BroadcastMessage("newContext", ResolveContextID(ctxt.get()), context);
   };
@@ -284,9 +295,13 @@ void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
 
   SendMessage(hdl, "subscribed", types);
 
+  auto root = GetContext();
   for (auto ctxt : ContextEnumerator{ GetContext() }) {
     // Send update about this newly discovered context
-    NewContext(*ctxt);
+    NewContext(
+      ctxt == root ? nullptr : ctxt->GetParentContext().get(),
+      *ctxt
+    );
 
     // Build total image of all objects, recursively:
     for (const auto* pObj : ctxt->BuildObjectState())

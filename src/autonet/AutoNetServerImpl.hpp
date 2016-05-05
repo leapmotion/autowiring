@@ -50,8 +50,9 @@ public:
   /// <summary>
   /// Updates server when a new context is created
   /// </summary>
-  /// <param name="ctxt">The new context</param>
-  void NewContext(CoreContext& ctxt);
+  /// <param name="pParent">The parent context, or nullptr if one does not exist</param>
+  /// <param name="newCtxt">The new context</param>
+  void NewContext(CoreContext* pParent, CoreContext& newCtxt);
 
   /// <summary>
   /// Updates server when a context has expired
