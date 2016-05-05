@@ -59,7 +59,7 @@ TEST_F(AutoFilterMultiDecorateTest, MultiWithSingleDecorateTest) {
     ASSERT_FALSE(packet.IsUnsatisfiable<Decoration<1>>());
     out.i = called++;
   };
-  
+
   *factory += [&called](AutoPacket& packet, Decoration<0>& out) {
     ASSERT_FALSE(packet.IsUnsatisfiable<Decoration<0>>());
     ASSERT_FALSE(packet.IsUnsatisfiable<Decoration<1>>());
@@ -133,7 +133,7 @@ TEST_F(AutoFilterMultiDecorateTest, UnsatDecTest) {
   *f += [](const Decoration<2>&, std::string& out) {
     out = "Crickets";
   };
-  
+
   int f1 = 0;
   *f += [&](const std::string* args []) {
     for (f1 = 0; *args; args++, f1++);
@@ -183,7 +183,7 @@ TEST_F(AutoFilterMultiDecorateTest, ArrayOfSharedPointers) {
   auto packet = f->NewPacket();
   packet->Decorate(Decoration<0>{});
   packet->Decorate(Decoration<1>{});
-  
+
   ASSERT_EQ(2, f1) << "shared_ptr[] input decoration count mismatch";
   ASSERT_EQ(2, f2) << "const shared_ptr[] input decoration count mismatch";
 }
@@ -242,4 +242,38 @@ TEST_F(AutoFilterMultiDecorateTest, AddRecipientIdempotentTest) {
   packet->Decorate(Decoration<0>());
 
   ASSERT_EQ(1, called) << "Add receipient should be idempotent";
+}
+
+struct MultiDecoration {};
+
+TEST_F(AutoFilterMultiDecorateTest, ManyMultiDecorate) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+
+  AutoRequired<AutoPacketFactory> factory;
+
+  // This lambda is invoked every time a packet is created.  It doesn't attach Decoration<0>
+  // to the packet, and as a result, Decoration<0> will be marked unsatisfiable.
+  *factory += [](std::shared_ptr<Decoration<0>>&) {};
+
+  // These won't ever be called.  Decoration<0> is unsatisfiable, so Decoration<1> is
+  // transitively unsatisfiable, and therefore so is Decoration<2>.  The critical requirement
+  // is that MultiDecoration not be marked unsatisfiable at this point.
+  *factory += [](const Decoration<0>&, Decoration<1>& sma) {};
+  *factory += [](const Decoration<1>&, Decoration<2>& pMap) {};
+  *factory += [](const Decoration<0>&, const Decoration<1>&, MultiDecoration&) {};
+
+  // This one gets called as soon as Decoration<2> is marked unsatisfiable.  It should still
+  // be able to attach MultiDecoration to the packet
+  *factory += [](const std::shared_ptr<const Decoration<2>>&, MultiDecoration&) {};
+
+  // Create a few packets, ensure none of these creations fail
+  // Don't reduce these into the following loop, having these here allows a convenient
+  // location for breakpoints to be set.
+  factory->NewPacket();
+  factory->NewPacket();
+
+  // Create a bunch more in a loop
+  for(size_t i = 0; i < 100; i++)
+    factory->NewPacket();
 }
