@@ -15,6 +15,7 @@ void GlobalInitTest::SetUp(void) {
 
 void GlobalInitTest::TearDown(void) {
   std::shared_ptr<GlobalCoreContext> glbl = AutoGlobalContext();
+  ASSERT_EQ(0U, glbl->AncestorCount) << "Global context ancestor count must be exactly zero";
 
   {
     // Always drop the global context when tests are done

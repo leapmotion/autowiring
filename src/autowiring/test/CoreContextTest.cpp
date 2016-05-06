@@ -698,3 +698,20 @@ TEST_F(CoreContextTest, SimultaneousMultiInject) {
   // Verify that there's no config block still present
   ASSERT_NO_THROW(ctxt->Config.Get("c"));
 }
+
+
+TEST_F(CoreContextTest, AncestorCount) {
+  AutoCurrentContext ctxt;
+
+  size_t ancestorCount = 0;
+  for (std::shared_ptr<CoreContext> cur = ctxt->GetParentContext(); cur; cur = cur->GetParentContext())
+    ancestorCount++;
+  ASSERT_EQ(ancestorCount, ctxt->AncestorCount) << "Manual traversal of the ancestor count did not match the annotated count";
+
+  auto child1 = ctxt->Create<void>();
+  auto child2 = child1->Create<void>();
+  auto child3 = child2->Create<void>();
+  ASSERT_EQ(ctxt->AncestorCount + 1, child1->AncestorCount);
+  ASSERT_EQ(ctxt->AncestorCount + 2, child2->AncestorCount);
+  ASSERT_EQ(ctxt->AncestorCount + 3, child3->AncestorCount);
+}
