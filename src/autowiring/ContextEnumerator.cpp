@@ -9,6 +9,10 @@ ContextEnumerator::ContextEnumerator(void) :
   m_root(CoreContext::CurrentContext())
 {}
 
+ContextEnumerator::ContextEnumerator(CoreContext& root) :
+  m_root(root.shared_from_this())
+{}
+
 ContextEnumerator::ContextEnumerator(const std::shared_ptr<CoreContext>& root) :
   m_root(root)
 {}

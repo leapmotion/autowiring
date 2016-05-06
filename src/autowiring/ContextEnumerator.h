@@ -33,6 +33,11 @@ public:
   ContextEnumerator(void);
 
   /// <summary>
+  /// Constructs a context enumerator for the current context
+  /// </summary>
+  ContextEnumerator(CoreContext& root);
+
+  /// <summary>
   /// Constructs an enumerator which may enumerate all of the contexts rooted at the specified root
   /// </summary>
   /// <param name="root">The root context, optionally null, in which case this type is instantiated as an end-iterator</param>
