@@ -39,6 +39,10 @@ void BasicThread::DoRun(std::shared_ptr<CoreObject>&& refTracker) {
   if(GetName())
     SetCurrentThreadName();
 
+  // Update the thread priority.  This value may have been assigned before we started.  In that case,
+  // we want to be sure we get the correct value assigned eventually.
+  SetThreadPriority(m_priority);
+
   // Now we wait for the thread to be good to go:
   try {
     Run();
