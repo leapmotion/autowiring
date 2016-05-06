@@ -66,11 +66,15 @@ namespace std {
     using awfsnamespace::rename;
 
 #ifdef _MSC_VER
+#if _MSC_VER >= 1900
+    using std::experimental::filesystem::canonical;
+#else
     template<class _Path>
     _Path canonical(const _Path& _Pval, const _Path& _Pbase = current_path<_Path>())
     {
       return awfsnamespace::complete(_Pval, _Pbase);
     }
+#endif
 #else
     using awfsnamespace::canonical;
 #endif
