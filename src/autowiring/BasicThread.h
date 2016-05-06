@@ -146,8 +146,7 @@ protected:
   /// Sets the thread priority of this thread
   /// </summary>
   /// <remarks>
-  /// This method must only be called from the running thread's context, and then, only inside
-  /// the ElevatePriority constructor
+  /// This method can only be safely called after the thread is already running.  Calling it before
   /// </remarks>
   void SetThreadPriority(ThreadPriority threadPriority);
 
