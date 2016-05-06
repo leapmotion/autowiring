@@ -477,7 +477,7 @@ public:
   ///
   /// \code
   /// AutoCreateContext myContext;
-  /// AutoCreateContextT<MySigil> myMarkedContext;
+  /// AutoCreateContextT&lt;MySigil&rt; myMarkedContext;
   /// \endcode
   /// </remarks>
   template<class T>

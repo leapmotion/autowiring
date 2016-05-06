@@ -55,10 +55,18 @@ namespace autowiring {
     };
 
     std::ostream& operator<<(std::ostream& os, const hung& lhs) {
-      auto runnables = lhs.ctxt.GetRunnables();
-      for (CoreRunnable* runnable : runnables)
-        if (runnable->IsRunning())
-          os << autowiring::demangle(typeid(*runnable)) << '\n';
+      std::string tabLvl;
+      for (auto ctxt : ContextEnumerator{ lhs.ctxt }) {
+        auto runnables = lhs.ctxt.GetRunnables();
+        if (runnables.empty())
+          continue;
+
+        tabLvl.assign(" ", ctxt->AncestorCount);
+        os << tabLvl << autowiring::demangle(ctxt->SigilType) << '\n';
+        for (CoreRunnable* runnable : runnables)
+          if (runnable->IsRunning())
+            os << tabLvl << autowiring::demangle(typeid(*runnable)) << '\n';
+      }
       return os;
     }
   }
