@@ -55,7 +55,8 @@ static thread_specific_ptr<std::shared_ptr<CoreContext>> autoCurrentContext;
 CoreContext::CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference, auto_id sigilType) :
   m_pParent(pParent),
   m_backReference(backReference),
-  m_sigilType(sigilType),
+  SigilType(sigilType),
+  AncestorCount(pParent ? pParent->AncestorCount + 1 : 0),
   m_stateBlock(std::make_shared<CoreContextStateBlock>(pParent ? pParent->m_stateBlock : nullptr))
 {}
 

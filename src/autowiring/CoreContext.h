@@ -147,15 +147,18 @@ public:
   /// \sa AutoGlobalContext, GlobalCoreContext
   static std::shared_ptr<CoreContext> GetGlobal(void);
 
+  // The number of ancestors of this context.  The global context is defined to have zero ancestors.
+  const size_t AncestorCount = 0;
+
+  // Sigil type, used during bolting
+  const auto_id SigilType;
+
 protected:
   // A pointer to the parent context
   const std::shared_ptr<CoreContext> m_pParent;
 
   // Back-referencing iterator which refers to ourselves in our parent's child list:
   const t_childList::iterator m_backReference;
-
-  // Sigil type, used during bolting
-  const auto_id m_sigilType;
 
   // State block for this context:
   std::shared_ptr<autowiring::CoreContextStateBlock> m_stateBlock;
@@ -394,7 +397,7 @@ public:
   /// The number of child contexts of this context.
   size_t GetChildCount(void) const;
   /// The type used as a sigil when creating this class, if any.
-  auto_id GetSigilType(void) const { return m_sigilType; }
+  auto_id GetSigilType(void) const { return SigilType; }
   /// The Context iterator for the parent context's children, pointing to this context.
   t_childList::iterator GetBackReference(void) const { return m_backReference; }
   /// A shared reference to the parent context of this context.
@@ -411,7 +414,7 @@ public:
 
   /// True if the sigil type of this CoreContext matches the specified sigil type.
   template<class Sigil>
-  bool Is(void) const { return m_sigilType == auto_id_t<Sigil>{}; }
+  bool Is(void) const { return SigilType == auto_id_t<Sigil>{}; }
 
   /// <summary>
   /// The first child in the set of this context's children.
