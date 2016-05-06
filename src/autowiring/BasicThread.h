@@ -146,7 +146,9 @@ protected:
   /// Sets the thread priority of this thread
   /// </summary>
   /// <remarks>
-  /// This method can only be safely called after the thread is already running.  Calling it before
+  /// This method may be called while the thread is running, or before it starts to run.  If it is
+  /// invoked before the thread starts to run, the thread will take on the specified priority when
+  /// it is started.
   /// </remarks>
   void SetThreadPriority(ThreadPriority threadPriority);
 
