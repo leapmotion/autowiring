@@ -61,7 +61,8 @@ namespace autowiring {
         if (runnables.empty())
           continue;
 
-        tabLvl.assign(" ", ctxt->AncestorCount);
+        tabLvl.clear();
+        tabLvl.insert(0, ctxt->AncestorCount, ' ');
         os << tabLvl << autowiring::demangle(ctxt->SigilType) << '\n';
         for (CoreRunnable* runnable : runnables)
           if (runnable->IsRunning())
