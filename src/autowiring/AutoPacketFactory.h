@@ -173,6 +173,9 @@ protected:
   static bool IsAutoPacketType(const std::type_info& dataType);
 
 public:
+  // CoreRunnable overrides:
+  bool IsRunning(void) const override;
+
   /// <returns>
   /// The most recently issued packet, or possibly nullptr if that packet has already been destroyed
   /// </returns>

@@ -83,7 +83,7 @@ protected:
 public:
   // Accessor methods:
   /// Reports whether this runnable is currently running.
-  bool IsRunning(void) const;
+  virtual bool IsRunning(void) const;
   /// Reports whether this runnable was ever started.
   bool WasStarted(void) volatile const { return m_wasStarted; }
   /// Reports whether this runnable should stop.

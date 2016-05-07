@@ -14,6 +14,12 @@ AutoPacketFactory::AutoPacketFactory(void):
 
 AutoPacketFactory::~AutoPacketFactory() {}
 
+bool AutoPacketFactory::IsRunning(void) const {
+  return
+    CoreRunnable::IsRunning() ||
+    !m_outstandingInternal.expired();
+}
+
 std::shared_ptr<AutoPacket> AutoPacketFactory::CurrentPacket(void) {
   std::lock_guard<std::mutex> lk(m_lock);
   return m_curPacket.lock();
@@ -69,7 +75,11 @@ std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
       std::lock_guard<std::mutex>{m_lock},
       outstanding.reset();
 
+      // Local state change condition notification
       m_stateCondition.notify_all();
+
+      // Also need to notify the ancestor runnable
+      m_cv.notify_all();
     }
   );
   m_outstandingInternal = retVal;
