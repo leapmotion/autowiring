@@ -30,9 +30,6 @@ private:
   // Lock for this type
   mutable std::mutex m_lock;
 
-  // State change notification
-  std::condition_variable m_stateCondition;
-
   // Internal outstanding reference for issued packet:
   std::weak_ptr<void> m_outstandingInternal;
 
