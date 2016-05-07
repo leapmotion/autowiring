@@ -64,7 +64,7 @@ TEST_F(AutoPacketFactoryTest, WaitRunsDownAllPackets) {
 
   // Make the thread create and hold a packet, and then return
   AutoRequired<IssuesPacketWaitsThenQuits> ipwtq;
-  
+
   // Shutdown context
   AutoCurrentContext()->SignalShutdown();
 
@@ -99,7 +99,7 @@ TEST_F(AutoPacketFactoryTest, AutoPacketFactoryCycle) {
     CurrentContextPusher pshr(ctxt);
     AutoRequired<HoldsAutoPacketFactoryReference> hapfr(ctxt);
     ctxt->Initiate();
-    
+
     // A weak pointer is used to detect object destruction
     ctxtWeak = ctxt;
     hapfrWeak = hapfr;
@@ -242,4 +242,13 @@ TEST_F(AutoPacketFactoryTest, CurrentPacket) {
   ASSERT_EQ(packet, factory->CurrentPacket()) << "Current packet was not reported correctly as being issued to the known current packet";
   packet.reset();
   ASSERT_EQ(nullptr, factory->CurrentPacket()) << "A current packet was reported after the current packet has expired";
+}
+
+TEST_F(AutoPacketFactoryTest, IsRunningWhilePacketIssued) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet = factory->NewPacket();
+  ctxt->SignalShutdown();
+  ASSERT_TRUE(factory->IsRunning()) << "Factory should be considered to be running as long as packets are outstanding";
 }
