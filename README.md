@@ -64,6 +64,8 @@ Building on ARM-Linux requires the use of a toolchain file.  This file is includ
 
     cmake . -DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake -DCMAKE_PREFIX_PATH:PATH=/your/lib/path
 
+For 64-bit ARMv8 (AArch64), use toolchain-arm64.cmake
+
 ### Android
 
 Similar requirements to Arm-linux, you must specify a toolchain file.  You must also specify the path to your Android toolchain directory.  Make sure you update `/opt/android-standalone-toolchain` to point to your actual Android standalone toolchain directory. To build for 64 bit android systems, export the environment variable `export ARMv8=true`. If you aren't cross-compiling, then simply run cmake with no options.
