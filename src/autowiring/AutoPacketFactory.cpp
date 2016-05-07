@@ -20,15 +20,15 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::CurrentPacket(void) {
 }
 
 std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
-  if(ShouldStop())
-    throw autowiring_error("Attempted to create a packet on an AutoPacketFactory that was already terminated");
-  if(!IsRunning())
-    throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
-
   std::shared_ptr<AutoPacketInternal> retVal;
   bool isFirstPacket;
   {
     std::lock_guard<std::mutex> lk(m_lock);
+
+    if (ShouldStop())
+      throw autowiring_error("Attempted to create a packet on an AutoPacketFactory that was already terminated");
+    if (!IsRunning())
+      throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
 
     // New packet issued
     isFirstPacket = !m_packetCount;
@@ -106,6 +106,7 @@ SatCounter* AutoPacketFactory::CreateSatCounterList(void) const {
 
 bool AutoPacketFactory::OnStart(void) {
   // Initialize first packet
+  std::lock_guard<std::mutex>{m_lock},
   m_nextPacket = ConstructPacket();
 
   // Wake us up. We're starting now
@@ -116,15 +117,12 @@ bool AutoPacketFactory::OnStart(void) {
 void AutoPacketFactory::OnStop(bool graceful) {
   // Queue of local variables to be destroyed when leaving scope
   t_autoFilterSet autoFilters;
-
-  // Reset next packet, it will never be issued
-  m_nextPacket.reset();
+  std::shared_ptr<AutoPacketInternal> nextPacket;
 
   // Lock destruction precedes local variables
   std::lock_guard<std::mutex>{m_lock},
-
-  // Same story with the AutoFilters
-  autoFilters.swap(m_autoFilters);
+    autoFilters.swap(m_autoFilters),
+    nextPacket.swap(m_nextPacket);
 
   // Now we can lock, update state, and notify any listeners
   m_stateCondition.notify_all();
