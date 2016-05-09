@@ -18,13 +18,12 @@ Release
 install_manifest.txt
 *.user
 .DS_Store
-CPackConfig.cmake
-CPackSourceConfig.cmake
 *.wixobj
 autowiring-config.cmake
 autowiring-configVersion.cmake
 install_manifest_*.txt
 *.cmake
+!toolchain-*.cmake
 Testing
 DartConfiguration.tcl
 autowiring-*-*.dmg
