@@ -175,6 +175,14 @@ bool BasicThread::DoAdditionalWait(std::chrono::nanoseconds timeout) {
   );
 }
 
+std::shared_ptr<std::thread> BasicThread::GetThread(void) const {
+  // Return an aliased shared pointer
+  return {
+    m_state,
+    &m_state->m_thisThread
+  };
+}
+
 bool BasicThread::IsCompleted(void) const {
   return m_state->m_completed;
 }

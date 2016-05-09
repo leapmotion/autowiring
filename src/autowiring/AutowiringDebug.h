@@ -30,6 +30,11 @@ namespace autowiring {
     void PrintContextTree(std::ostream& os);
     void PrintContextTree(std::ostream& os, const std::shared_ptr<CoreContext>& ctxt);
 
+    /// <summary>
+    /// Writes out the status of all runnables within a context
+    /// </summary>
+    void PrintRunnables(std::ostream& os, CoreContext& ctxt);
+
     /// <returns>
     /// The current packet under processing
     /// </returns>

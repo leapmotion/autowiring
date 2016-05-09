@@ -56,13 +56,13 @@ TEST_F(AutowiringDebugTest, ContextPrintout) {
 
   // This is the expected output
   std::string tree = "void(Current Context)\n"
-                     "├── Derp\n"
-                     "│   ├── Herp\n"
-                     "│   │   └── int\n"
-                     "│   └── Derp\n"
-                     "└── Herp\n"
-                     "    ├── Derp\n"
-                     "    └── Derp\n";
+                     "|-- Derp\n"
+                     "|   |-- Herp\n"
+                     "|   |   *-- int\n"
+                     "|   *-- Derp\n"
+                     "*-- Herp\n"
+                     "    |-- Derp\n"
+                     "    *-- Derp\n";
 
   // Remove whitespace so test is more robust
   tree.erase(std::remove_if(tree.begin(), tree.end(), [](char ch) { return ch == ' '; }), tree.end());
@@ -149,4 +149,50 @@ TEST_F(AutowiringDebugTest, FilterWithSyntheticID) {
 
   size_t off = str.find("IncompleteOutputType [i]", 0);
   ASSERT_NE(std::string::npos, off) << "AutoFilterGraph dump failed to correctly handle an uninstantiated output type";
+}
+
+namespace {
+  template<int>
+  class RunnableMember:
+    public ContextMember,
+    public CoreRunnable
+  {
+  public:
+    RunnableMember(const char* name) :
+      ContextMember(name)
+    {}
+
+    bool OnStart(void) override { return true; }
+  };
+}
+
+TEST_F(AutowiringDebugTest, PrintRunnables) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+
+  ctxt->Inject<RunnableMember<0>>("efgh");
+
+  auto child1 = ctxt->Create<void>();
+  child1->Initiate();
+  child1->Inject<RunnableMember<0>>("abcd");
+
+  auto child2 = ctxt->Create<void>();
+  child2->Initiate();
+  child2->Inject<RunnableMember<0>>("efgh");
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+  std::stringstream os;
+  autowiring::dbg::PrintRunnables(os, *ctxt);
+  auto str = os.str();
+
+  ASSERT_EQ(
+    "void(Current Context)\n"
+    "|   [ RUNNING ]    (efgh)\n"
+    "|-- void\n"
+    "|       [ RUNNING ]    (abcd)\n"
+    "*-- void\n"
+    "|       [ RUNNING ]    (efgh)\n",
+    str
+  );
 }

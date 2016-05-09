@@ -66,47 +66,131 @@ std::string autowiring::dbg::ContextName(void) {
   return autowiring::demangle(ctxt->GetSigilType());
 }
 
-void PrintContextTreeRecursive(std::ostream& os, const std::shared_ptr<CoreContext>& root, std::shared_ptr<CoreContext> ctxt) {
-  for (; ctxt; ctxt = ctxt->NextSibling()) {
+namespace {
+  class PrintContext {
+  public:
+    PrintContext(std::ostream& os, const CoreContext& ctxt) :
+      ctxt(ctxt.shared_from_this()),
+      os(os)
+    {}
 
-    // Create of vector of contexts from child of global to 'ctxt'
-    std::deque<std::shared_ptr<CoreContext>> path;
-    for (auto c = ctxt; c != root; c = c->GetParentContext()) {
-      path.push_front(c);
-    }
+    PrintContext(const PrintContext& parent, std::shared_ptr<const CoreContext>&& child) :
+      ctxt(std::move(child)),
+      pParent(&parent),
+      os(parent.os)
+    {}
 
-    // Print indentation the shows 'ctxt's path in the tree
-    for (auto it = path.begin(); it != path.end(); ++it)
-      if (std::next(it) == path.end()) // Check if last element
-        if ((*it)->NextSibling())
-          os << "├── ";
-        else
-          os << "└── ";
-      else if ((*it)->NextSibling()) // If not the last child
-        os << "│   ";
+    std::ostream& os;
+    const PrintContext* pParent = nullptr;
+    const std::shared_ptr<const CoreContext> ctxt;
+
+    void PrintParentIndentation(void) const {
+      if (!pParent)
+        // Root context, no indentation
+        return;
+
+      // Ancestor first, then ourselves
+      pParent->PrintParentIndentation();
+
+      if (ctxt->NextSibling())
+        os << "|   ";
       else
-        os << "    ";
-
-    // Print context name
-    os << autowiring::demangle(ctxt->GetSigilType());
-    if (ctxt == root) {
-      os << "(Current Context)";
+        os << "    ";
     }
-    os << std::endl;
-    PrintContextTreeRecursive(os, root, ctxt->FirstChild());
-  }
+
+    void PrintAttributeIndentation(void) const {
+      if (pParent)
+        pParent->PrintAttributeIndentation();
+
+      if (ctxt->FirstChild())
+        os << "|   ";
+      else
+        os << "    ";
+    }
+
+    void PrintChildIndentation(void) const {
+      if (!pParent)
+        // Root requires no indentation
+        return;
+
+      // Parent's indentation goes first
+      pParent->PrintParentIndentation();
+
+      // Child indentation is a little different, we show a relationship
+      // to the item being indented
+      if (ctxt->NextSibling())
+        os << "|-- ";
+      else
+        os << "*-- ";
+    }
+  };
+}
+
+static void PrintContextTreeRecursive(PrintContext printCtxt, const std::function<void(PrintContext&)>& prefix) {
+  // Show this context's name in the tree
+  printCtxt.PrintChildIndentation();
+  printCtxt.os << autowiring::demangle(printCtxt.ctxt->GetSigilType());
+  if (!printCtxt.pParent)
+    printCtxt.os << "(Current Context)";
+  printCtxt.os << std::endl;
+
+  // Call prefix routine on the currently enumerated context now that the identifier is printed
+  prefix(printCtxt);
+
+  // And now all children:
+  for (auto ctxt = printCtxt.ctxt->FirstChild(); ctxt; ctxt = ctxt->NextSibling())
+    PrintContextTreeRecursive(
+      { printCtxt, ctxt },
+      prefix
+    );
+}
+
+static void PrintContextTreeRecursive(std::ostream& os, const CoreContext& root, std::shared_ptr<CoreContext> ctxt) {
+  PrintContextTreeRecursive( { os, root }, [](PrintContext&) {});
 }
 
 void autowiring::dbg::PrintContextTree(std::ostream& os) {
-  PrintContextTreeRecursive(os, AutoGlobalContext(), AutoGlobalContext());
+  PrintContextTreeRecursive(os, *AutoGlobalContext(), AutoGlobalContext());
 }
 
 void autowiring::dbg::PrintContextTree(std::ostream& os, const std::shared_ptr<CoreContext>& ctxt) {
-  PrintContextTreeRecursive(os, ctxt, ctxt);
+  PrintContextTreeRecursive(os, *ctxt, ctxt);
 }
 
 void autowiring::dbg::PrintContextTree(void) {
-  PrintContextTreeRecursive(std::cout, AutoGlobalContext(), AutoGlobalContext());
+  PrintContextTreeRecursive(std::cout, *AutoGlobalContext(), AutoGlobalContext());
+}
+
+void autowiring::dbg::PrintRunnables(std::ostream& os, CoreContext& ctxt) {
+  PrintContextTreeRecursive(
+    { os, ctxt },
+    [] (PrintContext& printCtxt) {
+      std::ostream& os = printCtxt.os;
+
+      // Now all of the runnables in this context
+      for (CoreRunnable* runnable : printCtxt.ctxt->GetRunnables()) {
+        printCtxt.PrintAttributeIndentation();
+        if (runnable->IsRunning())
+          os << "[ RUNNING ]";
+        else if (runnable->WasStarted())
+          os << "[ STARTED ]";
+        else
+          os << "[ STOPPED ]";
+
+        // If we can get the tid, print that, otherwise just leave it blank
+        if (BasicThread* pThread = dynamic_cast<BasicThread*>(runnable))
+          os << "(tid: " << std::setw(5) << std::setfill(' ') << pThread->GetThread()->get_id() << ")";
+
+        // Type information, in human-readable form
+        os << ' ' << autowiring::demangle(typeid(*runnable)) << ' ';
+
+        os << " " << autowiring::demangle(typeid(*runnable));
+        if (ContextMember* pMember = dynamic_cast<ContextMember*>(runnable))
+          os << " (" << pMember->GetName() << ')';
+        os << '\n';
+      }
+    }
+  );
 }
 
 AutoPacket* autowiring::dbg::CurrentPacket(void) {
