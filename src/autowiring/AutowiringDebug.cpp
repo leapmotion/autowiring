@@ -10,6 +10,7 @@
 #include <iostream>
 #include <unordered_set>
 #include <sstream>
+#include <thread>
 
 using namespace autowiring;
 using namespace autowiring::dbg;
