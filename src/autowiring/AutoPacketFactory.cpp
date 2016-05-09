@@ -75,10 +75,7 @@ std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
       std::lock_guard<std::mutex>{m_lock},
       outstanding.reset();
 
-      // Local state change condition notification
-      m_stateCondition.notify_all();
-
-      // Also need to notify the ancestor runnable
+      // Now we might be ready to wake up, if anyone was waiting on this factory
       m_cv.notify_all();
     }
   );
@@ -118,9 +115,6 @@ bool AutoPacketFactory::OnStart(void) {
   // Initialize first packet
   std::lock_guard<std::mutex>{m_lock},
   m_nextPacket = ConstructPacket();
-
-  // Wake us up. We're starting now
-  m_stateCondition.notify_all();
   return true;
 }
 
@@ -133,14 +127,11 @@ void AutoPacketFactory::OnStop(bool graceful) {
   std::lock_guard<std::mutex>{m_lock},
     autoFilters.swap(m_autoFilters),
     nextPacket.swap(m_nextPacket);
-
-  // Now we can lock, update state, and notify any listeners
-  m_stateCondition.notify_all();
 }
 
 void AutoPacketFactory::DoAdditionalWait(void) {
   std::unique_lock<std::mutex> lk(m_lock);
-  m_stateCondition.wait(
+  m_cv.wait(
     lk,
     [this]{
       return ShouldStop() && m_outstandingInternal.expired();
@@ -150,7 +141,7 @@ void AutoPacketFactory::DoAdditionalWait(void) {
 
 bool AutoPacketFactory::DoAdditionalWait(std::chrono::nanoseconds timeout) {
   std::unique_lock<std::mutex> lk(m_lock);
-  return m_stateCondition.wait_for(
+  return m_cv.wait_for(
     lk,
     timeout,
     [this]{

@@ -33,6 +33,7 @@ bool CoreRunnable::Start(std::shared_ptr<CoreObject> outstanding) {
     OnStop(false);
   }
 
+  m_cv.notify_all();
   return true;
 }
 
@@ -50,10 +51,10 @@ void CoreRunnable::Stop(bool graceful) {
     std::shared_ptr<CoreObject> outstanding;
     std::lock_guard<std::mutex>{m_lock},
     outstanding.swap(m_outstanding);
-
-    // Everything looks good now
-    m_cv.notify_all();
   }
+
+  // Everything looks good now
+  m_cv.notify_all();
 }
 
 bool CoreRunnable::ThreadSleep(std::chrono::nanoseconds timeout) {
