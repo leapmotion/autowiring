@@ -14,10 +14,6 @@ namespace autowiring {
   struct BasicThreadStateBlock;
 }
 
-namespace std {
-  class thread;
-}
-
 /// <summary>
 /// Thread priority classifications from low to high.
 /// </summary>
@@ -214,9 +210,9 @@ protected:
 
 public:
   /// <returns>
-  /// The underlying std::thread
+  /// A void pointer to the underlying std::thread
   /// </returns>
-  std::shared_ptr<std::thread> GetThread(void) const;
+  std::shared_ptr<void> GetThread(void) const;
 
   /// <returns>
   /// The current thread priority

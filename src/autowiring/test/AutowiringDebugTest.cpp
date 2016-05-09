@@ -5,6 +5,7 @@
 #include "TestFixtures/Decoration.hpp"
 #include <algorithm>
 #include <fstream>
+#include <thread>
 
 class AutowiringDebugTest:
   public testing::Test

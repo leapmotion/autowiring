@@ -179,8 +179,10 @@ void autowiring::dbg::PrintRunnables(std::ostream& os, CoreContext& ctxt) {
           os << "[ STOPPED ]";
 
         // If we can get the tid, print that, otherwise just leave it blank
-        if (BasicThread* pThread = dynamic_cast<BasicThread*>(runnable))
-          os << "(tid: " << std::setw(5) << std::setfill(' ') << pThread->GetThread()->get_id() << ")";
+        if (BasicThread* pThread = dynamic_cast<BasicThread*>(runnable)) {
+          auto stdThread = std::static_pointer_cast<std::thread>(pThread->GetThread());
+          os << "(tid: " << std::setw(5) << std::setfill(' ') << stdThread->get_id() << ")";
+        }
 
         // Type information, in human-readable form
         os << ' ' << autowiring::demangle(typeid(*runnable)) << ' ';
