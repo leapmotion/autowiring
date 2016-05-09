@@ -187,11 +187,11 @@ TEST_F(AutowiringDebugTest, PrintRunnables) {
 
   ASSERT_EQ(
     "void(Current Context)\n"
-    "|   [ RUNNING ]    (efgh)\n"
+    "|   [ RUNNING ] RunnableMember<0>  (efgh)\n"
     "|-- void\n"
-    "|       [ RUNNING ]    (abcd)\n"
+    "|       [ RUNNING ] RunnableMember<0>  (abcd)\n"
     "*-- void\n"
-    "|       [ RUNNING ]    (efgh)\n",
+    "|       [ RUNNING ] RunnableMember<0>  (efgh)\n",
     str
   );
 }

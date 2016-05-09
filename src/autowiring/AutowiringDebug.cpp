@@ -186,8 +186,6 @@ void autowiring::dbg::PrintRunnables(std::ostream& os, CoreContext& ctxt) {
 
         // Type information, in human-readable form
         os << ' ' << autowiring::demangle(typeid(*runnable)) << ' ';
-
-        os << " " << autowiring::demangle(typeid(*runnable));
         if (ContextMember* pMember = dynamic_cast<ContextMember*>(runnable))
           os << " (" << pMember->GetName() << ')';
         os << '\n';
