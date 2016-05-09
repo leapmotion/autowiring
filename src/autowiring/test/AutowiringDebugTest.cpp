@@ -152,20 +152,18 @@ TEST_F(AutowiringDebugTest, FilterWithSyntheticID) {
   ASSERT_NE(std::string::npos, off) << "AutoFilterGraph dump failed to correctly handle an uninstantiated output type";
 }
 
-namespace {
-  template<int>
-  class RunnableMember:
-    public ContextMember,
-    public CoreRunnable
-  {
-  public:
-    RunnableMember(const char* name) :
-      ContextMember(name)
-    {}
+template<int>
+class RunnableMember:
+  public ContextMember,
+  public CoreRunnable
+{
+public:
+  RunnableMember(const char* name) :
+    ContextMember(name)
+  {}
 
-    bool OnStart(void) override { return true; }
-  };
-}
+  bool OnStart(void) override { return true; }
+};
 
 TEST_F(AutowiringDebugTest, PrintRunnables) {
   AutoCurrentContext ctxt;
