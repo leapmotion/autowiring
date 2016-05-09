@@ -64,6 +64,7 @@ namespace std {
     using awfsnamespace::remove;
     using awfsnamespace::remove_all;
     using awfsnamespace::rename;
+    using awfsnamespace::file_size;
 
 #ifdef _MSC_VER
 #if _MSC_VER >= 1900
