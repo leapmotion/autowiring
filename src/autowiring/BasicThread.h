@@ -210,6 +210,11 @@ protected:
 
 public:
   /// <returns>
+  /// A void pointer to the underlying std::thread
+  /// </returns>
+  std::shared_ptr<void> GetThread(void) const;
+
+  /// <returns>
   /// The current thread priority
   /// </returns>
   ThreadPriority GetThreadPriority(void) const { return m_priority; }

@@ -392,6 +392,8 @@ public:
   // Accessor methods:
   /// True if and only if this is the global context.
   bool IsGlobalContext(void) const { return !m_pParent; }
+  /// True if and only if this is an anonymous context
+  bool IsAnonymousContext(void) const { return SigilType == auto_id_t<void>{}; }
   /// The number of Autowired members in this context.
   size_t GetMemberCount(void) const { return m_concreteTypes.size(); }
   /// The number of child contexts of this context.

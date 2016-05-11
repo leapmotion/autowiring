@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <autowiring/autowiring.h>
+#include <autowiring/AutowiringDebug.h>
 #include <autowiring/demangle.h>
 #include <autowiring/at_exit.h>
 #include MEMORY_HEADER
@@ -55,19 +56,7 @@ namespace autowiring {
     };
 
     std::ostream& operator<<(std::ostream& os, const hung& lhs) {
-      std::string tabLvl;
-      for (auto ctxt : ContextEnumerator{ lhs.ctxt }) {
-        auto runnables = lhs.ctxt.GetRunnables();
-        if (runnables.empty())
-          continue;
-
-        tabLvl.clear();
-        tabLvl.insert(0, ctxt->AncestorCount, ' ');
-        os << tabLvl << autowiring::demangle(ctxt->SigilType) << '\n';
-        for (CoreRunnable* runnable : runnables)
-          if (runnable->IsRunning())
-            os << tabLvl << autowiring::demangle(typeid(*runnable)) << '\n';
-      }
+      autowiring::dbg::PrintRunnables(os, lhs.ctxt);
       return os;
     }
   }
@@ -142,7 +131,7 @@ public:
     // Do not allow teardown to take more than 5 seconds.  This is considered a "timely teardown" limit.
     // If it takes more than this amount of time to tear down, the test case itself should invoke SignalShutdown
     // and Wait itself with the extended teardown period specified.
-    ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Test case took too long to tear down, unit tests running after this point are untrustworthy.  Hung runnables:\n" << autowiring::testing::hung{ *ctxt };
+    ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Test case took too long to tear down, unit tests running after this point are untrustworthy.  Runnable dump:\n" << autowiring::testing::hung{ *ctxt };
 
     // Global context should return to quiescence:
     if (!allowGlobalReferences)
