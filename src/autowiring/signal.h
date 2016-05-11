@@ -58,8 +58,11 @@ namespace autowiring {
     /// </summary>
     template<typename T>
     struct dereferencer<T&, typename std::enable_if<!can_copy<T>::value>::type> {
+      static_assert(std::is_const<T>::value, "Cannot use a non-const reference as an argument to a signal handler");
+
       dereferencer(const dereferencer& rhs) : val(rhs.val) {}
       dereferencer(const T& val) : val(val) {}
+
       const T& val;
       const T& operator*(void) const { return val; }
     };
@@ -69,6 +72,8 @@ namespace autowiring {
     /// </summary>
     template<typename T>
     struct dereferencer<T&, typename std::enable_if<can_copy<T>::value>::type> {
+      static_assert(std::is_const<T>::value, "Cannot use a non-const reference as an argument to a signal handler");
+
       dereferencer(dereferencer&& rhs) : val(std::move(rhs.val)) {}
       dereferencer(const T& val) : val(val) {}
       T val;
