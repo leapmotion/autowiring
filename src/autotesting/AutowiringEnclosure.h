@@ -86,6 +86,8 @@ public:
   {}
 
   const bool allowGlobalReferences;
+  // The context that is current for the test being run right now
+  std::shared_ptr<CoreContext> m_ctxt;
 
   // Base overrides:
   void OnTestStart(const testing::TestInfo& info) override {
@@ -98,56 +100,59 @@ public:
 
     // The context proper.  This is automatically assigned as the current
     // context when SetUp is invoked.
-    AutoCreateContext create;
-    create->Inject<TestInfoProxy>(info);
+    m_ctxt = AutoCreateContext{};
+    m_ctxt->Inject<TestInfoProxy>(info);
 
     // Add exception filter in this context:
-    create->Inject<AutowiringEnclosureExceptionFilter>();
+    m_ctxt->Inject<AutowiringEnclosureExceptionFilter>();
 
     // Now make it current and let the test run:
-    create->SetCurrent();
+    m_ctxt->SetCurrent();
   }
 
   void OnTestEnd(const testing::TestInfo& info) override {
-    auto setglobal = MakeAtExit([] {
-      // Unconditionally nullify the global context as the current context
-      CoreContext::EvictCurrent();
-    });
+    // TLS clear to prevent leaks
+    CoreContext::EvictCurrent();
 
-    // Verify we can grab the test case back out and that the pointer is correct:
-    Autowired<AutowiringEnclosureExceptionFilter> ecef;
+    // Current context moved to local so we can ensure we free it
+    auto ctxt = std::move(m_ctxt);
+    m_ctxt = {};
 
     // Global initialization tests are special, we don't bother checking closure principle on them:
-    if(!strcmp("GlobalInitTest", info.test_case_name()))
+    if (!strcmp("GlobalInitTest", info.test_case_name()))
       return;
 
-    // Need to make sure we got back our exception filter before continuing:
-    ASSERT_TRUE(ecef.IsAutowired()) << "Failed to find the enclosed context exception filter; unit test may have incorrectly reset the enclosing context before returning";
-
-    // Now try to tear down the test context enclosure:
-    auto ctxt = ecef ? ecef->GetContext() : nullptr;
+    // Try to tear down the test context enclosure:
     ctxt->SignalShutdown();
 
-    // Do not allow teardown to take more than 5 seconds.  This is considered a "timely teardown" limit.
-    // If it takes more than this amount of time to tear down, the test case itself should invoke SignalShutdown
-    // and Wait itself with the extended teardown period specified.
-    ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Test case took too long to tear down, unit tests running after this point are untrustworthy.  Runnable dump:\n" << autowiring::testing::hung{ *ctxt };
+    {
+      // Verify we can grab the test case back out and that the pointer is correct:
+      Autowired<AutowiringEnclosureExceptionFilter> ecef;
 
-    // Global context should return to quiescence:
-    if (!allowGlobalReferences)
-      ASSERT_TRUE(AutoGlobalContext()->Quiescent(std::chrono::seconds(5))) << "Contexts took too long to release all references to the global context";
+      // Need to make sure we got back our exception filter before continuing:
+      ASSERT_TRUE(ecef.IsAutowired()) << "Failed to find the enclosed context exception filter; unit test may have incorrectly reset the enclosing context before returning";
 
-    // And no more references to this context, except the current context and the pointer itself
-    ASSERT_GE(2, ctxt.use_count()) << "Detected a dangling context reference after test termination, context may be leaking";
+      // Do not allow teardown to take more than 5 seconds.  This is considered a "timely teardown" limit.
+      // If it takes more than this amount of time to tear down, the test case itself should invoke SignalShutdown
+      // and Wait itself with the extended teardown period specified.
+      ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Test case took too long to tear down, unit tests running after this point are untrustworthy.  Runnable dump:\n" << autowiring::testing::hung{ *ctxt };
 
-    static const char sc_autothrow [] = "AUTOTHROW_";
-    if(!strncmp(sc_autothrow, info.name(), sizeof(sc_autothrow) - 1))
-      // Throw expected, end here
-      return;
+      // Global context should return to quiescence:
+      if (!allowGlobalReferences)
+        ASSERT_TRUE(AutoGlobalContext()->Quiescent(std::chrono::seconds(5))) << "Contexts took too long to release all references to the global context";
 
-    // If an exception occurred somewhere, report it:
-    ASSERT_FALSE(ecef->m_excepted)
-      << "An unhandled exception occurred in this context" << std::endl
-      << "[" << (ecef->m_ti ? autowiring::demangle(*ecef->m_ti) : "unknown") << "] " << ecef->m_what;
+      static const char sc_autothrow [] = "AUTOTHROW_";
+      if (strncmp(sc_autothrow, info.name(), sizeof(sc_autothrow) - 1)) {
+        // If an exception occurred somewhere, report it:
+        ASSERT_FALSE(ecef->m_excepted)
+          << "An unhandled exception occurred in this context" << std::endl
+          << "[" << (ecef->m_ti ? autowiring::demangle(*ecef->m_ti) : "unknown") << "] " << ecef->m_what;
+      }
+    }
+
+    // No more references to this context except for the pointer we hold ourselves
+    ASSERT_TRUE(ctxt.unique()) << "Detected a dangling context reference after test termination, context may be leaking";
+    ctxt = {};
+
   }
 };
