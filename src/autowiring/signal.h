@@ -118,6 +118,7 @@ namespace autowiring {
         delete prior;
         prior = cur;
       }
+      delete prior;
     }
 
     signal& operator=(signal&& rhs) {

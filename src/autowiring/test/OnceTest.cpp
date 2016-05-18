@@ -33,7 +33,7 @@ TEST(OnceTest, CallAfterSet) {
   ASSERT_EQ(1, val2) << "Lambda not executed on assignment as expected";
 }
 
-TEST(OnceTest, NoLeaks) {
+TEST(OnceTest, NoLeaks_Asserted) {
   autowiring::once_signal<void> o;
   auto v = std::make_shared<bool>(false);
   o += [v] {};
@@ -43,6 +43,15 @@ TEST(OnceTest, NoLeaks) {
   ASSERT_TRUE(v.unique()) << "Shared pointer leaked by once flag after execution";
   o += [v] {};
   ASSERT_TRUE(v.unique()) << "Shared pointer leaked by once flag after post-set attachment";
+}
+
+TEST(OnceTest, NoLeaks_NotAsserted) {
+  auto v = std::make_shared<bool>(false);
+  {
+    autowiring::once_signal<void()> x;
+    x += [v] {};
+  }
+  ASSERT_TRUE(v.unique()) << "Signal did not destroy all attached lambdas on its destruction";
 }
 
 TEST(OnceTest, MultiLambdaPending) {
