@@ -570,13 +570,10 @@ const std::shared_ptr<CoreContext>& CoreContext::CurrentContextOrNull(void) {
 }
 
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
-  if(!autoCurrentContext.get())
-    return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GetGlobalContext());
-
-  std::shared_ptr<CoreContext>* retVal = autoCurrentContext.get();
-  assert(retVal);
-  assert(*retVal);
-  return *retVal;
+  if (auto* retVal = autoCurrentContext.get())
+    if(*retVal)
+      return *retVal;
+  return GetGlobalContext();
 }
 
 void CoreContext::AddCoreRunnable(const std::shared_ptr<CoreRunnable>& ptr) {
@@ -990,10 +987,7 @@ std::shared_ptr<CoreContext> CoreContext::SetCurrent(const std::shared_ptr<CoreC
 
   // Value is changing, update:
   auto retVal = currentContext;
-  if (ctxt)
-    autoCurrentContext.reset(new std::shared_ptr<CoreContext>(ctxt));
-  else
-    autoCurrentContext.reset();
+  autoCurrentContext = ctxt;
   return retVal;
 }
 
@@ -1006,10 +1000,7 @@ std::shared_ptr<CoreContext> CoreContext::SetCurrent(std::shared_ptr<CoreContext
 
   // Value is changing, update:
   auto retVal = currentContext;
-  if (ctxt)
-    autoCurrentContext.reset(new std::shared_ptr<CoreContext>(std::move(ctxt)));
-  else
-    autoCurrentContext.reset();
+  autoCurrentContext = std::move(ctxt);
   return retVal;
 }
 
@@ -1018,5 +1009,5 @@ std::shared_ptr<CoreContext> CoreContext::SetCurrent(void) {
 }
 
 void CoreContext::EvictCurrent(void) {
-  autoCurrentContext.reset();
+  *autoCurrentContext = nullptr;
 }

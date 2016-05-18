@@ -19,7 +19,7 @@ using namespace autowiring;
 /// <summary>
 /// A pointer to the current AutoPacket, specific to the current thread.
 /// </summary>
-static thread_specific_ptr<AutoPacket> autoCurrentPacket{ nullptr };
+static thread_specific_ptr<AutoPacket> autoCurrentPacket([] (void*) {});
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
