@@ -551,7 +551,12 @@ public:
 };
 
 TEST_F(CoreThreadTest, ContextWaitTimesOutInOnStop) {
-  AutoCurrentContext ctxt;
+  AutoCurrentContext()->Initiate();
+
+  // Create a child context so we have precise and reliable use count numbers
+  AutoCreateContext ctxt;
+  ctxt->SetCurrent();
+
   AutoRequired<BlocksInOnStop> bios;
   ctxt->Initiate();
 

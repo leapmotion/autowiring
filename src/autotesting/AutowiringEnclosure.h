@@ -127,7 +127,7 @@ public:
 
     {
       // Verify we can grab the test case back out and that the pointer is correct:
-      Autowired<AutowiringEnclosureExceptionFilter> ecef;
+      AutowiredFast<AutowiringEnclosureExceptionFilter> ecef{ ctxt };
 
       // Need to make sure we got back our exception filter before continuing:
       ASSERT_TRUE(ecef.IsAutowired()) << "Failed to find the enclosed context exception filter; unit test may have incorrectly reset the enclosing context before returning";
@@ -153,6 +153,5 @@ public:
     // No more references to this context except for the pointer we hold ourselves
     ASSERT_TRUE(ctxt.unique()) << "Detected a dangling context reference after test termination, context may be leaking";
     ctxt = {};
-
   }
 };
