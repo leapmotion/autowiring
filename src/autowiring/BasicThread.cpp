@@ -81,28 +81,23 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
   // Perform a manual notification of teardown listeners
   NotifyTeardownListeners();
 
-  // Tell our CoreRunnable parent that we're done to ensure that our reference count will be cleared.
+  // Tell our CoreRunnable parent that we're done to ensure that our reference count will be cleared
   Stop(false);
 
-  // Release our hold on the context.  After this point, we have to be VERY CAREFUL that we
-  // don't try to refer to any of our own member variables, because our own object may have
-  // already gone out of scope.  [this] is potentially dangling.
+  // Release our hold on the context.  There is still at least one more hold through the refTracker
   ctxt.reset();
 
-  // Clear our reference tracker, which will notify anyone who is asleep and also maybe
-  // will destroy the entire underlying context.
-  refTracker.reset();
-
-  // MUST detach here.  By this point in the application, it's possible that `this` has already been
-  // deleted.  If that's the case, `state.unique()` is true, and when we go out of scope, the destructor
-  // for m_thisThread will be invoked.  If that happens, the destructor will block for the held thread
-  // to quit--and, in this case, the thread which is being held is actually us.  Blocking on it, in that
-  // case, would be a trivial deadlock.  So, because we're about to quit anyway, we simply detach the
-  // thread and prepare for final teardown operations.
+  // Detach.  This is just a simple memory free, destruction of the lambda should have no side-effects
   state->m_thisThread.detach();
 
-  // Notify other threads that we are done.  At this point, any held references that might still exist
-  // notification must happen from a synchronized level in order to ensure proper ordering.
+  // The reference tracker internally holds a reference to the CoreContext.  If this is the last
+  // reference tracker and the context is not otherwise referenced, this reset step may potentially
+  // cause the context to be destroyed.  In that case, [this] is dangling and further references to
+  // [this] must be avoided.
+  refTracker.reset();
+
+  // Notify other threads that we are done.  We are using the [state] local variable to do this, thereby
+  // avoiding an invalid reference to [this].
   std::lock_guard<std::mutex>{state->m_lock},
   state->m_completed = true;
   state->m_stateCondition.notify_all();
