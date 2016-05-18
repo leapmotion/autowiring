@@ -16,22 +16,25 @@ using namespace std;
 
 TEST_F(ContextMapTest, VerifySimple) {
   ContextMap<string> mp;
+  std::weak_ptr<CoreContext> ctxtWeak;
 
   // Create a new context and add it to the map:
   {
     AutoCreateContext context;
+    ctxtWeak = context;
 
     // Verify the reference count or the rest of the test will fail
-    ASSERT_EQ(context.use_count(), 1) << "A newly created context's use count isn't what was expected";
+    ASSERT_TRUE(context.unique()) << "A newly created context's use count isn't what was expected";
 
     // Add and ensure the reference count is unmodified
     mp.Add("context_simple", context);
-    ASSERT_EQ(context.use_count(), 1) << "The map altered the context use count";
+    ASSERT_TRUE(context.unique()) << "The map altered the context use count";
 
     // We should be able to find this context now:
     std::shared_ptr<CoreContext> found = mp.Find("context_simple");
     ASSERT_TRUE(!!found.get()) << "Failed to find a context that was just inserted into a context map";
   }
+  ASSERT_TRUE(ctxtWeak.expired()) << "Context was leaked after it should have gone out of scope";
 
   // We shouldn't be able to find it now that it's gone out of scope:
   std::shared_ptr<CoreContext> notFound = mp.Find("context_simple");
