@@ -91,7 +91,6 @@ public:
 
   // Base overrides:
   void OnTestStart(const testing::TestInfo& info) override {
-    AutoRequired<AutowiringEnclosureExceptionFilter> filter;
 
     // Set global context current first, then initiate
     AutoGlobalContext global;
