@@ -724,3 +724,12 @@ TEST_F(AutoSignalTest, IsExecuting) {
   };
   ASSERT_FALSE(sig.is_executing()) << "Signal was incorrectly marked as executing even though nothing is happening";
 }
+
+TEST_F(AutoSignalTest, NoLeaks) {
+  auto v = std::make_shared<bool>(false);
+  {
+    autowiring::signal<void()> x;
+    x += [v] {};
+  }
+  ASSERT_TRUE(v.unique()) << "Signal did not destroy all attached lambdas on its destruction";
+}
