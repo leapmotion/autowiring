@@ -214,7 +214,7 @@ add_windows_sources(Autowiring_SRCS
   SystemThreadPoolWinLH.cpp
   SystemThreadPoolWinLH.hpp
   InterlockedExchangeWin.cpp
-  thread_specific_ptr_win.h
+  thread_specific_ptr_win.cpp
 )
 
 add_mac_sources(Autowiring_SRCS
@@ -225,7 +225,7 @@ add_mac_sources(Autowiring_SRCS
 add_unix_sources(Autowiring_SRCS
   CreationRulesUnix.cpp
   InterlockedExchangeUnix.cpp
-  thread_specific_ptr_unix.h
+  thread_specific_ptr_unix.cpp
 )
 
 set(Autowiring_Linux_SRCS

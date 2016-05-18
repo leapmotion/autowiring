@@ -9,7 +9,7 @@
 using namespace autowiring;
 
 // Special file-level allocation with a no-op dtor, because all stack locations are stack-allocated
-static autowiring::thread_specific_ptr<SlotInformationStackLocation> tss([](SlotInformationStackLocation*) {});
+static autowiring::thread_specific_ptr<SlotInformationStackLocation> tss([](void*) {});
 
 SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStumpBase& stump, const void* pObj, size_t extent) :
   stump(stump),

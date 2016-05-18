@@ -6,92 +6,111 @@
 // platform specific headers
 #ifdef _MSC_VER
 #include <windows.h>
-#define TLS_KEY_TYPE DWORD
+namespace autowiring {
+  typedef void(__stdcall *t_cleanupFunction)(void*);
+  typedef DWORD TLS_KEY_TYPE;
+}
 #else
 #include <pthread.h>
-#define TLS_KEY_TYPE pthread_key_t
+namespace autowiring {
+  typedef void(*t_cleanupFunction)(void*);
+  typedef pthread_key_t TLS_KEY_TYPE;
+}
 #endif
-
-// Platform specific token for thread local storage
 
 namespace autowiring {
 
-// <summary>
-// Holds a ptr in thread local storage. Same interface as autoboost::thread_specific_ptr
-// </summary>
-template<typename T>
-class thread_specific_ptr {
-public:
-  typedef void (*t_cleanupFunction)(T *);
+class thread_specific_ptr_base {
+protected:
+  thread_specific_ptr_base(t_cleanupFunction cleanupFunction) :
+    m_cleanupFunction(cleanupFunction)
+  {}
 
-  thread_specific_ptr(void)
-  {
-    init();
-  }
-
-  thread_specific_ptr(t_cleanupFunction cleanup):
-    m_cleanupFunction(cleanup)
-  {
-    init();
-  }
-
-  virtual ~thread_specific_ptr(){
-    reset();
+  ~thread_specific_ptr_base(void) {
     freeTLS();
   }
 
-  T* get() const;
+  // Key to thread local storage
+  TLS_KEY_TYPE m_key;
 
-  T* operator->() const {
-    return get();
-  }
+  // Cleanup routine for the entry in the key
+  const t_cleanupFunction m_cleanupFunction;
 
-  T& operator*() const {
-    return *get();
-  }
+  // Gets teh assigned value
+  void* get(void) const;
 
-  T* release() {
-    T* const temp = get();
-    set(nullptr);
-    return temp;
-  }
-
-  void reset(T* new_value=nullptr) {
-    T* const current_value = get();
-
-    if (current_value == new_value)
-      return;
-
-    set(new_value);
-    if (current_value && m_cleanupFunction)
-      m_cleanupFunction(current_value);
-  }
-
-private:
   // Set thread specific value. Used by public facing "release" and "reset"
-  void set(T* value);
+  void set(void* value);
 
   // Initialize thread specific storage
   void init();
 
   // Cleanup thread specific ptr when destoyed
   void freeTLS();
-
-  // Functions called the cleanup old value
-  t_cleanupFunction m_cleanupFunction = [](T* p) { delete p; };
-
-  // Key to thread local storage
-  TLS_KEY_TYPE m_key;
 };
 
-} //namespace autowiring
+/// <summary>
+/// Holds a ptr in thread local storage. Same interface as autoboost::thread_specific_ptr
+/// </summary>
+template<typename T>
+class thread_specific_ptr final :
+  thread_specific_ptr_base
+{
+public:
+  thread_specific_ptr(void) :
+    thread_specific_ptr([](void* ptr) { delete static_cast<T*>(ptr); })
+  {}
 
-// Platform specifc functions
-#ifdef _MSC_VER
-#include "thread_specific_ptr_win.h"
-#else //Mac and linux
-#include "thread_specific_ptr_unix.h"
-#endif
+  thread_specific_ptr(t_cleanupFunction cleanupFunction) :
+    thread_specific_ptr_base(cleanupFunction)
+  {
+    init();
+  }
 
-// cleanup definitions
-#undef TLS_KEY_TYPE
+  ~thread_specific_ptr(void) {
+    reset();
+  }
+
+public:
+  T* get(void) const { return static_cast<T*>(thread_specific_ptr_base::get()); }
+
+  T* release(void) {
+    T* const temp = get();
+    set(nullptr);
+    return temp;
+  }
+
+  void reset(void) {
+    m_cleanupFunction(get());
+    set(nullptr);
+  }
+
+  void reset(T* new_value) {
+    m_cleanupFunction(get());
+    set(new_value);
+  }
+
+  // Operator overloads:
+  const T& operator=(const T& new_value) {
+    if (T* value = get()) {
+      *value = new_value;
+      return *value;
+    } else {
+      T* rv = new T{ new_value };
+      set(rv);
+      return *rv;
+    }
+  }
+
+  void operator=(T&& new_value) {
+    if (T* value = get())
+      *value = std::move(new_value);
+    else
+      set(new T{ std::move(new_value) });
+  }
+
+  T* operator->() const { return get(); }
+  T& operator*() const { return *get(); }
+};
+
+}
