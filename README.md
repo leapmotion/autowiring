@@ -62,7 +62,7 @@ via the [find_package](http://www.cmake.org/cmake/help/v3.0/command/find_package
 
 Building on ARM-Linux requires the use of a toolchain file.  This file is included with Autowiring.  To configure, use the following invocation:
 
-    cmake . -DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake -DCMAKE_PREFIX_PATH:PATH=/your/lib/path
+    cmake . -DCMAKE_TOOLCHAIN_FILE=toolchain-arm32.cmake -DCMAKE_PREFIX_PATH:PATH=/your/lib/path
 
 For 64-bit ARMv8 (AArch64), use toolchain-arm64.cmake
 
