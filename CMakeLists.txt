@@ -157,8 +157,8 @@ install(FILES
   COMPONENT autowiring
 )
 
-# Autoboost headers required everywhere but on Windows, which doesn't rely on filesystem
-if(NOT MSVC)
+# Autoboost headers required everywhere but on MSVC 2015+, which doesn't rely on filesystem
+if(NOT MSVC OR MSVC_VERSION LESS 1900)
   install(
     DIRECTORY ${PROJECT_SOURCE_DIR}/contrib/autoboost/autoboost
     DESTINATION include

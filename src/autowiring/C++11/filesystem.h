@@ -17,6 +17,7 @@ namespace std {
     using awfsnamespace::canonical;
     using awfsnamespace::create_directory;
     using awfsnamespace::current_path;
+    using awfsnamespace::directory_iterator;
     using awfsnamespace::exists;
     using awfsnamespace::is_directory;
     using awfsnamespace::is_empty;
@@ -24,5 +25,6 @@ namespace std {
     using awfsnamespace::remove_all;
     using awfsnamespace::rename;
     using awfsnamespace::file_size;
+    using awfsnamespace::unique_path;
   }
 }
