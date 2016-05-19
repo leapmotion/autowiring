@@ -3,6 +3,8 @@
 #include <autowiring/BasicThread.h>
 #include FUTURE_HEADER
 
+using namespace std::chrono;
+
 class BasicThreadTest:
   public testing::Test
 {};
@@ -11,12 +13,12 @@ class SpinsAndThenQuits:
   public BasicThread
 {
 public:
-  SpinsAndThenQuits(size_t spinCount) :
-    BasicThread("SpinsAndThenQuits"),
-    m_spinCount(spinCount)
+  SpinsAndThenQuits(void) :
+    BasicThread("SpinsAndThenQuits")
   {}
 
-  volatile size_t m_spinCount;
+  milliseconds m_spinDelayTime;
+  size_t spinCount = 0;
 
   bool m_continue = false;
   std::condition_variable m_signal;
@@ -32,7 +34,9 @@ public:
 
   void Run(void) override {
     WaitForStateUpdate([this] { return m_continue; });
-    while(m_spinCount--);
+    auto endTime = steady_clock::now() + m_spinDelayTime;
+    while (steady_clock::now() < endTime)
+      spinCount++;
     GetThreadTimes(m_kernelTime, m_userTime);
   }
 };
@@ -41,16 +45,8 @@ TEST_F(BasicThreadTest, ValidateThreadTimes) {
   AutoCurrentContext ctxt;
   ctxt->Initiate();
 
-  static const size_t spinCount = 10000000;
-  auto spinsThenQuits = ctxt->Inject<SpinsAndThenQuits>(spinCount);
-
-  // Instantaneous benchmark on the time it takes to decrement the counter value:
-  std::chrono::nanoseconds benchmark;
-  {
-    auto startTime = std::chrono::high_resolution_clock::now();
-    for(volatile size_t i = spinCount; i--;);
-    benchmark = std::chrono::high_resolution_clock::now() - startTime;
-  }
+  auto spinsThenQuits = ctxt->Inject<SpinsAndThenQuits>();
+  spinsThenQuits->m_spinDelayTime = milliseconds{ 1 };
 
   // By this point, not much should have happened:
   std::chrono::milliseconds kernelTime;
@@ -61,8 +57,13 @@ TEST_F(BasicThreadTest, ValidateThreadTimes) {
   spinsThenQuits->Continue();
   ASSERT_TRUE(spinsThenQuits->WaitFor(std::chrono::seconds(10))) << "Spin-then-quit test took too long to execute";
 
-  // Thread should not have been able to complete in less time than we completed, by a factor of ten or so at least
-  ASSERT_LE(benchmark, spinsThenQuits->m_userTime * 10) <<
+  // Get thread times again:
+  std::chrono::milliseconds kernelTime2;
+  std::chrono::milliseconds userTime2;
+  spinsThenQuits->GetThreadTimes(kernelTime2, userTime2);
+
+  // Ensure the runtime matches our expectation
+  ASSERT_LE(spinsThenQuits->m_spinDelayTime / 2, userTime2 - userTime) <<
     "Reported execution time could not possibly be correct, spin operation took less time to execute than should have been possible with the CPU";
 }
 
