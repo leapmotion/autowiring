@@ -26,6 +26,5 @@ namespace std {
     using awfsnamespace::rename;
     using awfsnamespace::file_size;
     using awfsnamespace::temp_directory_path;
-    using awfsnamespace::unique_path;
   }
 }
