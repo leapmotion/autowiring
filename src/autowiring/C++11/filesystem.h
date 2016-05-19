@@ -19,6 +19,7 @@ namespace std {
     using awfsnamespace::current_path;
     using awfsnamespace::directory_iterator;
     using awfsnamespace::exists;
+    using awfsnamespace::filesystem_error;
     using awfsnamespace::is_directory;
     using awfsnamespace::is_empty;
     using awfsnamespace::remove;
