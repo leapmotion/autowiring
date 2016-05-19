@@ -17,6 +17,7 @@ namespace std {
     using awfsnamespace::canonical;
     using awfsnamespace::create_directory;
     using awfsnamespace::current_path;
+    using awfsnamespace::directory_iterator;
     using awfsnamespace::exists;
     using awfsnamespace::is_directory;
     using awfsnamespace::is_empty;
