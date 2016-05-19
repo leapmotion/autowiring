@@ -19,12 +19,13 @@ namespace std {
     using awfsnamespace::current_path;
     using awfsnamespace::directory_iterator;
     using awfsnamespace::exists;
+    using awfsnamespace::filesystem_error;
     using awfsnamespace::is_directory;
     using awfsnamespace::is_empty;
     using awfsnamespace::remove;
     using awfsnamespace::remove_all;
     using awfsnamespace::rename;
     using awfsnamespace::file_size;
-    using awfsnamespace::unique_path;
+    using awfsnamespace::temp_directory_path;
   }
 }
