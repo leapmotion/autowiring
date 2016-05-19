@@ -46,6 +46,7 @@ TEST_F(BasicThreadTest, ValidateThreadTimes) {
   ctxt->Initiate();
 
   auto spinsThenQuits = ctxt->Inject<SpinsAndThenQuits>();
+  spinsThenQuits->m_spinDelayTime = milliseconds{ 1 };
 
   // By this point, not much should have happened:
   std::chrono::milliseconds kernelTime;
@@ -56,8 +57,13 @@ TEST_F(BasicThreadTest, ValidateThreadTimes) {
   spinsThenQuits->Continue();
   ASSERT_TRUE(spinsThenQuits->WaitFor(std::chrono::seconds(10))) << "Spin-then-quit test took too long to execute";
 
+  // Get thread times again:
+  std::chrono::milliseconds kernelTime2;
+  std::chrono::milliseconds userTime2;
+  spinsThenQuits->GetThreadTimes(kernelTime2, userTime2);
+
   // Ensure the runtime matches our expectation
-  ASSERT_LE(spinsThenQuits->m_spinDelayTime / 2, userTime) <<
+  ASSERT_LE(spinsThenQuits->m_spinDelayTime / 2, userTime2 - userTime) <<
     "Reported execution time could not possibly be correct, spin operation took less time to execute than should have been possible with the CPU";
 }
 
