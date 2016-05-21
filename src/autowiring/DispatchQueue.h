@@ -247,7 +247,9 @@ public:
   /// <summary>
   /// Blocks until all dispatchers on the DispatchQueue at the time of the call have been dispatched
   /// </summary>
-  /// <param name="timeout">The maximum amount of time to wait</param>
+  /// <param name="timeout">
+  /// The maximum amount of time to wait.  If this value is zero, this method will not obtain any locks.
+  /// </param>
   /// <remarks>
   /// This method does not cause any dispatchers to run.  If the underlying dispatch queue does not have an event loop
   /// operating on it, this method will deadlock.  It is an error for the party responsible for driving the dispatch queue

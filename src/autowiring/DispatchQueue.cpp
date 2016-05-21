@@ -280,6 +280,14 @@ void DispatchQueue::PendExisting(std::unique_lock<std::mutex>&& lk, DispatchThun
 
 bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
   // Optimistic check first:
+  if (!m_count)
+    return true;
+
+  // Short-circuit if zero is specified as the timeout value
+  if (timeout.count() == 0)
+    return false;
+
+  // Now lock and double-check:
   std::unique_lock<std::mutex> lk(m_dispatchLock);
 
   // Short-circuit if dispatching has been aborted
@@ -289,10 +297,6 @@ bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
   // Short-circuit if the queue is already empty
   if (!m_count)
     return true;
-
-  // Also short-circuit if zero is specified as the timeout value
-  if (timeout.count() == 0)
-    return false;
 
   // Set up the lambda.  Note that the queue size CANNOT be 1, because we just checked to verify
   // that it is non-empty.  Thus, we do not need to signal the m_queueUpdated condition variable.
