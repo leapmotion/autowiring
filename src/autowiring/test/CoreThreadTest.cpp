@@ -622,22 +622,27 @@ TEST_F(CoreThreadTest, LambdaHoldAfterTermination) {
   ctxt->Initiate();
 
   std::weak_ptr<CoreContext> childWeak;
+  auto teardownCalled = std::make_shared<bool>(false);
+
   {
     AutoCreateContext child;
     AutoRequired<CoreThread> mct{ child };
 
     // This is the critical piece which generates a hold on `child` after teardown
-    mct->AddTeardownListener([mct, child] {
+    mct->AddTeardownListener([mct, child, teardownCalled] {
       *mct += [child] {};
+      *teardownCalled = true;
     });
 
     child->Initiate();
     *mct += [] {};
     mct->Barrier();
+    ASSERT_GE(1U, mct->GetDispatchQueueLength()) << "Dispatch queue had lingering entries after barrier";
     child->SignalShutdown();
     childWeak = child;
     child->Wait();
   }
+  ASSERT_TRUE(*teardownCalled) << "Teardown listener was not called as expected";
   ASSERT_TRUE(childWeak.expired()) << "Child context leaked due to lambda pending in teardown";
 }
 
