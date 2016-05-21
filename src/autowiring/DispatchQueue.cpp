@@ -97,14 +97,10 @@ void DispatchQueue::TryDispatchEventUnsafe(std::unique_lock<std::mutex>& lk) {
 }
 
 void DispatchQueue::Abort(void) {
-  // Wake up anyone who is still waiting when we return
-  auto x = MakeAtExit([this] { m_queueUpdated.notify_all(); });
-
-  DispatchThunkBase* pHead;
-  std::priority_queue<autowiring::DispatchThunkDelayed> delayedQueue;
-
   // Do not permit any more lambdas to be pended to our queue
+  DispatchThunkBase* pHead;
   {
+    std::priority_queue<autowiring::DispatchThunkDelayed> delayedQueue;
     std::lock_guard<std::mutex> lk(m_dispatchLock);
     onAborted();
     m_dispatchCap = 0;
@@ -127,6 +123,9 @@ void DispatchQueue::Abort(void) {
   // Decrement the count by the number of entries we actually traversed.  Abort may potentially
   // be called from a lambda function, so assigning this value directly to zero would be an error.
   m_count -= nTraversed;
+
+  // Wake up anyone who is still waiting:
+  m_queueUpdated.notify_all();
 }
 
 bool DispatchQueue::Cancel(void) {
