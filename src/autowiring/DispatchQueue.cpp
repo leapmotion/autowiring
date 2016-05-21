@@ -100,12 +100,14 @@ void DispatchQueue::Abort(void) {
   // Do not permit any more lambdas to be pended to our queue
   DispatchThunkBase* pHead;
   {
+    std::priority_queue<autowiring::DispatchThunkDelayed> delayedQueue;
     std::lock_guard<std::mutex> lk(m_dispatchLock);
     onAborted();
     m_dispatchCap = 0;
     pHead = m_pHead;
     m_pHead = nullptr;
     m_pTail = nullptr;
+    delayedQueue = std::move(m_delayedQueue);
   }
 
   // Destroy the whole dispatch queue.  Do so in an unsynchronized context in order to prevent

@@ -335,3 +335,12 @@ TEST_F(DispatchQueueTest, MixedCancel) {
   ASSERT_FALSE(called1.unique()) << "Cancellation cancelled the wrong lambda";
   ASSERT_TRUE(called2.unique()) << "Cancellation cancelled the wrong lambda";
 }
+
+TEST_F(DispatchQueueTest, DelayedAbort) {
+  DispatchQueue dq;
+
+  auto v = std::make_shared<bool>(true);
+  dq += std::chrono::hours{ 1 }, [v] {};
+  dq.Abort();
+  ASSERT_TRUE(v.unique()) << "A delayed dispatcher was leaked after a call to Abort";
+}
