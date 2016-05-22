@@ -130,8 +130,9 @@ bool BasicThread::OnStart(void) {
   m_running = true;
   m_wasStarted = true;
 
-  // Place the new thread entity directly in the space where it goes to avoid
-  // any kind of races arising from asynchronous access to this space
+  // Place the new thread entity directly in the space where it goes.  This
+  // enables us to decide in advance the exact location in memory where the
+  // object will be stored.
   auto outstanding = GetOutstanding();
   m_state->m_thisThread.~thread();
   new (&m_state->m_thisThread) std::thread(
