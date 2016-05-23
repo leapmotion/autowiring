@@ -11,15 +11,10 @@ CoreThread::CoreThread(const char* pName):
 CoreThread::~CoreThread(void){}
 
 void CoreThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<CoreObject>&& refTracker) {
-  try {
-    // If we are asked to rundown while we still have elements in our dispatch queue,
-    // we must try to process them:
+  // Kill everything in the dispatch queue and also run it down
+  {
     CurrentContextPusher pshr(ctxt);
-    DispatchAllEvents();
-  }
-  catch(...) {
-    // We failed to run down the dispatch queue gracefully, we now need to abort it
-    Abort();
+    Rundown();
   }
 
   // Handoff to base class:

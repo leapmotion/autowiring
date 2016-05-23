@@ -344,3 +344,18 @@ TEST_F(DispatchQueueTest, DelayedAbort) {
   dq.Abort();
   ASSERT_TRUE(v.unique()) << "A delayed dispatcher was leaked after a call to Abort";
 }
+
+TEST_F(DispatchQueueTest, Rundown) {
+  auto called = std::make_shared<bool>(false);
+  auto notCalled = std::make_shared<bool>(false);
+
+  DispatchQueue dq;
+  dq += [called] { *called = true; };
+  dq.Rundown();
+  ASSERT_TRUE(*called) << "Dispatcher was not invoked during rundown as expected";
+  ASSERT_TRUE(called.unique()) << "Rundown dispatcher was leaked";
+
+  dq += [notCalled] { *notCalled = true; };
+  ASSERT_FALSE(*notCalled) << "Dispatcher was incorrectly invoked during rundown";
+  ASSERT_TRUE(notCalled.unique()) << "Rejected dispatcher was leaked";
+}

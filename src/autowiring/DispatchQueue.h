@@ -114,6 +114,9 @@ protected:
   /// </summary>
   void SetDispatcherCap(size_t dispatchCap) { m_dispatchCap = dispatchCap; }
 
+  // Internal implementation for abort/rundown
+  void ClearQueueInternal(bool executeDispatchers);
+
 public:
   /// <returns>
   /// True if there are curerntly any dispatchers ready for execution--IE, DispatchEvent would return true
@@ -143,6 +146,25 @@ public:
   /// This method is idempotent
   /// </remarks>
   void Abort(void);
+
+  /// <summary>
+  /// Graceful version of Abort
+  /// </summary>
+  /// <remarks>
+  /// In a synchronized context, all attached lambdas are guaranteed to be called when this function returns.
+  /// No guarantees are made in an unsynchronized context.
+  ///
+  /// Any delayed dispatchers that are ready at the time of the call will be invoked.  All oter delayed
+  /// dispatchers will be aborted.
+  ///
+  /// If a dispatcher throws any exception other than dispatch_aborted_exception, the remaining dispatchers
+  /// will be aborted.
+  ///
+  /// This method may be safely called from within a dispatcher.
+  ///
+  /// This method is idempotent.
+  /// </remarks>
+  void Rundown(void);
 
   /// <summary>
   /// Causes the very first lambda on the dispatch queue to be deleted without running it
