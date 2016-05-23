@@ -279,9 +279,9 @@ void DispatchQueue::PendExisting(std::unique_lock<std::mutex>&& lk, DispatchThun
 }
 
 bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
-  // Short-circuit if zero is specified as the timeout value
-  if (!m_count && timeout.count() == 0)
-    return true;
+  // Do not block or lock in the event of a no-wait check
+  if (timeout.count() == 0)
+    return m_count == 0;
 
   // Now lock and double-check:
   std::unique_lock<std::mutex> lk(m_dispatchLock);
