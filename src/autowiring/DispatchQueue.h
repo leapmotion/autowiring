@@ -247,17 +247,24 @@ public:
   /// <summary>
   /// Blocks until all dispatchers on the DispatchQueue at the time of the call have been dispatched
   /// </summary>
-  /// <param name="timeout">The maximum amount of time to wait</param>
+  /// <param name="timeout">
+  /// The maximum amount of time to wait.  If this value is zero, this method will not wait.
+  /// </param>
   /// <remarks>
   /// This method does not cause any dispatchers to run.  If the underlying dispatch queue does not have an event loop
   /// operating on it, this method will deadlock.  It is an error for the party responsible for driving the dispatch queue
-  /// via WaitForEvent or DispatchAllEvents unless that party first delegates the responsibility elsewhere.
+  /// via WaitForEvent or DispatchAllEvents to call this method unless that party first delegates the responsibility
+  /// elsewhere.
   ///
   /// If DispatchQueue::Abort() is called before the dispatcher has been completed, this method will throw an exception.
   /// If a dispatcher on the underlying DispatchQueue throws an exception, this method will also throw an exception.
   ///
   /// If zero is passed as the timeout value, this method will return true if and only if the queue was empty at the time
   /// of the call, ignoring any delayed dispatchers.
+  ///
+  /// If timeout is nonzero, this method will pend a dispatcher to the queue and only return true if this dispatcher
+  /// is actually dispatched.  If the timeout is zero, this method will return true immediately if the queue length
+  /// is exactly zero.
   /// </remarks>
   bool Barrier(std::chrono::nanoseconds timeout);
 
