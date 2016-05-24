@@ -35,8 +35,8 @@ function(generate_version)
 
   # Install ${ARG_NAME}-config.cmake and ${ARG_NAME}-configVersion.cmake
   install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/${ARG_NAME}-config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/${ARG_NAME}-configVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${ARG_NAME_LOWER}-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${ARG_NAME_LOWER}-configVersion.cmake"
     DESTINATION "."
     COMPONENT ${CMAKE_PROJECT_NAME}
   )
