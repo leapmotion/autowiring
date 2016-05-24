@@ -10,7 +10,7 @@ the required conventions for Leap Motion external libraries.  This function does
 * Ensures compilation happens with visibility set to hidden by default
 * Builds fat binaries on mac
 ]]
-function(set_standard_output_variables)
+macro(set_standard_output_variables)
   if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES "x86_64;i386" CACHE STRING "Mac OS X build architectures" FORCE)
   endif()
@@ -25,6 +25,24 @@ function(set_standard_output_variables)
     endif()
   endif()
   message(STATUS "Compiler version ${CMAKE_CXX_COMPILER_VERSION}")
+
+  # Need to classify the architecture before we run anything else, this lets us easily configure the
+  # find version file based on what the architecture was actually built to be
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+    set(standard_BUILD_ARM ON)
+    set(standard_BUILD_ARCHITECTURES "arm")
+    set(standard_BUILD_64 OFF)
+  elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64;i386")
+    set(standard_BUILD_ARCHITECTURES x64 x86)
+    set(standard_BUILD_64 ON)
+  elseif(CMAKE_SIZEOF_VOID_P STREQUAL 4)
+    set(standard_BUILD_ARCHITECTURES "x86")
+    set(standard_BUILD_64 OFF)
+  else()
+    set(standard_BUILD_ARCHITECTURES "x64")
+    set(standard_BUILD_64 ON)
+  endif()
+  message(STATUS "Using architecture: ${standard_BUILD_ARCHITECTURES}")
 
   # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
@@ -74,4 +92,4 @@ function(set_standard_output_variables)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     message(STATUS "GCC C++11")
   endif()
-endfunction()
+endmacro()

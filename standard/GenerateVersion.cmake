@@ -30,24 +30,6 @@ function(generate_version)
   parse_version(ARG_VERSION ${ARG_VERSION})
   string(TOLOWER ${ARG_NAME} ARG_NAME_LOWER)
 
-  # Need to classify the architecture before we run anything else, this lets us easily configure the
-  # find version file based on what the architecture was actually built to be
-  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
-    set(standard_BUILD_ARM ON)
-    set(standard_BUILD_ARCHITECTURES "arm")
-    set(standard_BUILD_64 OFF)
-  elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64;i386")
-    set(standard_BUILD_ARCHITECTURES x64 x86)
-    set(standard_BUILD_64 ON)
-  elseif(CMAKE_SIZEOF_VOID_P STREQUAL 4)
-    set(standard_BUILD_ARCHITECTURES "x86")
-    set(standard_BUILD_64 OFF)
-  else()
-    set(standard_BUILD_ARCHITECTURES "x64")
-    set(standard_BUILD_64 ON)
-  endif()
-  message(STATUS "Using architecture: ${standard_BUILD_ARCHITECTURES}")
-
   configure_file(${SELF}/standard-config.cmake.in ${ARG_DIRECTORY}/${ARG_NAME_LOWER}-config.cmake @ONLY)
   configure_file(${SELF}/standard-configVersion.cmake.in ${ARG_DIRECTORY}/${ARG_NAME_LOWER}-configVersion.cmake @ONLY)
 
