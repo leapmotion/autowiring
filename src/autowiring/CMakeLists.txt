@@ -234,12 +234,13 @@ set(Autowiring_Linux_SRCS
 
 add_conditional_sources(Autowiring_SRCS "NOT MSVC" GROUP_NAME "Non-Windows Source" FILES ${Autowiring_Unix_SRCS})
 
-add_conditional_sources(Autowiring_SRCS "WIN32 AND NOT autowiring_BUILD_64"
+add_conditional_sources(
+  Autowiring_SRCS "WIN32 AND standard_BUILD_ARCHITECTURES EQUAL x86"
   GROUP_NAME "ASMx86 Source"
   FILES interlocked.asm
 )
 
-if(WIN32 AND NOT BUILD_64_BIT)
+if(WIN32 AND standard_BUILD_ARCHITECTURES EQUAL "x86")
   enable_language(ASM_MASM)
 endif()
 
