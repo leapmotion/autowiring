@@ -1,0 +1,16 @@
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR arm)
+set(CMAKE_SYSTEM_VERSION 1)
+set(CMAKE_C_COMPILER /usr/bin/arm-linux-gnueabihf-gcc)
+set(CMAKE_CXX_COMPILER /usr/bin/arm-linux-gnueabihf-g++)
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+list(APPEND CMAKE_CXX_FLAGS "-fPIC")
+list(APPEND CMAKE_C_FLAGS "-fPIC")
+
+foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
+  string(TOUPPER ${config} config)
+  string(CONCAT CMAKE_${config}_POSTFIX "${CMAKE_${config}_POSTFIX}" "64")
+endforeach()

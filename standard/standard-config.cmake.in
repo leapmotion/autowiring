@@ -1,0 +1,15 @@
+# - Config file for the @ARG_NAME@ package
+# It defines the following variables
+#  @ARG_NAME@_FOUND - indicates that the module was found
+#  @ARG_NAME@_INCLUDE_DIR - include directories
+
+# Check if local build
+if ("@CMAKE_CURRENT_BINARY_DIR@" STREQUAL CMAKE_CURRENT_LIST_DIR)
+  set(@ARG_NAME@_INCLUDE_DIR "@PROJECT_SOURCE_DIR@")
+  include("${CMAKE_CURRENT_LIST_DIR}/@ARG_NAME@Targets.cmake")
+else()
+  set(@ARG_NAME@_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/include")
+  include("${CMAKE_CURRENT_LIST_DIR}/cmake/@ARG_NAME@Targets.cmake")
+endif()
+
+set(@ARG_NAME@_FOUND TRUE)
