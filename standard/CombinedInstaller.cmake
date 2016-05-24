@@ -17,12 +17,12 @@
 #   VENDOR Vendor            # The name of the library vendor
 #   CONTACT Contact          # The E-mail address of the user point-of-contact
 #   [NAME Name]              # The project name, if different from CMAKE_PROJECT_NAME
-#   [VERSION Version]        # The project version, if different from PROJECT_VERSION 
+#   [VERSION Version]        # The project version, if different from PROJECT_VERSION
 #   [GUID Guid]              # A GUID used to uniquely identify this library
 #                            # Must be of the following form:
 #                            #  {FFFFFFFF-0000-1111-2222-999999999999}
 #                            # Defaults to a sha1 UUID generated from the major version number, vendor, project
-#                            # name, and architecture with the CMake string command.  
+#                            # name, and architecture with the CMake string command.
 #   [LICENSE License]        # The path to the license file, defaults to LICENSE.txt
 #   [README Readme]          # The path to the library description file, defaults to README.md
 #   [CONFIGS Config1 [...]]  # Override the configurations to be packaged, defaults  to CMAKE_CONFIGURATION_TYPES
@@ -37,7 +37,7 @@ function(combined_installer)
   set(options )
   set(oneValueArgs NAME VENDOR CONTACT VERSION GUID LICENSE README WIXFILE)
   set(multiValueArgs CONFIGS)
-  
+
   cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
   if(NOT ARG_VENDOR)
     message(FATAL_ERROR "Vendor must be specified for the installer")
@@ -48,32 +48,32 @@ function(combined_installer)
   default_value(ARG_WIXFILE ${CMAKE_BINARY_DIR}/CMakeFiles/standard_WixFile.wxs)
   default_value(ARG_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
   default_value(ARG_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-  
+
   string(TOLOWER ${ARG_NAME} ARG_NAME_LOWER)
-  
+
   if(NOT ARG_VERSION)
     message(FATAL_ERROR "Could not determine the version number for this project, pass VERSION argument")
   endif()
   parse_version(ARG_VERSION ${ARG_VERSION})
-  
+
   # Generate a GUID if the user didn't specifically request one
   if(NOT ARG_GUID)
     set(namespace_str "${ARG_NAME}##${ARG_VENDOR}##")
-    
+
     # For 0. releases, we use the second digit as the indicator of an API-breaking change
     if(${ARG_VERSION_MAJOR} EQUAL 0)
       string(APPEND namespace_str ${ARG_VERSION_MINOR})
     else()
       string(APPEND namespace_str ${ARG_VERSION_MAJOR})
     endif()
-    
+
     # 64-bit installations get a different upgrade GUID
     string(APPEND namespace_str ${CMAKE_SIZEOF_VOID_P})
-    
+
     # There are also differences from version to version of visual studio
     string(APPEND namespace_str ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION})
 
-    # Now we generate the GUID     
+    # Now we generate the GUID
     string(
       UUID ARG_GUID
       NAMESPACE "20734ed8-cba2-4045-be14-2b3b3786eae2"
@@ -82,7 +82,7 @@ function(combined_installer)
     )
   endif()
 
-  if(WIN32)  
+  if(WIN32)
     configure_file(${SELF}/WixFile.wxs.in ${ARG_WIXFILE})
   endif()
 

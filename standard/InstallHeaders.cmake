@@ -15,7 +15,7 @@ function(install_headers)
   set(multiValueArgs)
 
   cmake_parse_arguments(opt "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-  
+
   string(TOLOWER LOWERNAME CMAKE_PROJECT_NAME)
   default_value(opt_DESTINATION include/${LOWERNAME})
 

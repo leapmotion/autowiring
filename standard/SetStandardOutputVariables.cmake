@@ -40,29 +40,29 @@ function(set_standard_output_variables)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/lib)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
-  
+
   # Postfix on all debug libraries should be "d"
   set(CMAKE_DEBUG_POSTFIX d${CMAKE_DEBUG_POSTFIX})
-  
+
   # 64-bit installations should suffix with 64 regardless of the CPU type (arm or intel)
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
       string(TOUPPER ${config} config)
       string(CONCAT CMAKE_${config}_POSTFIX "${CMAKE_${config}_POSTFIX}" "64")
     endforeach()
-    
-    # We want position-independent code for all 64-bit non-windows builds 
+
+    # We want position-independent code for all 64-bit non-windows builds
     if(NOT WIN32)
       list(APPEND CMAKE_CXX_FLAGS "-fPIC")
       list(APPEND CMAKE_C_FLAGS "-fPIC")
     endif()
   endif()
-  
+
   # Always use c++11 compiler with hidden visibility
   if(NOT WIN32)
     list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -fvisibility=hidden")
   endif()
-  
+
   # Clang needs special additional flags to build with C++11
   if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
     message(STATUS "AppleClang C++11")

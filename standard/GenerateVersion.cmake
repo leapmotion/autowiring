@@ -1,5 +1,5 @@
 # Generator function for $projectname-config.cmake and $projectname-configVersion.cmake
-# 
+#
 # This generator is used to create a version locator file compatible with find_package
 # that is compliant with the SemVer standard and also architecture-aware.  This ensures
 # that find_package for your 32-bit build will not ever accidentally bring in the 64-bit
@@ -21,15 +21,15 @@ function(generate_version)
   set(options )
   set(oneValueArgs DIRECTORY NAME)
   set(multiValueArgs )
-  
+
   cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-  
+
   default_value(ARG_DIRECTORY ${CMAKE_BINARY_DIR})
   default_value(ARG_NAME ${CMAKE_PROJECT_NAME})
   default_value(ARG_VERSION ${${ARG_NAME}_VERSION})
   parse_version(ARG_VERSION ${ARG_VERSION})
   string(TOLOWER ${ARG_NAME} ARG_NAME_LOWER)
-  
+
   # Need to classify the architecture before we run anything else, this lets us easily configure the
   # find version file based on what the architecture was actually built to be
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
@@ -47,10 +47,10 @@ function(generate_version)
     set(standard_BUILD_64 ON)
   endif()
   message(STATUS "Using architecture: ${standard_BUILD_ARCHITECTURES}")
-  
+
   configure_file(${SELF}/standard-config.cmake.in ${ARG_DIRECTORY}/${ARG_NAME_LOWER}-config.cmake @ONLY)
   configure_file(${SELF}/standard-configVersion.cmake.in ${ARG_DIRECTORY}/${ARG_NAME_LOWER}-configVersion.cmake @ONLY)
-  
+
   # Install ${ARG_NAME}-config.cmake and ${ARG_NAME}-configVersion.cmake
   install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/${ARG_NAME}-config.cmake"
@@ -58,7 +58,7 @@ function(generate_version)
     DESTINATION "."
     COMPONENT ${CMAKE_PROJECT_NAME}
   )
-  
+
   # Export library
   export(
     EXPORT ${ARG_NAME}Targets
