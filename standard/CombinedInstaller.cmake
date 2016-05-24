@@ -34,6 +34,8 @@ include(DefaultValue)
 include(ParseVersion)
 
 function(combined_installer)
+  message("Project name is ${CMAKE_PROJECT_NAME}")
+
   set(options )
   set(oneValueArgs NAME VENDOR CONTACT VERSION GUID LICENSE README WIXFILE)
   set(multiValueArgs CONFIGS)
@@ -44,7 +46,9 @@ function(combined_installer)
   endif()
   default_value(ARG_NAME ${CMAKE_PROJECT_NAME})
   default_value(ARG_VERSION ${${ARG_NAME}_VERSION})
-  default_value(ARG_CONFIGS ${CMAKE_CONFIGURATION_TYPES})
+  if(CMAKE_CONFIGURATION_TYPES)
+    default_value(ARG_CONFIGS ${CMAKE_CONFIGURATION_TYPES})
+  endif()
   default_value(ARG_WIXFILE ${CMAKE_BINARY_DIR}/CMakeFiles/standard_WixFile.wxs)
   default_value(ARG_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
   default_value(ARG_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
@@ -103,12 +107,22 @@ function(combined_installer)
   set(CPACK_MONOLITHIC_INSTALL ON)
 
   # Run the script that will grab the debug and release configurations and install them during packaging
-  set(CPACK_INSTALL_COMMANDS
-    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Debug"
-    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Release"
-    "${CMAKE_COMMAND} -DBUILD_TYPE=Debug -P \\\"${SELF}/cmake_package.cmake\\\""
-    "${CMAKE_COMMAND} -DBUILD_TYPE=Release -P \\\"${SELF}/cmake_package.cmake\\\""
-  )
+  if(ARG_CONFIGS)
+    set(CPACK_INSTALL_COMMANDS "")
+    foreach(ONE_CONFIG IN LISTS ARG_CONFIGS)
+      string(
+        APPEND
+        CPACK_INSTALL_COMMANDS
+        "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config ${ONE_CONFIG}"
+        "${CMAKE_COMMAND} -DBUILD_TYPE=${ONE_CONFIG} -P \\\"${SELF}/cmake_package.cmake\\\""
+      )
+    endforeach()
+  else()
+    set(CPACK_INSTALL_COMMANDS
+      "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}"
+      "${CMAKE_COMMAND} -P \\\"${SELF}/cmake_package.cmake\\\""
+    )
+  endif()
 
   # Pick the generator in an appropriate way
   if(WIN32)
