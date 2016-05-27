@@ -110,7 +110,7 @@ function(combined_installer)
   if(ARG_CONFIGS)
     set(CPACK_INSTALL_COMMANDS "")
     foreach(ONE_CONFIG IN LISTS ARG_CONFIGS)
-      string(
+      list(
         APPEND
         CPACK_INSTALL_COMMANDS
         "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config ${ONE_CONFIG}"
