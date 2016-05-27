@@ -71,20 +71,20 @@ macro(set_standard_output_variables)
 
     # We want position-independent code for all 64-bit non-windows builds
     if(NOT WIN32)
-      string(APPEND CMAKE_CXX_FLAGS "-fPIC ")
-      string(APPEND CMAKE_C_FLAGS "-fPIC ")
+      string(APPEND CMAKE_CXX_FLAGS " -fPIC")
+      string(APPEND CMAKE_C_FLAGS " -fPIC")
     endif()
   endif()
 
   # Always use c++11 compiler with hidden visibility
   if(NOT WIN32)
-    string(APPEND CMAKE_CXX_FLAGS "-std=c++11 -fvisibility=hidden ")
+    string(APPEND CMAKE_CXX_FLAGS " -std=c++11 -fvisibility=hidden")
   endif()
 
   # Clang needs special additional flags to build with C++11
   if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
     message(STATUS "AppleClang C++11")
-    string(APPEND CMAKE_CXX_FLAGS "-stdlib=libc++ ")
+    string(APPEND CMAKE_CXX_FLAGS " -stdlib=libc++")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     message(STATUS "Clang C++11")
