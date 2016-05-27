@@ -322,6 +322,7 @@ void AutoNetServerImpl::HandleUnsubscribe(websocketpp::connection_hdl hdl) {
 int AutoNetServerImpl::ResolveContextID(CoreContext* ctxt) {
   static int counter = 0;
 
+  std::lock_guard<autowiring::spin_lock> lk(m_lock);
   if(m_ContextIDs.find(ctxt) == m_ContextIDs.end()){
     m_ContextIDs[ctxt] = counter;
     m_ContextPtrs[counter] = ctxt;
@@ -333,6 +334,7 @@ int AutoNetServerImpl::ResolveContextID(CoreContext* ctxt) {
 }
 
 CoreContext* AutoNetServerImpl::ResolveContextID(int id) {
+  std::lock_guard<autowiring::spin_lock> lk(m_lock);
   return m_ContextPtrs.at(id);
 }
 

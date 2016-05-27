@@ -135,7 +135,8 @@ protected:
   // Set of all subscribers
   std::set<AutoNetTransportHandler::connection_hdl, std::owner_less<AutoNetTransportHandler::connection_hdl>> m_Subscribers;
 
-  // one-to-one map of contexts to integers
+  // one-to-one map of contexts to integers, and a lock because we use this in an unsynchronized setting
+  autowiring::spin_lock m_lock;
   std::map<CoreContext*, int> m_ContextIDs;
   std::map<int, CoreContext*> m_ContextPtrs;
 
