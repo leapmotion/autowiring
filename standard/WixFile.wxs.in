@@ -47,7 +47,7 @@
   <Fragment>
     <DirectoryRef Id="TARGETDIR">
       <Component Id="CMakeRegistration" Guid="$(var.CPACK_WIX_PRODUCT_GUID)">
-        <RegistryKey Root="HKLM" Key="Software\Kitware\CMake\Packages\autowiring">
+        <RegistryKey Root="HKLM" Key="Software\Kitware\CMake\Packages\@ARG_NAME_LOWER@">
           <RegistryValue Type="string" Name="$(var.CPACK_WIX_PRODUCT_GUID)" Value="[INSTALL_ROOT]"/>
         </RegistryKey>
       </Component>
