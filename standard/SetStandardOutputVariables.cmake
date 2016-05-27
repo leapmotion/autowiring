@@ -68,12 +68,11 @@ macro(set_standard_output_variables)
       string(TOUPPER ${config} config)
       string(CONCAT CMAKE_${config}_POSTFIX "${CMAKE_${config}_POSTFIX}" "64")
     endforeach()
+  endif()
 
-    # We want position-independent code for all 64-bit non-windows builds
-    if(NOT WIN32)
-      string(APPEND CMAKE_CXX_FLAGS " -fPIC")
-      string(APPEND CMAKE_C_FLAGS " -fPIC")
-    endif()
+  # We want -fPIC code for all 64-bit non-windows builds
+  if(NOT WIN32)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
   endif()
 
   # Always use c++11 compiler with hidden visibility
