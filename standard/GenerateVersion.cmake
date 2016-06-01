@@ -26,8 +26,7 @@ function(generate_version)
 
   default_value(ARG_DIRECTORY ${CMAKE_BINARY_DIR})
   default_value(ARG_NAME ${CMAKE_PROJECT_NAME})
-  default_value(ARG_VERSION ${${ARG_NAME}_VERSION})
-  parse_version(ARG_VERSION ${ARG_VERSION})
+  parse_version(ARG ${${ARG_NAME}_VERSION})
   string(TOLOWER ${ARG_NAME} ARG_NAME_LOWER)
 
   configure_file(${SELF}/standard-config.cmake.in ${ARG_DIRECTORY}/${ARG_NAME_LOWER}-config.cmake @ONLY)
