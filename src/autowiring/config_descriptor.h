@@ -270,7 +270,7 @@ namespace autowiring {
     }
 
   private:
-    std::vector<const metadata_base*> empty{};
+    std::vector<const metadata_base*> empty;
     std::unordered_map<auto_id, std::vector<const metadata_base*>> m_mdMap;
 
     // Initializes our default value
