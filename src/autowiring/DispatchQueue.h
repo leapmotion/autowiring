@@ -47,7 +47,7 @@ protected:
   // Current version cap:
   std::atomic<uint64_t> m_version{1};
 
-  // The dispatch queue proper.  A vector is used, here, not a queue, because this collection is frequently emptied.
+  // The dispatch queue proper.  We use a manual linked list here for better performance.
   autowiring::DispatchThunkBase* m_pHead = nullptr;
   autowiring::DispatchThunkBase* m_pTail = nullptr;
 
