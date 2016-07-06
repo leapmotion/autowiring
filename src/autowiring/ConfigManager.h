@@ -150,7 +150,7 @@ namespace autowiring {
     /// Invokes the specified callback when a piece of metadata is attached to any object
     /// </summary>
     /// <returns>A shared pointer containing the added watcher</returns>
-    /// <remarks>
+    /// <remarks><![CDATA[
     /// Two callable signatures are allowed.  The first is the full context variant, which
     /// provides the configuration filed.  Here, M is the metadata type:
     ///
@@ -159,7 +159,7 @@ namespace autowiring {
     /// The second is the compact variant, for which only the raw metadata is provided:
     ///
     /// [] (const M& slider)
-    /// </remarks>
+    /// ]]></remarks>
     template<typename Fn>
     std::shared_ptr<WhenWatcher> WhenFn(Fn&& fn) {
       auto retVal = std::make_shared<internal::WhenWatcherT<Fn, decltype(&Fn::operator())>>(std::forward<Fn>(fn));
