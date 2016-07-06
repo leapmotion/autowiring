@@ -65,6 +65,17 @@ namespace {
     }
   };
 
+  class DuplicateClass {
+  public:
+    autowiring::config<std::string> a { "Hello world" };
+
+    static autowiring::config_descriptor GetConfigDescriptor(void) {
+      return{
+        { "a", "Field A description 2", &DuplicateClass::a, aw::default_value<std::string>("Hello universe!")}
+      };
+    }
+  };
+
   class BadClass {
   public:
     autowiring::config_descriptor GetConfigDescriptor(void) { return{}; }
@@ -82,6 +93,11 @@ static_assert(aw::has_bind<multi_meta, aw::config_field, int>::value, "Contextua
 TEST_F(AutoConfigTest, ConfigFieldAssign) {
   autowiring::config<std::string> x{ "Hello world!" };
   ASSERT_TRUE(x.is_dirty()) << "Config values are assumed to be initially dirty";
+}
+
+TEST_F(AutoConfigTest, ConfigDefault) {
+  MyConfigurableClass c;
+  ASSERT_EQ(4444, c.bUnsigned); //The default value provided in the descriptor will override the initialized value.
 }
 
 TEST_F(AutoConfigTest, String) {
@@ -189,6 +205,44 @@ TEST_F(AutoConfigTest, ContextSetAfter) {
 
   AutoRequired<MyConfigurableClass> mcc;
   ASSERT_EQ(mcc->b, 10442);
+}
+
+TEST_F(AutoConfigTest, ContextGetSimple) {
+  AutoCurrentContext ctxt;
+  AutoRequired<MyConfigurableClass> mcc;
+
+  mcc->b = 10442;
+  EXPECT_EQ("929", ctxt->Config.Get("b")) << "Non-Observable value had an unexpected value.";
+
+  ctxt->Config.Set("b", "10443");
+  EXPECT_EQ(10443, mcc->b) << "Non-Observable value set in the context not modified in the backing value.";
+}
+
+TEST_F(AutoConfigTest, ContextGetObservable) {
+  AutoCurrentContext ctxt;
+  AutoRequired<MyConfigurableClass> mcc;
+
+  mcc->obs = 10442;
+  EXPECT_EQ("10442", ctxt->Config.Get("obs")) << "Observable value set directly not updated in the context.";
+
+  ctxt->Config.Set("b", "10443");
+  EXPECT_EQ(10443, mcc->b) << "Non-Observable value set in the context not modified in the backing value.";
+}
+
+TEST_F(AutoConfigTest, ContextMultiReference) {
+  AutoCurrentContext ctxt;
+  AutoRequired<MyConfigurableClass> mcc;
+  AutoRequired<DuplicateClass> dc;
+
+  const auto expectStr1 = "Hello Multiverse";
+  mcc->a = expectStr1;
+  EXPECT_STREQ(expectStr1, dc->a->c_str());
+  EXPECT_STREQ(expectStr1, ctxt->Config.Get("a").c_str());
+
+  const auto expectStr2 = "Hello Universe 616";
+  ctxt->Config.Set("a", expectStr2);
+  EXPECT_STREQ(expectStr2, mcc->a->c_str());
+  EXPECT_STREQ(expectStr2, dc->a->c_str());
 }
 
 namespace {
