@@ -13,9 +13,9 @@ TEST_F(OptionalTest, PrimitiveCheck) {
   ASSERT_TRUE(x);
   x = 0;
   ASSERT_TRUE(x);
+  ASSERT_EQ((void*)&x, (void*)&x.value()) << "Expected value to be at the top of optional";
   x = {};
   ASSERT_FALSE(x);
-  ASSERT_EQ((void*)&x, (void*)&x.value()) << "Expected value to be at the top of optional";
 }
 
 TEST_F(OptionalTest, DestructionCheck) {
