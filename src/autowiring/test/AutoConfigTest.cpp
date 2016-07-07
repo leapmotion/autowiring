@@ -96,8 +96,11 @@ TEST_F(AutoConfigTest, ConfigFieldAssign) {
 }
 
 TEST_F(AutoConfigTest, ConfigDefault) {
+  // Default value will be whatever bUnsigned is assigned to in the inline initializer.  This is
+  // because MyConfigurableClass is not actually in a context, which means Autowiring will not
+  // attempt to configure it.
   MyConfigurableClass c;
-  ASSERT_EQ(4444, c.bUnsigned); //The default value provided in the descriptor will override the initialized value.
+  ASSERT_EQ(92999, c.bUnsigned);
 }
 
 TEST_F(AutoConfigTest, String) {
