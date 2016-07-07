@@ -233,7 +233,8 @@ TEST_F(AutoConfigTest, ContextGetObservable) {
   AutoRequired<MyConfigurableClass> mcc;
 
   mcc->obs = 10442;
-  EXPECT_EQ("10442", ctxt->Config.Get("obs")) << "Observable value set directly not updated in the context.";
+  const std::string& val = ctxt->Config.Get("obs");
+  EXPECT_EQ("10442", val) << "Observable value set directly not updated in the context.";
 
   ctxt->Config.Set("b", "10443");
   EXPECT_EQ(10443, mcc->b) << "Non-Observable value set in the context not modified in the backing value.";

@@ -40,16 +40,13 @@ void ConfigManager::Register(void* pObj, const config_descriptor& desc) {
         // We have a value already.  Force the attachment's field to take on the value we
         // are storing locally.
         attachment.configField->marshaller->unmarshal(attachment.pField, entry.value->c_str());
-      else if (field_desc.default_value) {
-        // Descriptor provides a default value, and we do not have a value ourselves in our own
+      else {
+        // Descriptor must provide a default value, and we do not have a value ourselves in our own
         // local config store.  In this case, we take the default value, and unconditionally overwrite
         // the value currently present on the object.
         entry.value = attachment.configField->marshaller->marshal(attachment.configField->default_value.ptr());
         field_desc.marshaller->copy(attachment.pField, attachment.configField->default_value.ptr());
       }
-      ///else
-        // In this case, no value stored locally, no default value either.  We can't really do much
-        // except to default this entry.
 
       // Deferred signalling on all watcher collections.  This part causes When handlers to be invoked.
       const std::vector<const metadata_base*>& all_metadata = attachment.bound_metadata->get_list();

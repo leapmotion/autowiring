@@ -231,7 +231,7 @@ namespace autowiring {
     // Offset from the base of the object to the member to be serialized
     size_t offset = 0;
 
-    // Default value for this type, if one exists:
+    // Default value for this type, must not be empty:
     AnySharedPointer default_value;
 
     // Pointer to the required marshaller singleton:
