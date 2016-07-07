@@ -92,6 +92,8 @@ namespace autowiring {
       std::string retVal;
       type val = *static_cast<const type*>(ptr);
       bool pos = 0 < val;
+      if (!pos)
+        val *= ~0;
       for (; val; val /= 10) {
         retVal.push_back(static_cast<char>(val % 10 + '0'));
       }

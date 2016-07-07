@@ -42,8 +42,8 @@ public:
   }
 
 private:
-  bool m_valid = false;
   uint8_t val[sizeof(T)];
+  bool m_valid = false;
 
   T& _value(void) { return *reinterpret_cast<T*>(val); }
   const T& _value(void) const { return *reinterpret_cast<const T*>(val); }
