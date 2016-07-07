@@ -30,6 +30,19 @@ namespace autowiring {
     /// <param name="szValue">The string value to be converted</param>
     /// <param name="ptr">A pointer to the memory region where the output will be stored</param>
     virtual void unmarshal(void* ptr, const char* szValue) const = 0;
+
+    /// <summary>
+    /// Copies the value on the right-hand side to the left-hand side without translation.
+    /// </summary>
+    /// <param name="lhs">The destination for the assignment</param>
+    /// <param name="rhs">The source of the copy</param>
+    /// <remarks>
+    /// As with all other methods on this interface, this operation assumes that both objects
+    /// are fully initialized and are pointers to the correct type.
+    ///
+    /// Implementations of this method make use of the assignment operator to perform the copy.
+    /// </remarks>
+    virtual void copy(void* lhs, const void* rhs) const = 0;
   };
 
   /// <summary>
@@ -57,6 +70,10 @@ namespace autowiring {
         *static_cast<bool*>(ptr) = false;
       else
         throw std::invalid_argument("Boolean unmarshaller expects true or false keyword");
+    }
+
+    void copy(void* lhs, const void* rhs) const override {
+      *static_cast<bool*>(lhs) = *static_cast<const bool*>(rhs);
     }
   };
 
@@ -107,6 +124,10 @@ namespace autowiring {
       }
       if(negative)
         value *= -1;
+    }
+
+    void copy(void* lhs, const void* rhs) const override {
+      *static_cast<T*>(lhs) = *static_cast<const T*>(rhs);
     }
   };
 
@@ -210,6 +231,10 @@ namespace autowiring {
       if (negative)
         value *= -1.0f;
     }
+
+    void copy(void* lhs, const void* rhs) const override {
+      *static_cast<T*>(lhs) = *static_cast<const T*>(rhs);
+    }
   };
 
   /// <summary>
@@ -244,6 +269,10 @@ namespace autowiring {
       interior.unmarshal(&value, szValue);
       *static_cast<type*>(ptr) = std::move(value);
     }
+
+    void copy(void* lhs, const void* rhs) const override {
+      *static_cast<std::atomic<T>*>(lhs) = static_cast<const std::atomic<T>*>(rhs)->load();
+    }
   };
 
   template<>
@@ -258,6 +287,10 @@ namespace autowiring {
 
     void unmarshal(void* ptr, const char* szValue) const override {
       *static_cast<std::string*>(ptr) = szValue;
+    }
+
+    void copy(void* lhs, const void* rhs) const override {
+      *static_cast<std::string*>(lhs) = *static_cast<const std::string*>(rhs);
     }
   };
 }

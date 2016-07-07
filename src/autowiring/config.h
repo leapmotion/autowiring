@@ -115,5 +115,9 @@ namespace autowiring {
       interior.unmarshal(&value, szValue);
       *static_cast<type*>(ptr) = std::move(value);
     }
+
+    void copy(void* lhs, const void* rhs) const override {
+      *static_cast<config<T>*>(lhs) = *static_cast<const config<T>*>(rhs);
+    }
   };
 }

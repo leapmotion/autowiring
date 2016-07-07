@@ -29,6 +29,9 @@ public:
     onChanged(std::move(rhs.onChanged)),
     onBeforeChanged(std::move(rhs.onBeforeChanged))
   {}
+  observable(const observable& rhs) :
+    val(rhs.val)
+  {}
 
   autowiring::signal<void()> onChanged;
   autowiring::signal<void(const T& oldValue, const T& newValue)> onBeforeChanged;
@@ -58,6 +61,11 @@ public:
     return *this;
   }
 
+  observable& operator=(const observable& rhs)
+  {
+    return *this = rhs.get();
+  }
+
   observable& operator=(T&& rhs) {
     onBeforeChanged(val, rhs);
     val = std::move(rhs);
@@ -68,10 +76,10 @@ public:
 
 
 template<typename T>
-struct marshaller<autowiring::observable<T>> :
+struct marshaller<observable<T>> :
   marshaller_base
 {
-  typedef autowiring::observable<T> type;
+  typedef observable<T> type;
 
   // Marshaller for the interior type
   marshaller<T> interior;
@@ -84,6 +92,10 @@ struct marshaller<autowiring::observable<T>> :
     T value;
     interior.unmarshal(&value, szValue);
     *static_cast<type*>(ptr) = std::move(value);
+  }
+
+  void copy(void* lhs, const void* rhs) const override {
+    *static_cast<observable<T>*>(lhs) = *static_cast<const observable<T>*>(rhs);
   }
 };
 
