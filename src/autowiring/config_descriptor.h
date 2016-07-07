@@ -302,6 +302,10 @@ namespace autowiring {
 
     static t_mpType MakeFields(const std::initializer_list<config_field>& fields);
 
+    config_descriptor(void);
+    config_descriptor(config_descriptor&& rhs) :
+      fields(std::move(rhs.fields))
+    {}
     config_descriptor(std::initializer_list<config_field> fields) :
       fields(MakeFields(fields))
     {}

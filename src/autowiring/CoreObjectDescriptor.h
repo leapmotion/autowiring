@@ -52,7 +52,7 @@ struct CoreObjectDescriptor {
     pBasicThread(autowiring::fast_pointer_cast<::BasicThread>(value)),
     pFilter(autowiring::fast_pointer_cast<::ExceptionFilter>(value)),
     pBoltBase(autowiring::fast_pointer_cast<::BoltBase>(value)),
-    pConfigDesc(&config_registry_entry<T>::desc),
+    pConfigDesc(&config_registry_entry<T>::entry.descriptor),
     primitiveOffset(
       reinterpret_cast<size_t>(
         static_cast<T*>(

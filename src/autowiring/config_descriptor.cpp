@@ -11,6 +11,8 @@ config_descriptor::t_mpType autowiring::config_descriptor::MakeFields(const std:
   return retVal;
 }
 
+config_descriptor::config_descriptor(void) {}
+
 const config_field& config_descriptor::get(size_t offset) const {
   for (const auto& entry : fields)
     if (entry.second.offset == offset)

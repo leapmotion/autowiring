@@ -244,3 +244,14 @@ TEST_F(AutoConfigTest, WhenFn) {
 
   ASSERT_EQ(1UL, mgr->sliderReg.size()) << "Slider registration count did not match expectations";
 }
+
+TEST_F(AutoConfigTest, CanEnumRegistry) {
+  size_t nFound = 0;
+  for (const config_descriptor& desc : autowiring::config_registry{}) {
+    for (const auto& field : desc.fields) {
+      if (!std::strcmp("crazyjenkins", field.second.name))
+        nFound++;
+    }
+  }
+  ASSERT_EQ(1, nFound) << "Failed to find a descriptor field in the total descriptor enumeration";
+}
