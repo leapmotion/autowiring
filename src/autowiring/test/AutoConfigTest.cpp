@@ -246,12 +246,19 @@ TEST_F(AutoConfigTest, ContextMultiReference) {
   AutoRequired<DuplicateClass> dc;
 
   const auto expectStr1 = "Hello Multiverse";
-  mcc->a = expectStr1;
-  ASSERT_STREQ(expectStr1, dc->a->c_str());
-  ASSERT_STREQ(expectStr1, ctxt->Config.Get("a").c_str());
+  mcc->a.force_assign(expectStr1);
+  ASSERT_STREQ("Hello world", dc->a->c_str());
+  ASSERT_STREQ("Hello world!", ctxt->Config.Get("a").c_str());
+
+  ASSERT_TRUE(mcc->a.clear_dirty());
+  ASSERT_TRUE(dc->a.clear_dirty());
 
   const auto expectStr2 = "Hello Universe 616";
   ctxt->Config.Set("a", expectStr2);
+  ASSERT_TRUE(mcc->a.is_dirty());
+  ASSERT_TRUE(dc->a.is_dirty());
+  mcc->a.clear_dirty();
+  dc->a.clear_dirty();
   ASSERT_STREQ(expectStr2, mcc->a->c_str());
   ASSERT_STREQ(expectStr2, dc->a->c_str());
 }

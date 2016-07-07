@@ -75,6 +75,15 @@ namespace autowiring {
     bool operator==(const T& rhs) const { return get() == rhs; }
     bool operator!=(const T& rhs) const { return get() != rhs; }
 
+    /// <summary>
+    /// Forces an update to the value stored in this field
+    /// </summary>
+    /// <remarks>
+    ///
+    /// </remarks>
+    void force_assign(T rhs) { *this = std::move(rhs); }
+
+  private:
     config& operator=(const config& value) {
       // Local copy to hold the spin lock a minimum amount of time
       return *this = value.get();
@@ -92,6 +101,9 @@ namespace autowiring {
       dirty = true;
       return *this;
     }
+
+    template<typename T>
+    friend struct marshaller;
   };
 
   template<typename T>

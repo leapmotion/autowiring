@@ -15,6 +15,8 @@ namespace autowiring {
   template<typename T>
   struct marshaller;
 
+  class ConfigManager;
+
   /// <summary>
   /// The interface all marshallers must support
   /// </summary>
@@ -43,6 +45,20 @@ namespace autowiring {
     /// Implementations of this method make use of the assignment operator to perform the copy.
     /// </remarks>
     virtual void copy(void* lhs, const void* rhs) const = 0;
+
+    /// <summary>
+    /// Notification passed by the ConfigManager when a field has been attached
+    /// </summary>
+    /// <remarks>
+    /// When a configurable object is added to a context, each field in the object is processed one
+    /// at a time and then bound to the context's ConfigManager.  After being bound, each field's
+    /// marshaller is given the opportunity to consider the newly created field together with the
+    /// ConfigManager.
+    ///
+    /// One use case for this is allowing config fields to back-propagate changes on themselves to
+    /// the owning ConfigManager.
+    /// </remarks>
+    virtual void attach(ConfigManager& manager, void* pField) const {};
   };
 
   /// <summary>
