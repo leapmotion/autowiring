@@ -232,7 +232,7 @@ namespace {
 
     static autowiring::config_descriptor GetConfigDescriptor(void) {
       return{
-        aw::config_field { "b", "Field B description", &ClassWithBoundsField::b, 929, slider{}, aw::bounds<int>{ 10, 423 } },
+        aw::config_field { "crazyjenkins", "Field B description", &ClassWithBoundsField::b, 929, slider{}, aw::bounds<int>{ 10, 423 } },
       };
     }
   };
