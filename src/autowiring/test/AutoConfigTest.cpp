@@ -95,6 +95,13 @@ TEST_F(AutoConfigTest, ConfigFieldAssign) {
   ASSERT_TRUE(x.is_dirty()) << "Config values are assumed to be initially dirty";
 }
 
+TEST_F(AutoConfigTest, ConfigFieldSetBad) {
+  MyConfigurableClass c;
+
+  std::string expected{ "There is no config" };
+  ASSERT_ANY_THROW(autowiring::ConfigSet("z", c, expected.c_str())) << "Tried to set an invalid config key and did not fail.";
+}
+
 TEST_F(AutoConfigTest, ConfigDefault) {
   // Default value will be whatever bUnsigned is assigned to in the inline initializer.  This is
   // because MyConfigurableClass is not actually in a context, which means Autowiring will not
