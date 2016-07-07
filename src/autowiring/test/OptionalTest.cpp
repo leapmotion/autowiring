@@ -6,15 +6,6 @@ class OptionalTest :
   public testing::Test
 {};
 
-namespace {
-  class AUTO_ALIGNAS(32) MyAlignedClass {};
-}
-
-static_assert(
-  AUTO_ALIGNOF(optional<MyAlignedClass>) == 32,
-  "Automatic alignment did not occur for an aligned type as expected"
-);
-
 TEST_F(OptionalTest, PrimitiveCheck) {
   optional<int> x;
   ASSERT_FALSE(x);
