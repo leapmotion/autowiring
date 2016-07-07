@@ -4,7 +4,7 @@
 
 using namespace autowiring;
 
-std::atomic<config_registry_entry_base*> autowiring::config_registry::g_pFirstEntry;
+config_registry_entry_base* autowiring::config_registry::g_pFirstEntry;
 const config_registry_entry_default config_registry_entry_default::entry = {};
 
 config_registry_entry_default::config_registry_entry_default(void) = default;
@@ -17,6 +17,6 @@ config_registry_entry_base::config_registry_entry_base(config_descriptor&& descr
 
 const config_registry_entry_base* config_registry::Link(config_registry_entry_base& entry) {
   config_registry_entry_base* pFlink = g_pFirstEntry;
-  while (!g_pFirstEntry.compare_exchange_weak(pFlink, &entry));
+  g_pFirstEntry = &entry;
   return pFlink;
 }

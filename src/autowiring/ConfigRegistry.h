@@ -86,9 +86,15 @@ namespace autowiring {
 
   private:
     // Application linked list head
-    static std::atomic<config_registry_entry_base*> g_pFirstEntry;
+    static config_registry_entry_base* g_pFirstEntry;
 
   public:
+    /// <summary>
+    /// Adds a link to the specified registry entry
+    /// </summary>
+    /// <remarks>
+    /// This routine is not thread safe, and must be externally synchronized
+    /// </remarks>
     static const config_registry_entry_base* Link(config_registry_entry_base& entry);
 
     // Iterator support logic:
