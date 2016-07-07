@@ -222,10 +222,10 @@ TEST_F(AutoConfigTest, ContextGetSimple) {
   AutoRequired<MyConfigurableClass> mcc;
 
   mcc->b = 10442;
-  EXPECT_EQ("929", ctxt->Config.Get("b")) << "Non-Observable value had an unexpected value.";
+  ASSERT_EQ("929", ctxt->Config.Get("b")) << "Non-Observable value had an unexpected value.";
 
   ctxt->Config.Set("b", "10443");
-  EXPECT_EQ(10443, mcc->b) << "Non-Observable value set in the context not modified in the backing value.";
+  ASSERT_EQ(10443, mcc->b) << "Non-Observable value set in the context not modified in the backing value.";
 }
 
 TEST_F(AutoConfigTest, ContextGetObservable) {
@@ -234,10 +234,10 @@ TEST_F(AutoConfigTest, ContextGetObservable) {
 
   mcc->obs = 10442;
   const std::string& val = ctxt->Config.Get("obs");
-  EXPECT_EQ("10442", val) << "Observable value set directly not updated in the context.";
+  ASSERT_EQ("10442", val) << "Observable value set directly not updated in the context.";
 
   ctxt->Config.Set("b", "10443");
-  EXPECT_EQ(10443, mcc->b) << "Non-Observable value set in the context not modified in the backing value.";
+  ASSERT_EQ(10443, mcc->b) << "Non-Observable value set in the context not modified in the backing value.";
 }
 
 TEST_F(AutoConfigTest, ContextMultiReference) {
@@ -247,13 +247,13 @@ TEST_F(AutoConfigTest, ContextMultiReference) {
 
   const auto expectStr1 = "Hello Multiverse";
   mcc->a = expectStr1;
-  EXPECT_STREQ(expectStr1, dc->a->c_str());
-  EXPECT_STREQ(expectStr1, ctxt->Config.Get("a").c_str());
+  ASSERT_STREQ(expectStr1, dc->a->c_str());
+  ASSERT_STREQ(expectStr1, ctxt->Config.Get("a").c_str());
 
   const auto expectStr2 = "Hello Universe 616";
   ctxt->Config.Set("a", expectStr2);
-  EXPECT_STREQ(expectStr2, mcc->a->c_str());
-  EXPECT_STREQ(expectStr2, dc->a->c_str());
+  ASSERT_STREQ(expectStr2, mcc->a->c_str());
+  ASSERT_STREQ(expectStr2, dc->a->c_str());
 }
 
 namespace {
