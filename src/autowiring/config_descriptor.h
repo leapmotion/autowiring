@@ -195,6 +195,9 @@ namespace autowiring {
     return { std::forward<T>(t) };
   }
 
+  /// <summary>
+  /// Represents a single field in a context member that may be configured
+  /// </summary>
   struct config_field {
     config_field(void) = default;
     config_field(const config_field& rhs) { *this = rhs; }
@@ -231,10 +234,14 @@ namespace autowiring {
     // Offset from the base of the object to the member to be serialized
     size_t offset = 0;
 
-    // Default value for this type, must not be empty:
+    // Default value for this type.  Must not be empty, but there are no guarantees
+    // about the type of the underlying object.  In particular, the object will be
+    // initialized, but it may be value-initialized; for integer types this means
+    // it may contain random data.
     AnySharedPointer default_value;
 
-    // Pointer to the required marshaller singleton:
+    // Pointer to the required marshaller singleton.  This allows us to move to and
+    // from string representations of this field.
     const marshaller_base* marshaller = nullptr;
 
     // All of the metadata attached to this field
