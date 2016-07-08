@@ -4,6 +4,7 @@
 #include <autowiring/config.h>
 #include <autowiring/ConfigRegistry.h>
 #include <autowiring/observable.h>
+#include <cstring>
 
 namespace aw = autowiring;
 
