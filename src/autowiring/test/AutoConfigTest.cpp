@@ -228,18 +228,6 @@ TEST_F(AutoConfigTest, ContextGetSimple) {
   ASSERT_EQ(10443, mcc->b) << "Non-Observable value set in the context not modified in the backing value.";
 }
 
-TEST_F(AutoConfigTest, ContextGetObservable) {
-  AutoCurrentContext ctxt;
-  AutoRequired<MyConfigurableClass> mcc;
-
-  mcc->obs = 10442;
-  const std::string& val = ctxt->Config.Get("obs");
-  ASSERT_EQ("10442", val) << "Observable value set directly not updated in the context.";
-
-  ctxt->Config.Set("b", "10443");
-  ASSERT_EQ(10443, mcc->b) << "Non-Observable value set in the context not modified in the backing value.";
-}
-
 TEST_F(AutoConfigTest, ContextMultiReference) {
   AutoCurrentContext ctxt;
   AutoRequired<MyConfigurableClass> mcc;
