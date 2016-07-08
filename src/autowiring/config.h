@@ -102,7 +102,7 @@ namespace autowiring {
       return *this;
     }
 
-    template<typename T>
+    template<typename U>
     friend struct marshaller;
   };
 
