@@ -4,6 +4,7 @@
 #include <autowiring/config.h>
 #include <autowiring/ConfigRegistry.h>
 #include <autowiring/observable.h>
+#include <cstring>
 
 namespace aw = autowiring;
 
@@ -285,7 +286,7 @@ namespace {
 
     static autowiring::config_descriptor GetConfigDescriptor(void) {
       return{
-        aw::config_field { "b", "Field B description", &ClassWithBoundsField::b, 929, slider{}, aw::bounds<int>{ 10, 423 } },
+        aw::config_field { "crazyjenkins", "Field B description", &ClassWithBoundsField::b, 929, slider{}, aw::bounds<int>{ 10, 423 } },
       };
     }
   };
@@ -296,4 +297,15 @@ TEST_F(AutoConfigTest, WhenFn) {
   AutoRequired<ClassWithBoundsField> cwbf;
 
   ASSERT_EQ(1UL, mgr->sliderReg.size()) << "Slider registration count did not match expectations";
+}
+
+TEST_F(AutoConfigTest, CanEnumRegistry) {
+  size_t nFound = 0;
+  for (const config_descriptor& desc : autowiring::config_registry{}) {
+    for (const auto& field : desc.fields) {
+      if (!std::strcmp("crazyjenkins", field.second.name))
+        nFound++;
+    }
+  }
+  ASSERT_EQ(1, nFound) << "Failed to find a descriptor field in the total descriptor enumeration";
 }
