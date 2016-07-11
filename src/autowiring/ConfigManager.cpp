@@ -19,11 +19,16 @@ void ConfigManager::Register(void* pObj, const config_descriptor& desc) {
 
   {
     std::lock_guard<autowiring::spin_lock> lk(m_lock);
+
+    // This goes through all of the fields in the user-specified descriptor.  These fields describe offsets
+    // in pObj, and each one could require us to either populate offsets in pObj with values that we are
+    // keeping in m_config, or it could require us to update m_config based on metadata described by these
+    // fields.
     for (const auto& field : desc.fields) {
       const config_field& field_desc = field.second;
 
-      // We need to attach this field to the corresponding configuration entry,
-      // we perform the attachment by name
+      // We need to attach this field to the corresponding configuration entry, we perform the attachment by
+      // name.  After we have our entry we can fill it or use it to fill other objects as needed.
       Entry& entry = m_config[field_desc.name];
       entry.attached.emplace_back(
         field_desc,
@@ -32,9 +37,16 @@ void ConfigManager::Register(void* pObj, const config_descriptor& desc) {
 
       Entry::Attachment& attachment = entry.attached.back();
       if (entry.value)
-        // This configuration entry specifies a default value, we will take that value and store
-        // it in the manager to be advertised during query
+        // We have a value already.  Force the attachment's field to take on the value we
+        // are storing locally.
         attachment.configField->marshaller->unmarshal(attachment.pField, entry.value->c_str());
+      else {
+        // Descriptor must provide a default value, and we do not have a value ourselves in our own
+        // local config store.  In this case, we take the default value, and unconditionally overwrite
+        // the value currently present on the object.
+        entry.value = attachment.configField->marshaller->marshal(attachment.configField->default_value.ptr());
+        field_desc.marshaller->copy(attachment.pField, attachment.configField->default_value.ptr());
+      }
 
       // Deferred signalling on all watcher collections.  This part causes When handlers to be invoked.
       const std::vector<const metadata_base*>& all_metadata = attachment.bound_metadata->get_list();
