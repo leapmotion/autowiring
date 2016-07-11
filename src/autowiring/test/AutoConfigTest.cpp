@@ -252,7 +252,7 @@ TEST_F(AutoConfigTest, ContextMultiReference) {
   ASSERT_STREQ(expectStr2, dc->a->c_str());
 }
 
-TEST_F(AutoConfigTest, SubContextPropogation) {
+TEST_F(AutoConfigTest, SubContextPropagation) {
   AutoCurrentContext ctxt;
   AutoCreateContext subCtxt(ctxt);
 
@@ -262,7 +262,7 @@ TEST_F(AutoConfigTest, SubContextPropogation) {
   ASSERT_EQ(mcc->b, 10442) << "Setting of the \'b\' config was not propogated to the sub context.";
 }
 
-TEST_F(AutoConfigTest, SubContextDelayedPropogation) {
+TEST_F(AutoConfigTest, SubContextDelayedPropagation) {
   AutoCurrentContext ctxt;
   AutoCreateContext subCtxt(ctxt);
 
