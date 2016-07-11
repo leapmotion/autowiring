@@ -252,6 +252,26 @@ TEST_F(AutoConfigTest, ContextMultiReference) {
   ASSERT_STREQ(expectStr2, dc->a->c_str());
 }
 
+TEST_F(AutoConfigTest, SubContextPropogation) {
+  AutoCurrentContext ctxt;
+  AutoCreateContext subCtxt(ctxt);
+
+  std::shared_ptr<MyConfigurableClass> mcc = subCtxt->Inject<MyConfigurableClass>();
+  ctxt->Config.Set("b", "10442");
+
+  ASSERT_EQ(mcc->b, 10442) << "Setting of the \'b\' config was not propogated to the sub context.";
+}
+
+TEST_F(AutoConfigTest, SubContextDelayedPropogation) {
+  AutoCurrentContext ctxt;
+  AutoCreateContext subCtxt(ctxt);
+
+  ctxt->Config.Set("b", "10442");
+  std::shared_ptr<MyConfigurableClass> mcc = subCtxt->Inject<MyConfigurableClass>();
+
+  ASSERT_EQ(mcc->b, 10442) << "Setting of the \'b\' config was not propogated to the sub context when it was injected after \'b\' was set.";
+}
+
 namespace {
   class slider
   {
