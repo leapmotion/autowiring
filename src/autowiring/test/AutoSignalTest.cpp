@@ -733,3 +733,28 @@ TEST_F(AutoSignalTest, NoLeaks) {
   }
   ASSERT_TRUE(v.unique()) << "Signal did not destroy all attached lambdas on its destruction";
 }
+
+TEST_F(AutoSignalTest, InvokeTest) {
+  autowiring::signal<void()> x;
+
+  int sequence = 0;
+  int observedSequence = -1;
+  x += [&] {
+    sequence = 1;
+
+    // This one should run _after_ the assignment sequence=2, because we are asking the
+    // x signal to run the passed invocation while it's already handling something else
+    x.invoke([&] {
+      observedSequence = sequence;
+    });
+
+    // Now we assign to 2, and then the lambda we registered above should run.
+    sequence = 2;
+  };
+
+  x();
+  ASSERT_EQ(2, sequence) << "Event handler not invoked as expected";
+  ASSERT_NE(-1, observedSequence) << "Signal dispatcher was not invoked as expected";
+  ASSERT_NE(1, observedSequence) << "Signal dispatcher was incorrectly invoked before the enclosing signal exited";
+  ASSERT_EQ(2, observedSequence) << "Signal dispatcher did not correctly record the sequence value";
+}
