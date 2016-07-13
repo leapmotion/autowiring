@@ -31,6 +31,11 @@ namespace autowiring {
       rhs.pobj = nullptr;
     }
 
+    void clear(void) {
+      if(pobj)
+        *owner -= *this;
+    }
+
     operator bool(void) const { return pobj != nullptr; }
   };
 }
