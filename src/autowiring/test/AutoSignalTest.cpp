@@ -787,3 +787,18 @@ TEST_F(AutoSignalTest, CannotEnterInHandler) {
 
   ASSERT_FALSE(relocked) << "Was incorrectly able to lock a signal from within its handler";
 }
+
+TEST_F(AutoSignalTest, MoveInInvoke) {
+  autowiring::signal<void()> x;
+
+  std::unique_ptr<int> vRecovered;
+  x.invoke(
+    [&] (std::unique_ptr<int> v) {
+      vRecovered = std::move(v);
+    },
+    std::unique_ptr<int>(new int(404))
+  );
+
+  ASSERT_NE(nullptr, vRecovered);
+  ASSERT_EQ(404, *vRecovered) << "Recovered unique pointer was not the expected value";
+}

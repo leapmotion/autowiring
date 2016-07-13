@@ -528,6 +528,8 @@ namespace autowiring {
     /// <summary>
     /// Invokes the specified function in the call order of this signal
     /// </summary>
+    /// <param name="fn">The function to be invoked</param>
+    /// <param name="args">The arguments to be forwarded to the function</param>
     /// <remarks>
     /// The signal's call-order is a single total order, with respect to just this signal, in which
     /// calls are made.  No call is made on this signal while another call is still underway.
@@ -537,16 +539,19 @@ namespace autowiring {
     ///
     /// fn must not throw unhandled exceptions.
     /// </remarks>
-    template<typename Fn>
-    void invoke(Fn&& fn) {
+    template<typename Fn, typename... Args>
+    void invoke(Fn&& fn, Args&&... args) {
       // For a discussion of what's happening here, see the operator() overload
       if (!try_enter())
         return handoff(
-          new callable<Fn>{ std::forward<Fn&&>(fn) }
+          new callable<Fn, Args...>{
+            std::forward<Fn>(fn),
+            std::forward<Args>(args)...
+          }
         );
 
       // We've entered the asserting state succesfully.  Invoke the function and then leave the state.
-      fn();
+      fn(std::forward<Args>(args)...);
       leave();
     }
 
