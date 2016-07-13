@@ -32,7 +32,8 @@ namespace autowiring {
     }
 
     void clear(void) {
-      *owner -= *this;
+      if(pobj)
+        *owner -= *this;
     }
 
     operator bool(void) const { return pobj != nullptr; }
