@@ -2,6 +2,7 @@
 #pragma once
 #include "auto_id.h"
 #include "config_descriptor.h"
+#include "config_event.h"
 #include "Decompose.h"
 #include "optional.h"
 #include "spin_lock.h"
@@ -11,29 +12,6 @@
 #include <vector>
 
 namespace autowiring {
-  struct config_event {
-    config_event(void) = default;
-    config_event(void* pObj, const config_descriptor* desc, const config_field* field_desc, const metadata_base* metadata) :
-      pObj(pObj),
-      desc(desc),
-      field_desc(field_desc),
-      metadata(metadata)
-    {}
-
-    // A pointer to the enclosing object on which the event is being asserted
-    void* pObj;
-
-    // A pointer to the field itself
-    void* field(void) const {
-      return static_cast<char*>(pObj) + field_desc->offset;
-    }
-
-    // Metadata and descriptor pointers
-    const config_descriptor* desc;
-    const config_field* field_desc;
-    const metadata_base* metadata;
-  };
-
   struct WhenWatcher {
     WhenWatcher(auto_id id) :
       id(id)

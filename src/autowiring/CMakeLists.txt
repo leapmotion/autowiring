@@ -65,6 +65,7 @@ set(Autowiring_SRCS
   config.h
   config_descriptor.h
   config_descriptor.cpp
+  config_event.h
   ConfigBolt.h
   ConfigBolt.cpp
   ConfigManager.h
