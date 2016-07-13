@@ -327,5 +327,18 @@ TEST_F(AutoConfigTest, CanEnumRegistry) {
         nFound++;
     }
   }
-  ASSERT_EQ(1, nFound) << "Failed to find a descriptor field in the total descriptor enumeration";
+  ASSERT_EQ(1U, nFound) << "Failed to find a descriptor field in the total descriptor enumeration";
+}
+
+TEST_F(AutoConfigTest, TeardownUnreference) {
+  std::weak_ptr<ClassWithBoundsField> cwbf_weak;
+  AutoCurrentContext ctxt;
+  ctxt->Config.Set("crazyjenkins", "29291");
+
+  {
+    AutoCreateContext child;
+    AutoRequired<ClassWithBoundsField> cwbf{ child };
+    cwbf_weak = cwbf;
+  }
+  ASSERT_TRUE(cwbf_weak.expired()) << "Object leaked after context destruction";
 }

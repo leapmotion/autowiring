@@ -136,9 +136,6 @@ public:
   // Asserted any time a new object is added to the context
   autowiring::signal<void(const autowiring::CoreObjectDescriptor&)> newObject;
 
-  // The one and only configuration manager type
-  autowiring::ConfigManager Config;
-
   virtual ~CoreContext(void);
 
   /// <summary>
@@ -157,12 +154,21 @@ protected:
   // A pointer to the parent context
   const std::shared_ptr<CoreContext> m_pParent;
 
+  // The internally held configuration object.  This object may need to survive the context destruction
+  // under certain circumstances, and so is kept separate from it.
+  const std::shared_ptr<autowiring::ConfigManager> m_config;
+
   // Back-referencing iterator which refers to ourselves in our parent's child list:
   const t_childList::iterator m_backReference;
 
   // State block for this context:
   std::shared_ptr<autowiring::CoreContextStateBlock> m_stateBlock;
 
+public:
+  // The one and only configuration manager type
+  autowiring::ConfigManager& Config;
+
+protected:
   enum class State {
     // Not yet started
     NotStarted,
@@ -609,7 +615,10 @@ public:
       // We also want this to happen before the AutoInit call is made, but after we have
       // determined that the AutoInit call is inevitable.
       if (autowiring::has_getconfigdescriptor<T>::value)
-        Config.Register(static_cast<T*>(retVal.get()), *objDesc.pConfigDesc);
+        Config.Register(
+          std::static_pointer_cast<T>(retVal),
+          *objDesc.pConfigDesc
+        );
     }
     catch(autowiring_error&) {
       // We know why this exception occurred.  It's because, while we were constructing our

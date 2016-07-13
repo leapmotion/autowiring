@@ -5,6 +5,7 @@
 #include "config_event.h"
 #include "Decompose.h"
 #include "optional.h"
+#include "signal.h"
 #include "spin_lock.h"
 #include <functional>
 #include <string>
@@ -43,19 +44,27 @@ namespace autowiring {
     };
   }
 
-  class ConfigManager {
+  class ConfigManager :
+    public std::enable_shared_from_this<ConfigManager>
+  {
   public:
-    ConfigManager(void);
+    ConfigManager(void) :
+      ConfigManager(nullptr)
+    {}
+
+    ConfigManager(std::shared_ptr<ConfigManager> pParent);
 
   private:
-    spin_lock m_lock;
+    mutable spin_lock m_lock;
 
-    // Empty string sentry, used when a miss occurs
-    const std::string m_empty;
+    // Parent configuration, if one exists
+    std::shared_ptr<ConfigManager> m_pParent;
 
     // A single entry, which has a string representation part paired
     // with a pointer to the value part
     struct Entry {
+      struct Attachment;
+
       Entry(void) = default;
       Entry(const Entry&) = delete;
       Entry(Entry&& rhs) :
@@ -63,8 +72,18 @@ namespace autowiring {
         attached(std::move(rhs.attached))
       {}
 
+      // Signal asserted when the value changes:
+      mutable signal<void()> onChanged;
+
+      // Fields attached on this entry:
+      std::vector<Attachment> attached;
+
       // The value held here
-      optional<std::string> value;
+      std::string value;
+
+      // If we are taking on our value from the ancestor, this holds the parent
+      // registration object.
+      registration_t reg;
 
       struct Attachment {
         Attachment(void) = default;
@@ -99,9 +118,6 @@ namespace autowiring {
           return *this;
         }
       };
-
-      // Fields attached on this entry:
-      std::vector<Attachment> attached;
     };
 
     // All configuration values
@@ -116,13 +132,24 @@ namespace autowiring {
     // Adds a watcher on a specified type
     void WhenInternal(const std::shared_ptr<WhenWatcher>& watcher);
 
+    // Unsynchronized version of GetEntry
+    Entry& GetEntryUnsafe(const std::string& name);
+
+    // Gets an entry out of the configuration map
+    Entry& GetEntry(const std::string& name);
+
   public:
+    /// <summary>
+    /// Breaks any link this manager may have with its parent
+    /// </summary>
+    void Clear(void);
+
     /// <summary>
     /// Registers a new configurable object
     /// </summary>
     /// <param name="pObj">The object that may be configured</param>
     /// <param name="desc">A descriptor for the object</param>
-    void Register(void* pObj, const config_descriptor& desc);
+    void Register(std::shared_ptr<void> pObj, const config_descriptor& desc);
 
     /// <summary>
     /// Invokes the specified callback when a piece of metadata is attached to any object
@@ -155,11 +182,16 @@ namespace autowiring {
     /// <summary>
     /// Gets the current configuration value from the map
     /// </summary>
-    const std::string& Get(std::string name) const;
+    std::string Get(const std::string& name) const;
 
     /// <summary>
     /// Sets the named config value in the map
     /// </summary>
     void Set(std::string&& name, std::string&& value);
+
+    /// <summary>
+    /// Causes this entry to take on the default value in the parent context
+    /// </summary>
+    void Default(std::string name);
   };
 }
