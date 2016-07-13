@@ -593,12 +593,10 @@ namespace autowiring {
     template<typename Fn>
     void invoke(Fn&& fn) {
       // For a discussion of what's happening here, see the operator() overload
-      if (!try_enter()) {
-        handoff(
+      if (!try_enter())
+        return handoff(
           new callable<Fn>{ std::forward<Fn&&>(fn) }
         );
-        return;
-      }
 
       // We've entered the asserting state succesfully.  Invoke the function and then leave the state.
       fn();
