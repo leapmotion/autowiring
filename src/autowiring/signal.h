@@ -539,19 +539,19 @@ namespace autowiring {
     ///
     /// fn must not throw unhandled exceptions.
     /// </remarks>
-    template<typename Fn, typename... Args>
-    void invoke(Fn&& fn, Args&&... args) {
+    template<typename Fn, typename... FnArgs>
+    void invoke(Fn&& fn, FnArgs&&... args) {
       // For a discussion of what's happening here, see the operator() overload
       if (!try_enter())
         return handoff(
-          new callable<Fn, Args...>{
+          new callable<Fn, FnArgs...>{
             std::forward<Fn>(fn),
-            std::forward<Args>(args)...
+            std::forward<FnArgs>(args)...
           }
         );
 
       // We've entered the asserting state succesfully.  Invoke the function and then leave the state.
-      fn(std::forward<Args>(args)...);
+      fn(std::forward<FnArgs>(args)...);
       leave();
     }
 
