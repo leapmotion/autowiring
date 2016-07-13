@@ -377,6 +377,37 @@ namespace autowiring {
     }
 
     /// <summary>
+    /// Attempts to enter the asserting state
+    /// </summary>
+    /// <returns>True if we are in the asserting state, false otherwise</returns>
+    /// <remarks>
+    /// If the asserting state cannot be entered, the caller should package up the work they
+    /// wanted to do in the asserting state and delegate it to the thread presently in that
+    /// state by using the handoff function.
+    /// </remarks>
+    bool try_enter(void) const {
+      // For a discussion of what's happening here, see the operator() overload
+      for (;;) {
+        SignalState state = SignalState::Free;
+        if (m_state.compare_exchange_weak(state, SignalState::Asserting, std::memory_order_acquire, std::memory_order_relaxed))
+          return true;
+
+        switch (state) {
+        case SignalState::Free:
+        case SignalState::Updating:
+          // Spurious failure, or insertion.
+          // We cannot delegate signalling to insertion, and spurious failure should be retried.
+          break;
+        case SignalState::Asserting:
+        case SignalState::Deferred:
+          // Some other thread is already asserting this signal, doing work, we need to ensure
+          // that thread takes responsibility for this call.
+          return false;
+        }
+      }
+    }
+
+    /// <summary>
     /// Attempts to delegate responsibility for invoking the specified callable to another thread
     /// </summary>
     /// <remarks>
@@ -524,26 +555,15 @@ namespace autowiring {
     template<typename Fn>
     void invoke(Fn&& fn) {
       // For a discussion of what's happening here, see the operator() overload
-      for (;;) {
-        SignalState state = SignalState::Free;
-        if (m_state.compare_exchange_weak(state, SignalState::Asserting, std::memory_order_acquire, std::memory_order_relaxed)) {
-          fn();
-          break;
-        }
-
-        switch (state) {
-        case SignalState::Free:
-        case SignalState::Updating:
-          continue;
-        case SignalState::Asserting:
-        case SignalState::Deferred:
-          break;
-        }
-
-        return handoff(
+      if (!try_enter()) {
+        handoff(
           new callable<Fn>{ std::forward<Fn&&>(fn) }
         );
+        return;
       }
+
+      // We've entered the asserting state succesfully.  Invoke the function and then leave the state.
+      fn();
       leave();
     }
 
@@ -553,31 +573,7 @@ namespace autowiring {
     /// <param name="args">
     template<typename... FnArgs>
     void operator()(FnArgs&&... args) const AUTO_NOEXCEPT {
-      for (;;) {
-        SignalState state = SignalState::Free;
-        if (m_state.compare_exchange_weak(state, SignalState::Asserting, std::memory_order_acquire, std::memory_order_relaxed)) {
-          // Can safely make this call under state because there are never any blocking
-          // operations involving this lock.  We cannot let exceptions propagate out of
-          // here because we might not actually be able to give up control.
-          try {
-            SignalUnsafe(std::forward<FnArgs>(args)...);
-          } catch(...) {}
-          break;
-        }
-
-        switch (state) {
-        case SignalState::Free:
-        case SignalState::Updating:
-          // Spurious failure, or insertion.
-          // We cannot delegate signalling to insertion, and spurious failure should be retried.
-          continue;
-        case SignalState::Asserting:
-        case SignalState::Deferred:
-          // Some other thread is already asserting this signal, doing work, we need to ensure
-          // that thread takes responsibility for this call.
-          break;
-        }
-
+      if(!try_enter())
         // We failed to obtain control.  Create a thunk here.
         return handoff(
           new callable_signal<FnArgs...>{
@@ -585,9 +581,15 @@ namespace autowiring {
             std::forward<FnArgs&&>(args)...
           }
         );
-      }
 
-      // Verify the dispatch queue is empty
+      // Can safely make this call under state because there are never any blocking
+      // operations involving this lock.  We cannot let exceptions propagate out of
+      // here because we might not actually be able to give up control.
+      try {
+        SignalUnsafe(std::forward<FnArgs>(args)...);
+      } catch(...) {}
+
+      // Leave the asserting state, maybe empty the dispatch queue
       leave();
     }
 
