@@ -99,6 +99,7 @@ set(Autowiring_SRCS
   demangle.h
   deref_error.h
   deref_error.cpp
+  dereferencer.h
   Deserialize.h
   dispatch_aborted_exception.h
   dispatch_aborted_exception.cpp

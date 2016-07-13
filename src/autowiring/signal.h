@@ -5,6 +5,7 @@
 #include "autowiring_error.h"
 #include "callable.h"
 #include "Decompose.h"
+#include "dereferencer.h"
 #include "index_tuple.h"
 #include "noop.h"
 #include "registration.h"
@@ -21,60 +22,6 @@
 namespace autowiring {
   template<typename T>
   struct signal;
-
-  namespace detail {
-    // Holds true if type T can be copied safely
-    template<typename T>
-    struct can_copy {
-      static const bool value =
-        !std::is_abstract<T>::value &&
-        std::is_copy_constructible<T>::value;
-    };
-
-    // Utility type for handling dereferencing of an input value
-    template<typename T, typename = void>
-    struct dereferencer
-    {
-      static_assert(std::is_copy_constructible<T>::value, "T must be copy constructable");
-      static_assert(!std::is_abstract<T>::value, "T cannot be abstract");
-
-      dereferencer(dereferencer&& rhs) : val(std::move(rhs.val)) {}
-      dereferencer(T&& val) : val(std::move(val)) {}
-      T val;
-      const T& operator*(void) const { return val; }
-    };
-
-    template<typename T>
-    struct dereferencer<T&&, void>
-    {
-      dereferencer(dereferencer&& rhs) : val(std::move(rhs.val)) {}
-      dereferencer(T&& val) : val(std::move(val)) {}
-      T val;
-      const T& operator*(void) const { return val; }
-    };
-
-    /// <summary>
-    /// Copyable reference argument
-    /// </summary>
-    template<typename T>
-    struct dereferencer<T&, typename std::enable_if<!can_copy<T>::value>::type> {
-      dereferencer(const dereferencer& rhs) : val(rhs.val) {}
-      dereferencer(const T& val) : val(val) {}
-      const T& val;
-      const T& operator*(void) const { return val; }
-    };
-
-    /// <summary>
-    /// Non-copyable reference argument
-    /// </summary>
-    template<typename T>
-    struct dereferencer<T&, typename std::enable_if<can_copy<T>::value>::type> {
-      dereferencer(dereferencer&& rhs) : val(std::move(rhs.val)) {}
-      dereferencer(const T& val) : val(val) {}
-      T val;
-      const T& operator*(void) const { return val; }
-    };
-  }
 
   // Current state of the signal, used as a type of lock.
   enum class SignalState {
@@ -348,6 +295,145 @@ namespace autowiring {
       }
     };
 
+    /// <summary>
+    /// Attempts to enter the asserting state
+    /// </summary>
+    bool enter_asserting(void) {
+      for (;;) {
+        SignalState state = SignalState::Free;
+        if (m_state.compare_exchange_weak(state, SignalState::Asserting, std::memory_order_acquire, std::memory_order_relaxed))
+          // Entered the state successfully!
+          return true;
+
+        switch (state) {
+        case SignalState::Free:
+        case SignalState::Updating:
+          // Spurious failure, or insertion.
+          // We cannot delegate signalling to insertion, and spurious failure should be retried.
+          continue;
+        case SignalState::Asserting:
+        case SignalState::Deferred:
+          // Some other thread is already asserting this signal, doing work, we need to ensure
+          // that thread takes responsibility for this call.
+          break;
+        }
+
+        // We failed to obtain control.  Tell the user they will need to engage plan B.
+        return false;
+      }
+    }
+
+    /// <summary>
+    /// Attempts to enter the asserting state
+    /// </summary>
+    /// <returns>True if we are in the asserting state, false otherwise</returns>
+    /// <remarks>
+    /// If the asserting state cannot be entered, the caller should package up the work they
+    /// wanted to do in the asserting state and delegate it to the thread presently in that
+    /// state by using the handoff function.
+    /// </remarks>
+    bool try_enter(void) const {
+      // For a discussion of what's happening here, see the operator() overload
+      for (;;) {
+        SignalState state = SignalState::Free;
+        if (m_state.compare_exchange_weak(state, SignalState::Asserting, std::memory_order_acquire, std::memory_order_relaxed))
+          return true;
+
+        switch (state) {
+        case SignalState::Free:
+        case SignalState::Updating:
+          // Spurious failure, or insertion.
+          // We cannot delegate signalling to insertion, and spurious failure should be retried.
+          break;
+        case SignalState::Asserting:
+        case SignalState::Deferred:
+          // Some other thread is already asserting this signal, doing work, we need to ensure
+          // that thread takes responsibility for this call.
+          return false;
+        }
+      }
+    }
+
+    /// <summary>
+    /// Attempts to delegate responsibility for invoking the specified callable to another thread
+    /// </summary>
+    /// <remarks>
+    /// This method may choose to invoke the passed callable, depending on whether there are any
+    /// other threads running at the time of the call that are available to invoke it.
+    ///
+    /// This method may invoke other callables before invoking the callable passed by the user.
+    /// </remarks>
+    void handoff(callable_base* pCallable) const {
+      // Atomic list, no synchronization needed
+      m_delayedCalls.push_entry(pCallable);
+
+      // Now ensure that someone is going to take responsibility to make this invocation.  We do
+      // this by trying to transition the Asserting state to Deferred before the currently
+      // asserting thread manages to transition from Asserting to Free.  This is an implicit
+      // race condition, whoever wins the race can short-circuit, the loser needs to run the
+      // dispatch queue.
+      SignalState state;
+      do {
+        state = SignalState::Asserting;
+        if (m_state.compare_exchange_weak(state, SignalState::Deferred, std::memory_order_relaxed, std::memory_order_relaxed))
+          // Success, we have transferred responsibility for this call to the other entity.
+          return;
+
+        if (state == SignalState::Deferred)
+          // State is already deferred, maybe by someone else.  We can return control directly.
+          return;
+
+        state = SignalState::Free;
+      } while (!m_state.compare_exchange_weak(state, SignalState::Asserting, std::memory_order_acquire, std::memory_order_relaxed));
+
+      // Great.  If we got here it's because we were able to transition from Free to Asserting, which
+      // means that everyone else has already returned to their callers.  We are the only ones still
+      // in operator().  We are going to have to call the callable_signal that we just got finished
+      // pending.
+      leave();
+    }
+
+    /// <summary>
+    /// Attempts to delegate the specified callable to another thread
+    /// </summary>
+    /// <remarks>
+    /// These are the possibilities when this signal is asserting, in order of likelihood:
+    ///
+    /// 1)  The dispatch queue is empty and the signal is not being asserted concurrently.  The function
+    ///     returns right away.
+    ///
+    /// 2)  The dispatch queue is not empty, but there's another thread somewhere currently asserting the
+    ///     signal.  Mark the signal as having a non-empty dispatch queue and return.
+    ///
+    /// 3)  The dispatch queue is not empty, but there's another thread somewhere currently going through
+    ///     it right now.  We don't have to do anything, we can just quietly return.
+    ///
+    /// 4)  The dispatch queue is not empty, and the signal is not currently asserting.  We need to
+    ///     completely empty the dispatch queue.
+    /// </remarks>
+    void leave(void) const {
+      // Try to get out of the asserting state and into the free state
+      for (
+        SignalState state = SignalState::Asserting;
+        !m_state.compare_exchange_weak(state, SignalState::Free, std::memory_order_release, std::memory_order_relaxed);
+        state = SignalState::Asserting
+      ) {
+        // Failed to give up control.  Our state was deferred or the delayed call list was non-empty,
+        // we need to transition to the Asserting state and empty our list before proceeding
+        state = SignalState::Deferred;
+        if (!m_state.compare_exchange_weak(state, SignalState::Asserting))
+          // Circle around, maybe we had a spurious failure
+          continue;
+
+        // Call all dispatchers in the right order
+        for (auto& cur : m_delayedCalls.release<callable_base>()) {
+          // Eat any exception that occurs.  Maybe we should be calling std::terminate?
+          try { cur(); }
+          catch (...) {}
+        }
+      }
+    }
+
   public:
     bool is_executing(void) const override {
       switch (m_state.load()) {
@@ -359,6 +445,44 @@ namespace autowiring {
         return true;
       }
       throw std::runtime_error("Invalid state defined on signal type");
+    }
+
+    /// <summary>
+    /// Locks the signal's asserting state
+    /// </summary>
+    /// <remarks>
+    /// Be warned:  The underlying system is implemented using a spin lock.  No part of signal invokes
+    /// the lock method, instead using try_lock and wait-free algorithms underneath.
+    ///
+    /// Furthermore, this signal does not actually prevent the signal from becoming asserted; rather,
+    /// it only prevents other threads from invoking handlers registered on this signal.
+    ///
+    /// As with any spin lock, users are urged to minimize the amount of time the signal is locked.
+    ///
+    /// This method will deadlock if it is invoked and the caller already owns the lock.
+    ///
+    /// This method will deadlock if it is invoked from within a signal handler.
+    /// </remarks>
+    void lock(void) {
+      while(!try_enter());
+    }
+
+    /// <summary>
+    /// Prospective equivalent of lock.
+    /// </summary>
+    bool try_lock(void) {
+      return try_enter();
+    }
+
+    /// <summary>
+    /// Unlocks the signal's asserting state
+    /// </summary>
+    /// <remarks>
+    /// This routine leaves the asserting state, but also executes any deferred dispatchers that may
+    /// have been registered.
+    /// </remarks>
+    void unlock(void) AUTO_NOEXCEPT {
+      leave();
     }
 
     /// <summary>
@@ -402,88 +526,59 @@ namespace autowiring {
     }
 
     /// <summary>
+    /// Invokes the specified function in the call order of this signal
+    /// </summary>
+    /// <param name="fn">The function to be invoked</param>
+    /// <param name="args">The arguments to be forwarded to the function</param>
+    /// <remarks>
+    /// The signal's call-order is a single total order, with respect to just this signal, in which
+    /// calls are made.  No call is made on this signal while another call is still underway.
+    ///
+    /// This routine is guaranteed not to block.  If a call is currently underway on this signal, the
+    /// invoke routine will take ownership of `fn` and guarantee it will be called as soon as possible.
+    ///
+    /// fn must not throw unhandled exceptions.
+    /// </remarks>
+    template<typename Fn, typename... FnArgs>
+    void invoke(Fn&& fn, FnArgs&&... args) {
+      // For a discussion of what's happening here, see the operator() overload
+      if (!try_enter())
+        return handoff(
+          new callable<Fn, FnArgs...>{
+            std::forward<Fn>(fn),
+            std::forward<FnArgs>(args)...
+          }
+        );
+
+      // We've entered the asserting state succesfully.  Invoke the function and then leave the state.
+      fn(std::forward<FnArgs>(args)...);
+      leave();
+    }
+
+    /// <summary>
     /// Raises the signal and invokes all attached handlers
     /// </summary>
     /// <param name="args">
     template<typename... FnArgs>
     void operator()(FnArgs&&... args) const AUTO_NOEXCEPT {
-      for (;;) {
-        SignalState state = SignalState::Free;
-        if (m_state.compare_exchange_weak(state, SignalState::Asserting, std::memory_order_acquire, std::memory_order_relaxed)) {
-          // Can safely make this call under state because there are never any blocking
-          // operations involving this lock.  We cannot let exceptions propagate out of
-          // here because we might not actually be able to give up control.
-          try {
-            SignalUnsafe(std::forward<FnArgs>(args)...);
-          } catch(...) {}
-          break;
-        }
-
-        switch (state) {
-        case SignalState::Free:
-        case SignalState::Updating:
-          // Spurious failure, or insertion.
-          // We cannot delegate signalling to insertion, and spurious failure should be retried.
-          continue;
-        case SignalState::Asserting:
-        case SignalState::Deferred:
-          // Some other thread is already asserting this signal, doing work, we need to ensure
-          // that thread takes responsibility for this call.
-          break;
-        }
-
+      if(!try_enter())
         // We failed to obtain control.  Create a thunk here.
-        m_delayedCalls.push_entry(
+        return handoff(
           new callable_signal<FnArgs...>{
             *this,
             std::forward<FnArgs&&>(args)...
           }
         );
 
-        // Now ensure that someone is going to take responsibility to make this invocation.  We do
-        // this by trying to transition the Asserting state to Deferred before the currently
-        // asserting thread manages to transition from Asserting to Free.  This is an implicit
-        // race condition, whoever wins the race gets to return control to the caller.
-        do {
-          state = SignalState::Asserting;
-          if (m_state.compare_exchange_weak(state, SignalState::Deferred, std::memory_order_relaxed, std::memory_order_relaxed))
-            // Success, we have transferred responsibility for this call to the other entity.
-            return;
+      // Can safely make this call under state because there are never any blocking
+      // operations involving this lock.  We cannot let exceptions propagate out of
+      // here because we might not actually be able to give up control.
+      try {
+        SignalUnsafe(std::forward<FnArgs>(args)...);
+      } catch(...) {}
 
-          if (state == SignalState::Deferred)
-            // State is already deferred, maybe by someone else.  We can return control directly.
-            return;
-
-          state = SignalState::Free;
-        } while (!m_state.compare_exchange_weak(state, SignalState::Asserting, std::memory_order_acquire, std::memory_order_relaxed));
-
-        // Great.  If we got here it's because we were able to transition from Free to Asserting, which
-        // means that everyone else has already returned to their callers.  We are the only ones still
-        // in operator().  We are going to have to call the callable_signal that we just got finished
-        // pending.
-        break;
-      }
-
-      // Try to get out of the asserting state and into the free state
-      for(
-        SignalState state = SignalState::Asserting;
-        !m_state.compare_exchange_weak(state, SignalState::Free, std::memory_order_release, std::memory_order_relaxed);
-        state = SignalState::Asserting
-      ) {
-        // Failed to give up control.  Our state was deferred or the delayed call list was non-empty,
-        // we need to transition to the Asserting state and empty our list before proceeding
-        state = SignalState::Deferred;
-        if (!m_state.compare_exchange_weak(state, SignalState::Asserting))
-          // Circle around, maybe we had a spurious failure
-          continue;
-
-        // Call all dispatchers in the right order
-        for (auto& cur : m_delayedCalls.release<callable_base>()) {
-          // Eat any exception that occurs
-          try { cur(); }
-          catch (...) {}
-        }
-      }
+      // Leave the asserting state, maybe empty the dispatch queue
+      leave();
     }
 
     // This overload is provided so that statement completion makes sense.  Because of the
