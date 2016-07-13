@@ -556,6 +556,15 @@ namespace autowiring {
     }
 
     /// <summary>
+    /// Identical to invoke with no arguments
+    /// </summary>
+    template<typename Fn>
+    signal& operator<<(Fn&& fn) {
+      invoke<Fn>(std::forward<Fn>(fn));
+      return *this;
+    }
+
+    /// <summary>
     /// Raises the signal and invokes all attached handlers
     /// </summary>
     /// <param name="args">
