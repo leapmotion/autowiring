@@ -501,6 +501,44 @@ namespace autowiring {
     }
 
     /// <summary>
+    /// Locks the signal's asserting state
+    /// </summary>
+    /// <remarks>
+    /// Be warned:  The underlying system is implemented using a spin lock.  No part of signal invokes
+    /// the lock method, instead using try_lock and wait-free algorithms underneath.
+    ///
+    /// Furthermore, this signal does not actually prevent the signal from becoming asserted; rather,
+    /// it only prevents other threads from invoking handlers registered on this signal.
+    ///
+    /// As with any spin lock, users are urged to minimize the amount of time the signal is locked.
+    ///
+    /// This method will deadlock if it is invoked and the caller already owns the lock.
+    ///
+    /// This method will deadlock if it is invoked from within a signal handler.
+    /// </remarks>
+    void lock(void) {
+      while(!try_enter());
+    }
+
+    /// <summary>
+    /// Prospective equivalent of lock.
+    /// </summary>
+    bool try_lock(void) {
+      return try_enter();
+    }
+
+    /// <summary>
+    /// Unlocks the signal's asserting state
+    /// </summary>
+    /// <remarks>
+    /// This routine leaves the asserting state, but also executes any deferred dispatchers that may
+    /// have been registered.
+    /// </remarks>
+    void unlock(void) AUTO_NOEXCEPT {
+      leave();
+    }
+
+    /// <summary>
     /// Attaches the specified handler to this signal
     /// </summary>
     /// <remarks>

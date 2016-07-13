@@ -758,3 +758,32 @@ TEST_F(AutoSignalTest, InvokeTest) {
   ASSERT_NE(1, observedSequence) << "Signal dispatcher was incorrectly invoked before the enclosing signal exited";
   ASSERT_EQ(2, observedSequence) << "Signal dispatcher did not correctly record the sequence value";
 }
+
+TEST_F(AutoSignalTest, LockTest) {
+  autowiring::signal<void()> x;
+  x.lock();
+  ASSERT_FALSE(x.try_lock()) << "Locked a signal that should have already been locked";
+
+  bool called = false;
+  x += [&called] { called = true; };
+  x();
+
+  ASSERT_FALSE(called) << "Signal handler invoked while the signal was locked";
+  x.unlock();
+  ASSERT_TRUE(called) << "Deferred handler not invoked on unlock as expected";
+  called = false;
+  x();
+  ASSERT_TRUE(called) << "Handler not properly invoked during unlocked assertion";
+}
+
+TEST_F(AutoSignalTest, CannotEnterInHandler) {
+  autowiring::signal<void()> x;
+
+  bool relocked = false;
+  x += [&x, &relocked] {
+    relocked = x.try_lock();
+  };
+  x();
+
+  ASSERT_FALSE(relocked) << "Was incorrectly able to lock a signal from within its handler";
+}
