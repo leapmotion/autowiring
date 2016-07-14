@@ -252,6 +252,26 @@ TEST_F(AutoConfigTest, ContextMultiReference) {
   ASSERT_STREQ(expectStr2, dc->a->c_str());
 }
 
+TEST_F(AutoConfigTest, SubContextPropagation) {
+  AutoCurrentContext ctxt;
+  AutoCreateContext subCtxt(ctxt);
+
+  std::shared_ptr<MyConfigurableClass> mcc = subCtxt->Inject<MyConfigurableClass>();
+  ctxt->Config.Set("b", "10442");
+
+  ASSERT_EQ(mcc->b, 10442) << "Setting of the \'b\' config was not propogated to the sub context.";
+}
+
+TEST_F(AutoConfigTest, SubContextDelayedPropagation) {
+  AutoCurrentContext ctxt;
+  AutoCreateContext subCtxt(ctxt);
+
+  ctxt->Config.Set("b", "10442");
+  std::shared_ptr<MyConfigurableClass> mcc = subCtxt->Inject<MyConfigurableClass>();
+
+  ASSERT_EQ(mcc->b, 10442) << "Setting of the \'b\' config was not propogated to the sub context when it was injected after \'b\' was set.";
+}
+
 namespace {
   class slider
   {
@@ -307,5 +327,18 @@ TEST_F(AutoConfigTest, CanEnumRegistry) {
         nFound++;
     }
   }
-  ASSERT_EQ(1, nFound) << "Failed to find a descriptor field in the total descriptor enumeration";
+  ASSERT_EQ(1U, nFound) << "Failed to find a descriptor field in the total descriptor enumeration";
+}
+
+TEST_F(AutoConfigTest, TeardownUnreference) {
+  std::weak_ptr<ClassWithBoundsField> cwbf_weak;
+  AutoCurrentContext ctxt;
+  ctxt->Config.Set("crazyjenkins", "29291");
+
+  {
+    AutoCreateContext child;
+    AutoRequired<ClassWithBoundsField> cwbf{ child };
+    cwbf_weak = cwbf;
+  }
+  ASSERT_TRUE(cwbf_weak.expired()) << "Object leaked after context destruction";
 }

@@ -53,12 +53,19 @@ static thread_specific_ptr<std::shared_ptr<CoreContext>> autoCurrentContext;
 
 // Peer Context Constructor. Called interally by CreatePeer
 CoreContext::CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference, auto_id sigilType) :
+  m_config(
+    std::make_shared<autowiring::ConfigManager>(
+      pParent ? pParent->m_config : nullptr
+    )
+  ),
+  Config(*m_config),
   m_pParent(pParent),
   m_backReference(backReference),
   SigilType(sigilType),
   AncestorCount(pParent ? pParent->AncestorCount + 1 : 0),
   m_stateBlock(std::make_shared<CoreContextStateBlock>(pParent ? pParent->m_stateBlock : nullptr))
-{}
+{
+}
 
 CoreContext::~CoreContext(void) {
   // Evict from the parent's child list first, if we have a parent:
@@ -70,6 +77,9 @@ CoreContext::~CoreContext(void) {
     std::lock_guard<std::mutex> lk(m_pParent->m_stateBlock->m_lock);
     m_pParent->m_children.erase(m_backReference);
   }
+
+  // Ensure the configuration object's back-links are cleared off
+  m_config->Clear();
 
   // The autoCurrentContext pointer holds a shared_ptr to this--if we're in a dtor, and our caller
   // still holds a reference to us, then we have a serious problem.
