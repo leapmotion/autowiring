@@ -14,6 +14,15 @@ set_standard_output_variables()
 # We have unit test projects via googletest, they're added in the places where they are defined
 enable_testing()
 
+# Autoboost headers required everywhere but on MSVC 2015+, which doesn't rely on filesystem
+if(NOT MSVC OR MSVC_VERSION LESS 1900)
+  install(
+    DIRECTORY ${PROJECT_SOURCE_DIR}/contrib/autoboost/autoboost
+    DESTINATION include
+    COMPONENT autowiring
+  )
+endif()
+
 # Recurse through source directories
 include_directories(
   contrib
