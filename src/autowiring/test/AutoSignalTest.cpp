@@ -725,13 +725,30 @@ TEST_F(AutoSignalTest, IsExecuting) {
   ASSERT_FALSE(sig.is_executing()) << "Signal was incorrectly marked as executing even though nothing is happening";
 }
 
-TEST_F(AutoSignalTest, NoLeaks) {
+TEST_F(AutoSignalTest, Leak1) {
   auto v = std::make_shared<bool>(false);
   {
     autowiring::signal<void()> x;
     x += [v] {};
   }
   ASSERT_TRUE(v.unique()) << "Signal did not destroy all attached lambdas on its destruction";
+}
+
+TEST_F(AutoSignalTest, Leak2) {
+  bool v = true;
+  auto witness = std::make_shared<int>(929);
+
+  autowiring::signal<void(std::shared_ptr<int>)> x;
+
+  x += [&] (std::shared_ptr<int>) {
+    if (v)
+      x(witness);
+    v = false;
+  };
+
+  // If deferred assertions aren't being properly destroyed, this will leak witness:
+  x(witness);
+  ASSERT_TRUE(witness.unique()) << "Deferred assertion incorrectly leaked a reference";
 }
 
 TEST_F(AutoSignalTest, InvokeTest) {
