@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.7</span>
+   &#160;<span id="projectnumber">1.0.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -139,9 +139,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a274e47cff1ae841fe66e03a186d8eede"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a274e47cff1ae841fe66e03a186d8eede">Add</a> (const std::shared_ptr&lt; T &gt; &amp;ptr)</td></tr>
 <tr class="memdesc:a274e47cff1ae841fe66e03a186d8eede"><td class="mdescLeft">&#160;</td><td class="mdescRight">Introduces the specified pointer to this context explicitly  <a href="#a274e47cff1ae841fe66e03a186d8eede">More...</a><br /></td></tr>
 <tr class="separator:a274e47cff1ae841fe66e03a186d8eede"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e0312724984a15bffd56019af5a2737"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a7e0312724984a15bffd56019af5a2737">AddSnooper</a> (const CoreObjectDescriptor &amp;traits)</td></tr>
-<tr class="memdesc:a7e0312724984a15bffd56019af5a2737"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runtime version of AddSnooper  <a href="#a7e0312724984a15bffd56019af5a2737">More...</a><br /></td></tr>
-<tr class="separator:a7e0312724984a15bffd56019af5a2737"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeaa543a85ff3b5a9a3f581d1abe3ec5e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#aeaa543a85ff3b5a9a3f581d1abe3ec5e">AddSnooper</a> (const autowiring::CoreObjectDescriptor &amp;traits)</td></tr>
+<tr class="memdesc:aeaa543a85ff3b5a9a3f581d1abe3ec5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runtime version of AddSnooper  <a href="#aeaa543a85ff3b5a9a3f581d1abe3ec5e">More...</a><br /></td></tr>
+<tr class="separator:aeaa543a85ff3b5a9a3f581d1abe3ec5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a670aaca238bf0f7db59bcdb71f84ccd0"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:a670aaca238bf0f7db59bcdb71f84ccd0"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a670aaca238bf0f7db59bcdb71f84ccd0">AddSnooper</a> (const std::shared_ptr&lt; T &gt; &amp;pSnooper)</td></tr>
 <tr class="memdesc:a670aaca238bf0f7db59bcdb71f84ccd0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Registers the specified event receiver to receive messages from this context  <a href="#a670aaca238bf0f7db59bcdb71f84ccd0">More...</a><br /></td></tr>
@@ -150,17 +150,27 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a01a34fcd446e51c5c006d9f3d46b4cc7"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a01a34fcd446e51c5c006d9f3d46b4cc7">AddSnooper</a> (const <a class="el" href="class_autowired.html">Autowired</a>&lt; T &gt; &amp;snooper)</td></tr>
 <tr class="memdesc:a01a34fcd446e51c5c006d9f3d46b4cc7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resolution overload  <a href="#a01a34fcd446e51c5c006d9f3d46b4cc7">More...</a><br /></td></tr>
 <tr class="separator:a01a34fcd446e51c5c006d9f3d46b4cc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad7a9b70597e2ce15604bd823758408c6"><td class="memItemLeft" align="right" valign="top">JunctionBoxBase &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#ad7a9b70597e2ce15604bd823758408c6">All</a> (const std::type_info &amp;ti) const </td></tr>
-<tr class="memdesc:ad7a9b70597e2ce15604bd823758408c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runtime variant of All  <a href="#ad7a9b70597e2ce15604bd823758408c6">More...</a><br /></td></tr>
-<tr class="separator:ad7a9b70597e2ce15604bd823758408c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae5c351a08cc681adb51e7eb21ec6303"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
-<tr class="memitem:aae5c351a08cc681adb51e7eb21ec6303"><td class="memTemplItemLeft" align="right" valign="top">JunctionBox&lt; T &gt; &amp;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#aae5c351a08cc681adb51e7eb21ec6303">All</a> (void)</td></tr>
-<tr class="memdesc:aae5c351a08cc681adb51e7eb21ec6303"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns all members of and snoopers on this context which implement the specified interface  <a href="#aae5c351a08cc681adb51e7eb21ec6303">More...</a><br /></td></tr>
-<tr class="separator:aae5c351a08cc681adb51e7eb21ec6303"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aabb5e1ab6a9e96fc730163c4ee2777a4"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aabb5e1ab6a9e96fc730163c4ee2777a4"><td class="memTemplItemLeft" align="right" valign="top">const std::shared_ptr&lt; T &gt; &amp;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#aabb5e1ab6a9e96fc730163c4ee2777a4">Await</a> (void)</td></tr>
+<tr class="memdesc:aabb5e1ab6a9e96fc730163c4ee2777a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Similar to Inject, except will block until the specified type is available in the context  <a href="#aabb5e1ab6a9e96fc730163c4ee2777a4">More...</a><br /></td></tr>
+<tr class="separator:aabb5e1ab6a9e96fc730163c4ee2777a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0fe0f195083677ae0e7b5b9aab0b344"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ad0fe0f195083677ae0e7b5b9aab0b344"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#ad0fe0f195083677ae0e7b5b9aab0b344">Await</a> (std::chrono::nanoseconds timeout)</td></tr>
+<tr class="memdesc:ad0fe0f195083677ae0e7b5b9aab0b344"><td class="mdescLeft">&#160;</td><td class="mdescRight">Timed version of Await  <a href="#ad0fe0f195083677ae0e7b5b9aab0b344">More...</a><br /></td></tr>
+<tr class="separator:ad0fe0f195083677ae0e7b5b9aab0b344"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86dc8709b84fe3797666ca707866b3db"><td class="memItemLeft" align="right" valign="top">const AnySharedPointer &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a86dc8709b84fe3797666ca707866b3db">Await</a> (auto_id id)</td></tr>
+<tr class="memdesc:a86dc8709b84fe3797666ca707866b3db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runtime Await variant  <a href="#a86dc8709b84fe3797666ca707866b3db">More...</a><br /></td></tr>
+<tr class="separator:a86dc8709b84fe3797666ca707866b3db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40b3b14054c5f5ef8eb7dbd8475bb785"><td class="memItemLeft" align="right" valign="top">AnySharedPointer&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a40b3b14054c5f5ef8eb7dbd8475bb785">Await</a> (auto_id id, std::chrono::nanoseconds timeout)</td></tr>
+<tr class="memdesc:a40b3b14054c5f5ef8eb7dbd8475bb785"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runtime Await variant  <a href="#a40b3b14054c5f5ef8eb7dbd8475bb785">More...</a><br /></td></tr>
+<tr class="separator:a40b3b14054c5f5ef8eb7dbd8475bb785"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a81cde2e3e4031ac1bc1c9e761f8eff11"><td class="memTemplParams" colspan="2">template&lt;class T , class... Sigils&gt; </td></tr>
 <tr class="memitem:a81cde2e3e4031ac1bc1c9e761f8eff11"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a81cde2e3e4031ac1bc1c9e761f8eff11">BoltTo</a> (void)</td></tr>
 <tr class="memdesc:a81cde2e3e4031ac1bc1c9e761f8eff11"><td class="mdescLeft">&#160;</td><td class="mdescRight">Injects the specified type T into all subcontexts created with one of the matching sigil types.  <a href="#a81cde2e3e4031ac1bc1c9e761f8eff11">More...</a><br /></td></tr>
 <tr class="separator:a81cde2e3e4031ac1bc1c9e761f8eff11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae1250c4d0e0af0ac44810b793578589a"><td class="memItemLeft" align="right" valign="top">std::vector&lt; const autowiring::CoreObjectDescriptor * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#ae1250c4d0e0af0ac44810b793578589a">BuildObjectState</a> (void) const </td></tr>
+<tr class="memdesc:ae1250c4d0e0af0ac44810b793578589a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets a snapshot of all of the objects currently in the context  <a href="#ae1250c4d0e0af0ac44810b793578589a">More...</a><br /></td></tr>
+<tr class="separator:ae1250c4d0e0af0ac44810b793578589a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a248d2983aeb495dfa013024d10fbfc16"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::shared_ptr&lt; <a class="el" href="class_basic_thread.html">BasicThread</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a248d2983aeb495dfa013024d10fbfc16">CopyBasicThreadList</a> (void) const </td></tr>
 <tr class="memdesc:a248d2983aeb495dfa013024d10fbfc16"><td class="mdescLeft">&#160;</td><td class="mdescRight">A copy of the current list of child CoreRunnables of this context.  <a href="#a248d2983aeb495dfa013024d10fbfc16">More...</a><br /></td></tr>
 <tr class="separator:a248d2983aeb495dfa013024d10fbfc16"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -171,10 +181,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:abafba926a5bb2aa13f15c4de0d0df019"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#abafba926a5bb2aa13f15c4de0d0df019">DelayUntilInitiated</a> (void)</td></tr>
 <tr class="memdesc:abafba926a5bb2aa13f15c4de0d0df019"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits until the context is initiated or, if never initiated, until it starts shutting down.  <a href="#abafba926a5bb2aa13f15c4de0d0df019">More...</a><br /></td></tr>
 <tr class="separator:abafba926a5bb2aa13f15c4de0d0df019"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a9cb8e948aee0f4c90e0ec8f89d99cf"><td class="memTemplParams" colspan="2">template&lt;class Fx &gt; </td></tr>
-<tr class="memitem:a1a9cb8e948aee0f4c90e0ec8f89d99cf"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a1a9cb8e948aee0f4c90e0ec8f89d99cf">DEPRECATED</a> (AddTeardownListener(Fx &amp;&amp;fx),&quot;Superceded by onTeardown&quot;)</td></tr>
-<tr class="memdesc:a1a9cb8e948aee0f4c90e0ec8f89d99cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a teardown notifier which receives a pointer to this context on destruction  <a href="#a1a9cb8e948aee0f4c90e0ec8f89d99cf">More...</a><br /></td></tr>
-<tr class="separator:a1a9cb8e948aee0f4c90e0ec8f89d99cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8bc3598a2c82c5452ec5b942ec84ceed"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a8bc3598a2c82c5452ec5b942ec84ceed">Dump</a> (std::ostream &amp;os) const </td></tr>
 <tr class="memdesc:a8bc3598a2c82c5452ec5b942ec84ceed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility debug method for writing a snapshot of this context to the specified output stream  <a href="#a8bc3598a2c82c5452ec5b942ec84ceed">More...</a><br /></td></tr>
 <tr class="separator:a8bc3598a2c82c5452ec5b942ec84ceed"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -213,13 +219,10 @@ const std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreConte
 <tr class="memitem:a93a15fed7006535074ba0cad22734300"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="class_core_runnable.html">CoreRunnable</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a93a15fed7006535074ba0cad22734300">GetRunnables</a> (void) const </td></tr>
 <tr class="memdesc:a93a15fed7006535074ba0cad22734300"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a copy of the list of runnables  <a href="#a93a15fed7006535074ba0cad22734300">More...</a><br /></td></tr>
 <tr class="separator:a93a15fed7006535074ba0cad22734300"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a000005b5f276de444327cab8ccc2a785"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a000005b5f276de444327cab8ccc2a785"></a>
-const std::type_info &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a000005b5f276de444327cab8ccc2a785">GetSigilType</a> (void) const </td></tr>
-<tr class="memdesc:a000005b5f276de444327cab8ccc2a785"><td class="mdescLeft">&#160;</td><td class="mdescRight">The type used as a sigil when creating this class, if any. <br /></td></tr>
-<tr class="separator:a000005b5f276de444327cab8ccc2a785"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7646ea17e7eb961c2193485926af7965"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classautowiring_1_1_thread_pool.html">autowiring::ThreadPool</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a7646ea17e7eb961c2193485926af7965">GetThreadPool</a> (void) const </td></tr>
-<tr class="memdesc:a7646ea17e7eb961c2193485926af7965"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the current thread pool  <a href="#a7646ea17e7eb961c2193485926af7965">More...</a><br /></td></tr>
-<tr class="separator:a7646ea17e7eb961c2193485926af7965"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c0c410e9a465304a4234ce911981aa7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8c0c410e9a465304a4234ce911981aa7"></a>
+auto_id&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a8c0c410e9a465304a4234ce911981aa7">GetSigilType</a> (void) const </td></tr>
+<tr class="memdesc:a8c0c410e9a465304a4234ce911981aa7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The type used as a sigil when creating this class, if any. <br /></td></tr>
+<tr class="separator:a8c0c410e9a465304a4234ce911981aa7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff72e44be09394686d51a367a6ff9e23"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:aff72e44be09394686d51a367a6ff9e23"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#aff72e44be09394686d51a367a6ff9e23">Has</a> (void) const </td></tr>
 <tr class="memdesc:aff72e44be09394686d51a367a6ff9e23"><td class="mdescLeft">&#160;</td><td class="mdescRight">True, if an instance of the specified type exists and dependencies of that type can be autowired in this context.  <a href="#aff72e44be09394686d51a367a6ff9e23">More...</a><br /></td></tr>
@@ -231,10 +234,6 @@ const std::type_info &amp;&#160;</td><td class="memItemRight" valign="bottom"><a
 <tr class="memitem:a005f71baab03719918429b7ecdd8a9ba"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a005f71baab03719918429b7ecdd8a9ba">Inject</a> (Args &amp;&amp;...args)</td></tr>
 <tr class="memdesc:a005f71baab03719918429b7ecdd8a9ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Injects the specified types into this context.  <a href="#a005f71baab03719918429b7ecdd8a9ba">More...</a><br /></td></tr>
 <tr class="separator:a005f71baab03719918429b7ecdd8a9ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1fe1f8ada791176b9c4893963b74aee1"><td class="memTemplParams" colspan="2">template&lt;typename MemFn &gt; </td></tr>
-<tr class="memitem:a1fe1f8ada791176b9c4893963b74aee1"><td class="memTemplItemLeft" align="right" valign="top">InvokeRelay&lt; MemFn &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a1fe1f8ada791176b9c4893963b74aee1">Invoke</a> (MemFn memFn)</td></tr>
-<tr class="memdesc:a1fe1f8ada791176b9c4893963b74aee1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fires an event in another context.  <a href="#a1fe1f8ada791176b9c4893963b74aee1">More...</a><br /></td></tr>
-<tr class="separator:a1fe1f8ada791176b9c4893963b74aee1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aefaae7d459f3ee07dce5b65c731e7900"><td class="memTemplParams" colspan="2"><a class="anchor" id="aefaae7d459f3ee07dce5b65c731e7900"></a>
 template&lt;class Sigil &gt; </td></tr>
 <tr class="memitem:aefaae7d459f3ee07dce5b65c731e7900"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#aefaae7d459f3ee07dce5b65c731e7900">Is</a> (void) const </td></tr>
@@ -243,6 +242,10 @@ template&lt;class Sigil &gt; </td></tr>
 <tr class="memitem:a46ab31f4f5f30284304bca63390f9545"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a46ab31f4f5f30284304bca63390f9545">IsAncestorOf</a> (const <a class="el" href="class_core_context.html">CoreContext</a> *child) const </td></tr>
 <tr class="memdesc:a46ab31f4f5f30284304bca63390f9545"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether the specified context is an ancestor of this context.  <a href="#a46ab31f4f5f30284304bca63390f9545">More...</a><br /></td></tr>
 <tr class="separator:a46ab31f4f5f30284304bca63390f9545"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf844a4a8caa4340999dc7e6ce3e41f8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf844a4a8caa4340999dc7e6ce3e41f8"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#abf844a4a8caa4340999dc7e6ce3e41f8">IsAnonymousContext</a> (void) const </td></tr>
+<tr class="memdesc:abf844a4a8caa4340999dc7e6ce3e41f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">True if and only if this is an anonymous context. <br /></td></tr>
+<tr class="separator:abf844a4a8caa4340999dc7e6ce3e41f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2eb27daa6e017c3b678868faf0f7b14"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae2eb27daa6e017c3b678868faf0f7b14"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#ae2eb27daa6e017c3b678868faf0f7b14">IsGlobalContext</a> (void) const </td></tr>
 <tr class="memdesc:ae2eb27daa6e017c3b678868faf0f7b14"><td class="mdescLeft">&#160;</td><td class="mdescRight">True if and only if this is the global context. <br /></td></tr>
@@ -265,19 +268,15 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:a2073501aa492a30cb8738a14eee9302e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a2073501aa492a30cb8738a14eee9302e">NotifyWhenAutowired</a> (Fn &amp;&amp;listener)</td></tr>
 <tr class="memdesc:a2073501aa492a30cb8738a14eee9302e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a post-attachment listener in this context for a particular autowired member. There is no guarantee for the context in which the listener will be called.  <a href="#a2073501aa492a30cb8738a14eee9302e">More...</a><br /></td></tr>
 <tr class="separator:a2073501aa492a30cb8738a14eee9302e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d4ff8b34b0d1a6159abff8f7b96599e"><td class="memTemplParams" colspan="2">template&lt;class Fx &gt; </td></tr>
-<tr class="memitem:a9d4ff8b34b0d1a6159abff8f7b96599e"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a9d4ff8b34b0d1a6159abff8f7b96599e">operator+=</a> (Fx &amp;&amp;fx)</td></tr>
-<tr class="memdesc:a9d4ff8b34b0d1a6159abff8f7b96599e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Submits the specified lambda to this context's ThreadPool for processing  <a href="#a9d4ff8b34b0d1a6159abff8f7b96599e">More...</a><br /></td></tr>
-<tr class="separator:a9d4ff8b34b0d1a6159abff8f7b96599e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa13acb0db1c7703d05721b49df414bd3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#aa13acb0db1c7703d05721b49df414bd3">Quiescent</a> (void) const </td></tr>
 <tr class="memdesc:aa13acb0db1c7703d05721b49df414bd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Identical to Wait, except blocks only until the threads in this and all descendant contexts have stopped  <a href="#aa13acb0db1c7703d05721b49df414bd3">More...</a><br /></td></tr>
 <tr class="separator:aa13acb0db1c7703d05721b49df414bd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a04aad9deb56c4d7ad73984ed35ea9d65"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a04aad9deb56c4d7ad73984ed35ea9d65">Quiescent</a> (std::chrono::nanoseconds duration) const </td></tr>
 <tr class="memdesc:a04aad9deb56c4d7ad73984ed35ea9d65"><td class="mdescLeft">&#160;</td><td class="mdescRight">Timed version of Quiescent  <a href="#a04aad9deb56c4d7ad73984ed35ea9d65">More...</a><br /></td></tr>
 <tr class="separator:a04aad9deb56c4d7ad73984ed35ea9d65"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9dc0d1a9db98765d26bb89cab5bb4f90"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a9dc0d1a9db98765d26bb89cab5bb4f90">RemoveSnooper</a> (const CoreObjectDescriptor &amp;traits)</td></tr>
-<tr class="memdesc:a9dc0d1a9db98765d26bb89cab5bb4f90"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runtime version of RemoveSnooper  <a href="#a9dc0d1a9db98765d26bb89cab5bb4f90">More...</a><br /></td></tr>
-<tr class="separator:a9dc0d1a9db98765d26bb89cab5bb4f90"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae45118cfd608f3f26b02d080a7815348"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#ae45118cfd608f3f26b02d080a7815348">RemoveSnooper</a> (const autowiring::CoreObjectDescriptor &amp;traits)</td></tr>
+<tr class="memdesc:ae45118cfd608f3f26b02d080a7815348"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runtime version of RemoveSnooper  <a href="#ae45118cfd608f3f26b02d080a7815348">More...</a><br /></td></tr>
+<tr class="separator:ae45118cfd608f3f26b02d080a7815348"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1a7dd841f71c271a2f61b0a698011f29"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:a1a7dd841f71c271a2f61b0a698011f29"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a1a7dd841f71c271a2f61b0a698011f29">RemoveSnooper</a> (const std::shared_ptr&lt; T &gt; &amp;pSnooper)</td></tr>
 <tr class="memdesc:a1a7dd841f71c271a2f61b0a698011f29"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unregisters a snooper previously registered to receive snooped events  <a href="#a1a7dd841f71c271a2f61b0a698011f29">More...</a><br /></td></tr>
@@ -289,9 +288,6 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:ad306c1c3703311ba1fe7fdb4add279f9"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#ad306c1c3703311ba1fe7fdb4add279f9">SetCurrent</a> (void)</td></tr>
 <tr class="memdesc:ad306c1c3703311ba1fe7fdb4add279f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Makes this context the current context.  <a href="#ad306c1c3703311ba1fe7fdb4add279f9">More...</a><br /></td></tr>
 <tr class="separator:ad306c1c3703311ba1fe7fdb4add279f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2eff2c50f12c4de4e9e82a49a4bb2bc7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a2eff2c50f12c4de4e9e82a49a4bb2bc7">SetThreadPool</a> (const std::shared_ptr&lt; <a class="el" href="classautowiring_1_1_thread_pool.html">autowiring::ThreadPool</a> &gt; &amp;threadPool)</td></tr>
-<tr class="memdesc:a2eff2c50f12c4de4e9e82a49a4bb2bc7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns the thread pool handler for this context  <a href="#a2eff2c50f12c4de4e9e82a49a4bb2bc7">More...</a><br /></td></tr>
-<tr class="separator:a2eff2c50f12c4de4e9e82a49a4bb2bc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a15918e5e6962e2865b6da51e557f35c8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a15918e5e6962e2865b6da51e557f35c8">SetUnlinkOnTeardown</a> (bool unlinkOnTeardown)</td></tr>
 <tr class="memdesc:a15918e5e6962e2865b6da51e557f35c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the context's teardown unlink behavior  <a href="#a15918e5e6962e2865b6da51e557f35c8">More...</a><br /></td></tr>
 <tr class="separator:a15918e5e6962e2865b6da51e557f35c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -314,7 +310,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a3f8e26f6c2f8e94bdff0f2e2870b6836"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CurrentContext</a> (void)</td></tr>
-<tr class="memdesc:a3f8e26f6c2f8e94bdff0f2e2870b6836"><td class="mdescLeft">&#160;</td><td class="mdescRight">Identical to CurrentContextNoCheck, except returns the global context instead of a null pointer  <a href="#a3f8e26f6c2f8e94bdff0f2e2870b6836">More...</a><br /></td></tr>
+<tr class="memdesc:a3f8e26f6c2f8e94bdff0f2e2870b6836"><td class="mdescLeft">&#160;</td><td class="mdescRight">Identical to CurrentContextOrNull, except returns the global context instead of a null pointer  <a href="#a3f8e26f6c2f8e94bdff0f2e2870b6836">More...</a><br /></td></tr>
 <tr class="separator:a3f8e26f6c2f8e94bdff0f2e2870b6836"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf36b5e9c6bda2f2e2b6058b34d99e87"><td class="memItemLeft" align="right" valign="top">static const std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#abf36b5e9c6bda2f2e2b6058b34d99e87">CurrentContextOrNull</a> (void)</td></tr>
 <tr class="memdesc:abf36b5e9c6bda2f2e2b6058b34d99e87"><td class="mdescLeft">&#160;</td><td class="mdescRight">The shared pointer to the current context.  <a href="#abf36b5e9c6bda2f2e2b6058b34d99e87">More...</a><br /></td></tr>
@@ -347,12 +343,11 @@ Protected Member Functions</h2></td></tr>
 <div class="textblock"><p>A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain. </p>
 <p>A context is the basic unit of organization within an autowired application. The scope of a context determines:</p><ul>
 <li>How <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> dependencies are resolved</li>
-<li>Who receives <a class="el" href="class_auto_fired.html" title="Injects an object that can fire events. ">AutoFired</a> events</li>
 <li>Thread ownership (<a class="el" href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. ">BasicThread</a>, <a class="el" href="class_core_thread.html" title="Provides a dispatch queue that creates a thread to run jobs (in the form of lambda functions) in the ...">CoreThread</a>)</li>
 <li><a class="el" href="class_auto_packet.html" title="A decorator-style processing packet ">AutoPacket</a> filter graph scope</li>
 </ul>
-<p>Dependencies can be injected into a context using <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> or <a class="el" href="class_auto_required.html" title="Autowires the specified dependency, creating a new instance if one does not already exist...">AutoRequired</a>. The system looks in the current context for an existing object of the required type to satisfy the dependency. If one does not exist, it looks in parent contexts. When using <a class="el" href="class_auto_required.html" title="Autowires the specified dependency, creating a new instance if one does not already exist...">AutoRequired</a>, a new instance of the required type is created if no existing object is found. Otherwise, the dependoncy is satisfied when another object of the same type (or subtype) is added to the context (or one of its parents). This resolution system carries the restriction that only one instance of an <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> type can exist in the same branch of the context tree.</p>
-<p>In addition, an <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> member of a context exists for as long as that context. exists.</p>
+<p>Dependencies can be injected into a context using <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> or <a class="el" href="class_auto_required.html" title="Autowires the specified dependency, creating a new instance if one does not already exist...">AutoRequired</a>. The system looks in the current context for an existing object of the required type to satisfy the dependency. If one does not exist, it looks in parent contexts. When using <a class="el" href="class_auto_required.html" title="Autowires the specified dependency, creating a new instance if one does not already exist...">AutoRequired</a>, a new instance of the required type is created if no existing object is found. Otherwise, the dependency is satisfied when another object of the same type (or subtype) is added to the context (or one of its parents). This resolution system carries the restriction that only one instance of an <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> type can exist in the same branch of the context tree.</p>
+<p>In addition, an <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> member of a context exists for as long as that context exists.</p>
 <p><a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> dependencies do not need to meet any special requirements such as inheriting from a particular Autowiring type or implementing a particular interface. However, if a type contains <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> members, instances of that type must be <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> to a context in order for the dependencies of their members to be satisfied.</p>
 <p>Contexts can be created with <a class="el" href="_autowired_8h.html#aa65e92d94fffb9dcc42b0ff6de09f4cb" title="Creates a new context as a child of the current context. ">AutoCreateContext</a> and <a class="el" href="class_auto_create_context_t.html" title="Provides a simple way to create a child of the current context using a sigil. ">AutoCreateContextT</a>. The global context is created automatically; get a reference to it using <a class="el" href="class_auto_global_context.html" title="Provides a reference to the global context. ">AutoGlobalContext</a>.</p>
 <div class="fragment"><div class="line"><a class="code" href="class_auto_global_context.html">AutoGlobalContext</a> global;</div>
@@ -382,8 +377,8 @@ Protected Member Functions</h2></td></tr>
 <div class="line">              &lt;&lt; <span class="stringliteral">&quot; in current context.&quot;</span></div>
 <div class="line">              &lt;&lt; std::endl;</div>
 <div class="line">}</div>
-</div><!-- fragment --><p><a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> members of a context can pass information using <a class="el" href="class_auto_fired.html" title="Injects an object that can fire events. ">AutoFired</a> events, as well as with a filter graph. You can also pass data from one context to another in the same way. A context can also snoop on another context's events and filter graph packets to receive data it wouldn't otherwise have access to. Use <a class="el" href="class_bolt.html">Bolt</a> objects to receive notification when a context of a particular sigil type is created. This allows you to set up snooping whenever a particular type of context is created.</p>
-<p>Events, threads, and filter graphs require that the context's <a class="el" href="class_core_context.html#aec4c58c375caaeb70d20807cd4029657" title="Starts all registered threads and enables events and the flow of filter graph packets. ">Initiate()</a> function is called. </p>
+</div><!-- fragment --><p><a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> members of a context can pass information with a filter graph. You can also pass data from one context to another in the same way. A context can also snoop on another context's filter graph packets to receive data it wouldn't otherwise have access to. Use <a class="el" href="class_bolt.html">Bolt</a> objects to receive notification when a context of a particular sigil type is created. This allows you to set up snooping whenever a particular type of context is created.</p>
+<p>Threads and filter graphs require that the context's <a class="el" href="class_core_context.html#aec4c58c375caaeb70d20807cd4029657" title="Starts all registered threads and enables events and the flow of filter graph packets. ">Initiate()</a> function is called. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="a274e47cff1ae841fe66e03a186d8eede"></a>
 <div class="memitem">
@@ -421,14 +416,14 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a7e0312724984a15bffd56019af5a2737"></a>
+<a class="anchor" id="aeaa543a85ff3b5a9a3f581d1abe3ec5e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void CoreContext::AddSnooper </td>
           <td>(</td>
-          <td class="paramtype">const CoreObjectDescriptor &amp;&#160;</td>
+          <td class="paramtype">const autowiring::CoreObjectDescriptor &amp;&#160;</td>
           <td class="paramname"><em>traits</em></td><td>)</td>
           <td></td>
         </tr>
@@ -499,37 +494,17 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ad7a9b70597e2ce15604bd823758408c6"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">JunctionBoxBase&amp; CoreContext::All </td>
-          <td>(</td>
-          <td class="paramtype">const std::type_info &amp;&#160;</td>
-          <td class="paramname"><em>ti</em></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Runtime variant of All </p>
-<p>This instance does not cause a correct instantiation of the underlying junction box. Users are cautioned against using this method directly unless they are able to ensure a proper entry is made into the type registry.</p>
-<p>It is an error to call this method on an unregistered type. </p>
-
-</div>
-</div>
-<a class="anchor" id="aae5c351a08cc681adb51e7eb21ec6303"></a>
+<a class="anchor" id="aabb5e1ab6a9e96fc730163c4ee2777a4"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class T &gt; </div>
+template&lt;typename T &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">JunctionBox&lt;T&gt;&amp; CoreContext::All </td>
+          <td class="memname">const std::shared_ptr&lt;T&gt;&amp; CoreContext::Await </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -543,10 +518,86 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Returns all members of and snoopers on this context which implement the specified interface </p>
-<p>This method makes use of the JunctionBox subsystem, and thus is extremely efficient. The underlying system is memoized, and new entries automatically update any existing memos, which gives this routine O(n) efficiency, where n is the number of types in this context that implement the specified interface.</p>
-<p>Note that the junction box will also contain members of child contexts that implement the specified interface, and instances that are snooping this context.</p>
-<p>This method's result will be an empty iterable if the context is not currently initiated. </p>
+<p>Similar to Inject, except will block until the specified type is available in the context </p>
+<dl class="section return"><dt>Returns</dt><dd>An instance of type T</dd></dl>
+<p>This method will throw an exception if the context is terminated when the call is made or while waiting for injection to take place. </p>
+
+<p>Referenced by <a class="el" href="class_core_context.html#ad0fe0f195083677ae0e7b5b9aab0b344">Await()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ad0fe0f195083677ae0e7b5b9aab0b344"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::shared_ptr&lt;T&gt; CoreContext::Await </td>
+          <td>(</td>
+          <td class="paramtype">std::chrono::nanoseconds&#160;</td>
+          <td class="paramname"><em>timeout</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Timed version of Await </p>
+<dl class="section return"><dt>Returns</dt><dd>An instance of type T, or nullptr if the timeout has been reached</dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a86dc8709b84fe3797666ca707866b3db"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const AnySharedPointer&amp; CoreContext::Await </td>
+          <td>(</td>
+          <td class="paramtype">auto_id&#160;</td>
+          <td class="paramname"><em>id</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Runtime Await variant </p>
+
+</div>
+</div>
+<a class="anchor" id="a40b3b14054c5f5ef8eb7dbd8475bb785"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">AnySharedPointer CoreContext::Await </td>
+          <td>(</td>
+          <td class="paramtype">auto_id&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::chrono::nanoseconds&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Runtime Await variant </p>
 
 </div>
 </div>
@@ -575,6 +626,25 @@ template&lt;class T , class... Sigils&gt; </div>
 </div><div class="memdoc">
 
 <p>Injects the specified type T into all subcontexts created with one of the matching sigil types. </p>
+
+</div>
+</div>
+<a class="anchor" id="ae1250c4d0e0af0ac44810b793578589a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;const autowiring::CoreObjectDescriptor*&gt; CoreContext::BuildObjectState </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets a snapshot of all of the objects currently in the context </p>
+<p>The returned vector will only be valid for as long as this <a class="el" href="class_core_context.html" title="A top-level container class representing an autowiring domain, a minimum broadcast domain...">CoreContext</a> is </p>
 
 </div>
 </div>
@@ -624,7 +694,7 @@ template&lt;class T &gt; </div>
 <p>Creates a child context of this context. </p>
 <p>Using using <a class="el" href="_autowired_8h.html#aa65e92d94fffb9dcc42b0ff6de09f4cb" title="Creates a new context as a child of the current context. ">AutoCreateContext</a> or <a class="el" href="class_auto_create_context_t.html" title="Provides a simple way to create a child of the current context using a sigil. ">AutoCreateContextT</a> is the prefered way to create children of the current context.</p>
 <div class="fragment"><div class="line"><a class="code" href="class_auto_create_context_t.html">AutoCreateContext</a> myContext;</div>
-<div class="line"><a class="code" href="class_auto_create_context_t.html">AutoCreateContextT&lt;MySigil&gt;</a> myMarkedContext;</div>
+<div class="line"><a class="code" href="class_auto_create_context_t.html">AutoCreateContextT</a>&lt;MySigil&amp;rt; myMarkedContext;</div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -650,7 +720,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Identical to CurrentContextNoCheck, except returns the global context instead of a null pointer </p>
+<p>Identical to CurrentContextOrNull, except returns the global context instead of a null pointer </p>
 
 <p>Referenced by <a class="el" href="class_core_context.html#a0716b1184e3fba32e64c06160d3153a3">InjectCurrent()</a>.</p>
 
@@ -700,36 +770,6 @@ template&lt;class T &gt; </div>
 
 <p>Waits until the context is initiated or, if never initiated, until it starts shutting down. </p>
 <dl class="section return"><dt>Returns</dt><dd>True if initiated, false if shutting down.</dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="a1a9cb8e948aee0f4c90e0ec8f89d99cf"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class Fx &gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">void CoreContext::DEPRECATED </td>
-          <td>(</td>
-          <td class="paramtype">AddTeardownListener(Fx &amp;&amp;fx)&#160;</td>
-          <td class="paramname">, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&quot;Superceded by onTeardown&quot;&#160;</td>
-          <td class="paramname">&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Adds a teardown notifier which receives a pointer to this context on destruction </p>
 
 </div>
 </div>
@@ -948,27 +988,6 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a7646ea17e7eb961c2193485926af7965"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::shared_ptr&lt;<a class="el" href="classautowiring_1_1_thread_pool.html">autowiring::ThreadPool</a>&gt; CoreContext::GetThreadPool </td>
-          <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Returns the current thread pool </p>
-<p>If the context has been shut down, (IE, IsShutdown returns true), this method returns nullptr. Calling ThreadPool::Start on the returned shared pointer will not cause dispatchers pended to this context to be executed. To do this, invoke <a class="el" href="class_core_context.html#aec4c58c375caaeb70d20807cd4029657" title="Starts all registered threads and enables events and the flow of filter graph packets. ">CoreContext::Initiate</a> </p>
-
-<p>Referenced by <a class="el" href="class_core_context.html#a9d4ff8b34b0d1a6159abff8f7b96599e">operator+=()</a>.</p>
-
-</div>
-</div>
 <a class="anchor" id="aff72e44be09394686d51a367a6ff9e23"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1070,41 +1089,6 @@ template&lt;typename T &gt; </div>
 
 <p>Injects a type into the current context. </p>
 
-</div>
-</div>
-<a class="anchor" id="a1fe1f8ada791176b9c4893963b74aee1"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename MemFn &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">InvokeRelay&lt;MemFn&gt; CoreContext::Invoke </td>
-          <td>(</td>
-          <td class="paramtype">MemFn&#160;</td>
-          <td class="paramname"><em>memFn</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Fires an event in another context. </p>
-<p>Invoke allows you to fire an event in another context without first making that context current.</p>
-<p>The following statment:</p>
-<div class="fragment"><div class="line">ctxt-&gt;Invoke(&amp;MyEventType::MyEvent)();</div>
-</div><!-- fragment --><p>is equivalent to:</p>
-<div class="fragment"><div class="line"><a class="code" href="class_current_context_pusher.html">CurrentContextPusher</a>(ctxt);</div>
-<div class="line">(<a class="code" href="class_auto_fired.html">AutoFired&lt;MyEventType&gt;</a>())(&amp;MyEventType::MyEvent)();</div>
-<div class="line">ctxt-&gt;Pop();</div>
-</div><!-- fragment --> 
 </div>
 </div>
 <a class="anchor" id="a46ab31f4f5f30284304bca63390f9545"></a>
@@ -1283,36 +1267,6 @@ template&lt;class T , class Fn &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a9d4ff8b34b0d1a6159abff8f7b96599e"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class Fx &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool CoreContext::operator+= </td>
-          <td>(</td>
-          <td class="paramtype">Fx &amp;&amp;&#160;</td>
-          <td class="paramname"><em>fx</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Submits the specified lambda to this context's ThreadPool for processing </p>
-<dl class="section return"><dt>Returns</dt><dd>True if the job has been submitted for execution</dd></dl>
-<p>The passed thunk will not be executed if the current context has already stopped. </p>
-
-</div>
-</div>
 <a class="anchor" id="aa13acb0db1c7703d05721b49df414bd3"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1378,14 +1332,14 @@ template&lt;class Fn &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a9dc0d1a9db98765d26bb89cab5bb4f90"></a>
+<a class="anchor" id="ae45118cfd608f3f26b02d080a7815348"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void CoreContext::RemoveSnooper </td>
           <td>(</td>
-          <td class="paramtype">const CoreObjectDescriptor &amp;&#160;</td>
+          <td class="paramtype">const autowiring::CoreObjectDescriptor &amp;&#160;</td>
           <td class="paramname"><em>traits</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1524,27 +1478,6 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a2eff2c50f12c4de4e9e82a49a4bb2bc7"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void CoreContext::SetThreadPool </td>
-          <td>(</td>
-          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="classautowiring_1_1_thread_pool.html">autowiring::ThreadPool</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>threadPool</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Assigns the thread pool handler for this context </p>
-<p>If the context is currently running, the thread pool will automatically be started. The pool's start token and shared pointer is reset automatically when the context is torn down. If the context has already been shut down (IE, IsShutdown returns true), this method has no effect.</p>
-<p>Dispatchers that have been attached to the current thread pool will not be transitioned to the new pool. Changing the thread pool may cause the previously assigned thread pool to be stopped. This will cause it to complete all work assigned to it and release resources associated with processing. If there are no other handles to the pool, it may potentially destroy itself.</p>
-<p>It is an error to pass nullptr to this method. </p>
-
-</div>
-</div>
 <a class="anchor" id="a15918e5e6962e2865b6da51e557f35c8"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1570,7 +1503,8 @@ template&lt;class T &gt; </div>
 <p>Sets the context's teardown unlink behavior </p>
 <p>If this feature is turned on, then during context destruction and after teardown listeners have been run, all context members will be scanned for uses of <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a>. If a context member has such a field, and that field points to another member of the current context, then the field will be unlinked.</p>
 <p>If a field is <a class="el" href="class_auto_required.html" title="Autowires the specified dependency, creating a new instance if one does not already exist...">AutoRequired</a>, it is skipped. If the autowiring was satisfied outside of the context (for instance, at global scope), it's also skipped. <a class="el" href="class_autowired_fast.html" title="Autowires a slot immediately (with limitations). ">AutowiredFast</a> uses aren't registered anywhere, so they are also skipped.</p>
-<p>This method may be called at any time where a valid <a class="el" href="class_core_context.html" title="A top-level container class representing an autowiring domain, a minimum broadcast domain...">CoreContext</a> reference exists. <a class="el" href="class_core_context.html" title="A top-level container class representing an autowiring domain, a minimum broadcast domain...">CoreContext</a> does not track additional state if this flag is set. &lt;/reamrks&gt; </p>
+<p>This method may be called at any time where a valid <a class="el" href="class_core_context.html" title="A top-level container class representing an autowiring domain, a minimum broadcast domain...">CoreContext</a> reference exists. <a class="el" href="class_core_context.html" title="A top-level container class representing an autowiring domain, a minimum broadcast domain...">CoreContext</a> does not track additional state if this flag is set.</p>
+<p>Teardown unlinking is the default behavior. &lt;/reamrks&gt; </p>
 
 </div>
 </div>
@@ -1610,7 +1544,7 @@ template&lt;class T &gt; </div>
 <p>Filter graph packets will not be sent to receivers.</p>
 <p>The OnStop() method of all threads in the context is invoked. The specified shutdown mode determines whether the graceful parameter of OnStop() is set to true or false. </p>
 
-<p>Referenced by <a class="el" href="class_core_context.html#a107256cd9f29a43301afca98cd7309a5">SignalTerminate()</a>.</p>
+<p>Referenced by <a class="el" href="class_core_context.html#a005f71baab03719918429b7ecdd8a9ba">Inject()</a>, and <a class="el" href="class_core_context.html#a107256cd9f29a43301afca98cd7309a5">SignalTerminate()</a>.</p>
 
 </div>
 </div>
@@ -1710,7 +1644,7 @@ template&lt;class T &gt; </div>
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>autowiring/<a class="el" href="_core_context_8h_source.html">CoreContext.h</a></li>
+<li>src/autowiring/<a class="el" href="_core_context_8h_source.html">CoreContext.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -1718,7 +1652,7 @@ template&lt;class T &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_core_context.html">CoreContext</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:25:20 for Autowiring by
+    <li class="footer">Generated on Fri Jul 29 2016 21:26:22 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

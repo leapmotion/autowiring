@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.10"/>
-<title>Autowiring: autowiring/ThreadPool.h Source File</title>
+<title>Autowiring: src/autowiring/ThreadPool.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.7</span>
+   &#160;<span id="projectnumber">1.0.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -111,58 +111,66 @@ $(document).ready(function(){initNavTree('_thread_pool_8h_source.html','');});
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;atomic&gt;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;memory&gt;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;DispatchThunk.h&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;atomic&gt;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;mutex&gt;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">class </span><a class="code" href="class_dispatch_queue.html">DispatchQueue</a>;</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">class </span>DispatchThunkBase;</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include MEMORY_HEADER</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">class </span><a class="code" href="class_dispatch_queue.html">DispatchQueue</a>;</div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceautowiring.html">autowiring</a> {</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
-<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="classautowiring_1_1_thread_pool.html">   15</a></span>&#160;<span class="keyword">class </span><a class="code" href="classautowiring_1_1_thread_pool.html">ThreadPool</a>:</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  <span class="keyword">public</span> std::enable_shared_from_this&lt;ThreadPool&gt;</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;{</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <a class="code" href="classautowiring_1_1_thread_pool.html">ThreadPool</a>(<span class="keywordtype">void</span>) {}</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <span class="keyword">virtual</span> ~<a class="code" href="classautowiring_1_1_thread_pool.html">ThreadPool</a>(<span class="keywordtype">void</span>) {}</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="comment">// Start token:</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  std::mutex m_lock;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  std::weak_ptr&lt;void&gt; m_startToken;</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
-<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="classautowiring_1_1_thread_pool.html#ae17455e2f6abb95d1270357fd65eeaf8">   33</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classautowiring_1_1_thread_pool.html#ae17455e2f6abb95d1270357fd65eeaf8">OnStartUnsafe</a>(<span class="keywordtype">void</span>) {}</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;</div>
-<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="classautowiring_1_1_thread_pool.html#afa4c80aa10ca64fed35273b5fadd87d6">   41</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classautowiring_1_1_thread_pool.html#afa4c80aa10ca64fed35273b5fadd87d6">OnStop</a>(<span class="keywordtype">void</span>) {}</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="classautowiring_1_1_thread_pool.html#a4fdad28cbbe451fc38b99e026648ed83">   45</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="classautowiring_1_1_thread_pool.html#a4fdad28cbbe451fc38b99e026648ed83">IsStarted</a>(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> !m_startToken.expired(); }</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  <span class="keyword">virtual</span> std::shared_ptr&lt;void&gt; <a class="code" href="classautowiring_1_1_thread_pool.html#a1e0dc654fe77523edcc62983603b201b">Start</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classautowiring_1_1_thread_pool.html#ad4e0e0f0ed07a8f7eecb902e477e7400">Consume</a>(<span class="keyword">const</span> std::shared_ptr&lt;DispatchQueue&gt;&amp; dq);</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classautowiring_1_1_thread_pool.html#abd1c5c0ed7c110991635291062febcb2">Submit</a>(std::unique_ptr&lt;DispatchThunkBase&gt;&amp;&amp; thunk) = 0;</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;};</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;}</div>
-<div class="ttc" id="classautowiring_1_1_thread_pool_html"><div class="ttname"><a href="classautowiring_1_1_thread_pool.html">autowiring::ThreadPool</a></div><div class="ttdoc">Generic interface for a thread pool </div><div class="ttdef"><b>Definition:</b> ThreadPool.h:15</div></div>
-<div class="ttc" id="classautowiring_1_1_thread_pool_html_afa4c80aa10ca64fed35273b5fadd87d6"><div class="ttname"><a href="classautowiring_1_1_thread_pool.html#afa4c80aa10ca64fed35273b5fadd87d6">autowiring::ThreadPool::OnStop</a></div><div class="ttdeci">virtual void OnStop(void)</div><div class="ttdoc">Called when the thread pool is being cleaned up </div><div class="ttdef"><b>Definition:</b> ThreadPool.h:41</div></div>
-<div class="ttc" id="classautowiring_1_1_thread_pool_html_a4fdad28cbbe451fc38b99e026648ed83"><div class="ttname"><a href="classautowiring_1_1_thread_pool.html#a4fdad28cbbe451fc38b99e026648ed83">autowiring::ThreadPool::IsStarted</a></div><div class="ttdeci">bool IsStarted(void) const </div><div class="ttdoc">True if the thread pool is running</div><div class="ttdef"><b>Definition:</b> ThreadPool.h:45</div></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">class </span>DispatchThunkBase;</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
+<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="classautowiring_1_1_thread_pool.html">   17</a></span>&#160;<span class="keyword">class </span><a class="code" href="classautowiring_1_1_thread_pool.html">ThreadPool</a>:</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="keyword">public</span> std::enable_shared_from_this&lt;ThreadPool&gt;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;{</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <a class="code" href="classautowiring_1_1_thread_pool.html">ThreadPool</a>(<span class="keywordtype">void</span>) {}</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <span class="keyword">virtual</span> ~<a class="code" href="classautowiring_1_1_thread_pool.html">ThreadPool</a>(<span class="keywordtype">void</span>) {}</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="comment">// Start token:</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  std::mutex m_lock;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  std::weak_ptr&lt;void&gt; m_startToken;</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="classautowiring_1_1_thread_pool.html#ae17455e2f6abb95d1270357fd65eeaf8">   35</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classautowiring_1_1_thread_pool.html#ae17455e2f6abb95d1270357fd65eeaf8">OnStartUnsafe</a>(<span class="keywordtype">void</span>) {}</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;</div>
+<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="classautowiring_1_1_thread_pool.html#afa4c80aa10ca64fed35273b5fadd87d6">   43</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classautowiring_1_1_thread_pool.html#afa4c80aa10ca64fed35273b5fadd87d6">OnStop</a>(<span class="keywordtype">void</span>) {}</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="classautowiring_1_1_thread_pool.html#a4fdad28cbbe451fc38b99e026648ed83">   47</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="classautowiring_1_1_thread_pool.html#a4fdad28cbbe451fc38b99e026648ed83">IsStarted</a>(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> !m_startToken.expired(); }</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  <span class="keyword">virtual</span> std::shared_ptr&lt;void&gt; <a class="code" href="classautowiring_1_1_thread_pool.html#a1e0dc654fe77523edcc62983603b201b">Start</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classautowiring_1_1_thread_pool.html#ad4e0e0f0ed07a8f7eecb902e477e7400">Consume</a>(<span class="keyword">const</span> std::shared_ptr&lt;DispatchQueue&gt;&amp; dq);</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classautowiring_1_1_thread_pool.html#abd1c5c0ed7c110991635291062febcb2">Submit</a>(std::unique_ptr&lt;DispatchThunkBase&gt;&amp;&amp; thunk) = 0;</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> Fx&gt;</div>
+<div class="line"><a name="l00103"></a><span class="lineno"><a class="line" href="classautowiring_1_1_thread_pool.html#a688bae6bc277a0a79ec305bb7c7373ac">  103</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="classautowiring_1_1_thread_pool.html#a688bae6bc277a0a79ec305bb7c7373ac">operator+=</a>(Fx&amp;&amp; fx) {</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classautowiring_1_1_thread_pool.html#abd1c5c0ed7c110991635291062febcb2">Submit</a>(std::make_unique&lt;DispatchThunk&lt;Fx&gt;&gt;(std::forward&lt;Fx&amp;&amp;&gt;(fx)));</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  }</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;};</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;}</div>
+<div class="ttc" id="classautowiring_1_1_thread_pool_html"><div class="ttname"><a href="classautowiring_1_1_thread_pool.html">autowiring::ThreadPool</a></div><div class="ttdoc">Generic interface for a thread pool </div><div class="ttdef"><b>Definition:</b> ThreadPool.h:17</div></div>
+<div class="ttc" id="classautowiring_1_1_thread_pool_html_afa4c80aa10ca64fed35273b5fadd87d6"><div class="ttname"><a href="classautowiring_1_1_thread_pool.html#afa4c80aa10ca64fed35273b5fadd87d6">autowiring::ThreadPool::OnStop</a></div><div class="ttdeci">virtual void OnStop(void)</div><div class="ttdoc">Called when the thread pool is being cleaned up </div><div class="ttdef"><b>Definition:</b> ThreadPool.h:43</div></div>
+<div class="ttc" id="classautowiring_1_1_thread_pool_html_a688bae6bc277a0a79ec305bb7c7373ac"><div class="ttname"><a href="classautowiring_1_1_thread_pool.html#a688bae6bc277a0a79ec305bb7c7373ac">autowiring::ThreadPool::operator+=</a></div><div class="ttdeci">bool operator+=(Fx &amp;&amp;fx)</div><div class="ttdoc">Submits the specified lambda to this context&#39;s ThreadPool for processing </div><div class="ttdef"><b>Definition:</b> ThreadPool.h:103</div></div>
+<div class="ttc" id="classautowiring_1_1_thread_pool_html_a4fdad28cbbe451fc38b99e026648ed83"><div class="ttname"><a href="classautowiring_1_1_thread_pool.html#a4fdad28cbbe451fc38b99e026648ed83">autowiring::ThreadPool::IsStarted</a></div><div class="ttdeci">bool IsStarted(void) const </div><div class="ttdoc">True if the thread pool is running</div><div class="ttdef"><b>Definition:</b> ThreadPool.h:47</div></div>
 <div class="ttc" id="classautowiring_1_1_thread_pool_html_ad4e0e0f0ed07a8f7eecb902e477e7400"><div class="ttname"><a href="classautowiring_1_1_thread_pool.html#ad4e0e0f0ed07a8f7eecb902e477e7400">autowiring::ThreadPool::Consume</a></div><div class="ttdeci">virtual void Consume(const std::shared_ptr&lt; DispatchQueue &gt; &amp;dq)</div><div class="ttdoc">Causes the thread pool to call all lambdas specified on the passed DispatchQueue </div></div>
 <div class="ttc" id="classautowiring_1_1_thread_pool_html_abd1c5c0ed7c110991635291062febcb2"><div class="ttname"><a href="classautowiring_1_1_thread_pool.html#abd1c5c0ed7c110991635291062febcb2">autowiring::ThreadPool::Submit</a></div><div class="ttdeci">virtual bool Submit(std::unique_ptr&lt; DispatchThunkBase &gt; &amp;&amp;thunk)=0</div><div class="ttdoc">Adds the specified thunk to be executed by the thread pool at some later time </div></div>
 <div class="ttc" id="classautowiring_1_1_thread_pool_html_a1e0dc654fe77523edcc62983603b201b"><div class="ttname"><a href="classautowiring_1_1_thread_pool.html#a1e0dc654fe77523edcc62983603b201b">autowiring::ThreadPool::Start</a></div><div class="ttdeci">virtual std::shared_ptr&lt; void &gt; Start(void)</div><div class="ttdoc">Begins processing on this thread pool </div></div>
-<div class="ttc" id="namespaceautowiring_html"><div class="ttname"><a href="namespaceautowiring.html">autowiring</a></div><div class="ttdef"><b>Definition:</b> AutoPacket.h:31</div></div>
-<div class="ttc" id="classautowiring_1_1_thread_pool_html_ae17455e2f6abb95d1270357fd65eeaf8"><div class="ttname"><a href="classautowiring_1_1_thread_pool.html#ae17455e2f6abb95d1270357fd65eeaf8">autowiring::ThreadPool::OnStartUnsafe</a></div><div class="ttdeci">virtual void OnStartUnsafe(void)</div><div class="ttdoc">Called when the thread pool is first started </div><div class="ttdef"><b>Definition:</b> ThreadPool.h:33</div></div>
-<div class="ttc" id="class_dispatch_queue_html"><div class="ttname"><a href="class_dispatch_queue.html">DispatchQueue</a></div><div class="ttdoc">This is an asynchronous queue of zero-argument functions </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:21</div></div>
+<div class="ttc" id="namespaceautowiring_html"><div class="ttname"><a href="namespaceautowiring.html">autowiring</a></div><div class="ttdef"><b>Definition:</b> auto_arg.h:8</div></div>
+<div class="ttc" id="classautowiring_1_1_thread_pool_html_ae17455e2f6abb95d1270357fd65eeaf8"><div class="ttname"><a href="classautowiring_1_1_thread_pool.html#ae17455e2f6abb95d1270357fd65eeaf8">autowiring::ThreadPool::OnStartUnsafe</a></div><div class="ttdeci">virtual void OnStartUnsafe(void)</div><div class="ttdoc">Called when the thread pool is first started </div><div class="ttdef"><b>Definition:</b> ThreadPool.h:35</div></div>
+<div class="ttc" id="class_dispatch_queue_html"><div class="ttname"><a href="class_dispatch_queue.html">DispatchQueue</a></div><div class="ttdoc">This is an asynchronous queue of zero-argument functions </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:20</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><b>ThreadPool.h</b></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:25:19 for Autowiring by
+    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_6a7210ebf394e73ac44c8fe97dd266de.html">autowiring</a></li><li class="navelem"><b>ThreadPool.h</b></li>
+    <li class="footer">Generated on Fri Jul 29 2016 21:26:22 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

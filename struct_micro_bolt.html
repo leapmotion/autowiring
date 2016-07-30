@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.7</span>
+   &#160;<span id="projectnumber">1.0.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -167,14 +167,15 @@ template&lt;typename T , typename... Sigils&gt; </div>
 </div><div class="memdoc">
 
 <p>A notification broadcast when a context of the desired name has been created </p>
-<p>The current context at the time of the call is guaranteed to be the newly created context. </p>
+<p>The current context at the time of the call is guaranteed to be the newly created context.</p>
+<p>This method may potentially be called at an arbitrary time <em>after</em> the context is created. The created context may not yet be started, or it could be initiated, or it could be in a teardown state, or any other state that is valid for a context. </p>
 
 <p>Implements <a class="el" href="class_bolt_base.html#a549b755a9a153a2ae7c7108e84fea519">BoltBase</a>.</p>
 
 </div>
 </div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>autowiring/<a class="el" href="_micro_bolt_8h_source.html">MicroBolt.h</a></li>
+<li>src/autowiring/<a class="el" href="_micro_bolt_8h_source.html">MicroBolt.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -182,7 +183,7 @@ template&lt;typename T , typename... Sigils&gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="struct_micro_bolt.html">MicroBolt</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:25:20 for Autowiring by
+    <li class="footer">Generated on Fri Jul 29 2016 21:26:22 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

@@ -9,6 +9,8 @@ var class_basic_thread =
     [ "ForceCoreThreadReidentify", "class_basic_thread.html#ae9d8f1216df2a3f93b3b3a6a4c454fa0", null ],
     [ "GetCreationTime", "class_basic_thread.html#a6f756d73ea97f88a9d12f6e0708f1cf8", null ],
     [ "GetLock", "class_basic_thread.html#a208ccf918f0a440e2c6c53c2ac835a37", null ],
+    [ "GetThread", "class_basic_thread.html#a5253834a03afef831a1419937450d563", null ],
+    [ "GetThreadPriority", "class_basic_thread.html#a8a22b69ca60034f3d31f9b7df3406655", null ],
     [ "GetThreadTimes", "class_basic_thread.html#a643d476885ee38306b061d7fb37c126f", null ],
     [ "IsCompleted", "class_basic_thread.html#a2c6d0e971236f28d25eaef0bffb6181e", null ],
     [ "IsMainThread", "class_basic_thread.html#aa5fbc237ea2f1034509db47d0ed2f639", null ],
@@ -18,5 +20,6 @@ var class_basic_thread =
     [ "PerformStatusUpdate", "class_basic_thread.html#ac6fa3d56f8a17a6a8244aeab10fff577", null ],
     [ "Run", "class_basic_thread.html#aca183b811e4f93dfce70a449649b3033", null ],
     [ "SetCurrentThreadName", "class_basic_thread.html#aa6d8803cdc6ab28b1d79740b115487c5", null ],
+    [ "SetThreadPriority", "class_basic_thread.html#a6737ad97a5a74348518f658a34e3170b", null ],
     [ "WaitForStateUpdate", "class_basic_thread.html#a4b8057883725bfbfedd44b2f4ab471a6", null ]
 ];

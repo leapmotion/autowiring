@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.7</span>
+   &#160;<span id="projectnumber">1.0.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -136,18 +136,14 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a549b755a9a153a2ae7c7108e84fea519"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_bolt_base.html#a549b755a9a153a2ae7c7108e84fea519">ContextCreated</a> (void)=0</td></tr>
 <tr class="memdesc:a549b755a9a153a2ae7c7108e84fea519"><td class="mdescLeft">&#160;</td><td class="mdescRight">A notification broadcast when a context of the desired name has been created  <a href="#a549b755a9a153a2ae7c7108e84fea519">More...</a><br /></td></tr>
 <tr class="separator:a549b755a9a153a2ae7c7108e84fea519"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d4354d51bfff378ca9a5232e29d93c3"><td class="memItemLeft" align="right" valign="top">virtual const t_TypeInfoVector&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_bolt_base.html#a9d4354d51bfff378ca9a5232e29d93c3">GetContextSigils</a> (void) const  =0</td></tr>
-<tr class="memdesc:a9d4354d51bfff378ca9a5232e29d93c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a null-termianted list of one (or more) sigil types that this bolt cares about  <a href="#a9d4354d51bfff378ca9a5232e29d93c3">More...</a><br /></td></tr>
-<tr class="separator:a9d4354d51bfff378ca9a5232e29d93c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfe424160f6fb374533dd1f76f216cc2"><td class="memItemLeft" align="right" valign="top">virtual const auto_id *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_bolt_base.html#acfe424160f6fb374533dd1f76f216cc2">GetContextSigils</a> (void) const  =0</td></tr>
+<tr class="memdesc:acfe424160f6fb374533dd1f76f216cc2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a null-terminated list of one (or more) sigil types that this bolt cares about  <a href="#acfe424160f6fb374533dd1f76f216cc2">More...</a><br /></td></tr>
+<tr class="separator:acfe424160f6fb374533dd1f76f216cc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00548d2f70b5aca6f3e8cd9735724cfb"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_bolt_base.html#a00548d2f70b5aca6f3e8cd9735724cfb">Matches</a> (auto_id id) const  =0</td></tr>
+<tr class="separator:a00548d2f70b5aca6f3e8cd9735724cfb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">contextName</td><td>The name of the context whose creation we want to listen for</td></tr>
-  </table>
-  </dd>
-</dl>
-</div><h2 class="groupheader">Member Function Documentation</h2>
+<div class="textblock"></div><h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="a549b755a9a153a2ae7c7108e84fea519"></a>
 <div class="memitem">
 <div class="memproto">
@@ -171,13 +167,14 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>A notification broadcast when a context of the desired name has been created </p>
-<p>The current context at the time of the call is guaranteed to be the newly created context. </p>
+<p>The current context at the time of the call is guaranteed to be the newly created context.</p>
+<p>This method may potentially be called at an arbitrary time <em>after</em> the context is created. The created context may not yet be started, or it could be initiated, or it could be in a teardown state, or any other state that is valid for a context. </p>
 
 <p>Implemented in <a class="el" href="struct_micro_bolt.html#a15a835b332824ac3f2d765aefdc68c83">MicroBolt&lt; T, Sigils &gt;</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a9d4354d51bfff378ca9a5232e29d93c3"></a>
+<a class="anchor" id="acfe424160f6fb374533dd1f76f216cc2"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -185,7 +182,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual const t_TypeInfoVector BoltBase::GetContextSigils </td>
+          <td class="memname">virtual const auto_id* BoltBase::GetContextSigils </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -199,14 +196,41 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Returns a null-termianted list of one (or more) sigil types that this bolt cares about </p>
+<p>Returns a null-terminated list of one (or more) sigil types that this bolt cares about </p>
 
-<p>Implemented in <a class="el" href="class_bolt.html#a3e67e9ba9fef7f57275163870e4a3df2">Bolt&lt; Sigil &gt;</a>, and <a class="el" href="class_bolt.html#a3e67e9ba9fef7f57275163870e4a3df2">Bolt&lt; Sigils... &gt;</a>.</p>
+<p>Implemented in <a class="el" href="class_bolt.html#ada603094f12d2bc4a78fc7ea87bd1bbc">Bolt&lt; Sigil &gt;</a>, and <a class="el" href="class_bolt.html#ada603094f12d2bc4a78fc7ea87bd1bbc">Bolt&lt; Sigils... &gt;</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a00548d2f70b5aca6f3e8cd9735724cfb"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual bool BoltBase::Matches </td>
+          <td>(</td>
+          <td class="paramtype">auto_id&#160;</td>
+          <td class="paramname"><em>id</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>True if the specified sigil type matches the types interesting to this bolt </dd></dl>
+
+<p>Implemented in <a class="el" href="class_bolt.html#a1eea64b22369501cf87e0d98617f2ffa">Bolt&lt; Sigil &gt;</a>, and <a class="el" href="class_bolt.html#a1eea64b22369501cf87e0d98617f2ffa">Bolt&lt; Sigils... &gt;</a>.</p>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>autowiring/<a class="el" href="_bolt_base_8h_source.html">BoltBase.h</a></li>
+<li>src/autowiring/<a class="el" href="_bolt_base_8h_source.html">BoltBase.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -214,7 +238,7 @@ Public Member Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_bolt_base.html">BoltBase</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:25:20 for Autowiring by
+    <li class="footer">Generated on Fri Jul 29 2016 21:26:22 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

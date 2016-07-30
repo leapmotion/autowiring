@@ -1,14 +1,12 @@
 var searchData=
 [
-  ['decorate',['Decorate',['../class_auto_packet.html#a58cab6182ed3149b78b023a303467d39',1,'AutoPacket::Decorate(const AnySharedPointer &amp;ptr, DecorationKey key)'],['../class_auto_packet.html#a3964c80db7d3f4a22584a7e3fa82e126',1,'AutoPacket::Decorate(const std::shared_ptr&lt; T &gt; &amp;ptr)'],['../class_auto_packet.html#ab2eb82a4b2b0904f63d6d2a56639668c',1,'AutoPacket::Decorate(const std::shared_ptr&lt; const T &gt; &amp;ptr)'],['../class_auto_packet.html#a226d8fca104604bf290251b30783d030',1,'AutoPacket::Decorate(T &amp;&amp;t)']]],
+  ['decorate',['Decorate',['../class_auto_packet.html#a03eaa4b071ecd290890cdc17415de637',1,'AutoPacket::Decorate(const AnySharedPointer &amp;ptr, autowiring::DecorationKey key)'],['../class_auto_packet.html#a3964c80db7d3f4a22584a7e3fa82e126',1,'AutoPacket::Decorate(const std::shared_ptr&lt; T &gt; &amp;ptr)'],['../class_auto_packet.html#ab2eb82a4b2b0904f63d6d2a56639668c',1,'AutoPacket::Decorate(const std::shared_ptr&lt; const T &gt; &amp;ptr)'],['../class_auto_packet.html#a226d8fca104604bf290251b30783d030',1,'AutoPacket::Decorate(T &amp;&amp;t)']]],
   ['decorateimmediate',['DecorateImmediate',['../class_auto_packet.html#ac016b40fd64cf3e9df03627de240448a',1,'AutoPacket']]],
-  ['decorateimmediateunsafe',['DecorateImmediateUnsafe',['../class_auto_packet.html#afff5b7454dc3bcfb943d74e8738efe72',1,'AutoPacket']]],
-  ['decoratenopriors',['DecorateNoPriors',['../class_auto_packet.html#a721c9e5f19dcc05c8d408901615fcea5',1,'AutoPacket']]],
+  ['decorateimmediateunsafe',['DecorateImmediateUnsafe',['../class_auto_packet.html#a202896cd6af85ecd147af3de488ca9cd',1,'AutoPacket']]],
+  ['decoratenopriors',['DecorateNoPriors',['../class_auto_packet.html#a81af5ceaeef3a5d176fd1ea83c638385',1,'AutoPacket']]],
   ['delayuntilinitiated',['DelayUntilInitiated',['../class_core_context.html#abafba926a5bb2aa13f15c4de0d0df019',1,'CoreContext']]],
   ['demangle',['demangle',['../namespaceautowiring.html#aef8c65202e0d57213ea8335013bc634a',1,'autowiring']]],
-  ['demangletypename',['DemangleTypeName',['../class_auto_packet_graph.html#a04f1aea942c321644bd35f876a28ec65',1,'AutoPacketGraph']]],
-  ['deprecated',['DEPRECATED',['../class_auto_packet.html#aada270350032ac870594ac2fdf6fe372',1,'AutoPacket::DEPRECATED()'],['../class_core_context.html#a1a9cb8e948aee0f4c90e0ec8f89d99cf',1,'CoreContext::DEPRECATED()']]],
-  ['detectcycle',['DetectCycle',['../class_auto_packet.html#a8f801a97c5eb7308c977ef34604608d4',1,'AutoPacket']]],
+  ['detectcycle',['DetectCycle',['../class_auto_packet.html#a0b6d8d3eb3e0b671ce954daf1dc66959',1,'AutoPacket']]],
   ['dispatchallevents',['DispatchAllEvents',['../class_dispatch_queue.html#af94131c04ad4d1513cc411870fc6b002',1,'DispatchQueue']]],
   ['dispatchevent',['DispatchEvent',['../class_dispatch_queue.html#ae4cf0ed4b428ecbee03fb64a0e705ce7',1,'DispatchQueue']]],
   ['dispatcheventunsafe',['DispatchEventUnsafe',['../class_dispatch_queue.html#a7c909a2f706599e2aeaea163afc43d2a',1,'DispatchQueue']]],

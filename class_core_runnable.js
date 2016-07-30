@@ -3,7 +3,7 @@ var class_core_runnable =
     [ "DoAdditionalWait", "class_core_runnable.html#acfcf01282cf908f91218bfdd5601678c", null ],
     [ "DoAdditionalWait", "class_core_runnable.html#af3c2a762acf2fd367f09fff1100231da", null ],
     [ "GetOutstanding", "class_core_runnable.html#a7d2c7498d9db4e8f76dc2b6a69d8f1bc", null ],
-    [ "IsRunning", "class_core_runnable.html#ab13799735ef39ebe372f9851395a7f53", null ],
+    [ "IsRunning", "class_core_runnable.html#ac3ff8924be1ad354a7b8a5438ca82b32", null ],
     [ "OnStart", "class_core_runnable.html#aa72398f9348bd2b63fd9e040ee21f7e9", null ],
     [ "OnStop", "class_core_runnable.html#ac2b1fc01ebff2aa052c13abe7be0d647", null ],
     [ "ShouldStop", "class_core_runnable.html#a144421b84f8b8fee45838fbe2be6e5c6", null ],

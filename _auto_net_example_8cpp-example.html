@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.7</span>
+   &#160;<span id="projectnumber">1.0.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -105,23 +105,23 @@ $(document).ready(function(){initNavTree('_auto_net_example_8cpp-example.html','
 </div><!--header-->
 <div class="contents">
 <div class="fragment"><div class="line"><span class="comment">// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.</span></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="_autowired_8h.html">autowiring/Autowired.h</a>&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="_auto_net_server_8h.html">autowiring/AutoNetServer.h</a>&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;autowiring/autowiring.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="_auto_net_server_8h.html">autonet/AutoNetServer.h</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include THREAD_HEADER</span></div>
 <div class="line"></div>
-<div class="line"><span class="comment">// </span></div>
+<div class="line"><span class="comment">//</span></div>
 <div class="line"><span class="comment">// AutoNetServer</span></div>
-<div class="line"><span class="comment">// </span></div>
+<div class="line"><span class="comment">//</span></div>
 <div class="line"><span class="comment">// This example creates a sample context structure to view with the</span></div>
 <div class="line"><span class="comment">// AutoNetVisualizer. It creates contexts and adds dummy context members</span></div>
 <div class="line"><span class="comment">// at timed intervals to show off the dynamic nature of the visualizer.</span></div>
 <div class="line"><span class="comment">// You can view the visualizer at leapmotion.github.io/autonet</span></div>
-<div class="line"><span class="comment">// </span></div>
+<div class="line"><span class="comment">//</span></div>
 <div class="line"></div>
-<div class="line"><span class="comment">// </span></div>
+<div class="line"><span class="comment">//</span></div>
 <div class="line"><span class="comment">// Declaration of dummy classes to view in the visualizer</span></div>
-<div class="line"><span class="comment">// </span></div>
+<div class="line"><span class="comment">//</span></div>
 <div class="line"></div>
 <div class="line"><span class="keyword">class </span>TestThread1:</div>
 <div class="line">  <span class="keyword">public</span> <a name="_a0"></a><a class="code" href="class_core_thread.html">CoreThread</a></div>
@@ -171,30 +171,30 @@ $(document).ready(function(){initNavTree('_auto_net_example_8cpp-example.html','
 <div class="line"></div>
 <div class="line">  <span class="comment">// Initiate context to start threads</span></div>
 <div class="line">  ctxt-&gt;Initiate();</div>
-<div class="line">  </div>
+<div class="line"></div>
 <div class="line">  <span class="comment">// Create a bunch of example Contexts and Context Members</span></div>
 <div class="line">  <span class="keyword">auto</span> ctxt2 = ctxt-&gt;Create&lt;ContextB&gt;();</div>
 <div class="line">  <span class="keyword">auto</span> ctxt3 = ctxt-&gt;Create&lt;ContextC&gt;();</div>
-<div class="line">  </div>
+<div class="line"></div>
 <div class="line">  ctxt2-&gt;Initiate();</div>
-<div class="line">  </div>
+<div class="line"></div>
 <div class="line">  {</div>
 <div class="line">    <a class="code" href="class_current_context_pusher.html">CurrentContextPusher</a> pshr(ctxt3);</div>
 <div class="line">    <a class="code" href="class_auto_required.html">AutoRequired&lt;TestThread2&gt;</a> bar;</div>
 <div class="line">  }</div>
-<div class="line">  </div>
+<div class="line"></div>
 <div class="line">  std::shared_ptr&lt;CoreContext&gt; newContext;</div>
-<div class="line">  </div>
+<div class="line"></div>
 <div class="line">  {</div>
 <div class="line">    <a class="code" href="class_current_context_pusher.html">CurrentContextPusher</a> pshr(ctxt2);</div>
 <div class="line">    <a class="code" href="class_auto_required.html">AutoRequired&lt;TestThread1&gt;</a> foo;</div>
 <div class="line"></div>
 <div class="line">    <a class="code" href="class_auto_required.html">AutoRequired&lt;TestAutoFilter&lt;const TestData&lt;0&gt;</a>&amp;, TestData&lt;1&gt;&amp;&gt;&gt; filter01;</div>
 <div class="line">    <a class="code" href="class_auto_required.html">AutoRequired&lt;TestAutoFilter&lt;const TestData&lt;1&gt;</a>&amp;, TestData&lt;2&gt;&amp;&gt;&gt; filter12;</div>
-<div class="line">    </div>
+<div class="line"></div>
 <div class="line">    <span class="comment">// Give time to open AutoNet Visualizer</span></div>
 <div class="line">    std::this_thread::sleep_for(std::chrono::seconds(10));</div>
-<div class="line">    </div>
+<div class="line"></div>
 <div class="line">    *foo += std::chrono::seconds(1),[&amp;ctxt]{</div>
 <div class="line">      ctxt-&gt;Inject&lt;ThisClassGetsAddedLater&lt;4&gt;&gt;();</div>
 <div class="line">    };</div>
@@ -236,7 +236,7 @@ $(document).ready(function(){initNavTree('_auto_net_example_8cpp-example.html','
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Wed Jan 6 2016 16:25:19 for Autowiring by
+    <li class="footer">Generated on Fri Jul 29 2016 21:26:21 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

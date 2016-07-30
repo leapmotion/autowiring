@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.7</span>
+   &#160;<span id="projectnumber">1.0.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -144,6 +144,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a6f756d73ea97f88a9d12f6e0708f1cf8"><td class="memItemLeft" align="right" valign="top">std::chrono::steady_clock::time_point&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a6f756d73ea97f88a9d12f6e0708f1cf8">GetCreationTime</a> (void)</td></tr>
 <tr class="memdesc:a6f756d73ea97f88a9d12f6e0708f1cf8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The thread creation time.  <a href="#a6f756d73ea97f88a9d12f6e0708f1cf8">More...</a><br /></td></tr>
 <tr class="separator:a6f756d73ea97f88a9d12f6e0708f1cf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5253834a03afef831a1419937450d563"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; void &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a5253834a03afef831a1419937450d563">GetThread</a> (void) const </td></tr>
+<tr class="separator:a5253834a03afef831a1419937450d563"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a22b69ca60034f3d31f9b7df3406655"><td class="memItemLeft" align="right" valign="top"><a class="el" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a8a22b69ca60034f3d31f9b7df3406655">GetThreadPriority</a> (void) const </td></tr>
+<tr class="separator:a8a22b69ca60034f3d31f9b7df3406655"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a643d476885ee38306b061d7fb37c126f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a643d476885ee38306b061d7fb37c126f">GetThreadTimes</a> (std::chrono::milliseconds &amp;kernelTime, std::chrono::milliseconds &amp;userTime)</td></tr>
 <tr class="memdesc:a643d476885ee38306b061d7fb37c126f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports kernel and user mode running times for this thread.  <a href="#a643d476885ee38306b061d7fb37c126f">More...</a><br /></td></tr>
 <tr class="separator:a643d476885ee38306b061d7fb37c126f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -171,10 +175,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a34e73ac0659e22117582b903b81d2b18 inherit pub_methods_class_context_member"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked by the parent context when the parent context is about to be destroyed  <a href="#a34e73ac0659e22117582b903b81d2b18">More...</a><br /></td></tr>
 <tr class="separator:a34e73ac0659e22117582b903b81d2b18 inherit pub_methods_class_context_member"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_class_core_runnable"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_class_core_runnable')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="class_core_runnable.html">CoreRunnable</a></td></tr>
-<tr class="memitem:ab13799735ef39ebe372f9851395a7f53 inherit pub_methods_class_core_runnable"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab13799735ef39ebe372f9851395a7f53"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#ab13799735ef39ebe372f9851395a7f53">IsRunning</a> (void) const </td></tr>
-<tr class="memdesc:ab13799735ef39ebe372f9851395a7f53 inherit pub_methods_class_core_runnable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether this runnable is currently running. <br /></td></tr>
-<tr class="separator:ab13799735ef39ebe372f9851395a7f53 inherit pub_methods_class_core_runnable"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3ff8924be1ad354a7b8a5438ca82b32 inherit pub_methods_class_core_runnable"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac3ff8924be1ad354a7b8a5438ca82b32"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#ac3ff8924be1ad354a7b8a5438ca82b32">IsRunning</a> (void) const </td></tr>
+<tr class="memdesc:ac3ff8924be1ad354a7b8a5438ca82b32 inherit pub_methods_class_core_runnable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether this runnable is currently running. <br /></td></tr>
+<tr class="separator:ac3ff8924be1ad354a7b8a5438ca82b32 inherit pub_methods_class_core_runnable"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a144421b84f8b8fee45838fbe2be6e5c6 inherit pub_methods_class_core_runnable"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a144421b84f8b8fee45838fbe2be6e5c6"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#a144421b84f8b8fee45838fbe2be6e5c6">ShouldStop</a> (void) volatile const </td></tr>
 <tr class="memdesc:a144421b84f8b8fee45838fbe2be6e5c6 inherit pub_methods_class_core_runnable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports whether this runnable should stop. <br /></td></tr>
@@ -240,6 +244,9 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:aa6d8803cdc6ab28b1d79740b115487c5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#aa6d8803cdc6ab28b1d79740b115487c5">SetCurrentThreadName</a> (void) const </td></tr>
 <tr class="memdesc:aa6d8803cdc6ab28b1d79740b115487c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns a name to the thread, displayed in debuggers.  <a href="#aa6d8803cdc6ab28b1d79740b115487c5">More...</a><br /></td></tr>
 <tr class="separator:aa6d8803cdc6ab28b1d79740b115487c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6737ad97a5a74348518f658a34e3170b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a6737ad97a5a74348518f658a34e3170b">SetThreadPriority</a> (<a class="el" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a> threadPriority)</td></tr>
+<tr class="memdesc:a6737ad97a5a74348518f658a34e3170b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the thread priority of this thread  <a href="#a6737ad97a5a74348518f658a34e3170b">More...</a><br /></td></tr>
+<tr class="separator:a6737ad97a5a74348518f658a34e3170b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b8057883725bfbfedd44b2f4ab471a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a4b8057883725bfbfedd44b2f4ab471a6">WaitForStateUpdate</a> (const std::function&lt; bool()&gt; &amp;fn) const </td></tr>
 <tr class="memdesc:a4b8057883725bfbfedd44b2f4ab471a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits until the specified lambda function returns true or the thread shuts down.  <a href="#a4b8057883725bfbfedd44b2f4ab471a6">More...</a><br /></td></tr>
 <tr class="separator:a4b8057883725bfbfedd44b2f4ab471a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -542,6 +549,48 @@ template&lt;class Fx &gt; </div>
 
 </div>
 </div>
+<a class="anchor" id="a5253834a03afef831a1419937450d563"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::shared_ptr&lt;void&gt; BasicThread::GetThread </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>A void pointer to the underlying std::thread </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a8a22b69ca60034f3d31f9b7df3406655"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a> BasicThread::GetThreadPriority </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>The current thread priority </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a643d476885ee38306b061d7fb37c126f"></a>
 <div class="memitem">
 <div class="memproto">
@@ -822,6 +871,33 @@ template&lt;class Fx &gt; </div>
 
 </div>
 </div>
+<a class="anchor" id="a6737ad97a5a74348518f658a34e3170b"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void BasicThread::SetThreadPriority </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a>&#160;</td>
+          <td class="paramname"><em>threadPriority</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Sets the thread priority of this thread </p>
+<p>This method may be called while the thread is running, or before it starts to run. If it is invoked before the thread starts to run, the thread will take on the specified priority when it is started. </p>
+
+</div>
+</div>
 <a class="anchor" id="a4b8057883725bfbfedd44b2f4ab471a6"></a>
 <div class="memitem">
 <div class="memproto">
@@ -850,7 +926,7 @@ template&lt;class Fx &gt; </div>
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>autowiring/<a class="el" href="_basic_thread_8h_source.html">BasicThread.h</a></li>
+<li>src/autowiring/<a class="el" href="_basic_thread_8h_source.html">BasicThread.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -858,7 +934,7 @@ template&lt;class Fx &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_basic_thread.html">BasicThread</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:25:20 for Autowiring by
+    <li class="footer">Generated on Fri Jul 29 2016 21:26:22 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

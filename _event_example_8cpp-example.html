@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.7</span>
+   &#160;<span id="projectnumber">1.0.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -104,95 +104,12 @@ $(document).ready(function(){initNavTree('_event_example_8cpp-example.html','');
 <div class="title">EventExample.cpp</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><span class="comment">// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.</span></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="_autowired_8h.html">autowiring/Autowired.h</a>&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;memory&gt;</span></div>
-<div class="line"></div>
-<div class="line"><span class="comment">//                                                                 //</span></div>
-<div class="line"><span class="comment">//                        Autowiring Events                        //</span></div>
-<div class="line"><span class="comment">//                                                                 //</span></div>
-<div class="line"><span class="comment"></span></div>
-<div class="line"><span class="comment">// Autowiring events are just calls on member functions of in a context.</span></div>
-<div class="line"><span class="comment">// All context members that implement function pointer you &quot;fire&quot; will be called</span></div>
-<div class="line"></div>
-<div class="line"><span class="keyword">class </span>MyEvent {</div>
-<div class="line"><span class="keyword">public</span>:</div>
-<div class="line">  <span class="keyword">virtual</span> <span class="keywordtype">void</span> myFunction(<span class="keywordtype">int</span>) = 0;</div>
-<div class="line">};</div>
-<div class="line"></div>
-<div class="line"><span class="comment">// Will receive MyEvent::myFunction or FooEvent::myFunction events</span></div>
-<div class="line"><span class="keyword">class </span>FooEvent:</div>
-<div class="line">  <span class="keyword">public</span> MyEvent</div>
-<div class="line">{</div>
-<div class="line"><span class="keyword">public</span>:</div>
-<div class="line">  FooEvent():</div>
-<div class="line">    m_secret(0)</div>
-<div class="line">  {}</div>
-<div class="line">  </div>
-<div class="line">  <span class="keywordtype">void</span> myFunction(<span class="keywordtype">int</span> i)<span class="keyword"> override </span>{</div>
-<div class="line">    m_secret = i;</div>
-<div class="line">  }</div>
-<div class="line">  </div>
-<div class="line">  <span class="keywordtype">int</span> getSecret(){</div>
-<div class="line">    <span class="keywordflow">return</span> m_secret;</div>
-<div class="line">  }</div>
-<div class="line"><span class="keyword">private</span>:</div>
-<div class="line">  <span class="keywordtype">int</span> m_secret;</div>
-<div class="line">};</div>
-<div class="line"></div>
-<div class="line"><span class="comment">// Will receive MyEvent::myFunction or BarEvent::myFunction events</span></div>
-<div class="line"><span class="keyword">class </span>BarEvent:</div>
-<div class="line">  <span class="keyword">public</span> MyEvent</div>
-<div class="line">{</div>
-<div class="line"><span class="keyword">public</span>:</div>
-<div class="line">  BarEvent():</div>
-<div class="line">    m_secret(0)</div>
-<div class="line">  {}</div>
-<div class="line">  </div>
-<div class="line">  <span class="keywordtype">void</span> myFunction(<span class="keywordtype">int</span> i)<span class="keyword"> override </span>{</div>
-<div class="line">    m_secret = i;</div>
-<div class="line">  }</div>
-<div class="line">  </div>
-<div class="line">  <span class="keywordtype">int</span> getSecret(){</div>
-<div class="line">    <span class="keywordflow">return</span> m_secret;</div>
-<div class="line">  }</div>
-<div class="line"><span class="keyword">private</span>:</div>
-<div class="line">  <span class="keywordtype">int</span> m_secret;</div>
-<div class="line">};</div>
-<div class="line"></div>
-<div class="line"><span class="keywordtype">int</span> main(){</div>
-<div class="line">  <a name="_a0"></a><a class="code" href="class_auto_current_context.html">AutoCurrentContext</a> ctxt;</div>
-<div class="line">  </div>
-<div class="line">  <span class="comment">// A context must be initiated before events can be received. Similar to CoreThread</span></div>
-<div class="line">  ctxt-&gt;Initiate();</div>
-<div class="line">  </div>
-<div class="line">  <span class="comment">// This creates an proxy object that can fire MyEvent::* events</span></div>
-<div class="line">  <a name="_a1"></a><a class="code" href="class_auto_fired.html">AutoFired&lt;MyEvent&gt;</a> eventFirer;</div>
-<div class="line">  </div>
-<div class="line">  <span class="comment">// Inject receiver types into current context</span></div>
-<div class="line">  <a name="_a2"></a><a class="code" href="class_auto_required.html">AutoRequired&lt;FooEvent&gt;</a> foo;</div>
-<div class="line">  <a class="code" href="class_auto_required.html">AutoRequired&lt;BarEvent&gt;</a> bar;</div>
-<div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;Foo should be 0: &quot;</span> &lt;&lt; foo-&gt;getSecret() &lt;&lt; std::endl;</div>
-<div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;Bar Should be 0: &quot;</span> &lt;&lt; bar-&gt;getSecret() &lt;&lt; std::endl;</div>
-<div class="line">  </div>
-<div class="line">  <span class="comment">// Fire event, this should set m_secret on both foo and bar</span></div>
-<div class="line">  eventFirer(&amp;MyEvent::myFunction)(42);</div>
-<div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;Foo should be 42: &quot;</span> &lt;&lt; foo-&gt;getSecret() &lt;&lt; std::endl;</div>
-<div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;Bar should be 42: &quot;</span> &lt;&lt; bar-&gt;getSecret() &lt;&lt; std::endl;</div>
-<div class="line">  </div>
-<div class="line">  <span class="comment">// You can also manually fire events on a context with `Invoke`</span></div>
-<div class="line">  <span class="comment">// Since the function pointer is to `BarEvent`, `FooEvent` won&#39;t receive the event</span></div>
-<div class="line">  ctxt-&gt;Invoke(&amp;BarEvent::myFunction)(77);</div>
-<div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;Foo should be 42: &quot;</span> &lt;&lt; foo-&gt;getSecret() &lt;&lt; std::endl;</div>
-<div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;Bar should be 77: &quot;</span> &lt;&lt; bar-&gt;getSecret() &lt;&lt; std::endl;</div>
-<div class="line">}</div>
-</div><!-- fragment --> </div><!-- contents -->
+<div class="fragment"></div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Wed Jan 6 2016 16:25:19 for Autowiring by
+    <li class="footer">Generated on Fri Jul 29 2016 21:26:21 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

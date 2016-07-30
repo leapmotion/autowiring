@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.10"/>
-<title>Autowiring: autowiring/BoltBase.h Source File</title>
+<title>Autowiring: src/autowiring/BoltBase.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.7</span>
+   &#160;<span id="projectnumber">1.0.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -111,33 +111,34 @@ $(document).ready(function(){initNavTree('_bolt_base_8h_source.html','');});
 <div class="contents">
 <a href="_bolt_base_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;typeinfo&gt;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;auto_id.h&quot;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;</div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="keyword">class </span><a class="code" href="class_core_context.html">CoreContext</a>;</div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">typedef</span> <span class="keyword">const</span> std::type_info*<span class="keyword">const</span>* t_TypeInfoVector;</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;</div>
-<div class="line"><a name="l00014"></a><span class="lineno"><a class="line" href="class_bolt_base.html">   14</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_bolt_base.html">BoltBase</a></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;{</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  <a class="code" href="class_bolt_base.html">BoltBase</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="keyword">virtual</span> ~<a class="code" href="class_bolt_base.html">BoltBase</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="keyword">virtual</span> <span class="keyword">const</span> t_TypeInfoVector <a class="code" href="class_bolt_base.html#a9d4354d51bfff378ca9a5232e29d93c3">GetContextSigils</a>(<span class="keywordtype">void</span>) <span class="keyword">const</span> = 0;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_bolt_base.html#a549b755a9a153a2ae7c7108e84fea519">ContextCreated</a>(<span class="keywordtype">void</span>) = 0;</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;};</div>
-<div class="ttc" id="class_bolt_base_html_a9d4354d51bfff378ca9a5232e29d93c3"><div class="ttname"><a href="class_bolt_base.html#a9d4354d51bfff378ca9a5232e29d93c3">BoltBase::GetContextSigils</a></div><div class="ttdeci">virtual const t_TypeInfoVector GetContextSigils(void) const  =0</div><div class="ttdoc">Returns a null-termianted list of one (or more) sigil types that this bolt cares about ...</div></div>
-<div class="ttc" id="class_core_context_html"><div class="ttname"><a href="class_core_context.html">CoreContext</a></div><div class="ttdoc">A top-level container class representing an autowiring domain, a minimum broadcast domain...</div><div class="ttdef"><b>Definition:</b> CoreContext.h:115</div></div>
+<div class="line"><a name="l00011"></a><span class="lineno"><a class="line" href="class_bolt_base.html">   11</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_bolt_base.html">BoltBase</a></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;{</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <a class="code" href="class_bolt_base.html">BoltBase</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <span class="keyword">virtual</span> ~<a class="code" href="class_bolt_base.html">BoltBase</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <span class="keyword">virtual</span> <span class="keyword">const</span> auto_id* <a class="code" href="class_bolt_base.html#acfe424160f6fb374533dd1f76f216cc2">GetContextSigils</a>(<span class="keywordtype">void</span>) <span class="keyword">const</span> = 0;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="class_bolt_base.html#a00548d2f70b5aca6f3e8cd9735724cfb">Matches</a>(auto_id <span class="keywordtype">id</span>) <span class="keyword">const</span> = 0;</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_bolt_base.html#a549b755a9a153a2ae7c7108e84fea519">ContextCreated</a>(<span class="keywordtype">void</span>) = 0;</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;};</div>
+<div class="ttc" id="class_bolt_base_html_a00548d2f70b5aca6f3e8cd9735724cfb"><div class="ttname"><a href="class_bolt_base.html#a00548d2f70b5aca6f3e8cd9735724cfb">BoltBase::Matches</a></div><div class="ttdeci">virtual bool Matches(auto_id id) const  =0</div></div>
+<div class="ttc" id="class_bolt_base_html_acfe424160f6fb374533dd1f76f216cc2"><div class="ttname"><a href="class_bolt_base.html#acfe424160f6fb374533dd1f76f216cc2">BoltBase::GetContextSigils</a></div><div class="ttdeci">virtual const auto_id * GetContextSigils(void) const  =0</div><div class="ttdoc">Returns a null-terminated list of one (or more) sigil types that this bolt cares about ...</div></div>
+<div class="ttc" id="class_core_context_html"><div class="ttname"><a href="class_core_context.html">CoreContext</a></div><div class="ttdoc">A top-level container class representing an autowiring domain, a minimum broadcast domain...</div><div class="ttdef"><b>Definition:</b> CoreContext.h:106</div></div>
 <div class="ttc" id="class_bolt_base_html_a549b755a9a153a2ae7c7108e84fea519"><div class="ttname"><a href="class_bolt_base.html#a549b755a9a153a2ae7c7108e84fea519">BoltBase::ContextCreated</a></div><div class="ttdeci">virtual void ContextCreated(void)=0</div><div class="ttdoc">A notification broadcast when a context of the desired name has been created </div></div>
-<div class="ttc" id="class_bolt_base_html"><div class="ttname"><a href="class_bolt_base.html">BoltBase</a></div><div class="ttdef"><b>Definition:</b> BoltBase.h:14</div></div>
+<div class="ttc" id="class_bolt_base_html"><div class="ttname"><a href="class_bolt_base.html">BoltBase</a></div><div class="ttdef"><b>Definition:</b> BoltBase.h:11</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_bolt_base_8h.html">BoltBase.h</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:25:19 for Autowiring by
+    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_6a7210ebf394e73ac44c8fe97dd266de.html">autowiring</a></li><li class="navelem"><a class="el" href="_bolt_base_8h.html">BoltBase.h</a></li>
+    <li class="footer">Generated on Fri Jul 29 2016 21:26:21 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

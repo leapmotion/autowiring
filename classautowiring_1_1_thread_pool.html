@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.7</span>
+   &#160;<span id="projectnumber">1.0.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -140,6 +140,10 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:a4fdad28cbbe451fc38b99e026648ed83"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>True if the thread pool is running</dd></dl>
 <br /></td></tr>
 <tr class="separator:a4fdad28cbbe451fc38b99e026648ed83"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a688bae6bc277a0a79ec305bb7c7373ac"><td class="memTemplParams" colspan="2">template&lt;class Fx &gt; </td></tr>
+<tr class="memitem:a688bae6bc277a0a79ec305bb7c7373ac"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classautowiring_1_1_thread_pool.html#a688bae6bc277a0a79ec305bb7c7373ac">operator+=</a> (Fx &amp;&amp;fx)</td></tr>
+<tr class="memdesc:a688bae6bc277a0a79ec305bb7c7373ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Submits the specified lambda to this context's <a class="el" href="classautowiring_1_1_thread_pool.html" title="Generic interface for a thread pool ">ThreadPool</a> for processing  <a href="#a688bae6bc277a0a79ec305bb7c7373ac">More...</a><br /></td></tr>
+<tr class="separator:a688bae6bc277a0a79ec305bb7c7373ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e0dc654fe77523edcc62983603b201b"><td class="memItemLeft" align="right" valign="top">virtual std::shared_ptr&lt; void &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1_thread_pool.html#a1e0dc654fe77523edcc62983603b201b">Start</a> (void)</td></tr>
 <tr class="memdesc:a1e0dc654fe77523edcc62983603b201b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Begins processing on this thread pool  <a href="#a1e0dc654fe77523edcc62983603b201b">More...</a><br /></td></tr>
 <tr class="separator:a1e0dc654fe77523edcc62983603b201b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -242,6 +246,36 @@ Protected Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a688bae6bc277a0a79ec305bb7c7373ac"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class Fx &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool autowiring::ThreadPool::operator+= </td>
+          <td>(</td>
+          <td class="paramtype">Fx &amp;&amp;&#160;</td>
+          <td class="paramname"><em>fx</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Submits the specified lambda to this context's <a class="el" href="classautowiring_1_1_thread_pool.html" title="Generic interface for a thread pool ">ThreadPool</a> for processing </p>
+<dl class="section return"><dt>Returns</dt><dd>True if the job has been submitted for execution</dd></dl>
+<p>The passed thunk will not be executed if the current context has already stopped. </p>
+
+</div>
+</div>
 <a class="anchor" id="a1e0dc654fe77523edcc62983603b201b"></a>
 <div class="memitem">
 <div class="memproto">
@@ -296,10 +330,12 @@ Protected Member Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>True if the job was successfully accepted, false otherwise</dd></dl>
 <p>This method may be called even if the thread pool is not currently running. In that case, the job will be enqueued until the thread pool is started, at which time it will be submitted for execution. </p>
 
+<p>Referenced by <a class="el" href="classautowiring_1_1_thread_pool.html#a688bae6bc277a0a79ec305bb7c7373ac">operator+=()</a>.</p>
+
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>autowiring/<a class="el" href="_thread_pool_8h_source.html">ThreadPool.h</a></li>
+<li>src/autowiring/<a class="el" href="_thread_pool_8h_source.html">ThreadPool.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -307,7 +343,7 @@ Protected Member Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="namespaceautowiring.html">autowiring</a></li><li class="navelem"><a class="el" href="classautowiring_1_1_thread_pool.html">ThreadPool</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:25:20 for Autowiring by
+    <li class="footer">Generated on Fri Jul 29 2016 21:26:22 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

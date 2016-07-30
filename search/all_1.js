@@ -10,5 +10,6 @@ var searchData=
   ['boltable',['Boltable',['../struct_boltable.html',1,'']]],
   ['boltbase',['BoltBase',['../class_bolt_base.html',1,'']]],
   ['boltbase_2eh',['BoltBase.h',['../_bolt_base_8h.html',1,'']]],
-  ['boltto',['BoltTo',['../class_core_context.html#a81cde2e3e4031ac1bc1c9e761f8eff11',1,'CoreContext']]]
+  ['boltto',['BoltTo',['../class_core_context.html#a81cde2e3e4031ac1bc1c9e761f8eff11',1,'CoreContext']]],
+  ['buildobjectstate',['BuildObjectState',['../class_core_context.html#ae1250c4d0e0af0ac44810b793578589a',1,'CoreContext']]]
 ];

@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.10"/>
-<title>Autowiring: autowiring/auto_arg.h File Reference</title>
+<title>Autowiring: src/autowiring/auto_arg.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.7</span>
+   &#160;<span id="projectnumber">1.0.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -106,7 +106,8 @@ $(document).ready(function(){initNavTree('auto__arg_8h.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#namespaces">Namespaces</a>  </div>
   <div class="headertitle">
 <div class="title">auto_arg.h File Reference</div>  </div>
 </div><!--header-->
@@ -116,56 +117,64 @@ $(document).ready(function(){initNavTree('auto__arg_8h.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structarg__is__out.html">arg_is_out&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility predicate, used to assess whether T is an output argument  <a href="structarg__is__out.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structautowiring_1_1arg__is__out.html">autowiring::arg_is_out&lt; T &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility predicate, used to assess whether T is an output argument  <a href="structautowiring_1_1arg__is__out.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg.html">auto_arg&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reinterpret copied argument as input  <a href="classauto__arg.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg.html">autowiring::auto_arg&lt; T &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reinterpret copied argument as input  <a href="classautowiring_1_1auto__arg.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg_3_01const_01std_1_1shared__ptr_3_01const_01_t_01_4_01_6_01_4.html">auto_arg&lt; const std::shared_ptr&lt; const T &gt; &amp; &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "const std::shared_ptr&lt;const T&gt;&amp;" ~ auto_in&lt;T&gt;  <a href="classauto__arg_3_01const_01std_1_1shared__ptr_3_01const_01_t_01_4_01_6_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01const_01std_1_1shared__ptr_3_01const_01_t_01_4_01_6_01_4.html">autowiring::auto_arg&lt; const std::shared_ptr&lt; const T &gt; &amp; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "const std::shared_ptr&lt;const T&gt;&amp;" ~ auto_in&lt;T&gt;  <a href="classautowiring_1_1auto__arg_3_01const_01std_1_1shared__ptr_3_01const_01_t_01_4_01_6_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg_3_01const_01_t_01_6_01_4.html">auto_arg&lt; const T &amp; &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "const T&amp;" ~ auto_in&lt;T&gt;  <a href="classauto__arg_3_01const_01_t_01_6_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01const_01_t_01_6_01_4.html">autowiring::auto_arg&lt; const T &amp; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "const T&amp;" ~ auto_in&lt;T&gt;  <a href="classautowiring_1_1auto__arg_3_01const_01_t_01_6_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg_3_01const_01_t_01_4.html">auto_arg&lt; const T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reinterpret copied argument as input  <a href="classauto__arg_3_01const_01_t_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01const_01_t_01_4.html">autowiring::auto_arg&lt; const T &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reinterpret copied argument as input  <a href="classautowiring_1_1auto__arg_3_01const_01_t_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg_3_01_core_context_01_6_01_4.html">auto_arg&lt; CoreContext &amp; &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="class_core_context.html" title="A top-level container class representing an autowiring domain, a minimum broadcast domain...">CoreContext</a> specialization  <a href="classauto__arg_3_01_core_context_01_6_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01_core_context_01_6_01_4.html">autowiring::auto_arg&lt; CoreContext &amp; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="class_core_context.html" title="A top-level container class representing an autowiring domain, a minimum broadcast domain...">CoreContext</a> specialization  <a href="classautowiring_1_1auto__arg_3_01_core_context_01_6_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_5_01_4.html">auto_arg&lt; std::shared_ptr&lt; const T &gt; * &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shared pointer multi-in specialization  <a href="classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_5_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_5_01_4.html">autowiring::auto_arg&lt; std::shared_ptr&lt; const T &gt; * &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shared pointer multi-in specialization  <a href="classautowiring_1_1auto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_5_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_4.html">auto_arg&lt; std::shared_ptr&lt; const T &gt; &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "std::shared_ptr&lt;const T&gt;" ~ auto_in&lt;T&gt;  <a href="classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_4.html">autowiring::auto_arg&lt; std::shared_ptr&lt; const T &gt; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "std::shared_ptr&lt;const T&gt;" ~ auto_in&lt;T&gt;  <a href="classautowiring_1_1auto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg_3_01std_1_1shared__ptr_3_01_core_context_01_4_01_4.html">auto_arg&lt; std::shared_ptr&lt; CoreContext &gt; &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">shared_ptr <a class="el" href="class_core_context.html" title="A top-level container class representing an autowiring domain, a minimum broadcast domain...">CoreContext</a> specialization  <a href="classauto__arg_3_01std_1_1shared__ptr_3_01_core_context_01_4_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01std_1_1shared__ptr_3_01_core_context_01_4_01_4.html">autowiring::auto_arg&lt; std::shared_ptr&lt; CoreContext &gt; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">shared_ptr <a class="el" href="class_core_context.html" title="A top-level container class representing an autowiring domain, a minimum broadcast domain...">CoreContext</a> specialization  <a href="classautowiring_1_1auto__arg_3_01std_1_1shared__ptr_3_01_core_context_01_4_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_6_01_4.html">auto_arg&lt; std::shared_ptr&lt; T &gt; &amp; &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "std::shared_ptr&lt;T&gt;&amp;" ~ auto_in&lt;T&gt;  <a href="classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_6_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_6_01_4.html">autowiring::auto_arg&lt; std::shared_ptr&lt; T &gt; &amp; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "std::shared_ptr&lt;T&gt;&amp;" ~ auto_out&lt;T&gt;  <a href="classautowiring_1_1auto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_6_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_4.html">auto_arg&lt; std::shared_ptr&lt; T &gt; &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Forbidden input T  <a href="classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_6_6_01_4.html">autowiring::auto_arg&lt; std::shared_ptr&lt; T &gt; &amp;&amp; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "std::shared_ptr&lt;T&gt;&amp;&amp;" ~ auto_in&lt;T&amp;&amp;&gt; and auto_out&lt;T&amp;&amp;&gt;.  <a href="classautowiring_1_1auto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_6_6_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg_3_01_t_01_6_01_4.html">auto_arg&lt; T &amp; &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "T&amp;" ~ auto_out&lt;T&gt;  <a href="classauto__arg_3_01_t_01_6_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_4.html">autowiring::auto_arg&lt; std::shared_ptr&lt; T &gt; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Forbidden input T  <a href="classautowiring_1_1auto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg_3_01_t_01_6_6_01_4.html">auto_arg&lt; T &amp;&amp; &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "T&amp;&amp;" ~ auto_in&lt;T&amp;&amp;&gt; and auto_out&lt;T&amp;&amp;&gt;.  <a href="classauto__arg_3_01_t_01_6_6_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01_t_01_6_01_4.html">autowiring::auto_arg&lt; T &amp; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "T&amp;" ~ auto_out&lt;T&gt;  <a href="classautowiring_1_1auto__arg_3_01_t_01_6_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg_3_01_t_01_5_01_4.html">auto_arg&lt; T * &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "T*" ~ auto_in&lt;T*&gt;. T must be const-qualified in order to be an input parameter.  <a href="classauto__arg_3_01_t_01_5_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01_t_01_6_6_01_4.html">autowiring::auto_arg&lt; T &amp;&amp; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "T&amp;&amp;" ~ auto_in&lt;T&amp;&amp;&gt; and auto_out&lt;T&amp;&amp;&gt;.  <a href="classautowiring_1_1auto__arg_3_01_t_01_6_6_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__arg_3_01_t_01const_01_5_5_01_4.html">auto_arg&lt; T const ** &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multi-in specialization  <a href="classauto__arg_3_01_t_01const_01_5_5_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01_t_01_5_01_4.html">autowiring::auto_arg&lt; T * &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialization for "T*" ~ auto_in&lt;T*&gt;. T must be const-qualified in order to be an input parameter.  <a href="classautowiring_1_1auto__arg_3_01_t_01_5_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdetail_1_1auto__arg__ctor__helper.html">detail::auto_arg_ctor_helper&lt; T, has_default, has_autofilter &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construction helper for output-by-reference decoration types  <a href="structdetail_1_1auto__arg__ctor__helper.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__arg_3_01_t_01const_01_5_5_01_4.html">autowiring::auto_arg&lt; T const ** &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multi-in specialization  <a href="classautowiring_1_1auto__arg_3_01_t_01const_01_5_5_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__in.html">auto_in&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fundamental type of required input arguments of AutoFilter methods.  <a href="classauto__in.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structautowiring_1_1detail_1_1auto__arg__ctor__helper.html">autowiring::detail::auto_arg_ctor_helper&lt; T, has_default, has_autofilter &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construction helper for output-by-reference decoration types  <a href="structautowiring_1_1detail_1_1auto__arg__ctor__helper.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1auto__in.html">autowiring::auto_in&lt; T &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fundamental type of required input arguments of AutoFilter methods.  <a href="classautowiring_1_1auto__in.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
+Namespaces</h2></td></tr>
+<tr class="memitem:namespaceautowiring"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceautowiring.html">autowiring</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
@@ -173,8 +182,8 @@ Classes</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="auto__arg_8h.html">auto_arg.h</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:25:19 for Autowiring by
+    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_6a7210ebf394e73ac44c8fe97dd266de.html">autowiring</a></li><li class="navelem"><a class="el" href="auto__arg_8h.html">auto_arg.h</a></li>
+    <li class="footer">Generated on Fri Jul 29 2016 21:26:22 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

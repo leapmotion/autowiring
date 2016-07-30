@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.10"/>
-<title>Autowiring: autowiring/AutoNetServer.h Source File</title>
+<title>Autowiring: src/autonet/AutoNetServer.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.7</span>
+   &#160;<span id="projectnumber">1.0.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -111,9 +111,9 @@ $(document).ready(function(){initNavTree('_auto_net_server_8h_source.html','');}
 <div class="contents">
 <a href="_auto_net_server_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="_core_thread_8h.html">CoreThread.h</a>&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;index_tuple.h&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;autowiring/Decompose.h&gt;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="_core_thread_8h.html">autowiring/CoreThread.h</a>&gt;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;autowiring/Decompose.h&gt;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;autowiring/index_tuple.h&gt;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;sstream&gt;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include STL_UNORDERED_MAP</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include FUNCTIONAL_HEADER</span></div>
@@ -136,7 +136,7 @@ $(document).ready(function(){initNavTree('_auto_net_server_8h_source.html','');}
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_auto_net_transport.html#a9be6e10a968cdf1ebe3e441e08c13368">Stop</a>(<span class="keywordtype">void</span>) = 0;</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_auto_net_transport.html#a71fdfa8441d2e4611df85ff139a5fa71">Send</a>(AutoNetTransportHandler::connection_hdl hdl, <span class="keyword">const</span> std::string&amp; msg) = 0;</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  </div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_auto_net_transport.html#a98115d15fde7d0e1083b1943afe7b03d">SetTransportHandler</a>(std::shared_ptr&lt;AutoNetTransportHandler&gt; handler) = 0;</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;};</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;</div>
@@ -156,42 +156,42 @@ $(document).ready(function(){initNavTree('_auto_net_server_8h_source.html','');}
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  <span class="keyword">static</span> AutoNetServer* New(std::unique_ptr&lt;AutoNetTransport&gt; transport) {</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="keywordflow">return</span> NewAutoNetServerImpl(std::move(transport));</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  }</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  </div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <span class="keyword">static</span> AutoNetServer* New(<span class="keywordtype">void</span>) {</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keywordflow">return</span> NewAutoNetServerImpl();</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  }</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> Breakpoint(std::string name) = 0;</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  </div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Fx&gt;</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="keywordtype">void</span> AddEventHandler(<span class="keyword">const</span> std::string&amp; event, Fx&amp;&amp; handler) {</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    AddEventHandler&lt;Fx&gt;(</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;      event,</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;      std::forward&lt;Fx&amp;&amp;&gt;(handler),</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;      &amp;Fx::operator(),</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;      <span class="keyword">typename</span> make_index_tuple&lt;Decompose&lt;decltype(&amp;Fx::operator())&gt;::N&gt;::type()</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;      <span class="keyword">typename</span> autowiring::make_index_tuple&lt;autowiring::Decompose&lt;decltype(&amp;Fx::operator())&gt;::N&gt;::type()</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    );</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  }</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  </div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>... Args&gt;</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="keywordtype">void</span> SendEvent(<span class="keyword">const</span> std::string&amp; event, Args... args) {</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    SendEvent(event, std::vector&lt;std::string&gt;{parseToString(args)...});</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  }</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  </div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="keyword">protected</span>:</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  <span class="comment">// Send event with arguments parsed as vector of string</span></div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> SendEvent(<span class="keyword">const</span> std::string&amp; event, <span class="keyword">const</span> std::vector&lt;std::string&gt;&amp; args) = 0;</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  </div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  <span class="comment">// Map of callbacks keyed by event type</span></div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  std::unordered_map&lt;std::string, std::vector&lt;std::function&lt;void(std::vector&lt;std::string&gt;)&gt;&gt;&gt; m_handlers;</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  </div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="keyword">private</span>:</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="comment">// Add a handler that will be called when an event is received from the client</span></div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  <span class="keywordtype">void</span> AddEventHandlerInternal(<span class="keyword">const</span> std::string&amp; event, std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> std::vector&lt;std::string&gt;&amp;)&gt; handler);</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  </div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  <span class="comment">// Extract arguments from list of strings, parse and pass to handler</span></div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Fx, <span class="keyword">typename</span>... Args, <span class="keywordtype">int</span>... N&gt;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  <span class="keywordtype">void</span> AddEventHandler(<span class="keyword">const</span> std::string&amp; event, Fx&amp;&amp; handler, <span class="keywordtype">void</span> (Fx::*pfn)(Args...) <span class="keyword">const</span>, index_tuple&lt;N...&gt;) {</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  <span class="keywordtype">void</span> AddEventHandler(<span class="keyword">const</span> std::string&amp; event, Fx&amp;&amp; handler, <span class="keywordtype">void</span> (Fx::*pfn)(Args...) <span class="keyword">const</span>, autowiring::index_tuple&lt;N...&gt;) {</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    AddEventHandlerInternal(</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;      event,</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;      [<span class="keyword">this</span>, handler, pfn] (<span class="keyword">const</span> std::vector&lt;std::string&gt;&amp; args) {</div>
@@ -202,7 +202,7 @@ $(document).ready(function(){initNavTree('_auto_net_server_8h_source.html','');}
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;      }</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    );</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  }</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  </div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  <span class="comment">// parse type to string</span></div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  std::string parseToString(<span class="keyword">const</span> T&amp; t){</div>
@@ -210,18 +210,18 @@ $(document).ready(function(){initNavTree('_auto_net_server_8h_source.html','');}
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    ss &lt;&lt; t;</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <span class="keywordflow">return</span> ss.str();</div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  }</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  </div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;</div>
 <div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  <span class="comment">// parse string to primative type</span></div>
 <div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
 <div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  <span class="keyword">inline</span> T parseFromString(<span class="keyword">const</span> std::string&amp; str){</div>
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    std::istringstream ss(str);</div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <span class="keyword">typename</span> std::decay&lt;T&gt;::type val;</div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    ss &gt;&gt; std::boolalpha &gt;&gt; val;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    </div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;</div>
 <div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="keywordflow">if</span> (ss.fail()) {</div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;      autowiring::ThrowFailedTypeParseException(str, <span class="keyword">typeid</span>(T));</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    }</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    </div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;</div>
 <div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    <span class="keywordflow">return</span> val;</div>
 <div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;  }</div>
 <div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;};</div>
@@ -243,8 +243,8 @@ $(document).ready(function(){initNavTree('_auto_net_server_8h_source.html','');}
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_auto_net_server_8h.html">AutoNetServer.h</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:25:19 for Autowiring by
+    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_10875137a52bb18216e617c5d32bafd6.html">autonet</a></li><li class="navelem"><a class="el" href="_auto_net_server_8h.html">AutoNetServer.h</a></li>
+    <li class="footer">Generated on Fri Jul 29 2016 21:26:21 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

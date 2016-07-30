@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.7</span>
+   &#160;<span id="projectnumber">1.0.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -131,9 +131,11 @@ Inheritance diagram for Bolt&lt; Sigil &gt;:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a3e67e9ba9fef7f57275163870e4a3df2"><td class="memItemLeft" align="right" valign="top">const t_TypeInfoVector&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_bolt.html#a3e67e9ba9fef7f57275163870e4a3df2">GetContextSigils</a> (void) const  override</td></tr>
-<tr class="memdesc:a3e67e9ba9fef7f57275163870e4a3df2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a null-termianted list of one (or more) sigil types that this bolt cares about  <a href="#a3e67e9ba9fef7f57275163870e4a3df2">More...</a><br /></td></tr>
-<tr class="separator:a3e67e9ba9fef7f57275163870e4a3df2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada603094f12d2bc4a78fc7ea87bd1bbc"><td class="memItemLeft" align="right" valign="top">const auto_id *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_bolt.html#ada603094f12d2bc4a78fc7ea87bd1bbc">GetContextSigils</a> (void) const  override</td></tr>
+<tr class="memdesc:ada603094f12d2bc4a78fc7ea87bd1bbc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a null-terminated list of one (or more) sigil types that this bolt cares about  <a href="#ada603094f12d2bc4a78fc7ea87bd1bbc">More...</a><br /></td></tr>
+<tr class="separator:ada603094f12d2bc4a78fc7ea87bd1bbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1eea64b22369501cf87e0d98617f2ffa"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_bolt.html#a1eea64b22369501cf87e0d98617f2ffa">Matches</a> (auto_id id) const  override</td></tr>
+<tr class="separator:a1eea64b22369501cf87e0d98617f2ffa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_class_bolt_base"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_class_bolt_base')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="class_bolt_base.html">BoltBase</a></td></tr>
 <tr class="memitem:a549b755a9a153a2ae7c7108e84fea519 inherit pub_methods_class_bolt_base"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_bolt_base.html#a549b755a9a153a2ae7c7108e84fea519">ContextCreated</a> (void)=0</td></tr>
 <tr class="memdesc:a549b755a9a153a2ae7c7108e84fea519 inherit pub_methods_class_bolt_base"><td class="mdescLeft">&#160;</td><td class="mdescRight">A notification broadcast when a context of the desired name has been created  <a href="#a549b755a9a153a2ae7c7108e84fea519">More...</a><br /></td></tr>
@@ -151,7 +153,7 @@ class Bolt&lt; Sigil &gt;</h3>
 </dl>
 <p>A bolt is a way to augment the creation of a new context in a declarative, by-name manner. By inheriting from <a class="el" href="class_bolt.html">Bolt</a>, the object will recieve <a class="el" href="class_bolt_base.html#a549b755a9a153a2ae7c7108e84fea519" title="A notification broadcast when a context of the desired name has been created ">ContextCreated()</a> calls. To create a class that will have a new instance inserted into each instance of a context with a given sigil, use <a class="el" href="struct_boltable.html" title="Causes the class inheriting from this definition to be bolted to the specified contexts ...">Boltable</a>. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a3e67e9ba9fef7f57275163870e4a3df2"></a>
+<a class="anchor" id="ada603094f12d2bc4a78fc7ea87bd1bbc"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -161,7 +163,7 @@ template&lt;typename... Sigil&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const t_TypeInfoVector <a class="el" href="class_bolt.html">Bolt</a>&lt; Sigil &gt;::GetContextSigils </td>
+          <td class="memname">const auto_id* <a class="el" href="class_bolt.html">Bolt</a>&lt; Sigil &gt;::GetContextSigils </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -175,14 +177,43 @@ template&lt;typename... Sigil&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Returns a null-termianted list of one (or more) sigil types that this bolt cares about </p>
+<p>Returns a null-terminated list of one (or more) sigil types that this bolt cares about </p>
 
-<p>Implements <a class="el" href="class_bolt_base.html#a9d4354d51bfff378ca9a5232e29d93c3">BoltBase</a>.</p>
+<p>Implements <a class="el" href="class_bolt_base.html#acfe424160f6fb374533dd1f76f216cc2">BoltBase</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a1eea64b22369501cf87e0d98617f2ffa"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename... Sigil&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool <a class="el" href="class_bolt.html">Bolt</a>&lt; Sigil &gt;::Matches </td>
+          <td>(</td>
+          <td class="paramtype">auto_id&#160;</td>
+          <td class="paramname"><em>id</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>True if the specified sigil type matches the types interesting to this bolt </dd></dl>
+
+<p>Implements <a class="el" href="class_bolt_base.html#a00548d2f70b5aca6f3e8cd9735724cfb">BoltBase</a>.</p>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>autowiring/<a class="el" href="_bolt_8h_source.html">Bolt.h</a></li>
+<li>src/autowiring/<a class="el" href="_bolt_8h_source.html">Bolt.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -190,7 +221,7 @@ template&lt;typename... Sigil&gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_bolt.html">Bolt</a></li>
-    <li class="footer">Generated on Wed Jan 6 2016 16:25:20 for Autowiring by
+    <li class="footer">Generated on Fri Jul 29 2016 21:26:22 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>
