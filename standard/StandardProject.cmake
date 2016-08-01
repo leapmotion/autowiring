@@ -19,6 +19,17 @@ function(standard_project project_name)
     message(FATAL_ERROR "Standard compliant projects must specify a version")
   endif()
 
+  set(_language_arg "")
+  if(standard_LANGUAGES)
+    set(_language_arg LANGUAGES ${standard_LANGUAGES})
+  endif()
+
+  standard_project_preinit()
+  project(${project_name} VERSION ${standard_VERSION} ${_language_arg})
+  standard_project_postinit()
+endfunction()
+
+function(standard_project_preinit)
   # Pre-initialization steps - these variables must be set before the first call to
   # project()
   if(APPLE)
@@ -35,27 +46,22 @@ function(standard_project project_name)
   # Need to classify the architecture before we run anything else, this lets us easily configure the
   # find version file based on what the architecture was actually built to be
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
-    set(standard_BUILD_ARM ON PARENT_SCOPE)
-    set(standard_BUILD_ARCHITECTURES "arm" PARENT_SCOPE)
-    set(standard_BUILD_64 OFF PARENT_SCOPE)
+    set(standard_BUILD_ARM ON CACHE INTERNAL "")
+    set(standard_BUILD_ARCHITECTURES "arm" CACHE INTERNAL "")
+    set(standard_BUILD_64 OFF CACHE INTERNAL "")
   elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64;i386")
-    set(standard_BUILD_ARCHITECTURES x64 x86 PARENT_SCOPE)
-    set(standard_BUILD_64 ON PARENT_SCOPE)
+    set(standard_BUILD_ARCHITECTURES x64 x86 CACHE INTERNAL "")
+    set(standard_BUILD_64 ON CACHE INTERNAL "")
   elseif(CMAKE_SIZEOF_VOID_P STREQUAL 4)
-    set(standard_BUILD_ARCHITECTURES "x86" PARENT_SCOPE)
-    set(standard_BUILD_64 OFF PARENT_SCOPE)
+    set(standard_BUILD_ARCHITECTURES "x86" CACHE INTERNAL "")
+    set(standard_BUILD_64 OFF CACHE INTERNAL "")
   else()
-    set(standard_BUILD_ARCHITECTURES "x64" PARENT_SCOPE)
-    set(standard_BUILD_64 ON PARENT_SCOPE)
+    set(standard_BUILD_ARCHITECTURES "x64" CACHE INTERNAL "")
+    set(standard_BUILD_64 ON CACHE INTERNAL "")
   endif()
   message(STATUS "Using architecture: ${standard_BUILD_ARCHITECTURES}")
 
-  set(_language_arg "")
-  if(standard_LANGUAGES)
-    set(_language_arg LANGUAGES ${standard_LANGUAGES})
-  endif()
-
-  # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
+   # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
   # wants us to do.
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL "Executable Output directory")
@@ -85,9 +91,9 @@ function(standard_project project_name)
   if(NOT WIN32)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE INTERNAL "Position-Independent Code")
   endif()
+endfunction()
 
-  project(${project_name} VERSION ${standard_VERSION} ${_language_arg})
-
+function(standard_project_postinit)
   ##Post-initialization steps. All of these depend on project() having been called.
 
   include(CTest)
