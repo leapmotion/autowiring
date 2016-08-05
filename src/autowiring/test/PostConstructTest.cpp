@@ -142,6 +142,48 @@ TEST_F(PostConstructTest, VerifyTrivialNotifyWhenAutowired) {
   ASSERT_TRUE(called) << "An autowiring notification was not invoked on an already-satisfied field as expected";
 }
 
+TEST_F(PostConstructTest, DelayedNotifyWhenAutowired) {
+  // Autorequire, and add a registration:
+  bool called = false;
+  Autowired<SimpleObject> so;
+  so.NotifyWhenAutowired([&called] { called = true; });
+
+  // Inject a type after:
+  AutoRequired<SimpleObject>();
+  ASSERT_TRUE(called) << "An autowiring notification was not invoked on an already-satisfied field as expected";
+}
+
+struct Interface2 : ContextMember {};
+struct Implementation2 : Interface2 {
+};
+
+TEST_F(PostConstructTest, DeriveNotifyWhenAutowired) {
+
+  // Autorequire, and add a registration:
+  bool called = false;
+  Autowired<Interface2> interface;
+  interface.NotifyWhenAutowired([&called] { called = true; });
+
+  // Inject a type after:
+  AutoRequired<Implementation2>();
+  ASSERT_TRUE(called) << "An autowiring notification was not invoked on an already-satisfied field as expected";
+}
+
+struct Interface3 : ContextMember {};
+struct Implementation3 : Interface3 {
+};
+
+TEST_F(PostConstructTest, InjectNotifyWhenAutowired) {
+  // Autorequire, and add a registration:
+  bool called = false;
+  Autowired<Interface3> interface;
+  interface.NotifyWhenAutowired([&called] { called = true; });
+
+  // Inject a type after:
+  AutoCurrentContext()->Inject<Implementation3>();
+  ASSERT_TRUE(called) << "An autowiring notification was not invoked on an already-satisfied field as expected";
+}
+
 TEST_F(PostConstructTest, MultiNotifyWhenAutowired) {
   // Add multiple notifications on the same space:
   int field = 0;
@@ -155,6 +197,7 @@ TEST_F(PostConstructTest, MultiNotifyWhenAutowired) {
   // Verify that the notification got hit ten times:
   ASSERT_EQ(10, field) << "Autowiring lambdas did not run the expected number of times";
 }
+
 
 TEST_F(PostConstructTest, NotificationTeardownRace) {
   std::shared_ptr<CoreContext> pContext;
