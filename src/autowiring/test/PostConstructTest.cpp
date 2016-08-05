@@ -198,6 +198,14 @@ TEST_F(PostConstructTest, MultiNotifyWhenAutowired) {
   ASSERT_EQ(10, field) << "Autowiring lambdas did not run the expected number of times";
 }
 
+/*
+ Compile time failure case:
+class ForwardDeclared;
+TEST_F(PostConstructTest, TestForwardDeclare) {
+  Autowired<ForwardDeclared> decl;
+  decl.NotifyWhenAutowired([]() {std::cout << "thing"; });
+}
+*/
 
 TEST_F(PostConstructTest, NotificationTeardownRace) {
   std::shared_ptr<CoreContext> pContext;

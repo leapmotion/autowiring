@@ -219,6 +219,17 @@ public:
 
     return *retVal;
   }
+
+  //This ensures that the callback will be properly triggered if using a derived type
+  template<class Fn>
+  void NotifyWhenAutowired(Fn&& fn) {
+    // We have to initialize here, in the operator context, because we don't actually know if the
+    // user will be making use of this type.
+    (void)fast_pointer_cast_initializer<T, CoreObject>::sc_init;
+    (void)auto_id_t_init<T>::init;
+
+    DeferrableAutowiring::NotifyWhenAutowired(fn);
+  }
 };
 
 template<typename T>
