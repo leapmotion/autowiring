@@ -6,33 +6,20 @@
 #include <cstdint>
 
 //Common chrono types
-typedef std::chrono::duration<double> seconds_d;
-typedef std::chrono::duration<double, std::milli> milliseconds_d;
-typedef std::chrono::duration<double, std::micro> microseconds_d;
-typedef std::chrono::duration<double, std::nano> nanoseconds_d;
-typedef std::chrono::duration<double, std::pico> picoseconds_d;
-typedef std::chrono::duration<double, std::femto> femtoseconds_d;
+#define AW_DEFINE_CHRONO_ALIAS(type,suffix) \
+  typedef std::chrono::duration<type> seconds_##suffix; \
+  typedef std::chrono::duration<type, std::milli> milliseconds_##suffix; \
+  typedef std::chrono::duration<type, std::micro> microseconds_##suffix; \
+  typedef std::chrono::duration<type, std::nano> nanoseconds_##suffix; \
+  typedef std::chrono::duration<type, std::pico> picoseconds_##suffix; \
+  typedef std::chrono::duration<type, std::femto> femtoseconds_##suffix;
 
-typedef std::chrono::duration<float> seconds_f;
-typedef std::chrono::duration<float, std::milli> milliseconds_f;
-typedef std::chrono::duration<float, std::micro> microseconds_f;
-typedef std::chrono::duration<float, std::nano> nanoseconds_f;
-typedef std::chrono::duration<float, std::pico> picoseconds_f;
-typedef std::chrono::duration<float, std::femto> femtoseconds_f;
-
-typedef std::chrono::duration<int32_t> seconds_i32;
-typedef std::chrono::duration<int32_t, std::milli> milliseconds_i32;
-typedef std::chrono::duration<int32_t, std::micro> microseconds_i32;
-typedef std::chrono::duration<int32_t, std::nano> nanoseconds_i32;
-typedef std::chrono::duration<int32_t, std::pico> picoseconds_i32;
-typedef std::chrono::duration<int32_t, std::femto> femtoseconds_i32;
-
-typedef std::chrono::duration<int64_t> seconds_i64;
-typedef std::chrono::duration<int64_t, std::milli> milliseconds_i64;
-typedef std::chrono::duration<int64_t, std::micro> microseconds_i64;
-typedef std::chrono::duration<int64_t, std::nano> nanoseconds_i64;
-typedef std::chrono::duration<int64_t, std::pico> picoseconds_i64;
-typedef std::chrono::duration<int64_t, std::femto> femtoseconds_i64;
+AW_DEFINE_CHRONO_ALIAS(double, d)
+AW_DEFINE_CHRONO_ALIAS(float, f)
+AW_DEFINE_CHRONO_ALIAS(int32_t, i32)
+AW_DEFINE_CHRONO_ALIAS(int64_t, i64)
+AW_DEFINE_CHRONO_ALIAS(uint32_t, u32)
+AW_DEFINE_CHRONO_ALIAS(uint64_t, u64)
 
 typedef basic_timer<std::chrono::profiling_clock> profiling_timer;
 typedef basic_timer<std::chrono::profiling_clock, seconds_d> profiling_timer_seconds;
