@@ -25,14 +25,18 @@ Provides a sort of global header that can be used by all customers of this libra
 include("standard/Standard.cmake")
 ```
 
-### [SetStandardOutputVariables](SetStandardOutputVariables.cmake)
+### [StandardProject](StandardProject.cmake)
 
 There are a lot of options that have to be configured in order to get CMake building on all platforms with broadly compatible options for C++11.  This file handles all of that work, but also handles the task of standardizing the build directories and making sure that your compiler of choice can actually handle C++11.
 
-This module defines one function taking no arguments which should be invoked as so:
+This module defines a wrapper around project, which is itself a wrapper around project() with a pre-initialization and post-initialization function called in the correct order. This is required because some variables must be set prior to the first call to project, while other settings are conditional based on information that is only available after.
 
 ```CMake
-set_standard_output_variables()
+standard_project(project VERSION version [LANGUAGES ...])
+# OR
+standard_project_preinit()
+project(...)
+standard_project_postinit()
 
 # Now your source code
 add_subdirectory(src)
@@ -61,8 +65,8 @@ This module ensures this by doing the following:
 0. Figures out the architecture that you're targeting.  Right now we support ARM, x86, and x64
 0. Creates a file called `MyLibraryTargets.cmake` which includes all of the projects in your library which were installed with the cmake [`install`](https://cmake.org/cmake/help/v3.5/command/install.html) command.
 0. Creates `projectname-config.cmake` which specifies the right include directories for installed and local builds, and brings in `MyLibraryTargets.cmake`
-0. Creates `projectname-configVersion` which... 
-  * ...uses semantic versioning to ensure that `find_package(mylibrary 2.0.2)` correctly matches version `2.0.5` but not version `1.9.2` 
+0. Creates `projectname-configVersion` which...
+  * ...uses semantic versioning to ensure that `find_package(mylibrary 2.0.2)` correctly matches version `2.0.5` but not version `1.9.2`
   * ...validates architecture compatibility by not allowing an ARM build to accidentally link with an x86 library
   * ...handles the case of fat binaries, where both x86 and x64 builds can link to the same spot
 
@@ -80,7 +84,7 @@ install(
   CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
 )
 install_headers(TARGET MyLibrary)
-generate_version()  
+generate_version()
 ```
 
 ### [CombinedInstaller](CombinedInstaller.cmake)
