@@ -87,7 +87,7 @@ function(standard_project_preinit)
     endforeach()
   endif()
 
-  # We want -fPIC code for all 64-bit non-windows builds
+  # We want Position independent code for all 64-bit non-windows builds
   if(NOT WIN32)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE INTERNAL "Position-Independent Code")
   endif()
