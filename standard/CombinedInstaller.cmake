@@ -113,13 +113,13 @@ function(combined_installer)
       list(
         APPEND
         CPACK_INSTALL_COMMANDS
-        "${CMAKE_COMMAND} --build \"${CMAKE_BINARY_DIR}\" --config ${ONE_CONFIG}"
+        "${CMAKE_COMMAND} --build \\\"${CMAKE_BINARY_DIR}\\\" --config ${ONE_CONFIG}"
         "${CMAKE_COMMAND} -DBUILD_TYPE=${ONE_CONFIG} -P \\\"${SELF}/cmake_package.cmake\\\""
       )
     endforeach()
   else()
     set(CPACK_INSTALL_COMMANDS
-      "${CMAKE_COMMAND} --build \"${CMAKE_BINARY_DIR}\""
+      "${CMAKE_COMMAND} --build \\\"${CMAKE_BINARY_DIR}\\\""
       "${CMAKE_COMMAND} -P \\\"${SELF}/cmake_package.cmake\\\""
     )
   endif()
