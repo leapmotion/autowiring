@@ -54,7 +54,7 @@ function(combined_installer)
   if(CMAKE_CONFIGURATION_TYPES)
     default_value(ARG_CONFIGS ${CMAKE_CONFIGURATION_TYPES})
   endif()
-  default_value(ARG_WIXFILE ${CMAKE_BINARY_DIR}/CMakeFiles/standard_WixFile.wxs)
+  default_value(ARG_WIXFILE "${CMAKE_BINARY_DIR}/CMakeFiles/standard_WixFile.wxs")
   default_value(ARG_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
   default_value(ARG_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 
@@ -113,13 +113,13 @@ function(combined_installer)
       list(
         APPEND
         CPACK_INSTALL_COMMANDS
-        "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config ${ONE_CONFIG}"
+        "${CMAKE_COMMAND} --build \\\"${CMAKE_BINARY_DIR}\\\" --config ${ONE_CONFIG}"
         "${CMAKE_COMMAND} -DBUILD_TYPE=${ONE_CONFIG} -P \\\"${SELF}/cmake_package.cmake\\\""
       )
     endforeach()
   else()
     set(CPACK_INSTALL_COMMANDS
-      "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}"
+      "${CMAKE_COMMAND} --build \\\"${CMAKE_BINARY_DIR}\\\""
       "${CMAKE_COMMAND} -P \\\"${SELF}/cmake_package.cmake\\\""
     )
   endif()
