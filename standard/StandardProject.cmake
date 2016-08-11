@@ -14,6 +14,8 @@ does the following:
 * Enforces the project has a VERSION set.
 ]]
 
+include (CMakeParseArguments) #Backwards compatibilty
+
 #This must be a macro since project defines scope-local variables
 #that we generally rely on being in the root context.
 macro(standard_project project_name)
@@ -100,7 +102,7 @@ function(standard_project_preinit)
 
   #CMAKE_OSX_DEPLOYMENT_TARGET < 10.9 implies -stdlib=libstdc++, which doesn't have
   #complete c++11 support. override with libc++
-  if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9)
+  if(DEFINED CMAKE_OSX_DEPLOYMENT_TARGET AND CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" PARENT_SCOPE)
   endif()
 
