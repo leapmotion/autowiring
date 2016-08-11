@@ -90,13 +90,24 @@ function(standard_project_preinit)
     endforeach()
   endif()
 
-  # We want Position independent code for all builds
-  set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE INTERNAL "Position-Independent Code")
+  # Standard environment - Position independent code, Symbols hidden by default, and standard C++11
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON PARENT_SCOPE)
+  set(CMAKE_CXX_VISIBILITY_PRESET hidden PARENT_SCOPE)
+  set(CMAKE_VISIBILITY_INLINES_HIDDEN ON PARENT_SCOPE)
+  set(CMAKE_CXX_STANDARD 11 PARENT_SCOPE)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON PARENT_SCOPE)
+  set(CMAKE_CXX_EXTENSIONS OFF PARENT_SCOPE)
+
+  #CMAKE_OSX_DEPLOYMENT_TARGET < 10.9 implies -stdlib=libstdc++, which doesn't have
+  #complete c++11 support. oveeride with libc++
+  if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" PARENT_SCOPE)
+  endif()
+
 endfunction()
 
 function(standard_project_postinit)
   ##Post-initialization steps. All of these depend on project() having been called.
-
   include(CTest)
 
   if(CMAKE_COMPILER_IS_GNUCC)
@@ -110,20 +121,4 @@ function(standard_project_postinit)
   endif()
   message(STATUS "Compiler version ${CMAKE_CXX_COMPILER_VERSION}")
 
-  # Always use c++11 compiler with hidden visibility
-  if(NOT WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fvisibility=hidden" CACHE INTERNAL "C++ Compiler Flags")
-  endif()
-
-  # Clang needs special additional flags to build with C++11
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-    message(STATUS "AppleClang C++11")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE INTERNAL "C++ Compiler Flags")
-    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++" CACHE INTERNAL "XCode Clang C++ STL Version")
-  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    message(STATUS "Clang C++11")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++" CACHE INTERNAL "C++ EXE Linker Flags")
-  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    message(STATUS "GCC C++11")
-  endif()
 endfunction()
