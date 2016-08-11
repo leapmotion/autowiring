@@ -49,44 +49,44 @@ function(standard_project_preinit)
   # Need to classify the architecture before we run anything else, this lets us easily configure the
   # find version file based on what the architecture was actually built to be
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
-    set(standard_BUILD_ARM ON CACHE INTERNAL "")
-    set(standard_BUILD_ARCHITECTURES "arm" CACHE INTERNAL "")
-    set(standard_BUILD_64 OFF CACHE INTERNAL "")
+    set(standard_BUILD_ARM ON PARENT_SCOPE)
+    set(standard_BUILD_ARCHITECTURES "arm" PARENT_SCOPE)
+    set(standard_BUILD_64 OFFPARENT_SCOPE)
   elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64;i386")
-    set(standard_BUILD_ARCHITECTURES x64 x86 CACHE INTERNAL "")
-    set(standard_BUILD_64 ON CACHE INTERNAL "")
+    set(standard_BUILD_ARCHITECTURES x64 x86 PARENT_SCOPE)
+    set(standard_BUILD_64 ON PARENT_SCOPE)
   elseif(CMAKE_SIZEOF_VOID_P STREQUAL 4)
-    set(standard_BUILD_ARCHITECTURES "x86" CACHE INTERNAL "")
-    set(standard_BUILD_64 OFF CACHE INTERNAL "")
+    set(standard_BUILD_ARCHITECTURES "x86" PARENT_SCOPE)
+    set(standard_BUILD_64 OFF PARENT_SCOPE)
   else()
-    set(standard_BUILD_ARCHITECTURES "x64" CACHE INTERNAL "")
-    set(standard_BUILD_64 ON CACHE INTERNAL "")
+    set(standard_BUILD_ARCHITECTURES "x64" PARENT_SCOPE)
+    set(standard_BUILD_64 ON PARENT_SCOPE)
   endif()
   message(STATUS "Using architecture: ${standard_BUILD_ARCHITECTURES}")
 
    # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
   # wants us to do.
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL "Executable Output directory")
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin PARENT_SCOPE)
 
   # Libraries not only all wind up in the libraries directory, but we also keep them all together
   # here by putting them in the same place, regardless of whether they are debug or release.  This
   # makes globbing them together much easier.
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib CACHE INTERNAL "Shared Library output directory")
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/lib CACHE INTERNAL "Shared Library output directory")
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib CACHE INTERNAL "Shared Library output directory")
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib CACHE INTERNAL "Static Library output directory")
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/lib CACHE INTERNAL "Static Library output directory")
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib CACHE INTERNAL "Static Library output directory")
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib PARENT_SCOPE)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/lib PARENT_SCOPE)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib PARENT_SCOPE)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib PARENT_SCOPE)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/lib PARENT_SCOPE)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib PARENT_SCOPE)
 
   # Postfix on all debug libraries should be "d"
-  set(CMAKE_DEBUG_POSTFIX d${CMAKE_DEBUG_POSTFIX} CACHE INTERNAL "Debug postfix")
+  set(CMAKE_DEBUG_POSTFIX d${CMAKE_DEBUG_POSTFIX} PARENT_SCOPE)
 
   # 64-bit installations should suffix with 64 regardless of the CPU type (arm or intel)
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
       string(TOUPPER ${config} config)
-      set(CMAKE_${config}_POSTFIX "${CMAKE_${config}_POSTFIX}64" CACHE INTERNAL "$[config} Postfix")
+      set(CMAKE_${config}_POSTFIX "${CMAKE_${config}_POSTFIX}64" PARENT_SCOPE)
     endforeach()
   endif()
 
