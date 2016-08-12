@@ -1,4 +1,4 @@
-## Utility for creating a combined installer for Windows
+# Utility for creating a combined installer for Windows
 #
 # This utility allows a WIX installer to be created with a single PACKAGE command,
 # and allows both 32 and 64 variants of the installer to be installed on a system
