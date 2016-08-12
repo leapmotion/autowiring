@@ -34,7 +34,9 @@ include(DefaultValue)
 include(ParseVersion)
 
 function(combined_installer)
-  message("Project name is ${CMAKE_PROJECT_NAME}")
+  if(COMBINED_INSTALLER_DEBUG)
+    message("Project name is ${CMAKE_PROJECT_NAME}")
+  endif()
 
   set(options )
   set(oneValueArgs NAME VENDOR CONTACT VERSION GUID LICENSE README WIXFILE)
@@ -97,7 +99,9 @@ function(combined_installer)
   #
   # For more information on the rationale for this process, see the discussion on semantic versioning
   # found at http://semver.org/
-  message("Upgrade GUID is ${ARG_GUID}")
+  if(COMBINED_INSTALLER_DEBUG)
+    message("Upgrade GUID is ${ARG_GUID}")
+  endif()
   set(CPACK_WIX_UPGRADE_GUID "{${ARG_GUID}}")
 
   # Need a custom wix installation template so that we update the CMake package registry correctly
