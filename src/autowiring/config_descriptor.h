@@ -43,11 +43,6 @@ namespace autowiring {
     return sc_marshaller;
   }
 
-  template<typename T>
-  struct matched_arg {
-    static T& value(void);
-  };
-
   template<typename T, typename... Args>
   struct has_bind
   {
@@ -55,7 +50,7 @@ namespace autowiring {
     static std::true_type select(
       decltype(
         static_cast<U*>(nullptr)->bind(
-          matched_arg<Args>::value()...
+          *(Args*)nullptr...
         )
       )*
     );
