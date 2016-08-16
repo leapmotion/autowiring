@@ -82,7 +82,11 @@ function(standard_project_preinit)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib PARENT_SCOPE)
 
   # Postfix on all debug libraries should be "d"
-  set(CMAKE_DEBUG_POSTFIX d${CMAKE_DEBUG_POSTFIX} PARENT_SCOPE)
+  # PARENT_SCOPE causes the variable to not be set locally, and we
+  # rely on this value in the following loop....
+
+  set(CMAKE_DEBUG_POSTFIX "d${CMAKE_DEBUG_POSTFIX}")
+  set(CMAKE_DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX} PARENT_SCOPE)
 
   # 64-bit installations should suffix with 64 regardless of the CPU type (arm or intel)
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
