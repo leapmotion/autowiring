@@ -246,8 +246,8 @@ public:
   /// </summary>
   bool operator<(const AutoFilterDescriptor& rhs) const {
     return
-      std::tie(m_altitude, m_pCall, m_autoFilter) <
-      std::tie(rhs.m_altitude, rhs.m_pCall, rhs.m_autoFilter);
+      std::tie(rhs.m_altitude, rhs.m_pCall, rhs.m_autoFilter) <
+      std::tie(m_altitude, m_pCall, m_autoFilter);
   }
 
   // Operator overloads:

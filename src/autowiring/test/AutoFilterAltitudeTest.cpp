@@ -69,15 +69,15 @@ TEST_F(AutoFilterAltitudeTest, LambdaAltitudesOnFactory) {
 
   // Generate a packet and trip the assignments:
   auto packet = factory->NewPacket();
-  ASSERT_EQ(9, ctr[0]);
-  ASSERT_EQ(8, ctr[1]);
-  ASSERT_EQ(7, ctr[2]);
-  ASSERT_EQ(6, ctr[3]);
+  ASSERT_EQ(1, ctr[0]);
+  ASSERT_EQ(2, ctr[1]);
+  ASSERT_EQ(3, ctr[2]);
+  ASSERT_EQ(4, ctr[3]);
   ASSERT_EQ(5, ctr[4]);
-  ASSERT_EQ(4, ctr[5]);
-  ASSERT_EQ(3, ctr[6]);
-  ASSERT_EQ(2, ctr[7]);
-  ASSERT_EQ(1, ctr[8]);
+  ASSERT_EQ(6, ctr[5]);
+  ASSERT_EQ(7, ctr[6]);
+  ASSERT_EQ(8, ctr[7]);
+  ASSERT_EQ(9, ctr[8]);
 }
 
 TEST_F(AutoFilterAltitudeTest, AltitudeOnPacket) {

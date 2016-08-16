@@ -135,7 +135,7 @@ struct DecorationDisposition
     SatCounter* const satCounter;
 
     bool operator<(const Subscriber& rhs) const {
-      return std::tie(altitude, satCounter) > std::tie(rhs.altitude, rhs.satCounter);
+      return std::tie(altitude, satCounter) < std::tie(rhs.altitude, rhs.satCounter);
     }
   };
 

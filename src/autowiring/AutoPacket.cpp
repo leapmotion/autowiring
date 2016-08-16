@@ -120,14 +120,14 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
           throw autowiring_error(ss.str());
         }
 
-        if (it->altitude < satCounter.GetAltitude())
+        if (it->altitude > satCounter.GetAltitude())
           break;
         it++;
       }
       entry.m_modifiers.emplace(it, pCur->is_shared, satCounter.GetAltitude(), &satCounter);
     } else {
       if (pCur->is_input) {
-          entry.m_subscribers.emplace(
+        entry.m_subscribers.emplace(
           pCur->is_shared,
           pCur->is_multi ?
           DecorationDisposition::Subscriber::Type::Multi :
@@ -211,7 +211,8 @@ void AutoPacket::RemoveSatCounterUnsafe(const SatCounter& satCounter) {
           entry.m_modifiers.end(),
           [&satCounter](const DecorationDisposition::Modifier& modifier){
             return modifier.satCounter && *modifier.satCounter == satCounter;
-          }),
+          }
+        ),
         entry.m_modifiers.end()
       );
     } else {
