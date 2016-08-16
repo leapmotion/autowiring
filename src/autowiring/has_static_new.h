@@ -43,13 +43,13 @@ struct has_static_new
 template<typename T>
 struct has_static_new<T>
 {
-	template<class U>
-	static std::true_type select(decltype(U::New())*);
+  template<class U>
+  static std::true_type select(decltype(U::New())*);
 
-	template<class U>
-	static std::false_type select(...);
+  template<class U>
+  static std::false_type select(...);
 
-	static const bool value = has_well_formed_static_new<T, decltype(select<T>(nullptr))>::value;
+  static const bool value = has_well_formed_static_new<T, decltype(select<T>(nullptr))>::value;
 };
 
 }
