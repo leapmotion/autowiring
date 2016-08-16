@@ -27,7 +27,7 @@ template<class T, class... Args>
 struct select_strategy {
   static const construction_strategy value =
     // If a factory new is defined, then use it
-    has_static_new<T, Args...>::value ?
+    has_static_new<T, typename std::remove_reference<Args>::type...>::value ?
     construction_strategy::factory_new :
 
     // Otherwise we give up and just try to compose the type directly
