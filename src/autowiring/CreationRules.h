@@ -105,7 +105,7 @@ struct crh<construction_strategy::standard, T, Args...> {
   // If T doesn't inherit Object, then we need to compose a unifying type which does
   typedef typename SelectTypeUnifier<T>::type TActual;
 
-  static_assert(!has_static_new<T, Args...>::value, "Can't inject member with arguments if it has a static New");
+  static_assert(!has_static_new<T, typename std::remove_reference<Args>::type...>::value, "Can't inject member with arguments if it has a static New");
 
   static TActual* New(const CoreContext&, Args&&... args) {
     // Allocate slot first before registration
