@@ -200,7 +200,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const CoreObjectDescriptor&
     // Add slots for this object
     {
       Json::array slots;
-      for(auto slot = object.stump->pHead; slot; slot = slot->pFlink) {
+      for(const SlotInformation* slot = object.stump->pHead; slot; slot = slot->pFlink) {
         slots.push_back(Json::object{
             {"id", autowiring::demangle(slot->type)},
             {"autoRequired", slot->autoRequired},
