@@ -24,7 +24,7 @@ SlotInformationStackLocation::~SlotInformationStackLocation(void) {
   tss.reset(&prior);
 
   const SlotInformation* p = nullptr;
-  if (!stump.pHead.compare_exchange_strong(p, m_pCur, std::memory_order_relaxed)) {
+  if (!stump.pHead.compare_exchange_strong(p, m_pCur, std::memory_order_acquire)) {
     // Failed the exchange, destroy
     std::unique_ptr<SlotInformation> prior;
     for (const auto* cur = m_pCur; cur; cur = cur->pFlink)
