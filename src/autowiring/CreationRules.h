@@ -27,7 +27,7 @@ template<class T, class... Args>
 struct select_strategy {
   static const construction_strategy value =
     // If a factory new is defined, then use it
-    has_static_new<T, Args...>::value ?
+    has_static_new<T, typename std::remove_reference<Args>::type...>::value ?
     construction_strategy::factory_new :
 
     // Otherwise we give up and just try to compose the type directly
@@ -105,7 +105,7 @@ struct crh<construction_strategy::standard, T, Args...> {
   // If T doesn't inherit Object, then we need to compose a unifying type which does
   typedef typename SelectTypeUnifier<T>::type TActual;
 
-  static_assert(!has_static_new<T, Args...>::value, "Can't inject member with arguments if it has a static New");
+  static_assert(!has_static_new<T, typename std::remove_reference<Args>::type...>::value, "Can't inject member with arguments if it has a static New");
 
   static TActual* New(const CoreContext&, Args&&... args) {
     // Allocate slot first before registration

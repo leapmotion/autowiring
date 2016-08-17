@@ -43,11 +43,6 @@ namespace autowiring {
     return sc_marshaller;
   }
 
-  template<typename T>
-  struct matched_arg {
-    static T& value(void);
-  };
-
   template<typename T, typename... Args>
   struct has_bind
   {
@@ -55,7 +50,7 @@ namespace autowiring {
     static std::true_type select(
       decltype(
         static_cast<U*>(nullptr)->bind(
-          matched_arg<Args>::value()...
+          *(Args*)nullptr...
         )
       )*
     );
@@ -96,18 +91,18 @@ namespace autowiring {
     M m_value;
 
     template<typename T>
-    typename std::enable_if<has_bind<M, T>::value>::type bind(const config_field&, T& field) {
+    typename std::enable_if<has_bind<M, typename std::remove_reference<T>::type>::value>::type bind(const config_field&, T& field) {
       m_value.bind(field);
     }
     template<typename T>
-    typename std::enable_if<has_bind<M, const config_field&, T>::value>::type bind(const config_field& fieldDesc, T& field) {
+    typename std::enable_if<has_bind<M, const config_field, typename std::remove_reference<T>>::value>::type bind(const config_field& fieldDesc, T& field) {
       m_value.bind(fieldDesc, field);
     }
 
     template<typename T>
     typename std::enable_if<
       !has_bind<M, T>::value &&
-      !has_bind<M, const config_field&, T>::value
+      !has_bind<M, const config_field, T>::value
     >::type bind(const config_field&, T&) {}
 
     auto_id id(void) const override { return auto_id_t<M>{}; }

@@ -160,6 +160,16 @@ public:
   virtual int getValue(void) = 0;
 };
 
+static_assert(
+  autowiring::has_static_new<StaticNewInt>::value,
+  "Default static new not detected on StaticNewInt"
+);
+
+static_assert(
+  autowiring::has_static_new<StaticNewInt, std::unique_ptr<int>>::value,
+  "Static new with arguments not detected on StaticNewInt"
+);
+
 class StaticNewIntImpl:
   public StaticNewInt
 {

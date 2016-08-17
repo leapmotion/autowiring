@@ -86,6 +86,7 @@ public:
   {}
 
   const bool allowGlobalReferences;
+
   // The context that is current for the test being run right now
   std::shared_ptr<CoreContext> m_ctxt;
 
