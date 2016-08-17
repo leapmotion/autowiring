@@ -173,10 +173,12 @@ void autowiring::dbg::PrintRunnables(std::ostream& os, CoreContext& ctxt) {
         printCtxt.PrintAttributeIndentation();
         if (runnable->IsRunning())
           os << "[ RUNNING ]";
+        else if (runnable->ShouldStop())
+          os << "[ STOPPED ]";
         else if (runnable->WasStarted())
           os << "[ STARTED ]";
         else
-          os << "[ STOPPED ]";
+          os << "[ WAITING ]";
 
         // If we can get the tid, print that, otherwise just leave it blank
         if (BasicThread* pThread = dynamic_cast<BasicThread*>(runnable)) {
