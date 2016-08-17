@@ -178,7 +178,7 @@ void autowiring::dbg::PrintRunnables(std::ostream& os, CoreContext& ctxt) {
         else if (runnable->WasStarted())
           os << "[ STARTED ]";
         else
-          os << "[ UNKNOWN ]";
+          os << "[ WAITING ]";
 
         // If we can get the tid, print that, otherwise just leave it blank
         if (BasicThread* pThread = dynamic_cast<BasicThread*>(runnable)) {
