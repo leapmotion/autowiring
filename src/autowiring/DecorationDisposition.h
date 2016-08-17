@@ -66,6 +66,9 @@ struct DecorationDisposition
   // taking place.
   std::vector<SatCounter*> m_publishers;
 
+  /// <summary>
+  /// Represents a filter on this decoration that actually changes the decoration.
+  /// </summary>
   struct Modifier {
     Modifier(void) = default;
 
@@ -92,7 +95,8 @@ struct DecorationDisposition
     SatCounter* satCounter;
   };
 
-  // Modifiers of this decoration, ordered by altitude.
+  // Modifiers of this decoration, ordered by altitude.  These modifiers do not all become ready to
+  // run at the same time, and they MUST NOT be run concurrently with each other.
   std::vector<Modifier> m_modifiers;
 
   struct Subscriber {
