@@ -154,7 +154,7 @@ namespace autowiring {
 
       // We don't mind rare failures, here, because our algorithm is correct regardless
       // of the return value of this comparison, it's just slightly more efficient if
-      // there is no failure.
+      // a spurious failure does not occur.
       if (!m_state.compare_exchange_weak(state, SignalState::Updating, std::memory_order_relaxed, std::memory_order_relaxed)) {
         // Control is contended, we need to hand off linkage responsibility to someone else.
         auto link = new callable_link{ *this, e };
@@ -313,8 +313,8 @@ namespace autowiring {
           continue;
         case SignalState::Asserting:
         case SignalState::Deferred:
-          // Some other thread is already asserting this signal, doing work, we need to ensure
-          // that thread takes responsibility for this call.
+          // Some other thread is already asserting this signal, presumably doing work, we need to
+          // ensure that thread takes responsibility for this call.
           break;
         }
 

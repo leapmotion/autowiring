@@ -280,7 +280,7 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
 
   // Recursively mark unsatisfiable any single-output arguments on these subscribers:
   std::vector<const AutoFilterArgument*> unsatOutputArgs;
-  auto MarkOutputsUnsat = [&unsatOutputArgs] (SatCounter& satCounter) {
+  auto markOutputsUnsat = [&unsatOutputArgs] (SatCounter& satCounter) {
     // make sure each satCounter only gets marked once
     if (!satCounter.remaining)
       return;
@@ -316,7 +316,7 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
     } else {
       switch(disposition.m_decorations.size()) {
       case 0:
-        MarkOutputsUnsat(satCounter);
+        markOutputsUnsat(satCounter);
         break;
       case 1:
         if (satCounter.Decrement())
@@ -350,7 +350,7 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
         break;
       case DecorationDisposition::Subscriber::Type::Normal:
         // Non-optional, consider outputs and recursively invalidate
-        MarkOutputsUnsat(satCounter);
+        markOutputsUnsat(satCounter);
         break;
       }
     }
