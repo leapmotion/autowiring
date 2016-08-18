@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "SlotInformation.h"
 #include "AutowirableSlot.h"
-#include "InterlockedExchange.h"
 #include "thread_specific_ptr.h"
 #include MEMORY_HEADER
 
@@ -20,23 +19,19 @@ SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStumpB
   tss.reset(this);
 }
 
-template<class T>
-void UpdateOrCascadeDelete(T* ptr, const T*& dest) {
-  if(!compare_exchange<T>(&dest, ptr, nullptr))
-    // Exchange passed, the destination now owns this pointer
-    return;
-
-  // Failed the exchange, return here
-  std::unique_ptr<const T> prior;
-  for(const auto* cur = ptr; cur; cur = cur->pFlink)
-    prior.reset(cur);
-}
-
 SlotInformationStackLocation::~SlotInformationStackLocation(void) {
   // Replace the prior stack location, we were pushed
   tss.reset(&prior);
 
-  UpdateOrCascadeDelete(m_pCur, stump.pHead);
+  const SlotInformation* p = nullptr;
+  if (!stump.pHead.compare_exchange_strong(p, m_pCur, std::memory_order_acquire)) {
+    // Failed the exchange, destroy
+    std::unique_ptr<SlotInformation> prior;
+    for (const auto* cur = m_pCur; cur; cur = cur->pFlink)
+      prior.reset(m_pCur);
+  }
+  ///else
+    // Exchange passed, the destination now owns this pointer
 
   // Unconditionally update to true, no CAS needed
   stump.bInitialized = true;

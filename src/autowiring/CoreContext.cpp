@@ -102,7 +102,7 @@ CoreContext::~CoreContext(void) {
       uint8_t* pBase = (uint8_t*)ccType.value.ptr();
 
       // Enumerate all slots and unlink them one at a time
-      for (auto cur = ccType.stump->pHead; cur; cur = cur->pFlink) {
+      for (const SlotInformation* cur = ccType.stump->pHead; cur; cur = cur->pFlink) {
         if (cur->autoRequired)
           // Only unlink slots that were Autowired.  AutoRequired slots will never participate
           // in a cycle (because we would wind up with constructive chaos) so we don't really

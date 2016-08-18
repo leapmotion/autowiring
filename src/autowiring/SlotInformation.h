@@ -2,6 +2,7 @@
 #pragma once
 #include "auto_id.h"
 #include "TypeUnifier.h"
+#include <atomic>
 #include <typeinfo>
 #include MEMORY_HEADER
 
@@ -39,7 +40,9 @@ struct SlotInformation {
 struct SlotInformationStumpBase {
   SlotInformationStumpBase(const std::type_info& ti) :
     ti(ti)
-  {}
+  {
+    pHead = nullptr;
+  }
 
   // RTTI to which this stump pertains
   const std::type_info& ti;
@@ -48,7 +51,7 @@ struct SlotInformationStumpBase {
   bool bInitialized = false;
 
   // Current slot information:
-  const SlotInformation* pHead = nullptr;
+  std::atomic<const SlotInformation*> pHead;
 };
 
 /// <summary>

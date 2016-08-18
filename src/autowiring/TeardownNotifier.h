@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "C++11/cpp11.h"
+#include <atomic>
 #include RVALUE_HEADER
 
 namespace autowiring {
@@ -38,7 +39,7 @@ protected:
   };
 
   // Teardown listeners, invoked in sequence when the context is tearing down
-  EntryBase* m_pFirstTeardownListener = nullptr;
+  std::atomic<EntryBase*> m_pFirstTeardownListener;
 
   /// <summary>
   /// May be invoked prospectively by a derived instance to prematurely notify teardown listeners

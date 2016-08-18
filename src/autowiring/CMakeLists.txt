@@ -123,7 +123,6 @@ set(Autowiring_SRCS
   HeteroBlock.h
   HeteroBlock.cpp
   index_tuple.h
-  InterlockedExchange.h
   is_any.h
   is_shared_ptr.h
   ManualThreadPool.h
@@ -215,7 +214,6 @@ add_windows_sources(Autowiring_SRCS
   SystemThreadPoolWinXP.hpp
   SystemThreadPoolWinLH.cpp
   SystemThreadPoolWinLH.hpp
-  InterlockedExchangeWin.cpp
   thread_specific_ptr_win.cpp
 )
 
@@ -226,7 +224,6 @@ add_mac_sources(Autowiring_SRCS
 
 add_unix_sources(Autowiring_SRCS
   CreationRulesUnix.cpp
-  InterlockedExchangeUnix.cpp
   thread_specific_ptr_unix.cpp
 )
 
@@ -235,16 +232,6 @@ set(Autowiring_Linux_SRCS
 )
 
 add_conditional_sources(Autowiring_SRCS "NOT MSVC" GROUP_NAME "Non-Windows Source" FILES ${Autowiring_Unix_SRCS})
-
-add_conditional_sources(
-  Autowiring_SRCS "WIN32 AND standard_BUILD_ARCHITECTURES EQUAL x86"
-  GROUP_NAME "ASMx86 Source"
-  FILES interlocked.asm
-)
-
-if(WIN32 AND standard_BUILD_ARCHITECTURES EQUAL "x86")
-  enable_language(ASM_MASM)
-endif()
 
 add_conditional_sources(
   Autowiring_SRCS
