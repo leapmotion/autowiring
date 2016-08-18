@@ -187,14 +187,14 @@ std::string ConfigManager::Get(const std::string& name) const {
   return pEntry->value;
 }
 
-void ConfigManager::Set(std::string&& name, std::string&& value) {
+void ConfigManager::Set(const std::string& name, std::string value) {
   Entry* pEntry;
 
   {
     std::lock_guard<autowiring::spin_lock> lk(m_lock);
     auto q = m_config.find(name);
     if (q == m_config.end())
-      q = m_config.emplace(std::move(name), Entry{}).first;
+      q = m_config.emplace(name, Entry{}).first;
 
     pEntry = &q->second;
 
