@@ -188,10 +188,5 @@ namespace autowiring {
     /// Sets the named config value in the map
     /// </summary>
     void Set(std::string&& name, std::string&& value);
-
-    /// <summary>
-    /// Causes this entry to take on the default value in the parent context
-    /// </summary>
-    void Default(std::string name);
   };
 }

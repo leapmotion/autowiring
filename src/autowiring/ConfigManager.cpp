@@ -213,7 +213,3 @@ void ConfigManager::Set(std::string&& name, std::string&& value) {
   );
   pEntry->onChanged();
 }
-
-void ConfigManager::Default(std::string name) {
-
-}
