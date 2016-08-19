@@ -5,9 +5,11 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+
+#undef _GLIBCXX_HAVE_BROKEN_VSWPRINTF //Enable to_string in GCC 4.8.
 #include <string>
 #include <string.h>
-#include <cstdlib>
+#include <stdlib.h>
 #include TYPE_TRAITS_HEADER
 
 namespace autowiring {
@@ -113,7 +115,7 @@ namespace autowiring {
     void unmarshal(void* ptr, const char* szValue) const override {
       type& value = *static_cast<type*>(ptr);
       char* end = nullptr;
-      const auto llvalue = std::strtoll(szValue, &end, 10);
+      const auto llvalue = strtoll(szValue, &end, 10);
 
       if (llvalue > std::numeric_limits<type>::max() || llvalue < std::numeric_limits<type>::min())
         throw std::range_error("Overflow error, value is outside the range representable by this type.");
