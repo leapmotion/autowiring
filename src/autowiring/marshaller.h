@@ -105,46 +105,14 @@ namespace autowiring {
     typedef typename std::remove_volatile<T>::type type;
 
     std::string marshal(const void* ptr) const override {
-      std::string retVal;
-      type val = *static_cast<const type*>(ptr);
-      if (val == 0)
-        return "0";
-
-      bool pos = 0 < val;
-      if (!pos)
-        val *= ~0;
-      for (; val; val /= 10) {
-        retVal.push_back(static_cast<char>(val % 10 + '0'));
-      }
-      if (!pos)
-        retVal.push_back('-');
-
-      for (
-        auto first = retVal.begin(), last = retVal.end();
-        (first != last) && (first != --last);
-        ++first
-      )
-        std::swap(*first, *last);
-      return retVal;
+      const type val = *static_cast<const type*>(ptr);
+      return std::to_string(val);
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
       type& value = *static_cast<type*>(ptr);
-      bool negative = *szValue == '-';
-      if(negative) {
-        // Skip over the sign, verify we aren't assigning to the wrong field type
-        szValue++;
-        if (std::is_unsigned<type>::value)
-          throw std::range_error("Attempted to set a signed value on an unsigned calibration field");
-      }
-
-      for (value = 0; *szValue; szValue++) {
-        if (*szValue < '0' || '9' < *szValue)
-          throw std::invalid_argument("String value is not an integer");
-        value = *szValue - '0' + value * 10;
-      }
-      if(negative)
-        value *= -1;
+      char* end = nullptr;
+      value = strtol(szValue, &end, 10);
     }
 
     void copy(void* lhs, const void* rhs) const override {
