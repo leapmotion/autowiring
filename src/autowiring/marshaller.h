@@ -5,8 +5,10 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+
 #include <string>
 #include <string.h>
+#include <stdlib.h>
 #include TYPE_TRAITS_HEADER
 
 namespace autowiring {
@@ -107,6 +109,9 @@ namespace autowiring {
     std::string marshal(const void* ptr) const override {
       std::string retVal;
       type val = *static_cast<const type*>(ptr);
+      if (val == 0)
+        return "0";
+
       bool pos = 0 < val;
       if (!pos)
         val *= ~0;
@@ -120,28 +125,20 @@ namespace autowiring {
         auto first = retVal.begin(), last = retVal.end();
         (first != last) && (first != --last);
         ++first
-      )
+        )
         std::swap(*first, *last);
       return retVal;
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
       type& value = *static_cast<type*>(ptr);
-      bool negative = *szValue == '-';
-      if(negative) {
-        // Skip over the sign, verify we aren't assigning to the wrong field type
-        szValue++;
-        if (std::is_unsigned<type>::value)
-          throw std::range_error("Attempted to set a signed value on an unsigned calibration field");
-      }
+      char* end = nullptr;
+      const auto llvalue = strtoll(szValue, &end, 10);
 
-      for (value = 0; *szValue; szValue++) {
-        if (*szValue < '0' || '9' < *szValue)
-          throw std::invalid_argument("String value is not an integer");
-        value = *szValue - '0' + value * 10;
-      }
-      if(negative)
-        value *= -1;
+      if (llvalue > std::numeric_limits<type>::max() || llvalue < std::numeric_limits<type>::min())
+        throw std::range_error("Overflow error, value is outside the range representable by this type.");
+
+      value = static_cast<type>(llvalue);
     }
 
     void copy(void* lhs, const void* rhs) const override {
