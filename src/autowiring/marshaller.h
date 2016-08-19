@@ -6,7 +6,6 @@
 #include <limits>
 #include <stdexcept>
 
-#undef _GLIBCXX_HAVE_BROKEN_VSWPRINTF //Enable to_string in GCC 4.8.
 #include <string>
 #include <string.h>
 #include <stdlib.h>
@@ -108,8 +107,27 @@ namespace autowiring {
     typedef typename std::remove_volatile<T>::type type;
 
     std::string marshal(const void* ptr) const override {
-      const type val = *static_cast<const type*>(ptr);
-      return std::to_string(val);
+      std::string retVal;
+      type val = *static_cast<const type*>(ptr);
+      if (val == 0)
+        return "0";
+
+      bool pos = 0 < val;
+      if (!pos)
+        val *= ~0;
+      for (; val; val /= 10) {
+        retVal.push_back(static_cast<char>(val % 10 + '0'));
+      }
+      if (!pos)
+        retVal.push_back('-');
+
+      for (
+        auto first = retVal.begin(), last = retVal.end();
+        (first != last) && (first != --last);
+        ++first
+        )
+        std::swap(*first, *last);
+      return retVal;
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
