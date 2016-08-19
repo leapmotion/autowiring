@@ -107,6 +107,9 @@ namespace autowiring {
     std::string marshal(const void* ptr) const override {
       std::string retVal;
       type val = *static_cast<const type*>(ptr);
+      if (val == 0)
+        return "0";
+
       bool pos = 0 < val;
       if (!pos)
         val *= ~0;
