@@ -182,10 +182,50 @@ template<class T>
 class auto_arg<T*>
 {
 public:
-  static_assert(std::is_const<T>::value, "Pointer-typed input parameters must point to a const-qualified type (T must be const-qualified)");
-  typedef T* type;
-  typedef T* arg_type;
-  typedef auto_id_t<T*> id_type;
+  typedef std::shared_ptr<T> type;
+
+  // Utility type, required to dereference the std::shared_ptr
+  struct arg_type {
+    arg_type(const std::shared_ptr<T>& arg) :
+      arg(arg.get())
+    {}
+
+    T* arg;
+    operator T*() const { return arg; }
+  };
+
+  typedef auto_id_t<T> id_type;
+  static const bool is_input = false;
+  static const bool is_output = true;
+  static const bool is_rvalue = false;
+  static const bool is_shared = false;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+
+  static std::shared_ptr<T> arg(AutoPacket& packet) {
+    (void)auto_id_t_init<T>::init;
+
+    if (!packet.HasSubscribers<T>())
+      return nullptr;
+    return detail::auto_arg_ctor_helper<T>::arg(packet);
+  }
+
+  template<class C>
+  static void Commit(C& packet, type val) {
+    packet.template Decorate<T>(val);
+  }
+};
+
+/// <summary>
+/// Specialization for "const T*", which is functionally identical to a reference input
+/// </summary>
+template<class T>
+class auto_arg<const T*>
+{
+public:
+  typedef const T* type;
+  typedef type arg_type;
+  typedef auto_id_t<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_rvalue = false;
@@ -195,8 +235,8 @@ public:
 
   template<class C>
   static const T* arg(C& packet) {
-    (void) auto_id_t_init<T, false>::init;
-    return packet.template Get<const T*>();
+    (void)auto_id_t_init<T, false>::init;
+    return &packet.template Get<T>();
   }
 };
 
@@ -309,6 +349,56 @@ public:
   static std::shared_ptr<T> arg(C&) {
     (void) auto_id_t_init<T, false>::init;
     return std::shared_ptr<T>();
+  }
+};
+
+/// <summary>
+/// Specialization for "std::shared_ptr<T>*" ~ auto_out<T>
+/// </summary>
+template<class T>
+class auto_arg<std::shared_ptr<T>*>
+{
+public:
+  struct downstream_status {
+    downstream_status(bool has_downstream) :
+      has_downstream(has_downstream)
+    {}
+
+    bool has_downstream;
+    std::shared_ptr<T> arg;
+
+    operator std::shared_ptr<T>*() {
+      return has_downstream ? &arg : nullptr;
+    }
+  };
+
+  typedef std::shared_ptr<T>* arg_type;
+  typedef downstream_status type;
+  typedef auto_id_t<T> id_type;
+  static const bool is_input = false;
+  static const bool is_output = true;
+  static const bool is_rvalue = false;
+  static const bool is_shared = true;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+
+  template<class C>
+  static std::shared_ptr<T> arg(C&) {
+    (void)auto_id_t_init<T, false>::init;
+    if (!packet.HasSubscribers<T>())
+      return nullptr;
+    return std::shared_ptr<T>();
+  }
+
+  static downstream_status arg(AutoPacket& packet) {
+    (void)auto_id_t_init<T>::init;
+    return{ packet.HasSubscribers<T>() };
+  }
+
+  template<class C>
+  static void Commit(C& packet, downstream_status val) {
+    if(val.has_downstream)
+      packet.template Decorate<T>(val.arg);
   }
 };
 

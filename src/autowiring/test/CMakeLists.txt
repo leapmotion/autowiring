@@ -13,6 +13,7 @@ set(AutowiringTest_SRCS
   AutoFilterDiagnosticsTest.cpp
   AutoFilterFunctionTest.cpp
   AutoFilterMultiDecorateTest.cpp
+  AutoFilterPointerOutTest.cpp
   AutoFilterRvalueTest.cpp
   AutoFilterSatisfiabilityTest.cpp
   AutoFilterSequencing.cpp
