@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "AutoPacket.h"
 #include "auto_id.h"
 
 class AutoPacket;
@@ -46,6 +47,50 @@ public:
     return packet.template Get<T>();
   }
 };
+
+namespace detail {
+
+/// <summary>
+/// Construction helper for output-by-reference decoration types
+/// </summary>
+/// <remarks>
+/// If an output decoration type T has a constructor of the form T(AutoPacket&), then this constructor should
+/// be invoked preferentially when T is being constructed.
+/// </remarks>
+template<class T, bool has_default = std::is_constructible<T>::value, bool has_autofilter = std::is_constructible<T, AutoPacket&>::value>
+struct auto_arg_ctor_helper;
+
+template<class T, bool has_default>
+struct auto_arg_ctor_helper<T, has_default, true> {
+  static std::shared_ptr<T> arg(AutoPacket& packet) {
+    return std::make_shared<T>(packet);
+  }
+};
+
+template<class T, bool has_default>
+struct auto_arg_ctor_helper<T, has_default, false> {
+  static_assert(has_default, "Cannot speculatively construct an output argument of type T, it doesn't have any available constructors");
+
+  template<void* (*)(size_t)>
+  struct fn {};
+
+  template<typename U>
+  static std::shared_ptr<U> Allocate(fn<&U::operator new>*) {
+    return std::shared_ptr<U>(new U);
+  }
+
+  template<typename U>
+  static std::shared_ptr<U> Allocate(...) {
+    return std::make_shared<U>();
+  }
+
+  static std::shared_ptr<T> arg(AutoPacket&) {
+    // Use make shared, if we can; if static new is present on this type, though, then we have to use
+    // the uglier two-part construction syntax
+    return Allocate<T>(nullptr);
+  }
+};
+}
 
 /// <summary>
 /// Reinterpret copied argument as input
@@ -240,51 +285,6 @@ public:
   }
 };
 
-namespace detail {
-
-/// <summary>
-/// Construction helper for output-by-reference decoration types
-/// </summary>
-/// <remarks>
-/// If an output decoration type T has a constructor of the form T(AutoPacket&), then this constructor should
-/// be invoked preferentially when T is being constructed.
-/// </remarks>
-template<class T, bool has_default = std::is_constructible<T>::value, bool has_autofilter = std::is_constructible<T, AutoPacket&>::value>
-struct auto_arg_ctor_helper;
-
-template<class T, bool has_default>
-struct auto_arg_ctor_helper<T, has_default, true> {
-  static std::shared_ptr<T> arg(AutoPacket& packet) {
-    return std::make_shared<T>(packet);
-  }
-};
-
-template<class T, bool has_default>
-struct auto_arg_ctor_helper<T, has_default, false> {
-  static_assert(has_default, "Cannot speculatively construct an output argument of type T, it doesn't have any available constructors");
-
-  template<void* (*)(size_t)>
-  struct fn {};
-
-  template<typename U>
-  static std::shared_ptr<U> Allocate(fn<&U::operator new>*) {
-    return std::shared_ptr<U>(new U);
-  }
-
-  template<typename U>
-  static std::shared_ptr<U> Allocate(...) {
-    return std::make_shared<U>();
-  }
-
-  static std::shared_ptr<T> arg(AutoPacket&) {
-    // Use make shared, if we can; if static new is present on this type, though, then we have to use
-    // the uglier two-part construction syntax
-    return Allocate<T>(nullptr);
-  }
-};
-
-} // end of namespace detail
-
 /// <summary>
 /// Specialization for "T&" ~ auto_out<T>
 /// </summary>
@@ -381,14 +381,6 @@ public:
   static const bool is_shared = true;
   static const bool is_multi = false;
   static const int tshift = 0;
-
-  template<class C>
-  static std::shared_ptr<T> arg(C&) {
-    (void)auto_id_t_init<T, false>::init;
-    if (!packet.template HasSubscribers<T>())
-      return nullptr;
-    return std::shared_ptr<T>();
-  }
 
   static downstream_status arg(AutoPacket& packet) {
     (void)auto_id_t_init<T>::init;
