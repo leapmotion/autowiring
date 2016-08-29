@@ -147,8 +147,7 @@ public:
     return packet.template GetRvalue<T>();
   }
 
-  template<class C>
-  static void Commit(C& packet, T& val) {
+  static void Commit(AutoPacket& packet, T& val) {
     // Do nothing. Modify val in place, no need to commit
   }
 };
@@ -207,14 +206,12 @@ public:
   static const bool is_multi = false;
   static const int tshift = 0;
 
-  template<class C>
-  static std::shared_ptr<T>&& arg(C& packet) {
+  static std::shared_ptr<T>&& arg(AutoPacket& packet) {
     (void) auto_id_t_init<T, false>::init;
     return packet.template GetRvalueShared<T>();
   }
 
-  template<class C>
-  static void Commit(C& packet, std::shared_ptr<T> val) {
+  static void Commit(AutoPacket& packet, std::shared_ptr<T> val) {
     if (!val)
       packet.template RemoveDecoration<T>();
   }
@@ -255,8 +252,7 @@ public:
     return detail::auto_arg_ctor_helper<T>::arg(packet);
   }
 
-  template<class C>
-  static void Commit(C& packet, type val) {
+  static void Commit(AutoPacket& packet, type val) {
     packet.template Decorate<T>(val);
   }
 };
@@ -319,8 +315,7 @@ public:
     return detail::auto_arg_ctor_helper<T>::arg(packet);
   }
 
-  template<class C>
-  static void Commit(C& packet, type val) {
+  static void Commit(AutoPacket& packet, type val) {
     packet.template Decorate<T>(val);
   }
 };
@@ -387,8 +382,7 @@ public:
     return{ packet.template HasSubscribers<T>() };
   }
 
-  template<class C>
-  static void Commit(C& packet, downstream_status val) {
+  static void Commit(AutoPacket& packet, downstream_status val) {
     if(val.has_downstream)
       packet.template Decorate<T>(val.arg);
   }
