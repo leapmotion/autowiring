@@ -1,9 +1,10 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "auto_arg.h"
 #include <typeinfo>
 
 namespace autowiring {
+template<class T>
+class auto_arg;
 
 /// <summary>
 /// AutoFilter argument disposition

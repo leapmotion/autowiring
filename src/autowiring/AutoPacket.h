@@ -2,7 +2,6 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "at_exit.h"
-#include "auto_arg.h"
 #include "auto_id.h"
 #include "auto_tuple.h"
 #include "AutoFilterArgument.h"
@@ -35,6 +34,9 @@ namespace autowiring {
 
   template<class T>
   class auto_arg;
+
+  template<class T>
+  struct arg_is_out;
 }
 
 /// <summary>

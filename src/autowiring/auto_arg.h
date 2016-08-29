@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "AutoPacket.h"
 #include "auto_id.h"
 
 class AutoPacket;
@@ -46,6 +47,50 @@ public:
     return packet.template Get<T>();
   }
 };
+
+namespace detail {
+
+/// <summary>
+/// Construction helper for output-by-reference decoration types
+/// </summary>
+/// <remarks>
+/// If an output decoration type T has a constructor of the form T(AutoPacket&), then this constructor should
+/// be invoked preferentially when T is being constructed.
+/// </remarks>
+template<class T, bool has_default = std::is_constructible<T>::value, bool has_autofilter = std::is_constructible<T, AutoPacket&>::value>
+struct auto_arg_ctor_helper;
+
+template<class T, bool has_default>
+struct auto_arg_ctor_helper<T, has_default, true> {
+  static std::shared_ptr<T> arg(AutoPacket& packet) {
+    return std::make_shared<T>(packet);
+  }
+};
+
+template<class T, bool has_default>
+struct auto_arg_ctor_helper<T, has_default, false> {
+  static_assert(has_default, "Cannot speculatively construct an output argument of type T, it doesn't have any available constructors");
+
+  template<void* (*)(size_t)>
+  struct fn {};
+
+  template<typename U>
+  static std::shared_ptr<U> Allocate(fn<&U::operator new>*) {
+    return std::shared_ptr<U>(new U);
+  }
+
+  template<typename U>
+  static std::shared_ptr<U> Allocate(...) {
+    return std::make_shared<U>();
+  }
+
+  static std::shared_ptr<T> arg(AutoPacket&) {
+    // Use make shared, if we can; if static new is present on this type, though, then we have to use
+    // the uglier two-part construction syntax
+    return Allocate<T>(nullptr);
+  }
+};
+}
 
 /// <summary>
 /// Reinterpret copied argument as input
@@ -102,8 +147,7 @@ public:
     return packet.template GetRvalue<T>();
   }
 
-  template<class C>
-  static void Commit(C& packet, T& val) {
+  static void Commit(AutoPacket& packet, T& val) {
     // Do nothing. Modify val in place, no need to commit
   }
 };
@@ -162,14 +206,12 @@ public:
   static const bool is_multi = false;
   static const int tshift = 0;
 
-  template<class C>
-  static std::shared_ptr<T>&& arg(C& packet) {
+  static std::shared_ptr<T>&& arg(AutoPacket& packet) {
     (void) auto_id_t_init<T, false>::init;
     return packet.template GetRvalueShared<T>();
   }
 
-  template<class C>
-  static void Commit(C& packet, std::shared_ptr<T> val) {
+  static void Commit(AutoPacket& packet, std::shared_ptr<T> val) {
     if (!val)
       packet.template RemoveDecoration<T>();
   }
@@ -182,10 +224,49 @@ template<class T>
 class auto_arg<T*>
 {
 public:
-  static_assert(std::is_const<T>::value, "Pointer-typed input parameters must point to a const-qualified type (T must be const-qualified)");
-  typedef T* type;
-  typedef T* arg_type;
-  typedef auto_id_t<T*> id_type;
+  typedef std::shared_ptr<T> type;
+
+  // Utility type, required to dereference the std::shared_ptr
+  struct arg_type {
+    arg_type(const std::shared_ptr<T>& arg) :
+      arg(arg.get())
+    {}
+
+    T* arg;
+    operator T*() const { return arg; }
+  };
+
+  typedef auto_id_t<T> id_type;
+  static const bool is_input = false;
+  static const bool is_output = true;
+  static const bool is_rvalue = false;
+  static const bool is_shared = false;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+
+  static std::shared_ptr<T> arg(AutoPacket& packet) {
+    (void)auto_id_t_init<T>::init;
+
+    if (!packet.template HasSubscribers<T>())
+      return nullptr;
+    return detail::auto_arg_ctor_helper<T>::arg(packet);
+  }
+
+  static void Commit(AutoPacket& packet, type val) {
+    packet.template Decorate<T>(val);
+  }
+};
+
+/// <summary>
+/// Specialization for "const T*", which is functionally identical to a reference input
+/// </summary>
+template<class T>
+class auto_arg<const T*>
+{
+public:
+  typedef const T* type;
+  typedef type arg_type;
+  typedef auto_id_t<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_rvalue = false;
@@ -195,55 +276,10 @@ public:
 
   template<class C>
   static const T* arg(C& packet) {
-    (void) auto_id_t_init<T, false>::init;
-    return packet.template Get<const T*>();
+    (void)auto_id_t_init<T, false>::init;
+    return &packet.template Get<T>();
   }
 };
-
-namespace detail {
-
-/// <summary>
-/// Construction helper for output-by-reference decoration types
-/// </summary>
-/// <remarks>
-/// If an output decoration type T has a constructor of the form T(AutoPacket&), then this constructor should
-/// be invoked preferentially when T is being constructed.
-/// </remarks>
-template<class T, bool has_default = std::is_constructible<T>::value, bool has_autofilter = std::is_constructible<T, AutoPacket&>::value>
-struct auto_arg_ctor_helper;
-
-template<class T, bool has_default>
-struct auto_arg_ctor_helper<T, has_default, true> {
-  static std::shared_ptr<T> arg(AutoPacket& packet) {
-    return std::make_shared<T>(packet);
-  }
-};
-
-template<class T, bool has_default>
-struct auto_arg_ctor_helper<T, has_default, false> {
-  static_assert(has_default, "Cannot speculatively construct an output argument of type T, it doesn't have any available constructors");
-
-  template<void* (*)(size_t)>
-  struct fn {};
-
-  template<typename U>
-  static std::shared_ptr<U> Allocate(fn<&U::operator new>*) {
-    return std::shared_ptr<U>(new U);
-  }
-
-  template<typename U>
-  static std::shared_ptr<U> Allocate(...) {
-    return std::make_shared<U>();
-  }
-
-  static std::shared_ptr<T> arg(AutoPacket&) {
-    // Use make shared, if we can; if static new is present on this type, though, then we have to use
-    // the uglier two-part construction syntax
-    return Allocate<T>(nullptr);
-  }
-};
-
-} // end of namespace detail
 
 /// <summary>
 /// Specialization for "T&" ~ auto_out<T>
@@ -279,8 +315,7 @@ public:
     return detail::auto_arg_ctor_helper<T>::arg(packet);
   }
 
-  template<class C>
-  static void Commit(C& packet, type val) {
+  static void Commit(AutoPacket& packet, type val) {
     packet.template Decorate<T>(val);
   }
 };
@@ -309,6 +344,47 @@ public:
   static std::shared_ptr<T> arg(C&) {
     (void) auto_id_t_init<T, false>::init;
     return std::shared_ptr<T>();
+  }
+};
+
+/// <summary>
+/// Specialization for "std::shared_ptr<T>*" ~ auto_out<T>
+/// </summary>
+template<class T>
+class auto_arg<std::shared_ptr<T>*>
+{
+public:
+  struct downstream_status {
+    downstream_status(bool has_downstream) :
+      has_downstream(has_downstream)
+    {}
+
+    bool has_downstream;
+    std::shared_ptr<T> arg;
+
+    operator std::shared_ptr<T>*() {
+      return has_downstream ? &arg : nullptr;
+    }
+  };
+
+  typedef std::shared_ptr<T>* arg_type;
+  typedef downstream_status type;
+  typedef auto_id_t<T> id_type;
+  static const bool is_input = false;
+  static const bool is_output = true;
+  static const bool is_rvalue = false;
+  static const bool is_shared = true;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+
+  static downstream_status arg(AutoPacket& packet) {
+    (void)auto_id_t_init<T>::init;
+    return{ packet.template HasSubscribers<T>() };
+  }
+
+  static void Commit(AutoPacket& packet, downstream_status val) {
+    if(val.has_downstream)
+      packet.template Decorate<T>(val.arg);
   }
 };
 
