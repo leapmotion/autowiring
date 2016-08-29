@@ -205,7 +205,7 @@ public:
   static std::shared_ptr<T> arg(AutoPacket& packet) {
     (void)auto_id_t_init<T>::init;
 
-    if (!packet.HasSubscribers<T>())
+    if (!packet.template HasSubscribers<T>())
       return nullptr;
     return detail::auto_arg_ctor_helper<T>::arg(packet);
   }
@@ -385,14 +385,14 @@ public:
   template<class C>
   static std::shared_ptr<T> arg(C&) {
     (void)auto_id_t_init<T, false>::init;
-    if (!packet.HasSubscribers<T>())
+    if (!packet.template HasSubscribers<T>())
       return nullptr;
     return std::shared_ptr<T>();
   }
 
   static downstream_status arg(AutoPacket& packet) {
     (void)auto_id_t_init<T>::init;
-    return{ packet.HasSubscribers<T>() };
+    return{ packet.template HasSubscribers<T>() };
   }
 
   template<class C>
