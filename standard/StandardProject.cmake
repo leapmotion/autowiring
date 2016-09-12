@@ -39,10 +39,10 @@ function(standard_project_preinit)
   # project()
   if(APPLE)
     if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
-      set(CMAKE_OSX_ARCHITECTURES "arm" CACHE STRING "Mac OS X build architectures")
+      set(CMAKE_OSX_ARCHITECTURES "arm" CACHE STRING "Mac OS X build architectures" FORCE)
     else()
       # Build Fat binaries on OSX by default
-      set(CMAKE_OSX_ARCHITECTURES "x86_64;i386" CACHE STRING "Mac OS X build architectures")
+      set(CMAKE_OSX_ARCHITECTURES "x86_64;i386" CACHE STRING "Mac OS X build architectures" FORCE)
     endif()
   endif()
 
