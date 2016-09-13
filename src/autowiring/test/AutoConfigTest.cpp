@@ -45,7 +45,7 @@ namespace {
   public:
     autowiring::config<std::string> a{ "Hello world!" };
     std::atomic<int> b{ 929 };
-    std::atomic<unsigned int> bUnsigned{ 92999 };
+    std::atomic<uint64_t> bUnsigned{ 92999 };
     volatile bool c = false;
     volatile float d = 1.0f;
     volatile double e = 99.2;
