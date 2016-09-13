@@ -115,6 +115,14 @@ namespace autowiring {
   template<typename T>
   struct integral_converter<T, typename std::enable_if<std::is_unsigned<T>::value>::type> {
     static T convert(const char* p) {
+      // Trim
+      while (isspace(*p))
+        p++;
+
+      // This is the reason we're trimming--no signed numbers in unsigned deserialization
+      if (*p == '-')
+        throw std::range_error("Underflow error, attempted to set a signed value in an unsigned field");
+
       char* end = nullptr;
       return static_cast<T>(strtoull(p, &end, 10));
     }
