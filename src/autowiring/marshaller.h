@@ -100,6 +100,26 @@ namespace autowiring {
     builtin_marshaller<bool, void>
   {};
 
+  // Needed to avoid annoying signed/unsigned warnings due to strtoull
+  template<typename T, typename = void>
+  struct integral_converter;
+
+  template<typename T>
+  struct integral_converter<T, typename std::enable_if<std::is_signed<T>::value>::type> {
+    static T convert(const char* p) {
+      char* end = nullptr;
+      return static_cast<T>(strtoll(p, &end, 10));
+    }
+  };
+
+  template<typename T>
+  struct integral_converter<T, typename std::enable_if<std::is_unsigned<T>::value>::type> {
+    static T convert(const char* p) {
+      char* end = nullptr;
+      return static_cast<T>(strtoull(p, &end, 10));
+    }
+  };
+
   template<typename T>
   struct builtin_marshaller<T, typename std::enable_if<std::is_integral<T>::value>::type> :
     marshaller_base
@@ -131,14 +151,10 @@ namespace autowiring {
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
-      type& value = *static_cast<type*>(ptr);
-      char* end = nullptr;
-      const auto llvalue = strtoll(szValue, &end, 10);
-
-      if (llvalue > std::numeric_limits<type>::max() || llvalue < std::numeric_limits<type>::min())
+      const auto value = integral_converter<typename std::decay<T>::type>::convert(szValue);
+      if (value > std::numeric_limits<type>::max() || value < std::numeric_limits<type>::min())
         throw std::range_error("Overflow error, value is outside the range representable by this type.");
-
-      value = static_cast<type>(llvalue);
+      *static_cast<type*>(ptr) = value;
     }
 
     void copy(void* lhs, const void* rhs) const override {
