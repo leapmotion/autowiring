@@ -252,6 +252,28 @@ namespace autowiring {
     }
   };
 
+  template<typename Rep, typename Period>
+  struct builtin_marshaller<std::chrono::duration<Rep, Period>, void>:
+    builtin_marshaller<Rep, void>
+  {
+    typedef typename std::chrono::duration<Rep, Period> type;
+
+    std::string marshal(const void* ptr) const override {
+      Rep value = static_cast<const type*>(ptr)->count();
+      return builtin_marshaller<Rep, void>::marshal(&value);
+    }
+
+    void unmarshal(void* ptr, const char* szValue) const override {
+      Rep value;
+      builtin_marshaller<Rep, void>::unmarshal(&value, szValue);
+      *static_cast<type*>(ptr) = type { value };
+    }
+
+    void copy(void* lhs, const void* rhs) const override {
+      *static_cast<type*>(lhs) = *static_cast<const type*>(rhs);
+    }
+  };
+
   /// <summary>
   /// Default marshaller, a point of specialization for external users
   /// </summary>
