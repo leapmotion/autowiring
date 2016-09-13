@@ -26,7 +26,7 @@ namespace autowiring {
   };
 
   template<typename T>
-  static const marshaller<T>& get_marshaller(void) {
+  static const marshaller_base& get_marshaller(void) {
     // To fix this, specialize autowiring::marshal for your type
     static_assert(
       !std::is_base_of<invalid_marshal_base, autowiring::marshaller<T>>::value,
