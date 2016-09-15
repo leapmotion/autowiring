@@ -2,6 +2,7 @@
 #pragma once
 #include <atomic>
 #include <initializer_list>
+#include <chrono>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
@@ -10,6 +11,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include TYPE_TRAITS_HEADER
+
+namespace std {
+  template<class Rep, class Period> class duration;
+}
 
 namespace autowiring {
   struct invalid_marshal_base {};
