@@ -1,6 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/observable.h>
+#include <set>
+#include <unordered_set>
 
 class ObservableTest:
   public testing::Test
@@ -35,4 +37,22 @@ TEST_F(ObservableTest, BeforeAndAfter) {
   ASSERT_TRUE(hit) << "Change notification not raised";
   ASSERT_EQ(8, obBefore) << "\"Before\" value in onBeforeChanged was not correct";
   ASSERT_EQ(9, obAfter) << "\"AfFter\" value in onBeforeChanged was not correct";
+}
+
+TEST_F(ObservableTest, SetOfObservable) {
+  std::unordered_set<autowiring::observable<int>> a;
+  a.insert(9);
+  a.insert(10);
+  a.insert(11);
+  ASSERT_EQ(1, a.count(9));
+  ASSERT_EQ(1, a.count(12));
+  ASSERT_EQ(1, a.count(44));
+
+  std::set<autowiring::observable<int>> b;
+  b.insert(9);
+  b.insert(12);
+  b.insert(44);
+  ASSERT_EQ(1, b.count(9));
+  ASSERT_EQ(1, b.count(12));
+  ASSERT_EQ(1, b.count(44));
 }

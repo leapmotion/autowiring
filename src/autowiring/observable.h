@@ -72,8 +72,18 @@ public:
     onChanged();
     return *this;
   }
-};
 
+  bool operator==(const T& rhs) { return val == rhs; }
+  bool operator!=(const T& rhs) { return val != rhs; }
+  bool operator<(const T& rhs) { return val < rhs; }
+  bool operator<=(const T& rhs) { return val <= rhs; }
+  bool operator>(const T& rhs) { return val > rhs; }
+  bool operator>=(const T& rhs) { return val >= rhs; }
+  auto operator*(const T& rhs) -> decltype(val * rhs) { return val * rhs; }
+  auto operator/(const T& rhs) -> decltype(val * rhs) { return val / rhs; }
+  auto operator+(const T& rhs) -> decltype(val * rhs) { return val + rhs; }
+  auto operator-(const T& rhs) -> decltype(val * rhs) { return val - rhs; }
+};
 
 template<typename T>
 struct marshaller<observable<T>> :
@@ -99,4 +109,17 @@ struct marshaller<observable<T>> :
   }
 };
 
+}
+
+namespace std {
+template<typename T>
+struct hash<autowiring::observable<T>> {
+  hash(void) = default;
+
+  const hash<T> interior;
+
+  auto operator()(const autowiring::observable<T>& value) const -> decltype(interior(value.get())) {
+    return interior(value.get());
+  }
+};
 }
