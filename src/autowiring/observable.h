@@ -116,7 +116,7 @@ template<typename T>
 struct hash<autowiring::observable<T>> {
   hash(void) = default;
 
-  const hash<T> interior;
+  hash<T> interior;
 
   auto operator()(const autowiring::observable<T>& value) const -> decltype(interior(value.get())) {
     return interior(value.get());
