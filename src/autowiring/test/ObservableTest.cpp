@@ -41,12 +41,12 @@ TEST_F(ObservableTest, BeforeAndAfter) {
 
 TEST_F(ObservableTest, SetOfObservable) {
   std::unordered_set<autowiring::observable<int>> a;
-  a.insert(9);
-  a.insert(10);
-  a.insert(11);
-  ASSERT_EQ(1, a.count(9));
-  ASSERT_EQ(1, a.count(12));
-  ASSERT_EQ(1, a.count(44));
+  a.insert(4449);
+  a.insert(44410);
+  a.insert(44411);
+  ASSERT_EQ(1, a.count(4449));
+  ASSERT_EQ(1, a.count(44410));
+  ASSERT_EQ(1, a.count(44411));
 
   std::set<autowiring::observable<int>> b;
   b.insert(9);
