@@ -594,5 +594,8 @@ namespace autowiring {
     // template format of the earlier function call overload, overload resolution will never
     // select this variant.
     //void operator()(Args... args) const;
+
+    bool has_listeners(void) const { return m_pFirstListener != nullptr; }
+    operator bool() const { return has_listeners(); }
   };
 }
