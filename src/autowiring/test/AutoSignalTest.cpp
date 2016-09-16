@@ -823,6 +823,8 @@ TEST_F(AutoSignalTest, MoveInInvoke) {
 TEST_F(AutoSignalTest, ListenerCheck) {
   autowiring::signal<void()> s;
   ASSERT_FALSE(s) << "Signal did not correctly report it had no listeners";
-  s += [] {};
+  registration_t reg = s += [] {};
   ASSERT_TRUE(s) << "Signal stated that it had no listeners when it should have had at least one";
+  s -= reg;
+  ASSERT_FALSE(s) << "Signal believed it still had listeners even after they were all unregistered";
 }
