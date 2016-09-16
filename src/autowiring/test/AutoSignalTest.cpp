@@ -819,3 +819,10 @@ TEST_F(AutoSignalTest, MoveInInvoke) {
   ASSERT_NE(nullptr, vRecovered);
   ASSERT_EQ(404, *vRecovered) << "Recovered unique pointer was not the expected value";
 }
+
+TEST_F(AutoSignalTest, ListenerCheck) {
+  autowiring::signal<void()> s;
+  ASSERT_FALSE(s) << "Signal did not correctly report it had no listeners";
+  s += [] {};
+  ASSERT_TRUE(s) << "Signal stated that it had no listeners when it should have had at least one";
+}
