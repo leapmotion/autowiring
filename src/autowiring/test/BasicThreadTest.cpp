@@ -75,3 +75,23 @@ TEST_F(BasicThreadTest, IsMainThread) {
   );
   ASSERT_FALSE(secondaryIsMain.get()) << "Secondary thread incorrectly identified as the main thread";
 }
+
+namespace {
+class WaitsForStateUpdate :
+  public BasicThread
+{
+public:
+  void Run(void) override {
+    WaitForStateUpdate([] { return false; });
+  }
+};
+}
+
+TEST_F(BasicThreadTest, WaitForStateUpdateExits) {
+  AutoRequired<WaitsForStateUpdate> wfsu;
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+
+  ctxt->SignalShutdown();
+  ASSERT_TRUE(ctxt->Wait(std::chrono::seconds{ 10 }));
+}
