@@ -44,11 +44,12 @@ set(Autowiring_SRCS
   Autowired.cpp
   Autowired.h
   autowiring.h
+  autowiring_error.cpp
+  autowiring_error.h
   AutowiringConfig.h
   AutowiringDebug.h
   AutowiringDebug.cpp
-  autowiring_error.cpp
-  autowiring_error.h
+  AutowiringVersion.h
   basic_timer.h
   BasicThread.cpp
   BasicThread.h
@@ -247,6 +248,7 @@ add_conditional_sources(
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 add_pch(Autowiring "stdafx.h" "stdafx.cpp")
 target_link_libraries(Autowiring INTERFACE Autoboost)
+configure_file(AutowiringVersion.h.in AutowiringVersion.h)
 
 target_include_directories(
   Autowiring
@@ -254,6 +256,7 @@ target_include_directories(
   "${PROJECT_SOURCE_DIR}/contrib/autoboost"
   PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
   INTERFACE
   "$<INSTALL_INTERFACE:include>"
 )
