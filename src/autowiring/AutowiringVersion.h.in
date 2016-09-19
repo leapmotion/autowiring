@@ -1,6 +1,13 @@
 #pragma once
 
-#define AUTOWIRING_VERSION "@autowiring_VERSION@"
-#define AUTOWIRING_VERSION_MAJOR "@autowiring_VERSION_MAJOR@"
-#define AUTOWIRING_VERSION_MINOR "@autowiring_VERSION_MINOR@"
-#define AUTOWIRING_VERSION_PATCH "@autowiring_VERSION_PATCH@"
+#define AUTOWIRING_VERSION_STR "@autowiring_VERSION@"
+#define AUTOWIRING_VERSION_MAJOR @autowiring_VERSION_MAJOR@
+#define AUTOWIRING_VERSION_MINOR @autowiring_VERSION_MINOR@
+#define AUTOWIRING_VERSION_PATCH @autowiring_VERSION_PATCH@
+
+// BCD version number with the following form:
+// 0x XX YY ZZ
+// XX - Major version number
+// YY - Minor version number
+// ZZ - Patch
+#define AUTOWIRING_VERSION ((AUTOWIRING_VERSION_MAJOR << 16) | (AUTOWIRING_VERSION_MINOR << 8) | (AUTOWIRING_VERSION_PATCH))
