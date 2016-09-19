@@ -342,3 +342,23 @@ TEST_F(AutoConfigTest, TeardownUnreference) {
   }
   ASSERT_TRUE(cwbf_weak.expired()) << "Object leaked after context destruction";
 }
+
+namespace {
+  struct HasDurationField {
+    std::chrono::seconds d;
+
+    static config_descriptor GetConfigDescriptor(void) {
+      return{
+        { "duration", &HasDurationField::d }
+      };
+    }
+  };
+}
+
+TEST_F(AutoConfigTest, DurationSerialization) {
+  AutoRequired<HasDurationField> hdf;
+  AutoCurrentContext ctxt;
+  ctxt->Config.Set("duration", "192");
+
+  ASSERT_EQ(std::chrono::seconds{ 192 }, hdf->d);
+}

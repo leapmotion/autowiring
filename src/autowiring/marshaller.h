@@ -2,6 +2,7 @@
 #pragma once
 #include <atomic>
 #include <initializer_list>
+#include <chrono>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
@@ -10,6 +11,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include TYPE_TRAITS_HEADER
+
+namespace std {
+  template<class Rep, class Period> class duration;
+}
 
 namespace autowiring {
   struct invalid_marshal_base {};
@@ -273,6 +278,28 @@ namespace autowiring {
 
     void copy(void* lhs, const void* rhs) const override {
       *static_cast<T*>(lhs) = *static_cast<const T*>(rhs);
+    }
+  };
+
+  template<typename Rep, typename Period>
+  struct builtin_marshaller<std::chrono::duration<Rep, Period>, void>:
+    builtin_marshaller<Rep, void>
+  {
+    typedef typename std::chrono::duration<Rep, Period> type;
+
+    std::string marshal(const void* ptr) const override {
+      Rep value = static_cast<const type*>(ptr)->count();
+      return builtin_marshaller<Rep, void>::marshal(&value);
+    }
+
+    void unmarshal(void* ptr, const char* szValue) const override {
+      Rep value;
+      builtin_marshaller<Rep, void>::unmarshal(&value, szValue);
+      *static_cast<type*>(ptr) = type { value };
+    }
+
+    void copy(void* lhs, const void* rhs) const override {
+      *static_cast<type*>(lhs) = *static_cast<const type*>(rhs);
     }
   };
 
