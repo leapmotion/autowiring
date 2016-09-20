@@ -145,8 +145,13 @@ bool BasicThread::OnStart(void) {
 
 void BasicThread::OnStop(bool graceful) {
   // If we were never started, we need to set our completed flag to true
-  if (!m_wasStarted)
+  if (!m_wasStarted) {
+    std::lock_guard<std::mutex> lk(m_state->m_lock);
     m_state->m_completed = true;
+  }
+
+  // State condition must be notified, in the event that anything is blocking
+  m_state->m_stateCondition.notify_all();
 
   // Always invoke stop handler:
   OnStop();
