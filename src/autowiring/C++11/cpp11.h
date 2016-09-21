@@ -178,13 +178,8 @@
  *********************/
 #if _MSC_VER >= 1500
   #define LAMBDAS_AVAILABLE 1
-#elif CLANG_CHECK(3, 2)
-  // Only available if we're told we're using at least C++11
-  #if __cplusplus >= 201103L
-    #define LAMBDAS_AVAILABLE 1
-  #else
-    #define LAMBDAS_AVAILABLE 0
-  #endif
+#elif IS_CLANG
+  #define LAMBDAS_AVAILABLE 1
 #elif __GXX_EXPERIMENTAL_CXX0X__
   #define LAMBDAS_AVAILABLE 1
 #endif
