@@ -198,8 +198,6 @@ add_conditional_sources(
   C++11/memory.h
   C++11/memory_nostl11.h
   C++11/mutex.h
-  C++11/tr1_unordered_map.h
-  C++11/tr1_unordered_set.h
   C++11/type_index.h
   C++11/unique_ptr.h
 )
