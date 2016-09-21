@@ -57,13 +57,8 @@
 /*********************
  * Location of the unordered_set header
  *********************/
-#if defined(__APPLE__) && !defined(_LIBCPP_VERSION)
-  #define STL_UNORDERED_SET <autowiring/C++11/tr1_unordered_set.h>
-  #define STL_UNORDERED_MAP <autowiring/C++11/tr1_unordered_map.h>
-#else
-  #define STL_UNORDERED_SET <unordered_set>
-  #define STL_UNORDERED_MAP <unordered_map>
-#endif
+#define STL_UNORDERED_SET <unordered_set>
+#define STL_UNORDERED_MAP <unordered_map>
 
 /*********************
 * initializer_list header
