@@ -159,34 +159,12 @@
   #define MEMORY_HEADER <autowiring/C++11/memory_nostl11.h>
 #endif
 
-// Nullptr_t has odd availability
-#ifdef _MSC_VER
-  #define HAS_NULLPTR_T 1
-#elif IS_CLANG
-  #define HAS_NULLPTR_T 1
-#elif __cplusplus > 199711L
-  #define HAS_NULLPTR_T 1
-#else
-  // No idea--better safe than sorry!
-  #define HAS_NULLPTR_T 1
-#endif
-
-#if ! HAS_NULLPTR_T
-  // Have to provide our own dummy type, then, there's no header for this one
-  namespace std { typedef decltype(nullptr) nullptr_t; }
-#endif
-
+#define HAS_NULLPTR_T 1
 
 /*********************
  * Specific support for is_constructible
  *********************/
-#ifdef _MSC_VER
-  #define AUTOWIRE_cxx_is_constructible 1
-#elif IS_CLANG
-  #define AUTOWIRE_cxx_is_constructible 1
-#else
-  #define AUTOWIRE_cxx_is_constructible 1
-#endif
+#define AUTOWIRE_cxx_is_constructible 1
 
 /*********************
  * noexcept support
