@@ -9,7 +9,7 @@
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>A C++11 Concurrent Inversion of Control framework</description>
         <summary>Autowiring is an inversion-of-control framework for C++11. It provides a declarative way to manage resources through dependency injection.</summary>
-        <copyright>Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.</copyright>
+        <copyright>Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.</copyright>
         <language>en-US</language>
         <tags>c++ ioc concurrent c++11</tags>
         <dependencies>
@@ -18,27 +18,18 @@
     </metadata>
     <files>
         <file src="autowiring\C++11\boost_array.h" target="build\native\include\autowiring\C++11\boost_array.h" />
-        <file src="autowiring\C++11\boost_atomic.h" target="build\native\include\autowiring\C++11\boost_atomic.h" />
         <file src="autowiring\C++11\boost_chrono.h" target="build\native\include\autowiring\C++11\boost_chrono.h" />
         <file src="autowiring\C++11\boost_exception_ptr.h" target="build\native\include\autowiring\C++11\boost_exception_ptr.h" />
         <file src="autowiring\C++11\boost_functional.h" target="build\native\include\autowiring\C++11\boost_functional.h" />
         <file src="autowiring\C++11\boost_future.h" target="build\native\include\autowiring\C++11\boost_future.h" />
-        <file src="autowiring\C++11\boost_mutex.h" target="build\native\include\autowiring\C++11\boost_mutex.h" />
-        <file src="autowiring\C++11\boost_rvalue.h" target="build\native\include\autowiring\C++11\boost_rvalue.h" />
         <file src="autowiring\C++11\boost_shared_ptr.h" target="build\native\include\autowiring\C++11\boost_shared_ptr.h" />
-        <file src="autowiring\C++11\boost_system_error.h" target="build\native\include\autowiring\C++11\boost_system_error.h" />
-        <file src="autowiring\C++11\boost_thread.h" target="build\native\include\autowiring\C++11\boost_thread.h" />
-        <file src="autowiring\C++11\boost_tuple.h" target="build\native\include\autowiring\C++11\boost_tuple.h" />
         <file src="autowiring\C++11\boost_type_traits.h" target="build\native\include\autowiring\C++11\boost_type_traits.h" />
-        <file src="autowiring\C++11\boost_utility.h" target="build\native\include\autowiring\C++11\boost_utility.h" />
         <file src="autowiring\C++11\cpp11.h" target="build\native\include\autowiring\C++11\cpp11.h" />
-        <file src="autowiring\C++11\empty_file.h" target="build\native\include\autowiring\C++11\empty_file.h" />
         <file src="autowiring\C++11\make_unique.h" target="build\native\include\autowiring\C++11\make_unique.h" />
         <file src="autowiring\C++11\memory.h" target="build\native\include\autowiring\C++11\memory.h" />
         <file src="autowiring\C++11\memory_nostl11.h" target="build\native\include\autowiring\C++11\memory_nostl11.h" />
         <file src="autowiring\C++11\mutex.h" target="build\native\include\autowiring\C++11\mutex.h" />
         <file src="autowiring\C++11\README.md" target="build\native\include\autowiring\C++11\README.md" />
-        <file src="autowiring\C++11\type_index.h" target="build\native\include\autowiring\C++11\type_index.h" />
         <file src="autowiring\C++11\unique_ptr.h" target="build\native\include\autowiring\C++11\unique_ptr.h" />
         <file src="autowiring\AnySharedPointer.h" target="build\native\include\autowiring\AnySharedPointer.h" />
         <file src="autowiring\atomic_object.h" target="build\native\include\autowiring\atomic_object.h" />
