@@ -4,16 +4,8 @@
 // The reason this header exists is due to the asymmetric availability of C++11 on our
 // various compiler targets.  In particular, none of the typical headers for C++11 support
 // exist when building with libstdc++ on Apple, so we have to disable it across the board.
-#ifdef __APPLE__
-  #include <ciso646>  // detect std::lib
-  #ifdef _LIBCPP_VERSION // clang + libc++
-    #define STL11_ALLOWED 1
-  #else // clang + libstdc++
-    #define STL11_ALLOWED 0
-  #endif
-#else // gcc or MSVC
-  #define STL11_ALLOWED 1
-#endif
+
+#define STL11_ALLOWED 1
 
 #define IS_CLANG defined(__clang_major__)
 #define CLANG_CHECK(maj, min) (__clang_major__ == maj && __clang_minor__ >= min || __clang_major__ > maj)
@@ -102,7 +94,7 @@
   #define HAS_STATIC_ASSERT 0
 #endif
 
-#if !HAS_STATIC_ASSERT || !STL11_ALLOWED
+#if !HAS_STATIC_ASSERT
   // Static assert completely disabled if it's not available
   #define static_assert(...)
 #endif
@@ -114,16 +106,12 @@
 /*********************
  * system error availability
  *********************/
-#if STL11_ALLOWED
-  #define SYSTEM_ERROR_HEADER <system_error>
-#else
-  #define SYSTEM_ERROR_HEADER <autowiring/C++11/boost_system_error.h>
-#endif
+#define SYSTEM_ERROR_HEADER <system_error>
 
 /*********************
  * future availability
  *********************/
-#if (_MSC_VER >= 1700 || (STL11_ALLOWED)) && (!__ANDROID__ || (GCC_CHECK(4, 9) && __aarch64__))
+#if (!__ANDROID__ || (GCC_CHECK(4, 9) && __aarch64__))
   #define FUTURE_HEADER <future>
 #else
   // As of NDK r10, we still don't have an implementation of "future" for Android
@@ -133,19 +121,14 @@
 /**
  * type_index support
  */
-// Supported natively on any platform except Mac/libstdc++
-#if STL11_ALLOWED
-  #define TYPE_INDEX_HEADER <typeindex>
-#else
-  #define TYPE_INDEX_HEADER <autowiring/C++11/type_index.h>
-#endif
+#define TYPE_INDEX_HEADER <typeindex>
 
 /*********************
  * Decide what version of type_traits we are going to use
  *********************/
 #if _MSC_VER >= 1500
   #define TYPE_TRAITS_AVAILABLE 1
-#elif __GXX_EXPERIMENTAL_CXX0X__ && STL11_ALLOWED
+#elif __GXX_EXPERIMENTAL_CXX0X__
   #define TYPE_TRAITS_AVAILABLE 1
 #else
   #define TYPE_TRAITS_AVAILABLE 0
@@ -170,7 +153,7 @@
   #define SHARED_PTR_IN_STL 0
 #endif
 
-#if SHARED_PTR_IN_STL && STL11_ALLOWED
+#if SHARED_PTR_IN_STL
   #define MEMORY_HEADER <autowiring/C++11/memory.h>
 #else
   #define MEMORY_HEADER <autowiring/C++11/memory_nostl11.h>
@@ -180,7 +163,7 @@
 #ifdef _MSC_VER
   #define HAS_NULLPTR_T 1
 #elif IS_CLANG
-  #define HAS_NULLPTR_T (STL11_ALLOWED && __has_feature(cxx_nullptr))
+  #define HAS_NULLPTR_T 1
 #elif __cplusplus > 199711L
   #define HAS_NULLPTR_T 1
 #else
@@ -200,7 +183,7 @@
 #ifdef _MSC_VER
   #define AUTOWIRE_cxx_is_constructible 1
 #elif IS_CLANG
-  #define AUTOWIRE_cxx_is_constructible STL11_ALLOWED
+  #define AUTOWIRE_cxx_is_constructible 1
 #else
   #define AUTOWIRE_cxx_is_constructible 1
 #endif
@@ -238,7 +221,7 @@
   #define LAMBDAS_AVAILABLE 1
 #endif
 
-#if LAMBDAS_AVAILABLE && STL11_ALLOWED
+#if LAMBDAS_AVAILABLE
   #define FUNCTIONAL_HEADER <functional>
   #define _WEBSOCKETPP_CPP11_FUNCTIONAL_
 #else
@@ -254,7 +237,7 @@
 *********************/
 #if _MSC_VER >= 1500
 #define ARRAYS_AVAILABLE 1
-#elif __GXX_EXPERIMENTAL_CXX0X__ && STL11_ALLOWED
+#elif __GXX_EXPERIMENTAL_CXX0X__
 #define ARRAYS_AVAILABLE 1
 #else
 #define ARRAYS_AVAILABLE 0
@@ -275,54 +258,29 @@
 /**
  * R-value reference check
  */
-#if STL11_ALLOWED
-  #define RVALUE_HEADER <memory>
-  #define _WEBSOCKETPP_CPP11_MEMORY_
-#else
-  // Remove literal references in order to fix another missing header problem on *nix
-  // Defined by default on C++11 Clang
-  #if !defined(__APPLE__) || __cplusplus >= 201103L
-    #define BOOST_NO_UNICODE_LITERALS 1
-  #endif
-  #define RVALUE_HEADER <autowiring/C++11/boost_rvalue.h>
-#endif
+#define RVALUE_HEADER <memory>
+#define _WEBSOCKETPP_CPP11_MEMORY_
 
 /**
  * Atomic
  */
-#if STL11_ALLOWED
-  #define ATOMIC_HEADER <atomic>
-#else
-  #define ATOMIC_HEADER <autowiring/C++11/boost_atomic.h>
-#endif
+#define ATOMIC_HEADER <atomic>
 
 /**
  * Tuple
  */
-#if STL11_ALLOWED
-  #define STL_TUPLE_HEADER <tuple>
-#else
-  #define STL_TUPLE_HEADER <autowiring/C++11/boost_tuple.h>
-#endif
+#define STL_TUPLE_HEADER <tuple>
 
  /**
  * Mutex
  */
-#if STL11_ALLOWED
-  #define MUTEX_HEADER <autowiring/C++11/mutex.h>
-#else
-  #define MUTEX_HEADER <autowiring/C++11/boost_mutex.h>
-#endif
+#define MUTEX_HEADER <autowiring/C++11/mutex.h>
 
 /**
  * Thread
  */
-#if STL11_ALLOWED
-  #define THREAD_HEADER <thread>
-  #define _WEBSOCKETPP_CPP11_THREAD_
-#else
-  #define THREAD_HEADER <autowiring/C++11/boost_thread.h>
-#endif
+#define THREAD_HEADER <thread>
+#define _WEBSOCKETPP_CPP11_THREAD_
 
  /**
  * Chrono
@@ -332,18 +290,12 @@
  /**
  * Utility
  */
-#if STL11_ALLOWED
-  #define UTILITY_HEADER <utility>
-#else
-  #define UTILITY_HEADER <autowiring/C++11/boost_utility.h>
-#endif
+#define UTILITY_HEADER <utility>
 
 /**
  * System error
  */
-#if STL11_ALLOWED
-  #define _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
-#endif
+#define _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
 
 /**
  * Filesystem
