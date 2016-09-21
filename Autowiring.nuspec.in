@@ -18,7 +18,6 @@
     </metadata>
     <files>
         <file src="autowiring\C++11\boost_array.h" target="build\native\include\autowiring\C++11\boost_array.h" />
-        <file src="autowiring\C++11\boost_chrono.h" target="build\native\include\autowiring\C++11\boost_chrono.h" />
         <file src="autowiring\C++11\boost_exception_ptr.h" target="build\native\include\autowiring\C++11\boost_exception_ptr.h" />
         <file src="autowiring\C++11\boost_functional.h" target="build\native\include\autowiring\C++11\boost_functional.h" />
         <file src="autowiring\C++11\boost_future.h" target="build\native\include\autowiring\C++11\boost_future.h" />

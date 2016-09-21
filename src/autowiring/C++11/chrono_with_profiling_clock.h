@@ -1,11 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#if STL11_ALLOWED
-  #include <chrono>
-#else
-  #include <autowiring/C++11/boost_chrono.h>
-#endif
+#include <chrono>
 
 // This solution taken from http://stackoverflow.com/questions/8386128/how-to-get-the-precision-of-high-resolution-clock
 // Hopefully it will be able to be depricated when VS2015 hits.

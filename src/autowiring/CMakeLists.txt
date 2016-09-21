@@ -177,7 +177,6 @@ add_conditional_sources(
   GROUP_NAME "C++11"
   FILES
   C++11/boost_array.h
-  C++11/boost_chrono.h
   C++11/boost_exception_ptr.h
   C++11/boost_functional.h
   C++11/boost_future.h
