@@ -76,7 +76,7 @@
 /*********************
  * static_assert availability
  *********************/
-#if CLANG_CHECK(2, 9) || GCC_CHECK(4, 3)
+#if IS_CLANG || GCC_CHECK(4, 3)
   #define HAS_STATIC_ASSERT 1
 #elif _MSC_VER >= 1500
   #define HAS_STATIC_ASSERT 1
