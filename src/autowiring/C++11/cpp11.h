@@ -11,6 +11,10 @@
 #define CLANG_CHECK(maj, min) (__clang_major__ == maj && __clang_minor__ >= min || __clang_major__ > maj)
 #define GCC_CHECK(maj, min) (__GNUC__ == maj && __GNUC_MINOR__  >= min || __GNUC__ > maj)
 
+#if IS_CLANG && !CLANG_CHECK(3, 6)
+  #error Autowiring is not supported on clang 3.5 or older
+#endif
+
 // If Boost.Thread is used, we want it to provide the new name for its <future> class
 #define BOOST_THREAD_PROVIDES_FUTURE
 
@@ -64,17 +68,8 @@
 /*********************
 * initializer_list header
 *********************/
-#if IS_CLANG
-  #define HAS_INITIALIZER_LIST __has_feature(cxx_generalized_initializers)
-  #if HAS_INITIALIZER_LIST
-    #define INITIALIZER_LIST_HEADER <initializer_list>
-  #else
-  #define INITIALIZER_LIST_HEADER <autowiring/C++11/empty_file.h>
-  #endif
-#else
-  #define HAS_INITIALIZER_LIST 1
-  #define INITIALIZER_LIST_HEADER <initializer_list>
-#endif
+#define HAS_INITIALIZER_LIST 1
+#define INITIALIZER_LIST_HEADER <initializer_list>
 
 /*********************
  * Check override keyword availability
