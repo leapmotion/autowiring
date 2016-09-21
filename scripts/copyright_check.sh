@@ -5,12 +5,13 @@
 #
 
 ENFORCED_FILES="examples src"
-COPYRIGHT_HEADER="// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved."
+COPYRIGHT_HEADER="// Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved."
+COPYRIGHT_HEADER_FALLBACK="// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved."
 
 # Go to root directory
 for f in $(find $ENFORCED_FILES -name *.hpp -o -name *.cpp -o -name *.h);
 do
-  if [ "$(head -n 1 $f)" != "$COPYRIGHT_HEADER" ];
+  if [ "$(head -n 1 $f)" != "$COPYRIGHT_HEADER" ] && [ "$(head -n 1 $f)" != "$COPYRIGHT_HEADER_FALLBACK" ];
   then
     if [ "$BAD_FILES" == "" ]
     then
