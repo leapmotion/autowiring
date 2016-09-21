@@ -14,9 +14,6 @@
   #error Autowiring is not supported on clang 3.5 or older
 #endif
 
-// If Boost.Thread is used, we want it to provide the new name for its <future> class
-#define BOOST_THREAD_PROVIDES_FUTURE
-
 #ifdef AUTOWIRING_IS_BEING_BUILT
   // We know that we're using deprecated stuff in our unit tests, but the tests still
   // need to do what they do.  Undefine all of the deprecated macros so we don't get
