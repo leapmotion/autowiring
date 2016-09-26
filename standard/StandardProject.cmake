@@ -104,6 +104,21 @@ function(standard_project_preinit)
   set(CMAKE_CXX_STANDARD_REQUIRED ON PARENT_SCOPE)
   set(CMAKE_CXX_EXTENSIONS OFF PARENT_SCOPE)
 
+  if(APPLE AND NOT (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm"))
+    if(NOT CMAKE_OSX_SYSROOT)
+      set(_developer_sdk_version 10.11)
+      # CLANG_VERSION requires a sysroot to obtain, so resort to execute_process() here
+      execute_process(COMMAND clang -v ERROR_VARIABLE _clang_version)
+      if(_clang_version MATCHES "clang-8")
+        set(_developer_sdk_version 10.12)
+      endif()
+      set(CMAKE_OSX_SYSROOT "macosx${_developer_sdk_version}" CACHE STRING "Mac OS X build environment" FORCE)
+    endif()
+    if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+      set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Mac OS X deployment target" FORCE)
+    endif()
+  endif()
+
   #CMAKE_OSX_DEPLOYMENT_TARGET < 10.9 implies -stdlib=libstdc++, which doesn't have
   #complete c++11 support. override with libc++
   if(DEFINED CMAKE_OSX_DEPLOYMENT_TARGET AND CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9)
