@@ -14,7 +14,7 @@ does the following:
 * Enforces the project has a VERSION set.
 ]]
 
-include (CMakeParseArguments) #Backwards compatibility
+include(CMakeParseArguments) #Backwards compatibility
 
 #This must be a macro since project defines scope-local variables
 #that we generally rely on being in the root context.
