@@ -58,8 +58,8 @@ TEST_F(ObservableTest, SetOfObservable) {
 }
 
 TEST_F(ObservableTest, MathOperators) {
-  autowiring::observable<int> one(1);
-  autowiring::observable<int> two(2);
+  const autowiring::observable<int> one(1);
+  const autowiring::observable<int> two(2);
 
   // plus, minus, multiply, divide
   ASSERT_EQ(3, one + 2);
