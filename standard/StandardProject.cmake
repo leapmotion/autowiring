@@ -88,7 +88,7 @@ function(standard_project_preinit)
   set(CMAKE_DEBUG_POSTFIX "d${CMAKE_DEBUG_POSTFIX}")
   set(CMAKE_DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX} PARENT_SCOPE)
 
-  # 64-bit installations should suffix with 64 regardless of the CPU type (arm or intel)
+  # 64-bit installations should suffix with 64 regardless of the CPU type (ARM or Intel)
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
       string(TOUPPER ${config} config)
