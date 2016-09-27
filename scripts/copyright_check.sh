@@ -6,7 +6,6 @@
 
 ENFORCED_FILES="examples src"
 COPYRIGHT_HEADER="// Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved."
->>>>>>> origin/master
 
 # Go to root directory
 for f in $(find $ENFORCED_FILES -name *.hpp -o -name *.cpp -o -name *.h);
