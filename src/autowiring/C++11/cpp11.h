@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.
 #pragma once
 
 // The reason this header exists is due to the asymmetric availability of C++11 on our
