@@ -195,3 +195,30 @@ TEST_F(AutowiringDebugTest, PrintRunnables) {
     str
   );
 }
+
+namespace {
+class HasNoName :
+  public CoreThread
+{
+public:
+  HasNoName(void) :
+    CoreThread(nullptr)
+  {}
+};
+}
+
+TEST_F(AutowiringDebugTest, NullContextMemberName) {
+  AutoCurrentContext ctxt;
+  AutoRequired<HasNoName>{};
+
+  ctxt->Initiate();
+
+  std::stringstream str;
+  autowiring::dbg::PrintRunnables(str, *AutoCurrentContext{});
+
+  static const char expected[] = "void(Current Context)\n";
+  ASSERT_STREQ(
+    expected,
+    str.str().substr(0, sizeof(expected) - 1).c_str()
+  );
+}
