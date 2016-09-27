@@ -72,17 +72,6 @@ public:
     onChanged();
     return *this;
   }
-
-  bool operator==(const T& rhs) { return val == rhs; }
-  bool operator!=(const T& rhs) { return val != rhs; }
-  bool operator<(const T& rhs) { return val < rhs; }
-  bool operator<=(const T& rhs) { return val <= rhs; }
-  bool operator>(const T& rhs) { return val > rhs; }
-  bool operator>=(const T& rhs) { return val >= rhs; }
-  auto operator*(const T& rhs) -> decltype(val * rhs) { return val * rhs; }
-  auto operator/(const T& rhs) -> decltype(val * rhs) { return val / rhs; }
-  auto operator+(const T& rhs) -> decltype(val * rhs) { return val + rhs; }
-  auto operator-(const T& rhs) -> decltype(val * rhs) { return val - rhs; }
 };
 
 template<typename T>
