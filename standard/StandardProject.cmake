@@ -120,7 +120,7 @@ function(standard_project_preinit)
   endif()
 
   # CMAKE_OSX_DEPLOYMENT_TARGET < 10.9 implies -stdlib=libstdc++, which doesn't have
-  # complete c++11 support. override with libc++
+  # complete C++11 support. Override with libc++
   if(DEFINED CMAKE_OSX_DEPLOYMENT_TARGET AND CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" PARENT_SCOPE)
   endif()
