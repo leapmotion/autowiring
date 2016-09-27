@@ -56,3 +56,22 @@ TEST_F(ObservableTest, SetOfObservable) {
   ASSERT_EQ(1, b.count(12));
   ASSERT_EQ(1, b.count(44));
 }
+
+TEST_F(ObservableTest, MathOperators) {
+  autowiring::observable<int> one(1);
+  autowiring::observable<int> two(2);
+
+  // plus, minus, multiply, divide
+  ASSERT_EQ(3, one + 2);
+  ASSERT_EQ(1, two - 1);
+  ASSERT_EQ(2.0, one * 2.0);
+  ASSERT_EQ(two, two / one);
+
+  // all comparison operators
+  ASSERT_TRUE(one == 1);
+  ASSERT_TRUE(one != 2);
+  ASSERT_TRUE(one < 2);
+  ASSERT_TRUE(one >= 1);
+  ASSERT_FALSE(one > two);
+  ASSERT_FALSE(two <= one);
+}
