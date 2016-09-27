@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/autowiring.h>
 #include <autowiring/AutowiringDebug.h>
@@ -193,5 +193,32 @@ TEST_F(AutowiringDebugTest, PrintRunnables) {
     "*-- void\n"
     "|       [ RUNNING ] RunnableMember<0>  (efgh)\n",
     str
+  );
+}
+
+namespace {
+class HasNoName :
+  public CoreThread
+{
+public:
+  HasNoName(void) :
+    CoreThread(nullptr)
+  {}
+};
+}
+
+TEST_F(AutowiringDebugTest, NullContextMemberName) {
+  AutoCurrentContext ctxt;
+  AutoRequired<HasNoName>{};
+
+  ctxt->Initiate();
+
+  std::stringstream str;
+  autowiring::dbg::PrintRunnables(str, *AutoCurrentContext{});
+
+  static const char expected[] = "void(Current Context)\n";
+  ASSERT_STREQ(
+    expected,
+    str.str().substr(0, sizeof(expected) - 1).c_str()
   );
 }

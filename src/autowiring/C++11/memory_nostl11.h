@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.
 #pragma once
 
 #include "boost_shared_ptr.h"

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/BasicThread.h>
 #include FUTURE_HEADER
@@ -74,4 +74,24 @@ TEST_F(BasicThreadTest, IsMainThread) {
     &BasicThread::IsMainThread
   );
   ASSERT_FALSE(secondaryIsMain.get()) << "Secondary thread incorrectly identified as the main thread";
+}
+
+namespace {
+class WaitsForStateUpdate :
+  public BasicThread
+{
+public:
+  void Run(void) override {
+    WaitForStateUpdate([] { return false; });
+  }
+};
+}
+
+TEST_F(BasicThreadTest, WaitForStateUpdateExits) {
+  AutoRequired<WaitsForStateUpdate> wfsu;
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+
+  ctxt->SignalShutdown();
+  ASSERT_TRUE(ctxt->Wait(std::chrono::seconds{ 10 }));
 }
