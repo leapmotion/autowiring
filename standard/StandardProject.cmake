@@ -128,7 +128,7 @@ function(standard_project_preinit)
 endfunction()
 
 function(standard_project_postinit)
-  ##Post-initialization steps. All of these depend on project() having been called.
+  #Post-initialization steps. All of these depend on project() having been called.
   include(CTest)
 
   if(CMAKE_COMPILER_IS_GNUCC)
