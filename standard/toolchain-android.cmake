@@ -2,9 +2,9 @@ set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 set(CMAKE_SYSTEM_VERSION 1)
 
-#For reasons beyond my comprehension, this file is parsed multiple times
-#and in some of them, cache variables are not preserved so we have to store
-#this in an environmental variable...
+# For reasons beyond my comprehension, this file is parsed multiple times
+# and in some of them, cache variables are not preserved so we have to store
+# this in an environmental variable...
 if(NOT LLVM_ANDROID_TOOLCHAIN_DIR)
   set(LLVM_ANDROID_TOOLCHAIN_DIR $ENV{LLVM_ANDROID_TOOLCHAIN_DIR})
 else()
@@ -12,7 +12,7 @@ else()
 endif()
 
 find_path(ANDROID_NDK_ROOT bin/${ANDROID_NDK_TOOL_PREFIX}-gcc${_exe_suffix} PATHS
-  ${LLVM_ANDROID_TOOLCHAIN_DIR}${_ndk_suffix} #legacy variable
+  ${LLVM_ANDROID_TOOLCHAIN_DIR}${_ndk_suffix} # legacy variable
   /opt/android-standalone-toolchain${_ndk_suffix}
   ${LLVM_ANDROID_TOOLCHAIN_DIR}
   /opt/android-standalone-toolchain
