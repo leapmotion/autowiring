@@ -50,7 +50,9 @@ script:
   - $CMAKE_DIRNAME/bin/cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=~/autowiring/
   - make -j 4 || make
   - ctest --output-on-failure --timeout 30
-  - make install > logfile || cat logfile
+  - make install > logfile 2>&1 || (cat logfile; false)
+gfile
+/
   - cpack || (cat _CPack_Packages/Linux/TGZ/InstallOutput.log; exit 3)
   - cd examples
   - ../$CMAKE_DIRNAME/bin/cmake . -DCMAKE_PREFIX_PATH:PATH=~
