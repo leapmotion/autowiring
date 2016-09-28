@@ -152,6 +152,24 @@ namespace autowiring {
   };
 
   template<typename T>
+  struct float_converter;
+
+  template<>
+  struct float_converter<float> {
+    static float convert(const char* szValue) { return std::strtof(szValue, nullptr); }
+  };
+
+  template<>
+  struct float_converter<double> {
+    static double convert(const char* szValue) { return std::strtod(szValue, nullptr); }
+  };
+
+  template<>
+  struct float_converter<long double> {
+    static long double convert(const char* szValue) { return std::strtold(szValue, nullptr); }
+  };
+
+  template<typename T>
   struct builtin_marshaller<T, typename std::enable_if<std::is_floating_point<T>::value>::type> :
     marshaller_base
   {
@@ -221,35 +239,7 @@ namespace autowiring {
 
     void unmarshal(void* ptr, const char* szValue) const override {
       T& value = *static_cast<type*>(ptr);
-      bool negative = *szValue == '-';
-      if (negative)
-        szValue++;
-
-      uint64_t whole = 0;
-      for (; *szValue; szValue++) {
-        // Detect the decimal marker, switch to fractional part
-        if (*szValue == '.') {
-          szValue++;
-          break;
-        }
-        if (*szValue < '0' || '9' < *szValue)
-          throw std::invalid_argument("String value is not a decimal number");
-        whole = whole * 10 + *szValue - '0';
-      }
-
-      uint64_t fractional = 0;
-      size_t n = 0;
-      for (; szValue[n]; n++) {
-        if (szValue[n] < '0' || '9' < szValue[n])
-          throw std::invalid_argument("String value is not a decimal number");
-        fractional = fractional * 10 + szValue[n] - '0';
-      }
-      value = static_cast<type>(fractional);
-      while(n--)
-        value /= 10.0f;
-      value += static_cast<type>(whole);
-      if (negative)
-        value *= -1.0f;
+      value = float_converter<type>::convert(szValue);
     }
 
     void copy(void* lhs, const void* rhs) const override {
