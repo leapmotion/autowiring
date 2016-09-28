@@ -135,27 +135,8 @@ namespace autowiring {
     typedef typename std::remove_volatile<T>::type type;
 
     std::string marshal(const void* ptr) const override {
-      std::string retVal;
       type val = *static_cast<const type*>(ptr);
-      if (val == 0)
-        return "0";
-
-      bool pos = 0 < val;
-      if (!pos)
-        val *= ~0;
-      for (; val; val /= 10) {
-        retVal.push_back(static_cast<char>(val % 10 + '0'));
-      }
-      if (!pos)
-        retVal.push_back('-');
-
-      for (
-        auto first = retVal.begin(), last = retVal.end();
-        (first != last) && (first != --last);
-        ++first
-        )
-        std::swap(*first, *last);
-      return retVal;
+      return std::to_string(val);
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
