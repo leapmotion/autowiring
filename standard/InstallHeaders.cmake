@@ -15,7 +15,7 @@ function(install_headers)
   set(multiValueArgs)
 
   cmake_parse_arguments(opt "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-  
+
   string(TOLOWER LOWERNAME CMAKE_PROJECT_NAME)
   default_value(opt_DESTINATION include/${LOWERNAME})
 
@@ -28,15 +28,49 @@ function(install_headers)
     if(NOT ${opt_NOEXCLUDE_STDAFX} AND ${src} STREQUAL "stdafx.h")
       continue()
     endif()
+    get_filename_component(src_ext ${src} EXT)
+    if(NOT src_ext STREQUAL ".h")
+      continue()
+    endif()
+
+    # Need to make the path absolute.  We first look in the source directory,
+    # then we look in the binary directory, but only if the path is relative.
+    if(NOT IS_ABSOLUTE ${src})
+      get_filename_component(src_src ${src} ABSOLUTE BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+      get_filename_component(src_bin ${src} ABSOLUTE BASE_DIR ${CMAKE_CURRENT_BINARY_DIR})
+      if(EXISTS ${src_src})
+        set(src ${src_src})
+      elseif(EXISTS ${src_bin})
+        set(src ${src_bin})
+      else()
+        message(FATAL_ERROR "Could not find input header file ${src}")
+      endif()
+    endif()
+
+    # We find out what directory part the file is in, we want the shortest
+    # relative path on the assumption that the file will be most properly
+    # located in the directory whose relative address is the shortest.
+    file(RELATIVE_PATH src_rel ${CMAKE_CURRENT_SOURCE_DIR} ${src})
+    get_filename_component(src_rel ${src_rel} DIRECTORY)
+    if(src_rel)
+      string(LENGTH ${src_rel} src_rel_len)
+      set(actual_rel ${src_rel})
+    endif()
+
+    file(RELATIVE_PATH bin_rel ${CMAKE_CURRENT_BINARY_DIR} ${src})
+    get_filename_component(bin_rel ${bin_rel} DIRECTORY)
+    if(bin_rel)
+      string(LENGTH ${bin_rel} bin_rel_len)
+      if(src_rel AND bin_rel_len LESS src_rel_len)
+        set(actual_rel ${bin_rel})
+      endif()
+    endif()
 
     get_filename_component(src_ext ${src} EXT)
-    if(src_ext STREQUAL ".h")
-      get_filename_component(src_rel ${src} DIRECTORY)
-      install(
-        FILES ${src}
-        DESTINATION ${opt_DESTINATION}/${src_rel}
-        ${opt_UNPARSED_ARGUMENTS}
-      )
-    endif()
+    install(
+      FILES ${src}
+      DESTINATION ${opt_DESTINATION}/${actual_rel}
+      ${opt_UNPARSED_ARGUMENTS}
+    )
   endforeach()
 endfunction()
