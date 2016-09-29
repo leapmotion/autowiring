@@ -9,6 +9,7 @@
 #include <string>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include TYPE_TRAITS_HEADER
 
 namespace autowiring {
@@ -156,17 +157,17 @@ namespace autowiring {
 
   template<>
   struct float_converter<float> {
-    static float convert(const char* szValue) { return std::strtof(szValue, nullptr); }
+    static float convert(const char* szValue) { return strtof(szValue, nullptr); }
   };
 
   template<>
   struct float_converter<double> {
-    static double convert(const char* szValue) { return std::strtod(szValue, nullptr); }
+    static double convert(const char* szValue) { return strtod(szValue, nullptr); }
   };
 
   template<>
   struct float_converter<long double> {
-    static long double convert(const char* szValue) { return std::strtold(szValue, nullptr); }
+    static long double convert(const char* szValue) { return strtold(szValue, nullptr); }
   };
 
   template<typename T>
@@ -176,65 +177,23 @@ namespace autowiring {
     typedef typename std::remove_volatile<T>::type type;
 
     std::string marshal(const void* ptr) const override {
-      std::string retVal;
       type value = *static_cast<const type*>(ptr);
-      if (value == 0.0f)
-        return "0";
+      long double converted = static_cast<long double>(value);
+      //As reccomended by https://randomascii.wordpress.com/2012/03/08/float-precisionfrom-zero-to-100-digits-2/
+      //If this is found to be too slow or we need to use a guaranteed minimal string
+      //representation, replace with
+      // https://github.com/google/double-conversion
+      char buffer[256];
 
-      bool neg = value < 0.0f;
-      if (neg)
-        value *= -1.0f;
+      int len =
+#ifdef MSVC
+        sprintf_s
+#else
+        snprintf
+#endif
+      (buffer, sizeof(buffer), "%.33Lg", converted);
 
-      // Convert input value to scientific notation
-      int power = static_cast<int>(std::log10(value));
-
-      // We will be assembling the number backwards, need to keep track of the
-      // index of the current digit in the reassembled number.
-      int curDigit = std::numeric_limits<type>::digits10 - power;
-
-      // We only want a certain number of digits, this digit count will fit in
-      // a large integer and elimintes the loss of precision we experience when
-      // using floating point math to try to do digit shifts
-      uint64_t digits = static_cast<uint64_t>(value * std::pow(10.0, curDigit) + 0.5);
-
-      // Trailing zero introduction for integer multiples of 10
-      if (power > std::numeric_limits<type>::digits10)
-        retVal.append(power - std::numeric_limits<type>::digits10, '0');
-
-      // Trailing zero omission
-      while (0 < curDigit && 0 == (digits % 10)) {
-        digits /= 10;
-        curDigit--;
-      }
-
-      for(; digits; digits /= 10, curDigit--) {
-        char digit = static_cast<char>(digits % 10);
-
-        // String conversion step, straightforward mapping
-        retVal.push_back('0' + digit);
-        if (curDigit == 1)
-          retVal.push_back('.');
-
-        if (!digits)
-          // Short-circuit for precise representations
-          break;
-      }
-
-      // Zeroes before the decimal:
-      if (power < 0) {
-        retVal.append(-power, '0');
-        retVal.append(".0");
-      }
-
-      if (neg)
-        retVal.push_back('-');
-      for (
-        auto first = retVal.begin(), last = retVal.end();
-        (first != last) && (first != --last);
-        ++first
-      )
-        std::swap(*first, *last);
-      return retVal;
+      return std::string(buffer, len);
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
