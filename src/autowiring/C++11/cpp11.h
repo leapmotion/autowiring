@@ -4,8 +4,6 @@
 // The reason this header exists is due to the asymmetric availability of C++11 on our
 // various compiler targets.
 
-#define STL11_ALLOWED 1
-
 #define IS_CLANG defined(__clang_major__)
 #define CLANG_CHECK(maj, min) (__clang_major__ == maj && __clang_minor__ >= min || __clang_major__ > maj)
 #define GCC_CHECK(maj, min) (__GNUC__ == maj && __GNUC_MINOR__  >= min || __GNUC__ > maj)
