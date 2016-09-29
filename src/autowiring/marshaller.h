@@ -155,20 +155,49 @@ namespace autowiring {
   template<typename T>
   struct float_converter;
 
+#ifdef MSVC
+#define AW_SNPRINTF sprintf_s
+#else
+#define AW_SNPRINTF snprintf
+#endif
+
   template<>
   struct float_converter<float> {
-    static float convert(const char* szValue) { return strtof(szValue, nullptr); }
+    static float convertTo(const char* szValue) { return strtof(szValue, nullptr); }
+    static std::string convertFrom(float value) {
+      //As reccomended by https://randomascii.wordpress.com/2012/03/08/float-precisionfrom-zero-to-100-digits-2/
+      //If this is found to be too slow or we need to use a guaranteed minimal string
+      //representation, replace with
+      // https://github.com/google/double-conversion
+      char buffer[128];
+      const double asDouble = value;
+      //g implies double and according to cppreference cannot be used with a float.
+      int len = AW_SNPRINTF(buffer, sizeof(buffer), "%.9g", asDouble);
+      return std::string(buffer, len);
+    }
   };
 
   template<>
   struct float_converter<double> {
-    static double convert(const char* szValue) { return strtod(szValue, nullptr); }
+    static double convertTo(const char* szValue) { return strtod(szValue, nullptr); }
+    static std::string convertFrom(double value) {
+      char buffer[128];
+      int len = AW_SNPRINTF(buffer, sizeof(buffer), "%.17g", value);
+      return std::string(buffer, len);
+    }
   };
 
   template<>
   struct float_converter<long double> {
-    static long double convert(const char* szValue) { return strtold(szValue, nullptr); }
+    static long double convertTo(const char* szValue) { return strtold(szValue, nullptr); }
+    static std::string convertFrom(long double value) {
+      char buffer[256];
+      int len = AW_SNPRINTF(buffer, sizeof(buffer), "%.33Lg", value);
+      return std::string(buffer, len);
+    }
   };
+
+#undef AW_SNPRINTF
 
   template<typename T>
   struct builtin_marshaller<T, typename std::enable_if<std::is_floating_point<T>::value>::type> :
@@ -178,27 +207,12 @@ namespace autowiring {
 
     std::string marshal(const void* ptr) const override {
       type value = *static_cast<const type*>(ptr);
-      long double converted = static_cast<long double>(value);
-      //As reccomended by https://randomascii.wordpress.com/2012/03/08/float-precisionfrom-zero-to-100-digits-2/
-      //If this is found to be too slow or we need to use a guaranteed minimal string
-      //representation, replace with
-      // https://github.com/google/double-conversion
-      char buffer[256];
-
-      int len =
-#ifdef MSVC
-        sprintf_s
-#else
-        snprintf
-#endif
-      (buffer, sizeof(buffer), "%.33Lg", converted);
-
-      return std::string(buffer, len);
+      return float_converter<type>::convertFrom(value);
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
       T& value = *static_cast<type*>(ptr);
-      value = float_converter<type>::convert(szValue);
+      value = float_converter<type>::convertTo(szValue);
     }
 
     void copy(void* lhs, const void* rhs) const override {
