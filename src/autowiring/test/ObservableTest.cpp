@@ -1,6 +1,8 @@
 // Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/observable.h>
+#include <set>
+#include <unordered_set>
 
 class ObservableTest:
   public testing::Test
@@ -35,4 +37,41 @@ TEST_F(ObservableTest, BeforeAndAfter) {
   ASSERT_TRUE(hit) << "Change notification not raised";
   ASSERT_EQ(8, obBefore) << "\"Before\" value in onBeforeChanged was not correct";
   ASSERT_EQ(9, obAfter) << "\"AfFter\" value in onBeforeChanged was not correct";
+}
+
+TEST_F(ObservableTest, SetOfObservable) {
+  std::unordered_set<autowiring::observable<int>> a;
+  a.insert(4449);
+  a.insert(44410);
+  a.insert(44411);
+  ASSERT_EQ(1, a.count(4449));
+  ASSERT_EQ(1, a.count(44410));
+  ASSERT_EQ(1, a.count(44411));
+
+  std::set<autowiring::observable<int>> b;
+  b.insert(9);
+  b.insert(12);
+  b.insert(44);
+  ASSERT_EQ(1, b.count(9));
+  ASSERT_EQ(1, b.count(12));
+  ASSERT_EQ(1, b.count(44));
+}
+
+TEST_F(ObservableTest, MathOperators) {
+  const autowiring::observable<int> one(1);
+  const autowiring::observable<int> two(2);
+
+  // plus, minus, multiply, divide
+  ASSERT_EQ(3, one + 2);
+  ASSERT_EQ(1, two - 1);
+  ASSERT_EQ(2.0, one * 2.0);
+  ASSERT_EQ(two, two / one);
+
+  // all comparison operators
+  ASSERT_TRUE(one == 1);
+  ASSERT_TRUE(one != 2);
+  ASSERT_TRUE(one < 2);
+  ASSERT_TRUE(one >= 1);
+  ASSERT_FALSE(one > two);
+  ASSERT_FALSE(two <= one);
 }

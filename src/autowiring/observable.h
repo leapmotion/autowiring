@@ -74,7 +74,6 @@ public:
   }
 };
 
-
 template<typename T>
 struct marshaller<observable<T>> :
   marshaller_base
@@ -99,4 +98,17 @@ struct marshaller<observable<T>> :
   }
 };
 
+}
+
+namespace std {
+template<typename T>
+struct hash<autowiring::observable<T>> {
+  hash(void) = default;
+
+  hash<T> interior;
+
+  auto operator()(const autowiring::observable<T>& value) const -> decltype(interior(value.get())) {
+    return interior(value.get());
+  }
+};
 }
