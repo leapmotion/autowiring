@@ -41,6 +41,9 @@ struct Boltable;
 template<class T>
 class CoreContextT;
 
+template<typename T, typename... Sigils>
+struct MicroBolt;
+
 namespace autowiring {
   struct CoreContextStateBlock;
 }

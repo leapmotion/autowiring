@@ -5,7 +5,7 @@
 #include "config_event.h"
 #include "Decompose.h"
 #include "optional.h"
-#include "signal.h"
+#include "auto_signal.h"
 #include "spin_lock.h"
 #include <functional>
 #include <string>

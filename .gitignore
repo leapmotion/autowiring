@@ -44,3 +44,4 @@ autowiring.kdev4
 *.orig
 autowiring.VC.db
 .vscode
+AutowiringVersion.h

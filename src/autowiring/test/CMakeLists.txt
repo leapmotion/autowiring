@@ -94,6 +94,7 @@ set(AutowiringFixture_SRCS
 
 add_library(AutowiringFixture ${AutowiringFixture_SRCS})
 add_pch(AutowiringFixture stdafx.h stdafx.cpp)
+target_link_libraries(AutowiringFixture Autowiring)
 target_include_directories(AutowiringFixture PRIVATE "${CMAKE_SOURCE_DIR}/contrib/autoboost")
 
 add_executable(AutowiringTest ${AutowiringTest_SRCS})

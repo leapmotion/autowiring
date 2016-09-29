@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "marshaller.h"
-#include "signal.h"
+#include "auto_signal.h"
 
 namespace autowiring {
 
