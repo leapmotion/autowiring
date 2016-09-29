@@ -9,7 +9,7 @@
 #include <string>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include "double-conversion/double-conversion.h"
 #include TYPE_TRAITS_HEADER
 
 namespace autowiring {
@@ -157,17 +157,26 @@ namespace autowiring {
 
   template<>
   struct float_converter<float> {
-    static float convert(const char* szValue) { return std::strtof(szValue, nullptr); }
+    static float convert(const char* szValue) {
+      double_conversion::StringToDoubleConverter c(
+        double_conversion::StringToDoubleConverter::ALLOW_LEADING_SPACES |
+        double_conversion::StringToDoubleConverter::ALLOW_TRAILING_SPACES |
+        double_conversion::StringToDoubleConverter::ALLOW_SPACES_AFTER_SIGN, 0, 0, "Infinity", "NaN");
+      int count;
+      return c.StringToFloat(szValue, static_cast<int>(strlen(szValue)), &count);
+    }
   };
 
   template<>
   struct float_converter<double> {
-    static double convert(const char* szValue) { return std::strtod(szValue, nullptr); }
-  };
-
-  template<>
-  struct float_converter<long double> {
-    static long double convert(const char* szValue) { return std::strtold(szValue, nullptr); }
+    static double convert(const char* szValue) {
+      double_conversion::StringToDoubleConverter c(
+        double_conversion::StringToDoubleConverter::ALLOW_LEADING_SPACES |
+        double_conversion::StringToDoubleConverter::ALLOW_TRAILING_SPACES |
+        double_conversion::StringToDoubleConverter::ALLOW_SPACES_AFTER_SIGN, 0, 0, "Infinity", "NaN");
+      int count;
+      return c.StringToDouble(szValue, static_cast<int>(strlen(szValue)), &count);
+    }
   };
 
   template<typename T>
@@ -178,22 +187,13 @@ namespace autowiring {
 
     std::string marshal(const void* ptr) const override {
       type value = *static_cast<const type*>(ptr);
-      long double converted = static_cast<long double>(value);
-      //As reccomended by https://randomascii.wordpress.com/2012/03/08/float-precisionfrom-zero-to-100-digits-2/
-      //If this is found to be too slow or we need to use a guaranteed minimal string
-      //representation, replace with
-      // https://github.com/google/double-conversion
-      char buffer[256];
+      auto& dc = double_conversion::DoubleToStringConverter::EcmaScriptConverter();
+      char buffer[128];
+      double_conversion::StringBuilder builder(buffer, sizeof(buffer));
+      dc.ToShortest(value, &builder);
+      builder.Finalize();
 
-      int len =
-#ifndef snprintf //Hack for MSVC
-        sprintf_s
-#else
-        snprintf
-#endif
-      (buffer, sizeof(buffer), "%.33g", converted);
-
-      return std::string(buffer, len);
+      return std::string(buffer, builder.size());
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
