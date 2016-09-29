@@ -177,30 +177,18 @@ add_conditional_sources(
   GROUP_NAME "C++11"
   FILES
   C++11/boost_array.h
-  C++11/boost_atomic.h
-  C++11/boost_chrono.h
   C++11/boost_exception_ptr.h
   C++11/boost_functional.h
   C++11/boost_future.h
-  C++11/boost_mutex.h
-  C++11/boost_rvalue.h
   C++11/boost_shared_ptr.h
-  C++11/boost_system_error.h
-  C++11/boost_thread.h
-  C++11/boost_tuple.h
   C++11/boost_type_traits.h
-  C++11/boost_utility.h
   C++11/chrono_with_profiling_clock.h
   C++11/cpp11.h
-  C++11/empty_file.h
   C++11/filesystem.h
   C++11/make_unique.h
   C++11/memory.h
   C++11/memory_nostl11.h
   C++11/mutex.h
-  C++11/tr1_unordered_map.h
-  C++11/tr1_unordered_set.h
-  C++11/type_index.h
   C++11/unique_ptr.h
 )
 
