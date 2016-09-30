@@ -7,7 +7,6 @@
 #include <stdexcept>
 
 #include <string>
-#include <sstream>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -130,6 +129,31 @@ namespace autowiring {
     }
   };
 
+#if defined(_MSC_VER) && _MSC_VER <= 1900 //This is reported resolved in VC++15
+#define AW_SNPRINTF sprintf_s
+#else
+#define AW_SNPRINTF snprintf
+#endif
+  //a version of the 32-bit NDK we use does not support to_string so we'll roll our own.
+  template<typename T, int bufferLen>
+  static inline std::string var_to_string(T value, const char* fmt) {
+    char buffer[bufferLen];
+    auto len = AW_SNPRINTF(buffer, sizeof(buffer), fmt, value);
+    return std::string(buffer, len);
+  }
+#undef AW_SNPRINTF
+
+  static inline std::string int_to_string(char c) { return var_to_string<char, 8>(c, "%hhd"); }
+  static inline std::string int_to_string(short c) { return var_to_string<short, 8>(c, "%hd"); }
+  static inline std::string int_to_string(int c) { return var_to_string<int, 16>(c, "%d"); }
+  static inline std::string int_to_string(long c) { return var_to_string<long, 32>(c, "%ld"); }
+  static inline std::string int_to_string(long long c) { return var_to_string<long long, 64>(c, "%lld"); }
+  static inline std::string int_to_string(unsigned char c) { return var_to_string<unsigned char, 8>(c, "%hhu"); }
+  static inline std::string int_to_string(unsigned short c) { return var_to_string<unsigned short, 8>(c, "%hu"); }
+  static inline std::string int_to_string(unsigned int c) { return var_to_string<unsigned int, 16>(c, "%u"); }
+  static inline std::string int_to_string(unsigned long c) { return var_to_string<unsigned long, 32>(c, "%lu"); }
+  static inline std::string int_to_string(unsigned long long c) { return var_to_string<unsigned long long, 64>(c, "%llu"); }
+
   template<typename T>
   struct builtin_marshaller<T, typename std::enable_if<std::is_integral<T>::value>::type> :
     marshaller_base
@@ -138,9 +162,7 @@ namespace autowiring {
 
     std::string marshal(const void* ptr) const override {
       type val = *static_cast<const type*>(ptr);
-      std::stringstream ss;
-      ss << val;
-      return ss.str();
+      return int_to_string(val);
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
@@ -158,12 +180,6 @@ namespace autowiring {
   template<typename T>
   struct float_converter;
 
-#if defined(_MSC_VER) && _MSC_VER <= 1900 //This is reported resolved in VC++15
-#define AW_SNPRINTF sprintf_s
-#else
-#define AW_SNPRINTF snprintf
-#endif
-
   template<>
   struct float_converter<float> {
     static float convertTo(const char* szValue) { return strtof(szValue, nullptr); }
@@ -172,11 +188,7 @@ namespace autowiring {
       //If this is found to be too slow or we need to use a guaranteed minimal string
       //representation, replace with
       // https://github.com/google/double-conversion
-      char buffer[128];
-      const double asDouble = value;
-      //g implies double and according to cppreference cannot be used with a float.
-      int len = AW_SNPRINTF(buffer, sizeof(buffer), "%.9g", asDouble);
-      return std::string(buffer, len);
+      return var_to_string<double, 128>(value, "%.9g"); //g does not support floats according to the standard
     }
   };
 
@@ -184,9 +196,7 @@ namespace autowiring {
   struct float_converter<double> {
     static double convertTo(const char* szValue) { return strtod(szValue, nullptr); }
     static std::string convertFrom(double value) {
-      char buffer[128];
-      int len = AW_SNPRINTF(buffer, sizeof(buffer), "%.17g", value);
-      return std::string(buffer, len);
+      return var_to_string<double, 128>(value, "%.17g");
     }
   };
 
@@ -194,13 +204,10 @@ namespace autowiring {
   struct float_converter<long double> {
     static long double convertTo(const char* szValue) { return strtold(szValue, nullptr); }
     static std::string convertFrom(long double value) {
-      char buffer[256];
-      int len = AW_SNPRINTF(buffer, sizeof(buffer), "%.33Lg", value);
-      return std::string(buffer, len);
+      return var_to_string<long double, 128>(value, "%.33Lg");
     }
   };
 
-#undef AW_SNPRINTF
 
   template<typename T>
   struct builtin_marshaller<T, typename std::enable_if<std::is_floating_point<T>::value>::type> :
