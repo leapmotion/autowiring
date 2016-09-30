@@ -12,6 +12,10 @@
 #include <stdio.h>
 #include TYPE_TRAITS_HEADER
 
+#if __ANDROID__
+#include <sstream>
+#endif
+
 namespace autowiring {
   struct invalid_marshal_base {};
 
@@ -129,31 +133,6 @@ namespace autowiring {
     }
   };
 
-#if defined(_MSC_VER) && _MSC_VER <= 1900 //This is reported resolved in VC++15
-#define AW_SNPRINTF sprintf_s
-#else
-#define AW_SNPRINTF snprintf
-#endif
-  //a version of the 32-bit NDK we use does not support to_string so we'll roll our own.
-  template<typename T, int bufferLen>
-  static inline std::string var_to_string(T value, const char* fmt) {
-    char buffer[bufferLen];
-    auto len = AW_SNPRINTF(buffer, sizeof(buffer), fmt, value);
-    return std::string(buffer, len);
-  }
-#undef AW_SNPRINTF
-
-  static inline std::string int_to_string(char c) { return var_to_string<char, 8>(c, "%hhd"); }
-  static inline std::string int_to_string(short c) { return var_to_string<short, 8>(c, "%hd"); }
-  static inline std::string int_to_string(int c) { return var_to_string<int, 16>(c, "%d"); }
-  static inline std::string int_to_string(long c) { return var_to_string<long, 32>(c, "%ld"); }
-  static inline std::string int_to_string(long long c) { return var_to_string<long long, 64>(c, "%lld"); }
-  static inline std::string int_to_string(unsigned char c) { return var_to_string<unsigned char, 8>(c, "%hhu"); }
-  static inline std::string int_to_string(unsigned short c) { return var_to_string<unsigned short, 8>(c, "%hu"); }
-  static inline std::string int_to_string(unsigned int c) { return var_to_string<unsigned int, 16>(c, "%u"); }
-  static inline std::string int_to_string(unsigned long c) { return var_to_string<unsigned long, 32>(c, "%lu"); }
-  static inline std::string int_to_string(unsigned long long c) { return var_to_string<unsigned long long, 64>(c, "%llu"); }
-
   template<typename T>
   struct builtin_marshaller<T, typename std::enable_if<std::is_integral<T>::value>::type> :
     marshaller_base
@@ -162,7 +141,13 @@ namespace autowiring {
 
     std::string marshal(const void* ptr) const override {
       type val = *static_cast<const type*>(ptr);
-      return int_to_string(val);
+#if __ANDROID__
+      std::stringstream ss;
+      ss << val;
+      return ss.str();
+#else
+      return std::to_string(val);
+#endif //__ANDROID__
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
@@ -179,6 +164,19 @@ namespace autowiring {
 
   template<typename T>
   struct float_converter;
+#if defined(_MSC_VER) && _MSC_VER <= 1900 //This is reported resolved in VC++15
+#define AW_SNPRINTF sprintf_s
+#else
+#define AW_SNPRINTF snprintf
+#endif
+  //a version of the 32-bit NDK we use does not support to_string so we'll roll our own.
+  template<typename T, int bufferLen>
+  static inline std::string var_to_string(T value, const char* fmt) {
+    char buffer[bufferLen];
+    auto len = AW_SNPRINTF(buffer, sizeof(buffer), fmt, value);
+    return std::string(buffer, len);
+  }
+#undef AW_SNPRINTF
 
   template<>
   struct float_converter<float> {
