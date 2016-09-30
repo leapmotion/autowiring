@@ -51,7 +51,9 @@ TEST_F(MarshallerTest, DoubleMarshalTest) {
 
   double x = -0.00899999999999999;
   std::string val = d.marshal(&x);
-  ASSERT_STREQ("-0.00899999999999999", val.c_str()) << "Failed to marshal a double-precision value";
+  double outX;
+  d.unmarshal(&outX, val.c_str());
+  ASSERT_EQ(x,outX) << "Failed to round trip a large double precision value";
 }
 
 TEST_F(MarshallerTest, NegativeValues) {

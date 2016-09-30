@@ -5,6 +5,7 @@
 #include <autowiring/ConfigRegistry.h>
 #include <autowiring/observable.h>
 #include <cstring>
+#include "stdlib.h"
 
 namespace aw = autowiring;
 
@@ -154,7 +155,8 @@ TEST_F(AutoConfigTest, Float) {
 
   c.d = 10929.4f;
   std::string strVal = autowiring::ConfigGet("d", c);
-  ASSERT_STREQ("10929.4", strVal.c_str());
+  const float fVal = strtof(strVal.c_str(), nullptr);
+  ASSERT_EQ(c.d, fVal) << "Floating point config value didn't successfully round trip";
 
   autowiring::ConfigSet("d", c, "123.4");
   ASSERT_FLOAT_EQ(c.d, 123.4f) << "Float configuration value not assigned";
@@ -166,7 +168,8 @@ TEST_F(AutoConfigTest, Double) {
 
   c.e = 10929.4423;
   strVal = autowiring::ConfigGet("e", c);
-  ASSERT_STREQ("10929.4423", strVal.c_str());
+  double outVal = strtod(strVal.c_str(),nullptr);
+  ASSERT_EQ(c.e, outVal) << "Double config value failed to round trip";
 
   c.e = 109290000000000;
   strVal = autowiring::ConfigGet("e", c);
@@ -174,7 +177,8 @@ TEST_F(AutoConfigTest, Double) {
 
   c.e = -0.0099291;
   strVal = autowiring::ConfigGet("e", c);
-  ASSERT_STREQ("-0.0099291", strVal.c_str());
+  outVal = strtod(strVal.c_str(),nullptr);
+  ASSERT_EQ(c.e, outVal) << "Double config value failed to round trip with a negative number";
 
   autowiring::ConfigSet("e", c, "77482.4");
   ASSERT_DOUBLE_EQ(c.e, 77482.4) << "Double configuration value not assigned";
