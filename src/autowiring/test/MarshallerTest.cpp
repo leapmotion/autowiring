@@ -6,12 +6,51 @@ class MarshallerTest:
   public testing::Test
 {};
 
+TEST_F(MarshallerTest, FloatTest) {
+  autowiring::marshaller<float> f;
+
+  float x = 0;
+  std::string valX = f.marshal(&x);
+  ASSERT_STREQ("0", valX.c_str()) << "Failed to properly output 0";
+
+  float outX = 20;
+  f.unmarshal(&outX, valX.c_str());
+  ASSERT_EQ(outX, 0) << "Failed to properly round trip 0";
+
+  float y = 0.0001f;
+  std::string valY = f.marshal(&y);
+
+  float outY = 0;
+  f.unmarshal(&outY, valY.c_str());
+  ASSERT_EQ(y, outY) << "Failed to properly round trip 0.0001f";
+
+  float z = 1.23e8f;
+  std::string valZ = f.marshal(&z);
+  ASSERT_STREQ("123000000", valZ.c_str()) << "Failed to marshal a value with an exponent";
+}
+
+TEST_F(MarshallerTest, DISABLED_FloatRoundTrip_FULL) {
+  autowiring::marshaller<float> f;
+
+  const float start = std::numeric_limits<float>::min();
+  const float end = std::numeric_limits<float>::max();
+
+  for (float x = start; x != end; x = std::nextafterf(x, end)) {
+    std::string str = f.marshal(&x);
+    float roundtrip;
+    f.unmarshal(&roundtrip, str.c_str());
+    ASSERT_EQ(x, roundtrip) << "Floating point value did not round trip correctly";
+  }
+}
+
 TEST_F(MarshallerTest, DoubleMarshalTest) {
-  autowiring::marshaller<double> b;
+  autowiring::marshaller<double> d;
 
   double x = -0.00899999999999999;
-  std::string val = b.marshal(&x);
-  ASSERT_STREQ("-0.00899999999999999", val.c_str());
+  std::string val = d.marshal(&x);
+  double outX;
+  d.unmarshal(&outX, val.c_str());
+  ASSERT_EQ(x,outX) << "Failed to round trip a large double precision value";
 }
 
 TEST_F(MarshallerTest, NegativeValues) {

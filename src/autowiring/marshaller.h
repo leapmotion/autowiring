@@ -9,7 +9,12 @@
 #include <string>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include TYPE_TRAITS_HEADER
+
+#if __ANDROID__
+#include <sstream>
+#endif
 
 namespace autowiring {
   struct invalid_marshal_base {};
@@ -135,27 +140,14 @@ namespace autowiring {
     typedef typename std::remove_volatile<T>::type type;
 
     std::string marshal(const void* ptr) const override {
-      std::string retVal;
       type val = *static_cast<const type*>(ptr);
-      if (val == 0)
-        return "0";
-
-      bool pos = 0 < val;
-      if (!pos)
-        val *= ~0;
-      for (; val; val /= 10) {
-        retVal.push_back(static_cast<char>(val % 10 + '0'));
-      }
-      if (!pos)
-        retVal.push_back('-');
-
-      for (
-        auto first = retVal.begin(), last = retVal.end();
-        (first != last) && (first != --last);
-        ++first
-        )
-        std::swap(*first, *last);
-      return retVal;
+#if __ANDROID__
+      std::stringstream ss;
+      ss << val;
+      return ss.str();
+#else
+      return std::to_string(val);
+#endif //__ANDROID__
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
@@ -171,104 +163,64 @@ namespace autowiring {
   };
 
   template<typename T>
+  struct float_converter;
+#if defined(_MSC_VER) && _MSC_VER <= 1900 //This is reported resolved in VC++15
+#define AW_SNPRINTF sprintf_s
+#else
+#define AW_SNPRINTF snprintf
+#endif
+  //a version of the 32-bit NDK we use does not support to_string so we'll roll our own.
+  template<typename T, int bufferLen>
+  static inline std::string var_to_string(T value, const char* fmt) {
+    char buffer[bufferLen];
+    auto len = AW_SNPRINTF(buffer, sizeof(buffer), fmt, value);
+    return std::string(buffer, len);
+  }
+#undef AW_SNPRINTF
+
+  template<>
+  struct float_converter<float> {
+    static float convertTo(const char* szValue) { return strtof(szValue, nullptr); }
+    static std::string convertFrom(float value) {
+      //As reccomended by https://randomascii.wordpress.com/2012/03/08/float-precisionfrom-zero-to-100-digits-2/
+      //If this is found to be too slow or we need to use a guaranteed minimal string
+      //representation, replace with
+      // https://github.com/google/double-conversion
+      return var_to_string<double, 128>(value, "%.9g"); //g does not support floats according to the standard
+    }
+  };
+
+  template<>
+  struct float_converter<double> {
+    static double convertTo(const char* szValue) { return strtod(szValue, nullptr); }
+    static std::string convertFrom(double value) {
+      return var_to_string<double, 128>(value, "%.17g");
+    }
+  };
+
+  template<>
+  struct float_converter<long double> {
+    static long double convertTo(const char* szValue) { return strtold(szValue, nullptr); }
+    static std::string convertFrom(long double value) {
+      return var_to_string<long double, 128>(value, "%.33Lg");
+    }
+  };
+
+
+  template<typename T>
   struct builtin_marshaller<T, typename std::enable_if<std::is_floating_point<T>::value>::type> :
     marshaller_base
   {
     typedef typename std::remove_volatile<T>::type type;
 
     std::string marshal(const void* ptr) const override {
-      std::string retVal;
       type value = *static_cast<const type*>(ptr);
-      if (value == 0.0f)
-        return "0";
-
-      bool neg = value < 0.0f;
-      if (neg)
-        value *= -1.0f;
-
-      // Convert input value to scientific notation
-      int power = static_cast<int>(std::log10(value));
-
-      // We will be assembling the number backwards, need to keep track of the
-      // index of the current digit in the reassembled number.
-      int curDigit = std::numeric_limits<type>::digits10 - power;
-
-      // We only want a certain number of digits, this digit count will fit in
-      // a large integer and elimintes the loss of precision we experience when
-      // using floating point math to try to do digit shifts
-      uint64_t digits = static_cast<uint64_t>(value * std::pow(10.0, curDigit) + 0.5);
-
-      // Trailing zero introduction for integer multiples of 10
-      if (power > std::numeric_limits<type>::digits10)
-        retVal.append(power - std::numeric_limits<type>::digits10, '0');
-
-      // Trailing zero omission
-      while (0 < curDigit && 0 == (digits % 10)) {
-        digits /= 10;
-        curDigit--;
-      }
-
-      for(; digits; digits /= 10, curDigit--) {
-        char digit = static_cast<char>(digits % 10);
-
-        // String conversion step, straightforward mapping
-        retVal.push_back('0' + digit);
-        if (curDigit == 1)
-          retVal.push_back('.');
-
-        if (!digits)
-          // Short-circuit for precise representations
-          break;
-      }
-
-      // Zeroes before the decimal:
-      if (power < 0) {
-        retVal.append(-power, '0');
-        retVal.append(".0");
-      }
-
-      if (neg)
-        retVal.push_back('-');
-      for (
-        auto first = retVal.begin(), last = retVal.end();
-        (first != last) && (first != --last);
-        ++first
-      )
-        std::swap(*first, *last);
-      return retVal;
+      return float_converter<type>::convertFrom(value);
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
       T& value = *static_cast<type*>(ptr);
-      bool negative = *szValue == '-';
-      if (negative)
-        szValue++;
-
-      uint64_t whole = 0;
-      for (; *szValue; szValue++) {
-        // Detect the decimal marker, switch to fractional part
-        if (*szValue == '.') {
-          szValue++;
-          break;
-        }
-        if (*szValue < '0' || '9' < *szValue)
-          throw std::invalid_argument("String value is not a decimal number");
-        whole = whole * 10 + *szValue - '0';
-      }
-
-      uint64_t fractional = 0;
-      size_t n = 0;
-      for (; szValue[n]; n++) {
-        if (szValue[n] < '0' || '9' < szValue[n])
-          throw std::invalid_argument("String value is not a decimal number");
-        fractional = fractional * 10 + szValue[n] - '0';
-      }
-      value = static_cast<type>(fractional);
-      while(n--)
-        value /= 10.0f;
-      value += static_cast<type>(whole);
-      if (negative)
-        value *= -1.0f;
+      value = float_converter<type>::convertTo(szValue);
     }
 
     void copy(void* lhs, const void* rhs) const override {
