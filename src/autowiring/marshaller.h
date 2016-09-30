@@ -155,7 +155,7 @@ namespace autowiring {
   template<typename T>
   struct float_converter;
 
-#ifdef MSVC
+#if defined(_MSC_VER) && _MSC_VER <= 1900 //This is reported resolved in VC++15
 #define AW_SNPRINTF sprintf_s
 #else
 #define AW_SNPRINTF snprintf

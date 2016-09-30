@@ -5,7 +5,7 @@
 #include <autowiring/ConfigRegistry.h>
 #include <autowiring/observable.h>
 #include <cstring>
-#include "stdlib.h"
+#include <cstdlib>
 
 namespace aw = autowiring;
 
@@ -168,7 +168,7 @@ TEST_F(AutoConfigTest, Double) {
 
   c.e = 10929.4423;
   strVal = autowiring::ConfigGet("e", c);
-  double outVal = strtod(strVal.c_str(),nullptr);
+  double outVal = strtod(strVal.c_str(), nullptr);
   ASSERT_EQ(c.e, outVal) << "Double config value failed to round trip";
 
   c.e = 109290000000000;
@@ -177,7 +177,7 @@ TEST_F(AutoConfigTest, Double) {
 
   c.e = -0.0099291;
   strVal = autowiring::ConfigGet("e", c);
-  outVal = strtod(strVal.c_str(),nullptr);
+  outVal = strtod(strVal.c_str(), nullptr);
   ASSERT_EQ(c.e, outVal) << "Double config value failed to round trip with a negative number";
 
   autowiring::ConfigSet("e", c, "77482.4");

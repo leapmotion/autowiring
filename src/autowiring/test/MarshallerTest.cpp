@@ -20,9 +20,6 @@ TEST_F(MarshallerTest, FloatTest) {
   float y = 0.0001f;
   std::string valY = f.marshal(&y);
 
-  //This value is actually notoriously difficult to create a minimal string
-  //representation for.
-  //ASSERT_STREQ("0.0001", valY.c_str()) << "Failed to marshal a decimal value";
   float outY = 0;
   f.unmarshal(&outY, valY.c_str());
   ASSERT_EQ(y, outY) << "Failed to properly round trip 0.0001f";
