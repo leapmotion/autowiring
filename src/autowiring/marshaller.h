@@ -7,6 +7,7 @@
 #include <stdexcept>
 
 #include <string>
+#include <sstream>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -137,7 +138,9 @@ namespace autowiring {
 
     std::string marshal(const void* ptr) const override {
       type val = *static_cast<const type*>(ptr);
-      return std::to_string(val);
+      std::stringstream ss;
+      ss << val;
+      return ss.str();
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
