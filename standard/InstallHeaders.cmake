@@ -40,31 +40,20 @@ function(install_headers)
       get_filename_component(src_bin ${src} ABSOLUTE BASE_DIR ${CMAKE_CURRENT_BINARY_DIR})
       if(EXISTS ${src_src})
         set(src ${src_src})
+        file(RELATIVE_PATH src_rel ${CMAKE_CURRENT_SOURCE_DIR} ${src})
+        get_filename_component(src_rel ${src_rel} DIRECTORY)
+        set(actual_rel ${src_rel})
       elseif(EXISTS ${src_bin})
         set(src ${src_bin})
+        file(RELATIVE_PATH bin_rel ${CMAKE_CURRENT_BINARY_DIR} ${src})
+        get_filename_component(bin_rel ${bin_rel} DIRECTORY)
+        set(actual_rel ${bin_rel})
       else()
         message(FATAL_ERROR "Could not find input header file ${src}")
       endif()
     endif()
 
-    # We find out what directory part the file is in, we want the shortest
-    # relative path on the assumption that the file will be most properly
-    # located in the directory whose relative address is the shortest.
-    file(RELATIVE_PATH src_rel ${CMAKE_CURRENT_SOURCE_DIR} ${src})
-    get_filename_component(src_rel ${src_rel} DIRECTORY)
-    if(src_rel)
-      string(LENGTH ${src_rel} src_rel_len)
-      set(actual_rel ${src_rel})
-    endif()
 
-    file(RELATIVE_PATH bin_rel ${CMAKE_CURRENT_BINARY_DIR} ${src})
-    get_filename_component(bin_rel ${bin_rel} DIRECTORY)
-    if(bin_rel)
-      string(LENGTH ${bin_rel} bin_rel_len)
-      if(src_rel AND bin_rel_len LESS src_rel_len)
-        set(actual_rel ${bin_rel})
-      endif()
-    endif()
 
     get_filename_component(src_ext ${src} EXT)
     install(
