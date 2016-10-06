@@ -10,6 +10,8 @@
 #include "GlobalCoreContext.h"
 #include "fast_pointer_cast.h"
 #include <cassert>
+#include <symphony/symphony.h>
+
 #include ATOMIC_HEADER
 
 using namespace autowiring;
