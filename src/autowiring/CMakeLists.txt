@@ -244,9 +244,6 @@ add_conditional_sources(
 # Configure library
 #
 
-set(SYMPHONY_INCLUDE_DIR /opt/local/Libraries-android64/SymphonySDK-1.1.0/include)
-set(SYMPHONY_LIB /opt/local/Libraries-android64/SymphonySDK-1.1.0/lib/libsymphony-cpu-1.1.0.so /opt/local/Libraries-android64/SymphonySDK-1.1.0/lib/libsymphonypower-1.1.0.so)
-
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 add_pch(Autowiring "stdafx.h" "stdafx.cpp")
 target_link_libraries(Autowiring INTERFACE Autoboost)

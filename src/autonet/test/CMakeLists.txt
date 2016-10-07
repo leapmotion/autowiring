@@ -13,6 +13,7 @@ set(AutoNetTest_SRCS
 add_executable(AutoNetTest ${AutoNetTest_SRCS})
 add_pch(AutoNetTest "stdafx.h" "stdafx.cpp")
 target_link_libraries(AutoNetTest AutoTesting AutoNet Autowiring)
+target_link_libraries(AutoNetTest ${SYMPHONY_LIB} -llog)
 
 # This is a unit test, let CMake know this
 add_test(NAME AutoNetTest COMMAND $<TARGET_FILE:AutoNetTest>)

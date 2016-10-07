@@ -19,3 +19,4 @@ set(AutoBench_SRCS
 add_executable(AutoBench ${AutoBench_SRCS})
 add_pch(AutoBench "stdafx.h" "stdafx.cpp")
 target_link_libraries(AutoBench Autowiring AutowiringFixture AutoTesting)
+target_link_libraries(AutoBench ${SYMPHONY_LIB} -llog)

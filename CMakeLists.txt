@@ -26,6 +26,8 @@ include_directories(
   contrib
   contrib/websocketpp
 )
+set(SYMPHONY_INCLUDE_DIR /opt/local/Libraries-android64/SymphonySDK-1.1.0/include)
+set(SYMPHONY_LIB /opt/local/Libraries-android64/SymphonySDK-1.1.0/lib/libsymphony-cpu-1.1.0.so /opt/local/Libraries-android64/SymphonySDK-1.1.0/lib/libsymphonypower-1.1.0.so)
 add_subdirectory(contrib)
 add_subdirectory(src)
 
