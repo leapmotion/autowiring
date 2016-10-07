@@ -99,7 +99,7 @@ add_executable(AutowiringTest ${AutowiringTest_SRCS})
 add_pch(AutowiringTest stdafx.h stdafx.cpp)
 target_link_libraries(AutowiringTest Autowiring AutowiringFixture AutoTesting)
 target_include_directories(AutowiringTest PRIVATE "${CMAKE_SOURCE_DIR}/contrib/autoboost")
-
+target_link_libraries(AutowiringTest ${SYMPHONY_LIB} -llog)
 # Link AutoNet if we've got it
 if(TARGET AutoNet)
   target_link_libraries(AutowiringTest AutoNet)

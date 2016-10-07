@@ -10,9 +10,8 @@
 #include "GlobalCoreContext.h"
 #include "fast_pointer_cast.h"
 #include <cassert>
-#include <symphony/symphony.h>
-
 #include ATOMIC_HEADER
+#include <symphony/symphony.h>
 
 using namespace autowiring;
 
@@ -137,11 +136,18 @@ bool BasicThread::OnStart(void) {
   // object will be stored.
   auto outstanding = GetOutstanding();
   m_state->m_thisThread.~thread();
-  new (&m_state->m_thisThread) std::thread(
-    [this, outstanding] () mutable {
-      this->DoRun(std::move(outstanding));
-    }
-  );
+  new (&m_state->m_thisThread) std::thread([this, outstanding] () mutable {
+    auto g = symphony::create_group(__FUNCTION__);
+    auto k_with_attrib = symphony::create_cpu_kernel([this, outstanding] () mutable {
+       this->DoRun(std::move(outstanding));
+     });
+    k_with_attrib.set_little();
+    symphony::affinity::set(symphony::affinity::settings(symphony::affinity::cores::little,
+       true, symphony::affinity::mode::allow_local_setting));
+    g->launch(k_with_attrib);
+    g->wait_for();
+  });
+
   return true;
 }
 
