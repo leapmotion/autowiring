@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include TYPE_TRAITS_HEADER
 
-#if __ANDROID__
+#if defined(__ANDROID__) && !defined(_LIBCPP_VERSION)
 #include <sstream>
 #endif
 
@@ -141,13 +141,13 @@ namespace autowiring {
 
     std::string marshal(const void* ptr) const override {
       type val = *static_cast<const type*>(ptr);
-#if __ANDROID__
+#if defined(__ANDROID__) && !defined(_LIBCPP_VERSION)
       std::stringstream ss;
       ss << val;
       return ss.str();
 #else
       return std::to_string(val);
-#endif //__ANDROID__
+#endif
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
