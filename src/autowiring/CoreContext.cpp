@@ -6,10 +6,8 @@
 #include "CoreThread.h"
 #include "demangle.h"
 #include "GlobalCoreContext.h"
-#include "ManualThreadPool.h"
 #include "MicroBolt.h"
 #include "NullPool.h"
-#include "SystemThreadPool.h"
 #include "thread_specific_ptr.h"
 #include <cassert>
 #include <sstream>

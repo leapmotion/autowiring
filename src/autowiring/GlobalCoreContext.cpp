@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "GlobalCoreContext.h"
-#include "SystemThreadPool.h"
 #include <cassert>
 
 GlobalCoreContext::GlobalCoreContext(void):
