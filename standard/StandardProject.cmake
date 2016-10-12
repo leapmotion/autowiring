@@ -46,6 +46,10 @@ function(standard_project_preinit)
     endif()
   endif()
 
+  if(NOT MSVC AND NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
+  endif()
+
   # These do not strictly *have* to be set prior to project, but they can be so we will
   # Need to classify the architecture before we run anything else, this lets us easily
   # configure the find version file based on what the architecture was actually built to
