@@ -29,20 +29,6 @@ TEST_F(MarshallerTest, FloatTest) {
   ASSERT_STREQ("123000000", valZ.c_str()) << "Failed to marshal a value with an exponent";
 }
 
-TEST_F(MarshallerTest, DISABLED_FloatRoundTrip_FULL) {
-  autowiring::marshaller<float> f;
-
-  const float start = std::numeric_limits<float>::min();
-  const float end = std::numeric_limits<float>::max();
-
-  for (float x = start; x != end; x = std::nextafterf(x, end)) {
-    std::string str = f.marshal(&x);
-    float roundtrip;
-    f.unmarshal(&roundtrip, str.c_str());
-    ASSERT_EQ(x, roundtrip) << "Floating point value did not round trip correctly";
-  }
-}
-
 TEST_F(MarshallerTest, DoubleMarshalTest) {
   autowiring::marshaller<double> d;
 
