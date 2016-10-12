@@ -201,7 +201,7 @@ namespace autowiring {
   template<>
   struct float_converter<long double> {
     static long double convertTo(const char* szValue) {
-#if defined(__ANDROID__) && !defined(_LIBCPP_VERSION)
+#if defined(__ANDROID__) && !defined(__aarch64__) && !defined(_LIBCPP_VERSION)
       std::stringstream ss(szValue);
       long double ld;
       ss >> ld;
