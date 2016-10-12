@@ -200,7 +200,16 @@ namespace autowiring {
 
   template<>
   struct float_converter<long double> {
-    static long double convertTo(const char* szValue) { return strtold(szValue, nullptr); }
+    static long double convertTo(const char* szValue) {
+#if defined(__ANDROID__) && !defined(_LIBCPP_VERSION)
+      std::stringstream ss(szValue);
+      long double ld;
+      ss >> ld;
+      return ld;
+#else
+      return strtold(szValue, nullptr);
+#endif
+    }
     static std::string convertFrom(long double value) {
       return var_to_string<long double, 128>(value, "%.33Lg");
     }
