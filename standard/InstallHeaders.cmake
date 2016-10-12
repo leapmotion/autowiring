@@ -33,32 +33,31 @@ function(install_headers)
       continue()
     endif()
 
-    # Need to make the path absolute.  We first look in the source directory,
-    # then we look in the binary directory, but only if the path is relative.
-    if(NOT IS_ABSOLUTE ${src})
-      get_filename_component(src_src ${src} ABSOLUTE BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-      get_filename_component(src_bin ${src} ABSOLUTE BASE_DIR ${CMAKE_CURRENT_BINARY_DIR})
-      if(EXISTS ${src_src})
-        set(src ${src_src})
-        file(RELATIVE_PATH src_rel ${CMAKE_CURRENT_SOURCE_DIR} ${src})
-        get_filename_component(src_rel ${src_rel} DIRECTORY)
-        set(actual_rel ${src_rel})
-      elseif(EXISTS ${src_bin})
-        set(src ${src_bin})
-        file(RELATIVE_PATH bin_rel ${CMAKE_CURRENT_BINARY_DIR} ${src})
-        get_filename_component(bin_rel ${bin_rel} DIRECTORY)
-        set(actual_rel ${bin_rel})
-      else()
-        message(FATAL_ERROR "Could not find input header file ${src}")
-      endif()
+    #When the path to the file is absolute, we don't know what we should be installing
+    #it relative to. Warn
+    if(IS_ABSOLUTE ${src})
+      message(WARNING "Not sure where to install file with absolute path ${src}")
+      continue()
     endif()
 
+    #Determine which path the file is relative to and use intermediate directories as the install path
+    foreach(_search_dir "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
+      get_filename_component(src_abs ${src} ABSOLUTE BASE_DIR ${_search_dir})
+      if(EXISTS ${src_abs})
+        set(src ${src_abs})
+        file(RELATIVE_PATH containing_dir ${_search_dir} ${src})
+        get_filename_component(containing_dir ${containing_dir} DIRECTORY)
+        break()
+      endif()
+    endforeach()
 
+    if(NOT EXISTS ${src_abs})
+      message(FATAL_ERROR "Could not find input header file ${src}")
+    endif()
 
-    get_filename_component(src_ext ${src} EXT)
     install(
       FILES ${src}
-      DESTINATION ${opt_DESTINATION}/${actual_rel}
+      DESTINATION ${opt_DESTINATION}/${containing_dir}
       ${opt_UNPARSED_ARGUMENTS}
     )
   endforeach()
