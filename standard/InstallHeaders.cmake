@@ -33,14 +33,14 @@ function(install_headers)
       continue()
     endif()
 
-    #When the path to the file is absolute, we don't know what we should be installing
-    #it relative to. Warn
+    # When the path to the file is absolute, we don't know what we should be installing
+    # it relative to. Warn
     if(IS_ABSOLUTE ${src})
       message(WARNING "Not sure where to install file with absolute path ${src}")
       continue()
     endif()
 
-    #Determine which path the file is relative to and use intermediate directories as the install path
+    # Determine which path the file is relative to and use intermediate directories as the install path
     foreach(_search_dir "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
       get_filename_component(src_abs ${src} ABSOLUTE BASE_DIR ${_search_dir})
       if(EXISTS ${src_abs})
