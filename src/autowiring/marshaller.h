@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include TYPE_TRAITS_HEADER
 
-#if __ANDROID__
+#if defined(__ANDROID__) && !defined(_LIBCPP_VERSION)
 #include <sstream>
 #endif
 
@@ -141,13 +141,13 @@ namespace autowiring {
 
     std::string marshal(const void* ptr) const override {
       type val = *static_cast<const type*>(ptr);
-#if __ANDROID__
+#if defined(__ANDROID__) && !defined(_LIBCPP_VERSION)
       std::stringstream ss;
       ss << val;
       return ss.str();
 #else
       return std::to_string(val);
-#endif //__ANDROID__
+#endif
     }
 
     void unmarshal(void* ptr, const char* szValue) const override {
@@ -200,7 +200,16 @@ namespace autowiring {
 
   template<>
   struct float_converter<long double> {
-    static long double convertTo(const char* szValue) { return strtold(szValue, nullptr); }
+    static long double convertTo(const char* szValue) {
+#if defined(__ANDROID__) && !defined(__aarch64__) && !defined(_LIBCPP_VERSION)
+      std::stringstream ss(szValue);
+      long double ld;
+      ss >> ld;
+      return ld;
+#else
+      return strtold(szValue, nullptr);
+#endif
+    }
     static std::string convertFrom(long double value) {
       return var_to_string<long double, 128>(value, "%.33Lg");
     }
