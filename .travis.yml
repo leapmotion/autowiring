@@ -18,6 +18,7 @@ matrix:
           - g++-4.8
           - libc6-i386
   - os: osx
+    osx_image: xcode8
     env:
     - _CC: clang
     - _CXX: clang++
