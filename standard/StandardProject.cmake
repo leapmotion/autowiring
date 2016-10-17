@@ -46,6 +46,10 @@ function(standard_project_preinit)
     endif()
   endif()
 
+  if(NOT MSVC AND NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
+  endif()
+
   # These do not strictly *have* to be set prior to project, but they can be so we will
   # Need to classify the architecture before we run anything else, this lets us easily
   # configure the find version file based on what the architecture was actually built to
@@ -114,7 +118,7 @@ function(standard_project_preinit)
         set(_developer_sdk_version 10.12)
       endif()
       if(_developer_sdk_version)
-        set(CMAKE_OSX_SYSROOT "macosx${_developer_sdk_version}" CACHE STRING "Mac OS X build environment" FORCE)
+        set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${_developer_sdk_version}.sdk" CACHE STRING "Mac OS X build environment" FORCE)
         if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
           set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Mac OS X deployment target" FORCE)
         endif()
