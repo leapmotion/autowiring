@@ -147,6 +147,7 @@ set(Autowiring_SRCS
   Parallel.cpp
   registration.h
   SatCounter.h
+  signal.h
   signal_base.h
   SlotInformation.cpp
   SlotInformation.h
@@ -243,7 +244,7 @@ target_include_directories(
   "${PROJECT_SOURCE_DIR}/contrib/autoboost"
   PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
+  "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>"
   INTERFACE
   "$<INSTALL_INTERFACE:include>"
 )
