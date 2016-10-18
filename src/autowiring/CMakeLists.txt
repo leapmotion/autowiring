@@ -245,7 +245,7 @@ target_include_directories(
   "${PROJECT_SOURCE_DIR}/contrib/autoboost"
   PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>"
-  "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src/autowiring>"
+  "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>"
   INTERFACE
   "$<INSTALL_INTERFACE:include>"
 )
