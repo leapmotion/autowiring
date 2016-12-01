@@ -14,8 +14,12 @@ class AutowiringConan(ConanFile):
     generators = "cmake"
     build_dir = "b"
     short_paths = True
-
+       
     def build(self):
+        # For Visual Studio builds, ignore build_type since we want to create both debug and release binaries
+        if self.settings.compiler == "Visual Studio":
+            self.settings.remove("build_type")
+
         self.output.info(self.version)
         
         if not os.path.exists(self.build_dir):
@@ -23,16 +27,15 @@ class AutowiringConan(ConanFile):
         
         cmake = CMake(self.settings)
         args = ['-DCMAKE_INSTALL_PREFIX="%s"' % self.package_folder]
-
-        if self.settings.compiler == "Visual Studio" and self.settings.build_type == "Debug":
-            if not str(self.settings.compiler.runtime).endswith("d"):
-                self.settings.compiler.runtime = str(self.settings.compiler.runtime) + "d"
-
         self.run('cd %s && cmake %s %s %s' % (self.build_dir, self.conanfile_directory, cmake.command_line, ' '.join(args)))
-        self.run("cd %s && cmake --build . %s --target install" % (self.build_dir, cmake.build_config))
+        if hasattr(self.settings, "build_type"):
+            self.run("cd %s && cmake --build . --target install %s" % (self.build_dir, cmake.build_config))
+        else:
+            self.run("cd %s && cmake --build . --target install --config Release" % (self.build_dir))
+            self.run("cd %s && cmake --build . --target install --config Debug" % (self.build_dir))
 
     def package(self):
         self.output.info(self.package_folder)
 
     def package_info(self):
-        self.cpp_info.libs = ["hello"]
+        self.cpp_info.libs = ["Autoboost64.lib", "AutoNet64.lib", "AutoTesting64.lib", "Autowiring64.lib"]
