@@ -102,3 +102,47 @@ TEST_F(AutoConstructTest, FactoryNewPrivateCtor) {
   ASSERT_NE(nullptr, mpcc.get()) << "Null not expected as a return type from a factory new construction";
   ASSERT_EQ(1002, mpcc->ival) << "Correct ctor was not invoked on a type with a private ctor";
 }
+
+
+namespace {
+  class MyPrivateCtorStringClass :
+    public CoreObject
+  {
+    MyPrivateCtorStringClass(void) :
+      istr("default_string")
+    {}
+    MyPrivateCtorStringClass(const char*) :
+      istr(istr)
+    {}
+
+  public:
+    const char* istr;
+
+    static MyPrivateCtorStringClass* New(const char* str) {
+      return new MyPrivateCtorStringClass{ str };
+    }
+  };
+}
+
+static_assert(
+  autowiring::has_static_new<MyPrivateCtorStringClass, const char*>::value,
+  "Failed to find factory new on a type that carries it"
+  );
+static_assert(
+  autowiring::select_strategy<MyPrivateCtorStringClass, const char*>::value == autowiring::construction_strategy::factory_new,
+  "Construction strategy incorrectly inferred"
+  );
+static_assert(
+  !std::is_constructible<MyPrivateCtorStringClass>::value,
+  "Type reported as being constructable when it was not"
+  );
+static_assert(
+  !autowiring::has_simple_constructor<MyPrivateCtorStringClass>::value,
+  "Simple constructor detected when said constructor should have been private"
+  );
+
+TEST_F(AutoConstructTest, FactoryNewPrivateStringCtor) {
+  AutoConstruct<MyPrivateCtorStringClass> mpcc{ "a new string" };
+  ASSERT_NE(nullptr, mpcc.get()) << "Null not expected as a return type from a factory new construction";
+  ASSERT_STREQ("a new string", mpcc->istr) << "Correct ctor was not invoked on a type with a private ctor";
+}
