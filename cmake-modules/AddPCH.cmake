@@ -7,6 +7,6 @@ macro(add_pch TargetName PrecompiledHeader PrecompiledSource)
       COMPILE_FLAGS "/Yc${PrecompiledHeader}"
     )
     target_sources(${TargetName} PRIVATE ${PrecompiledHeader} ${PrecompiledSource})
-    target_compile_definitions(${TargetName} PRIVATE "/Yu${PrecompiledHeader}")
+    set_property(TARGET ${TargetName} APPEND PROPERTY COMPILE_FLAGS "/Yu")
   endif(MSVC)
 endmacro(add_pch)
