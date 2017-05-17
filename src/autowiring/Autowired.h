@@ -377,8 +377,8 @@ class AutoConstruct:
 {
 public:
   template<class... Args>
-  AutoConstruct(Args&&... args) :
-    std::shared_ptr<T>(init(std::forward<Args&&>(args)...))
+  AutoConstruct(Args... args) :
+    std::shared_ptr<T>(init(std::forward<Args>(args)...))
   {}
 
   operator bool(void) const { return IsAutowired(); }
