@@ -32,7 +32,7 @@ template<typename T, typename... Args>
 struct has_static_new
 {
   template<class U>
-  static std::true_type select(decltype(U::New((Args&&)*(Args*)nullptr...))*);
+  static std::true_type select(decltype(U::New(std::declval<Args>()...)));
 
   template<class U>
   static std::false_type select(...);

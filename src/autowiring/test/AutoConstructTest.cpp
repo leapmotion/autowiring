@@ -103,7 +103,6 @@ TEST_F(AutoConstructTest, FactoryNewPrivateCtor) {
   ASSERT_EQ(1002, mpcc->ival) << "Correct ctor was not invoked on a type with a private ctor";
 }
 
-
 namespace {
   class MyPrivateCtorStringClass :
     public CoreObject
