@@ -19,6 +19,11 @@ namespace {
   };
 }
 
+static_assert(
+  autowiring::select_strategy<HasDefaultCtorAndOthers, int>::value == autowiring::construction_strategy::standard,
+  "Construction strategy incorrectly inferred"
+  );
+
 TEST_F(AutoConstructTest, AutoConstructNoArgs) {
   AutoConstruct<HasDefaultCtorAndOthers> hdcao;
   ASSERT_EQ(101, hdcao->v) << "Default constructor was not called as expected";
@@ -144,4 +149,23 @@ TEST_F(AutoConstructTest, FactoryNewPrivateStringCtor) {
   AutoConstruct<MyPrivateCtorStringClass> mpcc{ "a new string" };
   ASSERT_NE(nullptr, mpcc.get()) << "Null not expected as a return type from a factory new construction";
   ASSERT_STREQ("a new string", mpcc->istr) << "Correct ctor was not invoked on a type with a private ctor";
+}
+
+class MultiStaticNew : public CoreObject {
+  MultiStaticNew() {}
+public:
+  static char* New() { return nullptr; }
+  static MultiStaticNew* New(int x) { return nullptr; }
+};
+static_assert(
+  !autowiring::has_static_new<MultiStaticNew>::value,
+  "Found a bad static new"
+  );
+static_assert(
+  autowiring::has_static_new<MultiStaticNew, int>::value,
+  "Failed to find a good static new override"
+  );
+
+TEST_F(AutoConstructTest, MultiStaticNewTest) {
+  AutoConstruct<MultiStaticNew> badstatic{ 1 };
 }
