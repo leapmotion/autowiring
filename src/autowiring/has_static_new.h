@@ -5,6 +5,12 @@
 
 namespace autowiring {
 
+/// <summary>
+/// Utility helper structure for types which have a factory New routine
+/// </summary>
+/// <remarks>
+/// A factory New routine is malformed when the return type is not implicitly castable to type T
+/// </remarks>
 template <class T, typename... Args>
 class has_static_new
 {
@@ -13,6 +19,7 @@ class has_static_new
     std::is_convertible<decltype(U::New(std::declval<Args>()...)), T*>::value
   >::type>
   static std::true_type check(void*);
+
   template <class...>
   static std::false_type check(...);
 public:

@@ -167,5 +167,5 @@ static_assert(
   );
 
 TEST_F(AutoConstructTest, MultiStaticNewTest) {
-  AutoConstruct<MultiStaticNew> badstatic{ 1 };
+  AutoConstruct<MultiStaticNew> multistatic{ 1 };
 }
