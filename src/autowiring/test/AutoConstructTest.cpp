@@ -19,6 +19,11 @@ namespace {
   };
 }
 
+static_assert(
+  autowiring::select_strategy<HasDefaultCtorAndOthers, int>::value == autowiring::construction_strategy::standard,
+  "Construction strategy incorrectly inferred"
+  );
+
 TEST_F(AutoConstructTest, AutoConstructNoArgs) {
   AutoConstruct<HasDefaultCtorAndOthers> hdcao;
   ASSERT_EQ(101, hdcao->v) << "Default constructor was not called as expected";
@@ -101,4 +106,66 @@ TEST_F(AutoConstructTest, FactoryNewPrivateCtor) {
   AutoConstruct<MyPrivateCtorClass> mpcc{ 1002 };
   ASSERT_NE(nullptr, mpcc.get()) << "Null not expected as a return type from a factory new construction";
   ASSERT_EQ(1002, mpcc->ival) << "Correct ctor was not invoked on a type with a private ctor";
+}
+
+namespace {
+  class MyPrivateCtorStringClass :
+    public CoreObject
+  {
+    MyPrivateCtorStringClass(void) :
+      istr("default_string")
+    {}
+    MyPrivateCtorStringClass(const char* istr) :
+      istr(istr)
+    {}
+
+  public:
+    const char* istr;
+
+    static MyPrivateCtorStringClass* New(const char* str) {
+      return new MyPrivateCtorStringClass{ str };
+    }
+  };
+}
+
+static_assert(
+  autowiring::has_static_new<MyPrivateCtorStringClass, decltype("")>::value,
+  "Failed to find factory new on a type that carries it"
+  );
+static_assert(
+  autowiring::select_strategy<MyPrivateCtorStringClass, decltype("")>::value == autowiring::construction_strategy::factory_new,
+  "Construction strategy incorrectly inferred"
+  );
+static_assert(
+  !std::is_constructible<MyPrivateCtorStringClass>::value,
+  "Type reported as being constructable when it was not"
+  );
+static_assert(
+  !autowiring::has_simple_constructor<MyPrivateCtorStringClass>::value,
+  "Simple constructor detected when said constructor should have been private"
+  );
+
+TEST_F(AutoConstructTest, FactoryNewPrivateStringCtor) {
+  AutoConstruct<MyPrivateCtorStringClass> mpcc{ "a new string" };
+  ASSERT_NE(nullptr, mpcc.get()) << "Null not expected as a return type from a factory new construction";
+  ASSERT_STREQ("a new string", mpcc->istr) << "Correct ctor was not invoked on a type with a private ctor";
+}
+
+class MultiStaticNew : public CoreObject {
+  MultiStaticNew() {}
+public:
+  static char* New() { return nullptr; }
+  static MultiStaticNew* New(int x) { return nullptr; }
+};
+static_assert(
+  !autowiring::has_static_new<MultiStaticNew>::value,
+  "Found a bad static new"
+  );
+static_assert(
+  autowiring::has_static_new<MultiStaticNew, int>::value,
+  "Failed to find a good static new override"
+  );
+
+TEST_F(AutoConstructTest, MultiStaticNewTest) {
+  AutoConstruct<MultiStaticNew> multistatic{ 1 };
 }

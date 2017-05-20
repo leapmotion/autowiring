@@ -11,45 +11,19 @@ namespace autowiring {
 /// <remarks>
 /// A factory New routine is malformed when the return type is not implicitly castable to type T
 /// </remarks>
-template<class T, class Selector, class... Args>
-struct has_well_formed_static_new {
-  static const bool value = std::is_convertible<
-    decltype(
-      T::New(
-        std::declval<Args>()...
-      )
-    ),
-    T*
-  >::value;
-};
-
-template<class T, class... Args>
-struct has_well_formed_static_new<T, std::false_type, Args...> {
-  static const bool value = false;
-};
-
-template<typename T, typename... Args>
-struct has_static_new
+template <class T, typename... Args>
+class has_static_new
 {
-  template<class U>
-  static std::true_type select(decltype(U::New((Args&&)*(Args*)nullptr...))*);
+  template<class U, class = typename std::enable_if<
+    std::is_function<decltype(U::New(std::declval<Args>()...))(Args...)>::value &&
+    std::is_convertible<decltype(U::New(std::declval<Args>()...)), T*>::value
+  >::type>
+  static std::true_type check(void*);
 
-  template<class U>
-  static std::false_type select(...);
-
-  static const bool value = has_well_formed_static_new<T, decltype(select<T>(nullptr)), Args...>::value;
-};
-
-template<typename T>
-struct has_static_new<T>
-{
-  template<class U>
-  static std::true_type select(decltype(U::New())*);
-
-  template<class U>
-  static std::false_type select(...);
-
-  static const bool value = has_well_formed_static_new<T, decltype(select<T>(nullptr))>::value;
+  template <class...>
+  static std::false_type check(...);
+public:
+  static const bool value = decltype(check<T>(nullptr))::value;
 };
 
 }
