@@ -42,8 +42,6 @@ Autowiring.nuspec
 autowiring.kdev4
 *.opendb
 *.orig
-autowiring.VC.db
+*.VC.db*
 .vscode
 AutowiringVersion.h
-
-*.VC.db*
