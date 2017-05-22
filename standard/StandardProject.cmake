@@ -72,7 +72,9 @@ function(standard_project_preinit)
       endif()
     endif()
   endif()
+endfunction()
 
+function(standard_project_postinit)
   # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
   # wants us to do.
@@ -117,9 +119,6 @@ function(standard_project_preinit)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" PARENT_SCOPE)
   endif()
 
-endfunction()
-
-function(standard_project_postinit)
   # CMAKE_SYSTEM_PROCESSOR is set by the toolchain, so must happen strictly after project()
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
     set(standard_BUILD_ARCHITECTURES "aarch64" PARENT_SCOPE)
@@ -139,7 +138,6 @@ function(standard_project_postinit)
   endif()
   message(STATUS "Using architecture: ${standard_BUILD_ARCHITECTURES}")
 
-  # Post-initialization steps. All of these depend on project() having been called.
   include(CTest)
 
   if(CMAKE_COMPILER_IS_GNUCC)
