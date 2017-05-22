@@ -1,9 +1,8 @@
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_VERSION 1)
 
-# For reasons beyond my comprehension, this file is parsed multiple times
-# and in some of them, cache variables are not preserved so we have to store
-# this in an environmental variable...
+# Deal with weirdnesses caused by our standard_project setup. See
+# notes in StandardProject.cmake
 if(NOT LLVM_ANDROID_TOOLCHAIN_DIR)
   set(LLVM_ANDROID_TOOLCHAIN_DIR $ENV{LLVM_ANDROID_TOOLCHAIN_DIR})
 else()
