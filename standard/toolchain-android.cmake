@@ -1,5 +1,4 @@
 set(CMAKE_SYSTEM_NAME Linux)
-set(CMAKE_SYSTEM_PROCESSOR arm)
 set(CMAKE_SYSTEM_VERSION 1)
 
 # For reasons beyond my comprehension, this file is parsed multiple times

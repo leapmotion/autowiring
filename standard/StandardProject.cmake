@@ -54,8 +54,10 @@ function(standard_project_preinit)
   # Need to classify the architecture before we run anything else, this lets us easily
   # configure the find version file based on what the architecture was actually built to
   # be.
-  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
-    set(standard_BUILD_ARM ON PARENT_SCOPE)
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+    set(standard_BUILD_ARCHITECTURES "aarch64" PARENT_SCOPE)
+    set(standard_BUILD_64 ON PARENT_SCOPE)
+  elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
     set(standard_BUILD_ARCHITECTURES "arm" PARENT_SCOPE)
     set(standard_BUILD_64 OFF PARENT_SCOPE)
   elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64;i386")
