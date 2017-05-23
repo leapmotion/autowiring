@@ -226,6 +226,34 @@ TEST_F(AutowiringTest, StaticNewWithArgs) {
   }
 }
 
+struct PureVirtualStruct {
+  virtual void PureVirtualFunction() = 0;
+};
+
+struct VSImpl : public PureVirtualStruct {
+  void PureVirtualFunction() override {
+    (void)0;
+  }
+};
+
+struct ConcreteStruct {
+  ConcreteStruct(PureVirtualStruct& pRef): m_ref(pRef) {}
+  PureVirtualStruct& m_ref;
+};
+
+static_assert(!autowiring::has_static_new<ConcreteStruct, PureVirtualStruct&>::value, "Found static new on type that doesn't have one");
+
+TEST_F(AutowiringTest, AbstractArgTest) {
+  const bool static_new = autowiring::has_static_new<ConcreteStruct, PureVirtualStruct&>::value;
+  ASSERT_FALSE(static_new);
+  {
+    AutoCreateContext ctxt;
+    ctxt->Inject<VSImpl>();
+    AutowiredFast<PureVirtualStruct> pvs(ctxt);
+    ctxt->Inject<ConcreteStruct>(*pvs);
+  }
+}
+
 namespace {
   class InjectsItself:
     public CoreObject
