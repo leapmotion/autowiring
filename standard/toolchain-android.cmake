@@ -21,7 +21,7 @@ if(NOT ANDROID_NDK_ROOT)
   message(FATAL_ERROR "ANDROID_NDK_ROOT could not be located. Have you installed the NDK?")
 endif()
 
-set(ANDROID_COMMON_FLAGS " --sysroot=${ANDROID_NDK_ROOT}/sysroot -B${ANDROID_NDK_ROOT} ")
+set(ANDROID_COMMON_FLAGS " --sysroot=${ANDROID_NDK_ROOT}/sysroot -B${ANDROID_NDK_ROOT} -pie ")
 set(CMAKE_C_COMPILER ${ANDROID_NDK_ROOT}/bin/${ANDROID_NDK_TOOL_PREFIX}-gcc${_exe_suffix} CACHE FILEPATH "C Compiler" FORCE)
 set(CMAKE_CXX_COMPILER ${ANDROID_NDK_ROOT}/bin/${ANDROID_NDK_TOOL_PREFIX}-g++${_exe_suffix} CACHE FILEPATH "C++ Compiler" FORCE)
 set(ANDROID_STRIP_COMMAND ${ANDROID_NDK_ROOT}/bin/${ANDROID_NDK_TOOL_PREFIX}-strip)
