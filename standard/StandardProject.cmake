@@ -16,22 +16,37 @@ does the following:
 
 include(CMakeParseArguments) # Backwards compatibility
 
-# This must be a macro since project defines scope-local variables
-# that we generally rely on being in the root context.
 # IMPORTANT: Note that if there is no *direct* call to 'project' in the root CMakeLists.txt
 # file, CMake will automatically inject one with the default languages of C and CXX.
 # This will cause the toolchain file to be parsed multiple times, and will
 # make much of the work done in standard_project_preinit useless.
 macro(standard_project project_name)
-  cmake_parse_arguments(standard "" "VERSION" ${ARGN})
+  message(AUTHOR_WARNING "Standard_project has been replaced by an override of project.")
+  project(${ARGV})
+endmacro()
 
-  if(NOT standard_VERSION)
-    message(FATAL_ERROR "Standard compliant projects must specify a version")
+if(NOT DEFINED standard_project_OVERRIDE)
+  set(standard_project_OVERRIDE ON)
+endif()
+
+# This must be a macro since project defines scope-local variables
+# that we generally rely on being in the root context.
+macro(project project_name)
+  if(standard_project_OVERRIDE)
+    cmake_parse_arguments(standard "" "VERSION" "" ${ARGN})
+
+    if(NOT standard_VERSION)
+      message(FATAL_ERROR "Standard compliant projects must specify a version")
+    endif()
+
+    standard_project_preinit()
+    _project(${project_name} VERSION ${standard_VERSION} ${standard_UNPARSED_ARGUMENTS})
+    standard_project_postinit()
+
+    set(standard_project_OVERRIDE OFF) #we generally only want to modify the root project.
+  else()
+    _project(${ARGV})
   endif()
-
-  standard_project_preinit()
-  project(${project_name} VERSION ${standard_VERSION} ${standard_UNPARSED_ARGUMENTS})
-  standard_project_postinit()
 endmacro()
 
 function(standard_project_preinit)
