@@ -15,7 +15,7 @@ template <class T, typename... Args>
 class has_static_new
 {
   template<class U, class = typename std::enable_if<
-    std::is_function<decltype(U::New(std::declval<Args>()...))(Args...)>::value &&
+    std::is_function<decltype(U::New(std::declval<Args>()...))(Args&&...)>::value &&
     std::is_convertible<decltype(U::New(std::declval<Args>()...)), T*>::value
   >::type>
   static std::true_type check(void*);

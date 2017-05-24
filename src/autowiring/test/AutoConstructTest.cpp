@@ -169,3 +169,4 @@ static_assert(
 TEST_F(AutoConstructTest, MultiStaticNewTest) {
   AutoConstruct<MultiStaticNew> multistatic{ 1 };
 }
+
