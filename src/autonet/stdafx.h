@@ -7,8 +7,6 @@
   #define NOMINMAX
 #endif
 
-#include <autowiring/AutowiringConfig.h>
-
 // Defined when Autowiring is being built, as opposed to when it is being linked
 #define AUTOWIRING_IS_BEING_BUILT
 

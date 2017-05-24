@@ -31,7 +31,6 @@ autowiring-*-*.deb
 autowiring-*-*.rpm
 autowiring-*-*.msi
 autowiring.xcodeproj
-autowiring/AutowiringConfig.h
 *.nupkg
 lib/*.*
 autowiring-*-*.zip

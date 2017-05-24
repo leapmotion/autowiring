@@ -46,7 +46,6 @@ set(Autowiring_SRCS
   autowiring.h
   autowiring_error.cpp
   autowiring_error.h
-  AutowiringConfig.h
   AutowiringDebug.h
   AutowiringDebug.cpp
   AutowiringVersion.h

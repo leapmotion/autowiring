@@ -50,7 +50,6 @@
         <file src="autowiring\AutowirableSlot.h" target="build\native\include\autowiring\AutowirableSlot.h" />
         <file src="autowiring\Autowired.h" target="build\native\include\autowiring\Autowired.h" />
         <file src="autowiring\autowiring.h" target="build\native\include\autowiring\autowiring.h" />
-        <file src="autowiring\AutowiringConfig.h" target="build\native\include\autowiring\AutowiringConfig.h" />
         <file src="autowiring\AutowiringEnclosure.h" target="build\native\include\autowiring\AutowiringEnclosure.h" />
         <file src="autowiring\AutowiringEvents.h" target="build\native\include\autowiring\AutowiringEvents.h" />
         <file src="autowiring\autowiring_error.h" target="build\native\include\autowiring\autowiring_error.h" />
