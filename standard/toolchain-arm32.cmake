@@ -6,8 +6,3 @@ set(CMAKE_CXX_COMPILER /usr/bin/arm-linux-gnueabihf-g++)
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-
-foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
-  string(TOUPPER ${config} config)
-  string(CONCAT CMAKE_${config}_POSTFIX "${CMAKE_${config}_POSTFIX}" "64")
-endforeach()

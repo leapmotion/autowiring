@@ -18,8 +18,13 @@ include(CMakeParseArguments) # Backwards compatibility
 
 # This must be a macro since project defines scope-local variables
 # that we generally rely on being in the root context.
+# IMPORTANT: Note that if there is no *direct* call to 'project' in the root CMakeLists.txt
+# file, CMake will automatically inject one with the default languages of C and CXX.
+# This will cause the toolchain file to be parsed multiple times, and will
+# make much of the work done in standard_project_preinit useless.
 macro(standard_project project_name)
   cmake_parse_arguments(standard "" "VERSION" "LANGUAGES" ${ARGN})
+
   if(NOT standard_VERSION)
     message(FATAL_ERROR "Standard compliant projects must specify a version")
   endif()
@@ -50,26 +55,26 @@ function(standard_project_preinit)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
   endif()
 
-  # These do not strictly *have* to be set prior to project, but they can be so we will
-  # Need to classify the architecture before we run anything else, this lets us easily
-  # configure the find version file based on what the architecture was actually built to
-  # be.
-  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
-    set(standard_BUILD_ARM ON PARENT_SCOPE)
-    set(standard_BUILD_ARCHITECTURES "arm" PARENT_SCOPE)
-    set(standard_BUILD_64 OFF PARENT_SCOPE)
-  elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64;i386")
-    set(standard_BUILD_ARCHITECTURES x64 x86 PARENT_SCOPE)
-    set(standard_BUILD_64 ON PARENT_SCOPE)
-  elseif(CMAKE_SIZEOF_VOID_P STREQUAL 4)
-    set(standard_BUILD_ARCHITECTURES "x86" PARENT_SCOPE)
-    set(standard_BUILD_64 OFF PARENT_SCOPE)
-  else()
-    set(standard_BUILD_ARCHITECTURES "x64" PARENT_SCOPE)
-    set(standard_BUILD_64 ON PARENT_SCOPE)
+  if(APPLE AND NOT (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm"))
+    if(NOT CMAKE_OSX_SYSROOT)
+      # CLANG_VERSION requires a sysroot to obtain, so resort to execute_process() here
+      execute_process(COMMAND clang -v ERROR_VARIABLE _clang_version)
+      if(_clang_version MATCHES "clang-7")
+        set(_developer_sdk_version 10.11)
+      elseif(_clang_version MATCHES "clang-8")
+        set(_developer_sdk_version 10.12)
+      endif()
+      if(_developer_sdk_version)
+        set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${_developer_sdk_version}.sdk" CACHE STRING "Mac OS X build environment" FORCE)
+        if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+          set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Mac OS X deployment target" FORCE)
+        endif()
+      endif()
+    endif()
   endif()
-  message(STATUS "Using architecture: ${standard_BUILD_ARCHITECTURES}")
+endfunction()
 
+function(standard_project_postinit)
   # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
   # wants us to do.
@@ -108,34 +113,31 @@ function(standard_project_preinit)
   set(CMAKE_CXX_STANDARD_REQUIRED ON PARENT_SCOPE)
   set(CMAKE_CXX_EXTENSIONS OFF PARENT_SCOPE)
 
-  if(APPLE AND NOT (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm"))
-    if(NOT CMAKE_OSX_SYSROOT)
-      # CLANG_VERSION requires a sysroot to obtain, so resort to execute_process() here
-      execute_process(COMMAND clang -v ERROR_VARIABLE _clang_version)
-      if(_clang_version MATCHES "clang-7")
-        set(_developer_sdk_version 10.11)
-      elseif(_clang_version MATCHES "clang-8")
-        set(_developer_sdk_version 10.12)
-      endif()
-      if(_developer_sdk_version)
-        set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${_developer_sdk_version}.sdk" CACHE STRING "Mac OS X build environment" FORCE)
-        if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
-          set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Mac OS X deployment target" FORCE)
-        endif()
-      endif()
-    endif()
-  endif()
-
   # CMAKE_OSX_DEPLOYMENT_TARGET < 10.9 implies -stdlib=libstdc++, which doesn't have
   # complete C++11 support. Override with libc++
   if(DEFINED CMAKE_OSX_DEPLOYMENT_TARGET AND CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.9)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" PARENT_SCOPE)
   endif()
 
-endfunction()
+  # CMAKE_SYSTEM_PROCESSOR is set by the toolchain, so must happen strictly after project()
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+    set(standard_BUILD_ARCHITECTURES "aarch64" PARENT_SCOPE)
+    set(standard_BUILD_64 ON PARENT_SCOPE)
+  elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+    set(standard_BUILD_ARCHITECTURES "arm" PARENT_SCOPE)
+    set(standard_BUILD_64 OFF PARENT_SCOPE)
+  elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64;i386")
+    set(standard_BUILD_ARCHITECTURES x64 x86 PARENT_SCOPE)
+    set(standard_BUILD_64 ON PARENT_SCOPE)
+  elseif(CMAKE_SIZEOF_VOID_P STREQUAL 4)
+    set(standard_BUILD_ARCHITECTURES "x86" PARENT_SCOPE)
+    set(standard_BUILD_64 OFF PARENT_SCOPE)
+  else()
+    set(standard_BUILD_ARCHITECTURES "x64" PARENT_SCOPE)
+    set(standard_BUILD_64 ON PARENT_SCOPE)
+  endif()
+  message(STATUS "Using architecture: ${standard_BUILD_ARCHITECTURES}")
 
-function(standard_project_postinit)
-  # Post-initialization steps. All of these depend on project() having been called.
   include(CTest)
 
   if(CMAKE_COMPILER_IS_GNUCC)
