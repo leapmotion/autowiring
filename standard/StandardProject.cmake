@@ -23,19 +23,14 @@ include(CMakeParseArguments) # Backwards compatibility
 # This will cause the toolchain file to be parsed multiple times, and will
 # make much of the work done in standard_project_preinit useless.
 macro(standard_project project_name)
-  cmake_parse_arguments(standard "" "VERSION" "LANGUAGES" ${ARGN})
+  cmake_parse_arguments(standard "" "VERSION" ${ARGN})
 
   if(NOT standard_VERSION)
     message(FATAL_ERROR "Standard compliant projects must specify a version")
   endif()
 
-  set(_language_arg "")
-  if(standard_LANGUAGES)
-    set(_language_arg LANGUAGES ${standard_LANGUAGES})
-  endif()
-
   standard_project_preinit()
-  project(${project_name} VERSION ${standard_VERSION} ${_language_arg})
+  project(${project_name} VERSION ${standard_VERSION} ${standard_UNPARSED_ARGUMENTS})
   standard_project_postinit()
 endmacro()
 
