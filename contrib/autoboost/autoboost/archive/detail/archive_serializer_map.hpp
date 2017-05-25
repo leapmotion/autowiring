@@ -36,12 +36,11 @@ namespace detail {
 class basic_serializer;
 
 template<class Archive>
-class AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
-archive_serializer_map {
+class AUTOBOOST_SYMBOL_VISIBLE archive_serializer_map {
 public:
-    static bool insert(const basic_serializer * bs);
-    static void erase(const basic_serializer * bs);
-    static const basic_serializer * find(
+    static AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL bool insert(const basic_serializer * bs);
+    static AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void erase(const basic_serializer * bs);
+    static AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL const basic_serializer * find(
         const autoboost::serialization::extended_type_info & type_
     );
 };

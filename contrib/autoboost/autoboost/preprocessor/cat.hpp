@@ -25,7 +25,7 @@
 #    define AUTOBOOST_PP_CAT_OO(par) AUTOBOOST_PP_CAT_I ## par
 # endif
 #
-# if ~AUTOBOOST_PP_CONFIG_FLAGS() & AUTOBOOST_PP_CONFIG_MSVC()
+# if (~AUTOBOOST_PP_CONFIG_FLAGS() & AUTOBOOST_PP_CONFIG_MSVC()) || (defined(__INTEL_COMPILER) && __INTEL_COMPILER >= 1700)
 #    define AUTOBOOST_PP_CAT_I(a, b) a ## b
 # else
 #    define AUTOBOOST_PP_CAT_I(a, b) AUTOBOOST_PP_CAT_II(~, a ## b)

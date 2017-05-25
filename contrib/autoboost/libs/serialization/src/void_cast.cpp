@@ -13,20 +13,24 @@
 # pragma warning (disable : 4786) // too long name, harmless warning
 #endif
 
-#include <autoboost/assert.hpp>
+// STL
+#include <set>
+#include <functional>
+#include <algorithm>
 #include <cstddef> // NULL
 #ifdef AUTOBOOST_SERIALIZATION_LOG
 #include <iostream>
 #endif
 
-// STL
-#include <set>
-#include <functional>
-#include <algorithm>
+// AUTOBOOST
+#include <autoboost/config.hpp>
 #include <autoboost/assert.hpp>
 
-// AUTOBOOST
 #define AUTOBOOST_SERIALIZATION_SOURCE
+#include <autoboost/serialization/config.hpp>
+// it marks our code with proper attributes as being exported when
+// we're compiling it while marking it import when just the headers
+// is being included.
 #include <autoboost/serialization/singleton.hpp>
 #include <autoboost/serialization/extended_type_info.hpp>
 #include <autoboost/serialization/void_cast.hpp>
@@ -212,7 +216,7 @@ public:
 #endif
 
 // implementation of void caster base class
-AUTOBOOST_SERIALIZATION_DECL(void)
+AUTOBOOST_SERIALIZATION_DECL void
 void_caster::recursive_register(bool includes_virtual_base) const {
     void_cast_detail::set_type & s
         = void_cast_detail::void_caster_registry::get_mutable_instance();
@@ -270,7 +274,7 @@ void_caster::recursive_register(bool includes_virtual_base) const {
     }
 }
 
-AUTOBOOST_SERIALIZATION_DECL(void)
+AUTOBOOST_SERIALIZATION_DECL void
 void_caster::recursive_unregister() const {
     if(void_caster_registry::is_destroyed())
         return;
@@ -306,11 +310,18 @@ void_caster::recursive_unregister() const {
 
 } // namespace void_cast_detail
 
+AUTOBOOST_SYMBOL_VISIBLE void const *
+void_upcast(
+    extended_type_info const & derived,
+    extended_type_info const & base,
+    void const * const t
+);
+
 // Given a void *, assume that it really points to an instance of one type
 // and alter it so that it would point to an instance of a related type.
 // Return the altered pointer. If there exists no sequence of casts that
 // can transform from_type to to_type, return a NULL.
-AUTOBOOST_SERIALIZATION_DECL(void const *)
+AUTOBOOST_SERIALIZATION_DECL void const *
 void_upcast(
     extended_type_info const & derived,
     extended_type_info const & base,
@@ -333,7 +344,14 @@ void_upcast(
     return NULL;
 }
 
-AUTOBOOST_SERIALIZATION_DECL(void const *)
+AUTOBOOST_SYMBOL_VISIBLE void const *
+void_downcast(
+    extended_type_info const & derived,
+    extended_type_info const & base,
+    void const * const t
+);
+
+AUTOBOOST_SERIALIZATION_DECL void const *
 void_downcast(
     extended_type_info const & derived,
     extended_type_info const & base,

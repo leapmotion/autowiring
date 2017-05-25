@@ -26,10 +26,10 @@ for($on_arg = 0; $on_arg <= $max_args; ++$on_arg) {
     else {
 	print OUT "#elif";
     }
-    print OUT " AUTOBOOST_FUNCTION_NUM_ARGS == $on_arg\n";
-    print OUT "#  ifndef AUTOBOOST_FUNCTION_$on_arg\n";
-    print OUT "#    define AUTOBOOST_FUNCTION_$on_arg\n";
-    print OUT "#    include <autoboost/function/function_template.hpp>\n";
+    print OUT " BOOST_FUNCTION_NUM_ARGS == $on_arg\n";
+    print OUT "#  ifndef BOOST_FUNCTION_$on_arg\n";
+    print OUT "#    define BOOST_FUNCTION_$on_arg\n";
+    print OUT "#    include <boost/function/function_template.hpp>\n";
     print OUT "#  endif\n";
 }
 print OUT "#else\n";

@@ -38,7 +38,7 @@ namespace autoboost
      * \par Synchronization
      * The completion of all the closures happen before the completion of the executor destructor.
      */
-    virtual ~executor() {};
+    virtual ~executor() {}
 
     /**
      * \par Effects
@@ -99,9 +99,10 @@ namespace autoboost
     }
 
     template <typename Closure>
-    void submit(AUTOBOOST_THREAD_RV_REF(Closure) closure)
+    void submit(AUTOBOOST_THREAD_FWD_REF(Closure) closure)
     {
-      work w = autoboost::move(closure);
+      //submit(work(autoboost::forward<Closure>(closure)));
+      work w((autoboost::forward<Closure>(closure)));
       submit(autoboost::move(w));
     }
 

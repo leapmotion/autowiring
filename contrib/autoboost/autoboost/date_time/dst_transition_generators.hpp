@@ -4,8 +4,8 @@
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
  */
-#ifndef AB_DATE_TIME_DATE_DST_TRANSITION_DAY_GEN_HPP__
-#define AB_DATE_TIME_DATE_DST_TRANSITION_DAY_GEN_HPP__
+#ifndef DATE_TIME_DATE_DST_TRANSITION_DAY_GEN_HPP__
+#define DATE_TIME_DATE_DST_TRANSITION_DAY_GEN_HPP__
 
 
 

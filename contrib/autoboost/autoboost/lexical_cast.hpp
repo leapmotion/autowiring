@@ -36,7 +36,7 @@ namespace autoboost
     template <typename Target, typename Source>
     inline Target lexical_cast(const Source &arg)
     {
-        Target result;
+        Target result = Target();
 
         if (!autoboost::conversion::detail::try_lexical_convert(arg, result)) {
             autoboost::conversion::detail::throw_bad_cast<Source, Target>();

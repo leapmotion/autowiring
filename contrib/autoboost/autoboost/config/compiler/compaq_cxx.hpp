@@ -9,7 +9,7 @@
 
 #define AUTOBOOST_COMPILER "HP Tru64 C++ " AUTOBOOST_STRINGIZE(__DECCXX_VER)
 
-#include "autoboost/config/compiler/common_edg.hpp"
+#include <autoboost/config/compiler/common_edg.hpp>
 
 //
 // versions check:

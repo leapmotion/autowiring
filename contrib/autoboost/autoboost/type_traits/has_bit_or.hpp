@@ -12,32 +12,32 @@
 #define AUTOBOOST_TT_TRAIT_NAME has_bit_or
 #define AUTOBOOST_TT_TRAIT_OP |
 #define AUTOBOOST_TT_FORBIDDEN_IF\
-   ::autoboost::type_traits::ice_or<\
+   (\
       /* Lhs==fundamental and Rhs==fundamental and (Lhs!=integral or Rhs!=integral) */\
-      ::autoboost::type_traits::ice_and<\
-         ::autoboost::is_fundamental< Lhs_nocv >::value,\
-         ::autoboost::is_fundamental< Rhs_nocv >::value,\
-         ::autoboost::type_traits::ice_or<\
-            ::autoboost::type_traits::ice_not< ::autoboost::is_integral< Lhs_noref >::value >::value,\
-            ::autoboost::type_traits::ice_not< ::autoboost::is_integral< Rhs_noref >::value >::value\
-         >::value\
-      >::value,\
+      (\
+         ::autoboost::is_fundamental< Lhs_nocv >::value && \
+         ::autoboost::is_fundamental< Rhs_nocv >::value && \
+         ( \
+            (!  ::autoboost::is_integral< Lhs_noref >::value ) || \
+            (!  ::autoboost::is_integral< Rhs_noref >::value )\
+          )\
+      )||\
       /* Lhs==fundamental and Rhs==pointer */\
-      ::autoboost::type_traits::ice_and<\
-         ::autoboost::is_fundamental< Lhs_nocv >::value,\
+      (\
+         ::autoboost::is_fundamental< Lhs_nocv >::value && \
          ::autoboost::is_pointer< Rhs_noref >::value\
-      >::value,\
+      )||\
       /* Rhs==fundamental and Lhs==pointer */\
-      ::autoboost::type_traits::ice_and<\
-         ::autoboost::is_fundamental< Rhs_nocv >::value,\
+      (\
+         ::autoboost::is_fundamental< Rhs_nocv >::value && \
          ::autoboost::is_pointer< Lhs_noref >::value\
-      >::value,\
+      )||\
       /* Lhs==pointer and Rhs==pointer */\
-      ::autoboost::type_traits::ice_and<\
-         ::autoboost::is_pointer< Lhs_noref >::value,\
+      (\
+         ::autoboost::is_pointer< Lhs_noref >::value && \
          ::autoboost::is_pointer< Rhs_noref >::value\
-      >::value\
-   >::value
+      )\
+      )
 
 
 #include <autoboost/type_traits/detail/has_binary_operator.hpp>

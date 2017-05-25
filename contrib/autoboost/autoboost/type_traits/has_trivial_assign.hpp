@@ -9,49 +9,44 @@
 #ifndef AUTOBOOST_TT_HAS_TRIVIAL_ASSIGN_HPP_INCLUDED
 #define AUTOBOOST_TT_HAS_TRIVIAL_ASSIGN_HPP_INCLUDED
 
-#include <autoboost/type_traits/config.hpp>
+#include <cstddef> // size_t
+#include <autoboost/type_traits/detail/config.hpp>
 #include <autoboost/type_traits/intrinsics.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
+
+#if !defined(AUTOBOOST_HAS_TRIVIAL_ASSIGN) || defined(AUTOBOOST_MSVC) || defined(__GNUC__) || defined(AUTOBOOST_INTEL) || defined(__SUNPRO_CC) || defined(__clang__)
 #include <autoboost/type_traits/is_pod.hpp>
 #include <autoboost/type_traits/is_const.hpp>
 #include <autoboost/type_traits/is_volatile.hpp>
-#include <autoboost/type_traits/detail/ice_and.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
-#include <autoboost/type_traits/detail/ice_not.hpp>
-
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#include <autoboost/type_traits/is_assignable.hpp>
+#endif
 
 namespace autoboost {
 
-namespace detail {
-
-template <typename T>
-struct has_trivial_assign_impl
-{
+   template <typename T>
+   struct has_trivial_assign : public integral_constant < bool,
 #ifdef AUTOBOOST_HAS_TRIVIAL_ASSIGN
-   AUTOBOOST_STATIC_CONSTANT(bool, value = AUTOBOOST_HAS_TRIVIAL_ASSIGN(T));
+      AUTOBOOST_HAS_TRIVIAL_ASSIGN(T)
 #else
-   AUTOBOOST_STATIC_CONSTANT(bool, value =
-      (::autoboost::type_traits::ice_and<
-        ::autoboost::is_pod<T>::value,
-        ::autoboost::type_traits::ice_not< ::autoboost::is_const<T>::value >::value,
-      ::autoboost::type_traits::ice_not< ::autoboost::is_volatile<T>::value >::value
-      >::value));
+      ::autoboost::is_pod<T>::value && !::autoboost::is_const<T>::value && !::autoboost::is_volatile<T>::value
 #endif
-};
+   > {};
 
-} // namespace detail
-
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(has_trivial_assign,T,::autoboost::detail::has_trivial_assign_impl<T>::value)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_assign,void,false)
+   template<> struct has_trivial_assign<void> : public false_type{};
 #ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_assign,void const,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_assign,void const volatile,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_assign,void volatile,false)
+   template<> struct has_trivial_assign<void const> : public false_type{};
+   template<> struct has_trivial_assign<void const volatile> : public false_type{};
+   template<> struct has_trivial_assign<void volatile> : public false_type{};
 #endif
+   template <class T> struct has_trivial_assign<T volatile> : public false_type{};
+   template <class T> struct has_trivial_assign<T&> : public false_type{};
+#if !defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES)
+   template <class T> struct has_trivial_assign<T&&> : public false_type{};
+#endif
+   // Arrays are not explictly assignable:
+   template <typename T, std::size_t N> struct has_trivial_assign<T[N]> : public false_type{};
+   template <typename T> struct has_trivial_assign<T[]> : public false_type{};
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_HAS_TRIVIAL_ASSIGN_HPP_INCLUDED

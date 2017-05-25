@@ -17,9 +17,19 @@
 #include <autoboost/config.hpp>
 
 #if defined(AUTOBOOST_TT_PREPROCESSING_MODE)
-#   include <autoboost/preprocessor/iterate.hpp>
-#   include <autoboost/preprocessor/enum_params.hpp>
-#   include <autoboost/preprocessor/comma_if.hpp>
+//
+// Maintenance mode, hide include dependencies
+// from trackers:
+//
+#define PPI <autoboost/preprocessor/iterate.hpp>
+#include PPI
+#undef PPI
+#define PPI <autoboost/preprocessor/enum_params.hpp>
+#include PPI
+#undef PPI
+#define PPI <autoboost/preprocessor/comma_if.hpp>
+#include PPI
+#undef PPI
 #endif
 
 namespace autoboost {

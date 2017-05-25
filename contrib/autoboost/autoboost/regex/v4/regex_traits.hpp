@@ -82,7 +82,7 @@ struct regex_traits : public implementationT
 // interfaces that we support, in addition to the
 // required "standard" ones:
 //
-namespace re_detail{
+namespace AUTOBOOST_REGEX_DETAIL_NS{
 #if !AUTOBOOST_WORKAROUND(__HP_aCC, < 60000)
 AUTOBOOST_MPL_HAS_XXX_TRAIT_DEF(autoboost_extensions_tag)
 #else
@@ -99,7 +99,7 @@ struct default_wrapper : public BaseT
    typedef typename BaseT::char_type char_type;
    std::string error_string(::autoboost::regex_constants::error_type e)const
    {
-      return ::autoboost::re_detail::get_default_error_string(e);
+      return ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::get_default_error_string(e);
    }
    ::autoboost::regex_constants::syntax_type syntax_type(char_type c)const
    {
@@ -109,9 +109,9 @@ struct default_wrapper : public BaseT
    {
       return ((c & 0x7f) == c) ? get_default_escape_syntax_type(static_cast<char>(c)) : ::autoboost::regex_constants::escape_type_identity;
    }
-   int toi(const char_type*& p1, const char_type* p2, int radix)const
+   autoboost::intmax_t toi(const char_type*& p1, const char_type* p2, int radix)const
    {
-      return ::autoboost::re_detail::global_toi(p1, p2, radix, *this);
+      return ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::global_toi(p1, p2, radix, *this);
    }
    char_type translate(char_type c, bool icase)const
    {
@@ -123,11 +123,11 @@ struct default_wrapper : public BaseT
    }
    char_type tolower(char_type c)const
    {
-      return ::autoboost::re_detail::global_lower(c);
+      return ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::global_lower(c);
    }
    char_type toupper(char_type c)const
    {
-      return ::autoboost::re_detail::global_upper(c);
+      return ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::global_upper(c);
    }
 };
 
@@ -157,13 +157,13 @@ struct compute_wrapper_base<c_regex_traits<wchar_t>, false>
 #endif
 #endif
 
-} // namespace re_detail
+} // namespace AUTOBOOST_REGEX_DETAIL_NS
 
 template <class BaseT>
 struct regex_traits_wrapper
-   : public ::autoboost::re_detail::compute_wrapper_base<
+   : public ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::compute_wrapper_base<
                BaseT,
-               ::autoboost::re_detail::has_autoboost_extensions_tag<BaseT>::value
+               ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::has_autoboost_extensions_tag<BaseT>::value
             >::type
 {
    regex_traits_wrapper(){}

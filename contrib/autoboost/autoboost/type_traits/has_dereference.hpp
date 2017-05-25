@@ -13,13 +13,13 @@
 #define AUTOBOOST_TT_TRAIT_OP *
 #define AUTOBOOST_TT_FORBIDDEN_IF\
    /* void* or fundamental */\
-   ::autoboost::type_traits::ice_or<\
-      ::autoboost::type_traits::ice_and<\
-         ::autoboost::is_pointer< Rhs_noref >::value,\
+   (\
+      (\
+         ::autoboost::is_pointer< Rhs_noref >::value && \
          ::autoboost::is_void< Rhs_noptr >::value\
-      >::value,\
+      ) || \
       ::autoboost::is_fundamental< Rhs_nocv >::value\
-   >::value
+   )
 
 
 #include <autoboost/type_traits/detail/has_prefix_operator.hpp>

@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2011-2013
+Copyright Rene Rivera 2011-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -52,10 +52,6 @@ Specifically the defined versions are:
 
 #define AUTOBOOST_LANG_STDCPP_NAME "Standard C++"
 
-#include <autoboost/predef/detail/test.h>
-AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_LANG_STDCPP,AUTOBOOST_LANG_STDCPP_NAME)
-
-
 /*`
 [heading `AUTOBOOST_LANG_STDCPPCLI`]
 
@@ -88,10 +84,6 @@ If available, the year of the standard is detected as YYYY.MM.1 from the Epoc da
 
 #define AUTOBOOST_LANG_STDCPPCLI_NAME "Standard C++/CLI"
 
-#include <autoboost/predef/detail/test.h>
-AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_LANG_STDCPPCLI,AUTOBOOST_LANG_STDCPPCLI_NAME)
-
-
 /*`
 [heading `AUTOBOOST_LANG_STDECPP`]
 
@@ -117,8 +109,13 @@ AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_LANG_STDCPPCLI,AUTOBOOST_LANG_STDCPPCLI_
 
 #define AUTOBOOST_LANG_STDECPP_NAME "Standard Embedded C++"
 
+#endif
+
+#include <autoboost/predef/detail/test.h>
+AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_LANG_STDCPP,AUTOBOOST_LANG_STDCPP_NAME)
+
+#include <autoboost/predef/detail/test.h>
+AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_LANG_STDCPPCLI,AUTOBOOST_LANG_STDCPPCLI_NAME)
+
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_LANG_STDECPP,AUTOBOOST_LANG_STDECPP_NAME)
-
-
-#endif

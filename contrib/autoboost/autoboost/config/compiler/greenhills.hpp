@@ -9,7 +9,7 @@
 
 #define AUTOBOOST_COMPILER "Greenhills C++ version " AUTOBOOST_STRINGIZE(__ghs)
 
-#include "autoboost/config/compiler/common_edg.hpp"
+#include <autoboost/config/compiler/common_edg.hpp>
 
 //
 // versions check:

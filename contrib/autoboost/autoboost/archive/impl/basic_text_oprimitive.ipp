@@ -10,11 +10,15 @@
 
 #include <cstddef> // NULL
 #include <algorithm> // std::copy
-#include <autoboost/serialization/pfto.hpp>
+#include <exception> // std::uncaught_exception
+#include <autoboost/config.hpp>
+#if defined(AUTOBOOST_NO_STDC_NAMESPACE)
+namespace std{
+    using ::size_t;
+} // namespace std
+#endif
 
 #include <autoboost/archive/basic_text_oprimitive.hpp>
-#include <autoboost/archive/codecvt_null.hpp>
-#include <autoboost/archive/add_facet.hpp>
 
 #include <autoboost/archive/iterators/base64_from_binary.hpp>
 #include <autoboost/archive/iterators/insert_linebreaks.hpp>
@@ -26,7 +30,7 @@ namespace archive {
 
 // translate to base64 and copy in to buffer.
 template<class OStream>
-AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
 basic_text_oprimitive<OStream>::save_binary(
     const void *address,
     std::size_t count
@@ -59,9 +63,9 @@ basic_text_oprimitive<OStream>::save_binary(
 
     autoboost::archive::iterators::ostream_iterator<CharType> oi(os);
     std::copy(
-        base64_text(AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast<const char *>(address))),
+        base64_text(static_cast<const char *>(address)),
         base64_text(
-            AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast<const char *>(address) + count)
+            static_cast<const char *>(address) + count
         ),
         oi
     );
@@ -75,39 +79,35 @@ basic_text_oprimitive<OStream>::save_binary(
 }
 
 template<class OStream>
-AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
 basic_text_oprimitive<OStream>::basic_text_oprimitive(
     OStream & os_,
     bool no_codecvt
 ) :
-#ifndef AUTOBOOST_NO_STD_LOCALE
     os(os_),
     flags_saver(os_),
     precision_saver(os_),
-    archive_locale(NULL),
-    locale_saver(* os_.rdbuf())
+#ifndef AUTOBOOST_NO_STD_LOCALE
+    codecvt_null_facet(1),
+    archive_locale(os.getloc(), & codecvt_null_facet),
+    locale_saver(os)
 {
     if(! no_codecvt){
-        archive_locale.reset(
-            add_facet(
-                std::locale::classic(),
-                new codecvt_null<typename OStream::char_type>
-            )
-        );
-        os.imbue(* archive_locale);
+        os_.flush();
+        os_.imbue(archive_locale);
     }
-    os << std::noboolalpha;
+    os_ << std::noboolalpha;
 }
 #else
-    os(os_),
-    flags_saver(os_),
-    precision_saver(os_)
 {}
 #endif
 
+
 template<class OStream>
-AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
 basic_text_oprimitive<OStream>::~basic_text_oprimitive(){
+    if(std::uncaught_exception())
+        return;
     os << std::endl;
 }
 

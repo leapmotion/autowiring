@@ -934,7 +934,7 @@ namespace autoboost
       if (m == 0)
       {
         autoboost::throw_exception(
-            autoboost::lock_error(static_cast<int>(system::errc::operation_not_permitted), "autoboost shared_lock has no mutex"));
+            autoboost::lock_error(static_cast<int>(system::errc::operation_not_permitted), "autoboost upgrade_lock has no mutex"));
       }
       if (owns_lock())
       {
@@ -949,7 +949,7 @@ namespace autoboost
       if (m == 0)
       {
         autoboost::throw_exception(
-            autoboost::lock_error(static_cast<int>(system::errc::operation_not_permitted), "autoboost shared_lock has no mutex"));
+            autoboost::lock_error(static_cast<int>(system::errc::operation_not_permitted), "autoboost upgrade_lock has no mutex"));
       }
       if (owns_lock())
       {
@@ -964,7 +964,7 @@ namespace autoboost
       if (m == 0)
       {
         autoboost::throw_exception(
-            autoboost::lock_error(static_cast<int>(system::errc::operation_not_permitted), "autoboost shared_lock has no mutex"));
+            autoboost::lock_error(static_cast<int>(system::errc::operation_not_permitted), "autoboost upgrade_lock has no mutex"));
       }
       if (!owns_lock())
       {
@@ -980,11 +980,11 @@ namespace autoboost
     {
       if(m==0)
       {
-        autoboost::throw_exception(autoboost::lock_error(static_cast<int>(system::errc::operation_not_permitted), "autoboost shared_lock has no mutex"));
+        autoboost::throw_exception(autoboost::lock_error(static_cast<int>(system::errc::operation_not_permitted), "autoboost upgrade_lock has no mutex"));
       }
       if(owns_lock())
       {
-        autoboost::throw_exception(autoboost::lock_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "autoboost shared_lock owns already the mutex"));
+        autoboost::throw_exception(autoboost::lock_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "autoboost upgrade_lock owns already the mutex"));
       }
       is_locked=m->try_lock_upgrade_for(rel_time);
       return is_locked;
@@ -994,11 +994,11 @@ namespace autoboost
     {
       if(m==0)
       {
-        autoboost::throw_exception(autoboost::lock_error(static_cast<int>(system::errc::operation_not_permitted), "autoboost shared_lock has no mutex"));
+        autoboost::throw_exception(autoboost::lock_error(static_cast<int>(system::errc::operation_not_permitted), "autoboost upgrade_lock has no mutex"));
       }
       if(owns_lock())
       {
-        autoboost::throw_exception(autoboost::lock_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "autoboost shared_lock owns already the mutex"));
+        autoboost::throw_exception(autoboost::lock_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "autoboost upgrade_lock owns already the mutex"));
       }
       is_locked=m->try_lock_upgrade_until(abs_time);
       return is_locked;
@@ -1080,7 +1080,7 @@ namespace autoboost
     //std-2104 unique_lock move-assignment should not be noexcept
     upgrade_to_unique_lock& operator=(AUTOBOOST_THREAD_RV_REF_BEG upgrade_to_unique_lock<Mutex> AUTOBOOST_THREAD_RV_REF_END other) //AUTOBOOST_NOEXCEPT
     {
-      upgrade_to_unique_lock temp(other);
+      upgrade_to_unique_lock temp(::autoboost::move(other));
       swap(temp);
       return *this;
     }
@@ -1167,7 +1167,7 @@ private unique_lock<Mutex>
 #endif
     try_lock_wrapper& operator=(AUTOBOOST_THREAD_RV_REF_BEG try_lock_wrapper<Mutex> AUTOBOOST_THREAD_RV_REF_END other)
     {
-      try_lock_wrapper temp(other);
+      try_lock_wrapper temp(::autoboost::move(other));
       swap(temp);
       return *this;
     }

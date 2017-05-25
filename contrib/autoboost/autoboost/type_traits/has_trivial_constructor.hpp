@@ -9,43 +9,49 @@
 #ifndef AUTOBOOST_TT_HAS_TRIVIAL_CONSTRUCTOR_HPP_INCLUDED
 #define AUTOBOOST_TT_HAS_TRIVIAL_CONSTRUCTOR_HPP_INCLUDED
 
-#include <autoboost/type_traits/config.hpp>
 #include <autoboost/type_traits/intrinsics.hpp>
 #include <autoboost/type_traits/is_pod.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
+#include <autoboost/type_traits/is_default_constructible.hpp>
 
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#ifdef AUTOBOOST_HAS_TRIVIAL_CONSTRUCTOR
+#ifdef AUTOBOOST_HAS_SGI_TYPE_TRAITS
+#include <autoboost/type_traits/is_same.hpp>
+#elif defined(__GNUC__) || defined(__SUNPRO_CC)
+#include <autoboost/type_traits/is_volatile.hpp>
+#ifdef AUTOBOOST_INTEL
+#include <autoboost/type_traits/is_pod.hpp>
+#endif
+#endif
+#endif
+
+
+#if (defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 409)) || defined(AUTOBOOST_CLANG) || (defined(__SUNPRO_CC) && defined(AUTOBOOST_HAS_TRIVIAL_CONSTRUCTOR))
+#include <autoboost/type_traits/is_default_constructible.hpp>
+#define AUTOBOOST_TT_TRIVIAL_CONSTRUCT_FIX && is_default_constructible<T>::value
+#else
+//
+// Mot all compilers, particularly older GCC versions can handle the fix above.
+#define AUTOBOOST_TT_TRIVIAL_CONSTRUCT_FIX
+#endif
 
 namespace autoboost {
 
-namespace detail {
-
-template <typename T>
-struct has_trivial_ctor_impl
-{
+template <typename T> struct has_trivial_constructor
 #ifdef AUTOBOOST_HAS_TRIVIAL_CONSTRUCTOR
-   AUTOBOOST_STATIC_CONSTANT(bool, value =
-      (::autoboost::type_traits::ice_or<
-         ::autoboost::is_pod<T>::value,
-         AUTOBOOST_HAS_TRIVIAL_CONSTRUCTOR(T)
-      >::value));
+   : public integral_constant <bool, ((::autoboost::is_pod<T>::value || AUTOBOOST_HAS_TRIVIAL_CONSTRUCTOR(T)) AUTOBOOST_TT_TRIVIAL_CONSTRUCT_FIX)>{};
 #else
-   AUTOBOOST_STATIC_CONSTANT(bool, value =
-      (::autoboost::type_traits::ice_or<
-         ::autoboost::is_pod<T>::value,
-         false
-      >::value));
+   : public integral_constant <bool, ::autoboost::is_pod<T>::value>{};
 #endif
-};
 
-} // namespace detail
+template <> struct has_trivial_constructor<void> : public autoboost::false_type{};
+template <> struct has_trivial_constructor<void const> : public autoboost::false_type{};
+template <> struct has_trivial_constructor<void const volatile> : public autoboost::false_type{};
+template <> struct has_trivial_constructor<void volatile> : public autoboost::false_type{};
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(has_trivial_constructor,T,::autoboost::detail::has_trivial_ctor_impl<T>::value)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(has_trivial_default_constructor,T,::autoboost::detail::has_trivial_ctor_impl<T>::value)
+template <class T> struct has_trivial_default_constructor : public has_trivial_constructor<T> {};
+
+#undef AUTOBOOST_TT_TRIVIAL_CONSTRUCT_FIX
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_HAS_TRIVIAL_CONSTRUCTOR_HPP_INCLUDED

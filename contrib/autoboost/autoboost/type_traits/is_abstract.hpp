@@ -48,21 +48,20 @@
 //              to degrade gracefully, rather than trash the compiler (John Maddock).
 //
 
+#include <cstddef> // size_t
 #include <autoboost/type_traits/intrinsics.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
 #ifndef AUTOBOOST_IS_ABSTRACT
 #include <autoboost/static_assert.hpp>
 #include <autoboost/type_traits/detail/yes_no_type.hpp>
 #include <autoboost/type_traits/is_class.hpp>
-#include <autoboost/type_traits/detail/ice_and.hpp>
 #ifdef AUTOBOOST_NO_IS_ABSTRACT
 #include <autoboost/type_traits/is_polymorphic.hpp>
 #endif
 #endif
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
-
 
 namespace autoboost {
+
 namespace detail{
 
 #ifdef AUTOBOOST_IS_ABSTRACT
@@ -141,13 +140,11 @@ struct is_abstract_imp
 }
 
 #ifndef AUTOBOOST_NO_IS_ABSTRACT
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_abstract,T,::autoboost::detail::is_abstract_imp<T>::value)
+template <class T> struct is_abstract : public integral_constant<bool, ::autoboost::detail::is_abstract_imp<T>::value> {};
 #else
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_abstract,T,::autoboost::detail::is_polymorphic_imp<T>::value)
+template <class T> struct is_abstract : public integral_constant<bool, ::autoboost::detail::is_polymorphic_imp<T>::value> {};
 #endif
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif //AUTOBOOST_TT_IS_ABSTRACT_CLASS_HPP

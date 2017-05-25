@@ -14,7 +14,11 @@
 #ifndef AUTOBOOST_CONTAINER_DETAIL_ITERATORS_HPP
 #define AUTOBOOST_CONTAINER_DETAIL_ITERATORS_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -22,24 +26,24 @@
 #include <autoboost/container/detail/workaround.hpp>
 #include <autoboost/container/allocator_traits.hpp>
 #include <autoboost/container/detail/type_traits.hpp>
+#include <autoboost/container/detail/value_init.hpp>
 #include <autoboost/static_assert.hpp>
 #include <autoboost/move/utility_core.hpp>
 #include <autoboost/intrusive/detail/reverse_iterator.hpp>
 
-#ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
-#include <autoboost/container/detail/variadic_templates_tools.hpp>
+#if defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#include <autoboost/move/detail/fwd_macros.hpp>
 #else
-#include <autoboost/container/detail/preprocessor.hpp>
+#include <autoboost/container/detail/variadic_templates_tools.hpp>
 #endif
-
-#include <iterator>
+#include <autoboost/container/detail/iterator.hpp>
 
 namespace autoboost {
 namespace container {
 
 template <class T, class Difference = std::ptrdiff_t>
 class constant_iterator
-  : public std::iterator
+  : public ::autoboost::container::iterator
       <std::random_access_iterator_tag, T, Difference, const T*, const T &>
 {
    typedef  constant_iterator<T, Difference> this_type;
@@ -150,7 +154,7 @@ class constant_iterator
 
 template <class T, class Difference>
 class value_init_construct_iterator
-  : public std::iterator
+  : public ::autoboost::container::iterator
       <std::random_access_iterator_tag, T, Difference, const T*, const T &>
 {
    typedef  value_init_construct_iterator<T, Difference> this_type;
@@ -261,7 +265,7 @@ class value_init_construct_iterator
 
 template <class T, class Difference>
 class default_init_construct_iterator
-  : public std::iterator
+  : public ::autoboost::container::iterator
       <std::random_access_iterator_tag, T, Difference, const T*, const T &>
 {
    typedef  default_init_construct_iterator<T, Difference> this_type;
@@ -373,8 +377,8 @@ class default_init_construct_iterator
 
 template <class T, class Difference = std::ptrdiff_t>
 class repeat_iterator
-  : public std::iterator
-      <std::random_access_iterator_tag, T, Difference>
+  : public ::autoboost::container::iterator
+      <std::random_access_iterator_tag, T, Difference, T*, T&>
 {
    typedef repeat_iterator<T, Difference> this_type;
    public:
@@ -483,20 +487,20 @@ class repeat_iterator
 
 template <class T, class EmplaceFunctor, class Difference /*= std::ptrdiff_t*/>
 class emplace_iterator
-  : public std::iterator
+  : public ::autoboost::container::iterator
       <std::random_access_iterator_tag, T, Difference, const T*, const T &>
 {
    typedef emplace_iterator this_type;
 
    public:
    typedef Difference difference_type;
-   explicit emplace_iterator(EmplaceFunctor&e)
+   AUTOBOOST_CONTAINER_FORCEINLINE explicit emplace_iterator(EmplaceFunctor&e)
       :  m_num(1), m_pe(&e){}
 
-   emplace_iterator()
+   AUTOBOOST_CONTAINER_FORCEINLINE emplace_iterator()
       :  m_num(0), m_pe(0){}
 
-   this_type& operator++()
+   AUTOBOOST_CONTAINER_FORCEINLINE this_type& operator++()
    { increment();   return *this;   }
 
    this_type operator++(int)
@@ -506,7 +510,7 @@ class emplace_iterator
       return result;
    }
 
-   this_type& operator--()
+   AUTOBOOST_CONTAINER_FORCEINLINE this_type& operator--()
    { decrement();   return *this;   }
 
    this_type operator--(int)
@@ -516,29 +520,29 @@ class emplace_iterator
       return result;
    }
 
-   friend bool operator== (const this_type& i, const this_type& i2)
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator== (const this_type& i, const this_type& i2)
    { return i.equal(i2); }
 
-   friend bool operator!= (const this_type& i, const this_type& i2)
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator!= (const this_type& i, const this_type& i2)
    { return !(i == i2); }
 
-   friend bool operator< (const this_type& i, const this_type& i2)
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator< (const this_type& i, const this_type& i2)
    { return i.less(i2); }
 
-   friend bool operator> (const this_type& i, const this_type& i2)
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator> (const this_type& i, const this_type& i2)
    { return i2 < i; }
 
-   friend bool operator<= (const this_type& i, const this_type& i2)
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator<= (const this_type& i, const this_type& i2)
    { return !(i > i2); }
 
-   friend bool operator>= (const this_type& i, const this_type& i2)
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator>= (const this_type& i, const this_type& i2)
    { return !(i < i2); }
 
-   friend difference_type operator- (const this_type& i, const this_type& i2)
+   AUTOBOOST_CONTAINER_FORCEINLINE friend difference_type operator- (const this_type& i, const this_type& i2)
    { return i2.distance_to(i); }
 
    //Arithmetic
-   this_type& operator+=(difference_type off)
+   AUTOBOOST_CONTAINER_FORCEINLINE this_type& operator+=(difference_type off)
    {  this->advance(off); return *this;   }
 
    this_type operator+(difference_type off) const
@@ -548,103 +552,143 @@ class emplace_iterator
       return other;
    }
 
-   friend this_type operator+(difference_type off, const this_type& right)
+   AUTOBOOST_CONTAINER_FORCEINLINE friend this_type operator+(difference_type off, const this_type& right)
    {  return right + off; }
 
-   this_type& operator-=(difference_type off)
+   AUTOBOOST_CONTAINER_FORCEINLINE this_type& operator-=(difference_type off)
    {  this->advance(-off); return *this;   }
 
-   this_type operator-(difference_type off) const
+   AUTOBOOST_CONTAINER_FORCEINLINE this_type operator-(difference_type off) const
    {  return *this + (-off);  }
 
+   private:
    //This pseudo-iterator's dereference operations have no sense since value is not
    //constructed until ::autoboost::container::construct_in_place is called.
    //So comment them to catch bad uses
-   //const T& operator*() const;
-   //const T& operator[](difference_type) const;
-   //const T* operator->() const;
+   const T& operator*() const;
+   const T& operator[](difference_type) const;
+   const T* operator->() const;
 
-   template<class A>
-   void construct_in_place(A &a, T* ptr)
+   public:
+   template<class Allocator>
+   void construct_in_place(Allocator &a, T* ptr)
    {  (*m_pe)(a, ptr);  }
+
+   template<class DestIt>
+   void assign_in_place(DestIt dest)
+   {  (*m_pe)(dest);  }
 
    private:
    difference_type m_num;
    EmplaceFunctor *            m_pe;
 
-   void increment()
+   AUTOBOOST_CONTAINER_FORCEINLINE void increment()
    { --m_num; }
 
-   void decrement()
+   AUTOBOOST_CONTAINER_FORCEINLINE void decrement()
    { ++m_num; }
 
-   bool equal(const this_type &other) const
+   AUTOBOOST_CONTAINER_FORCEINLINE bool equal(const this_type &other) const
    {  return m_num == other.m_num;   }
 
-   bool less(const this_type &other) const
+   AUTOBOOST_CONTAINER_FORCEINLINE bool less(const this_type &other) const
    {  return other.m_num < m_num;   }
 
-   const T & dereference() const
+   AUTOBOOST_CONTAINER_FORCEINLINE const T & dereference() const
    {
       static T dummy;
       return dummy;
    }
 
-   void advance(difference_type n)
+   AUTOBOOST_CONTAINER_FORCEINLINE void advance(difference_type n)
    {  m_num -= n; }
 
-   difference_type distance_to(const this_type &other)const
+   AUTOBOOST_CONTAINER_FORCEINLINE difference_type distance_to(const this_type &other)const
    {  return difference_type(m_num - other.m_num);   }
 };
 
-#ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
+#if !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 template<class ...Args>
 struct emplace_functor
 {
    typedef typename container_detail::build_number_seq<sizeof...(Args)>::type index_tuple_t;
 
-   emplace_functor(Args&&... args)
+   emplace_functor(AUTOBOOST_FWD_REF(Args)... args)
       : args_(args...)
    {}
 
-   template<class A, class T>
-   void operator()(A &a, T *ptr)
+   template<class Allocator, class T>
+   AUTOBOOST_CONTAINER_FORCEINLINE void operator()(Allocator &a, T *ptr)
    {  emplace_functor::inplace_impl(a, ptr, index_tuple_t());  }
 
-   template<class A, class T, int ...IdxPack>
-   void inplace_impl(A &a, T* ptr, const container_detail::index_tuple<IdxPack...>&)
+   template<class DestIt>
+   AUTOBOOST_CONTAINER_FORCEINLINE void operator()(DestIt dest)
+   {  emplace_functor::inplace_impl(dest, index_tuple_t());  }
+
+   private:
+   template<class Allocator, class T, std::size_t ...IdxPack>
+   AUTOBOOST_CONTAINER_FORCEINLINE void inplace_impl(Allocator &a, T* ptr, const container_detail::index_tuple<IdxPack...>&)
    {
-      allocator_traits<A>::construct
+      allocator_traits<Allocator>::construct
          (a, ptr, ::autoboost::forward<Args>(container_detail::get<IdxPack>(args_))...);
+   }
+
+   template<class DestIt, std::size_t ...IdxPack>
+   AUTOBOOST_CONTAINER_FORCEINLINE void inplace_impl(DestIt dest, const container_detail::index_tuple<IdxPack...>&)
+   {
+      typedef typename autoboost::container::iterator_traits<DestIt>::value_type value_type;
+      value_type && tmp= value_type(::autoboost::forward<Args>(container_detail::get<IdxPack>(args_))...);
+      *dest = ::autoboost::move(tmp);
    }
 
    container_detail::tuple<Args&...> args_;
 };
 
-#else //#ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
+template<class ...Args>
+struct emplace_functor_type
+{
+   typedef emplace_functor<Args...> type;
+};
 
-#define AUTOBOOST_PP_LOCAL_MACRO(n)                                                        \
-   AUTOBOOST_PP_EXPR_IF(n, template <)                                                     \
-      AUTOBOOST_PP_ENUM_PARAMS(n, class P)                                                 \
-         AUTOBOOST_PP_EXPR_IF(n, >)                                                        \
-   struct AUTOBOOST_PP_CAT(AUTOBOOST_PP_CAT(emplace_functor, n), arg)                          \
-   {                                                                                   \
-      AUTOBOOST_PP_CAT(AUTOBOOST_PP_CAT(emplace_functor, n), arg)                              \
-         ( AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _) )                        \
-      AUTOBOOST_PP_EXPR_IF(n, :) AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_INIT, _){}      \
-                                                                                       \
-      template<class A, class T>                                                       \
-      void operator()(A &a, T *ptr)                                                    \
-      {                                                                                \
-         allocator_traits<A>::construct                                                \
-            (a, ptr AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_MEMBER_FORWARD, _) ); \
-      }                                                                                \
-      AUTOBOOST_PP_REPEAT(n, AUTOBOOST_CONTAINER_PP_PARAM_DEFINE, _)                           \
-   };                                                                                  \
-   //!
-#define AUTOBOOST_PP_LOCAL_LIMITS (0, AUTOBOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-#include AUTOBOOST_PP_LOCAL_ITERATE()
+#else // !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+
+//Partial specializations cannot match argument list for primary template, so add an extra argument
+template <AUTOBOOST_MOVE_CLASSDFLT9, class Dummy = void>
+struct emplace_functor_type;
+
+#define AUTOBOOST_MOVE_ITERATOR_EMPLACE_FUNCTOR_CODE(N) \
+AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N \
+struct emplace_functor##N\
+{\
+   explicit emplace_functor##N( AUTOBOOST_MOVE_UREF##N )\
+      AUTOBOOST_MOVE_COLON##N AUTOBOOST_MOVE_FWD_INIT##N{}\
+   \
+   template<class Allocator, class T>\
+   void operator()(Allocator &a, T *ptr)\
+   {  allocator_traits<Allocator>::construct(a, ptr AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_MFWD##N);  }\
+   \
+   template<class DestIt>\
+   void operator()(DestIt dest)\
+   {\
+      typedef typename autoboost::container::iterator_traits<DestIt>::value_type value_type;\
+      AUTOBOOST_MOVE_IF(N, value_type tmp(AUTOBOOST_MOVE_MFWD##N), container_detail::value_init<value_type> tmp) ;\
+      *dest = ::autoboost::move(const_cast<value_type &>(AUTOBOOST_MOVE_IF(N, tmp, tmp.get())));\
+   }\
+   \
+   AUTOBOOST_MOVE_MREF##N\
+};\
+\
+template <AUTOBOOST_MOVE_CLASS##N>\
+struct emplace_functor_type<AUTOBOOST_MOVE_TARG##N>\
+{\
+   typedef emplace_functor##N AUTOBOOST_MOVE_LT##N AUTOBOOST_MOVE_TARG##N AUTOBOOST_MOVE_GT##N type;\
+};\
+//
+
+AUTOBOOST_MOVE_ITERATE_0TO9(AUTOBOOST_MOVE_ITERATOR_EMPLACE_FUNCTOR_CODE)
+
+#undef AUTOBOOST_MOVE_ITERATOR_EMPLACE_FUNCTOR_CODE
 
 #endif
 
@@ -653,11 +697,13 @@ namespace container_detail {
 template<class T>
 struct has_iterator_category
 {
+   struct two { char _[2]; };
+
    template <typename X>
    static char test(int, typename X::iterator_category*);
 
    template <typename X>
-   static int test(int, ...);
+   static two test(int, ...);
 
    static const bool value = (1 == sizeof(test<T>(0, 0)));
 };
@@ -673,6 +719,12 @@ template<class T>
 struct is_input_iterator<T, false>
 {
    static const bool value = false;
+};
+
+template<class T>
+struct is_not_input_iterator
+{
+   static const bool value = !is_input_iterator<T>::value;
 };
 
 template<class T, bool = has_iterator_category<T>::value >
@@ -709,8 +761,8 @@ struct iiterator_types
 {
    typedef typename IIterator::value_type                            it_value_type;
    typedef typename iiterator_node_value_type<it_value_type>::type   value_type;
-   typedef typename std::iterator_traits<IIterator>::pointer         it_pointer;
-   typedef typename std::iterator_traits<IIterator>::difference_type difference_type;
+   typedef typename autoboost::container::iterator_traits<IIterator>::pointer         it_pointer;
+   typedef typename autoboost::container::iterator_traits<IIterator>::difference_type difference_type;
    typedef typename ::autoboost::intrusive::pointer_traits<it_pointer>::
       template rebind_pointer<value_type>::type                      pointer;
    typedef typename ::autoboost::intrusive::pointer_traits<it_pointer>::
@@ -723,9 +775,9 @@ struct iiterator_types
 };
 
 template<class IIterator, bool IsConst>
-struct std_iterator
+struct iterator_types
 {
-   typedef typename std::iterator
+   typedef typename ::autoboost::container::iterator
       < typename iiterator_types<IIterator>::iterator_category
       , typename iiterator_types<IIterator>::value_type
       , typename iiterator_types<IIterator>::difference_type
@@ -734,9 +786,9 @@ struct std_iterator
 };
 
 template<class IIterator>
-struct std_iterator<IIterator, false>
+struct iterator_types<IIterator, false>
 {
-   typedef typename std::iterator
+   typedef typename ::autoboost::container::iterator
       < typename iiterator_types<IIterator>::iterator_category
       , typename iiterator_types<IIterator>::value_type
       , typename iiterator_types<IIterator>::difference_type
@@ -745,9 +797,9 @@ struct std_iterator<IIterator, false>
 };
 
 template<class IIterator, bool IsConst>
-class iterator
+class iterator_from_iiterator
 {
-   typedef typename std_iterator<IIterator, IsConst>::type types_t;
+   typedef typename iterator_types<IIterator, IsConst>::type types_t;
 
    public:
    typedef typename types_t::pointer             pointer;
@@ -756,63 +808,65 @@ class iterator
    typedef typename types_t::iterator_category   iterator_category;
    typedef typename types_t::value_type          value_type;
 
-   iterator()
+   AUTOBOOST_CONTAINER_FORCEINLINE iterator_from_iiterator()
+      : m_iit()
    {}
 
-   explicit iterator(IIterator iit) AUTOBOOST_CONTAINER_NOEXCEPT
+   AUTOBOOST_CONTAINER_FORCEINLINE explicit iterator_from_iiterator(IIterator iit) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       : m_iit(iit)
    {}
 
-   iterator(iterator<IIterator, false> const& other) AUTOBOOST_CONTAINER_NOEXCEPT
+   AUTOBOOST_CONTAINER_FORCEINLINE iterator_from_iiterator(iterator_from_iiterator<IIterator, false> const& other) AUTOBOOST_NOEXCEPT_OR_NOTHROW
       :  m_iit(other.get())
    {}
 
-   iterator& operator++() AUTOBOOST_CONTAINER_NOEXCEPT
+   AUTOBOOST_CONTAINER_FORCEINLINE iterator_from_iiterator& operator++() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  ++this->m_iit;   return *this;  }
 
-   iterator operator++(int) AUTOBOOST_CONTAINER_NOEXCEPT
+   AUTOBOOST_CONTAINER_FORCEINLINE iterator_from_iiterator operator++(int) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
-      iterator result (*this);
+      iterator_from_iiterator result (*this);
       ++this->m_iit;
       return result;
    }
 
-   iterator& operator--() AUTOBOOST_CONTAINER_NOEXCEPT
+   AUTOBOOST_CONTAINER_FORCEINLINE iterator_from_iiterator& operator--() AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
-      //If the iterator is not a bidirectional iterator, operator-- should not exist
-      AUTOBOOST_STATIC_ASSERT((is_bidirectional_iterator<iterator>::value));
+      //If the iterator_from_iiterator is not a bidirectional iterator, operator-- should not exist
+      AUTOBOOST_STATIC_ASSERT((is_bidirectional_iterator<iterator_from_iiterator>::value));
       --this->m_iit;   return *this;
    }
 
-   iterator operator--(int) AUTOBOOST_CONTAINER_NOEXCEPT
+   AUTOBOOST_CONTAINER_FORCEINLINE iterator_from_iiterator operator--(int) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {
-      iterator result (*this);
+      iterator_from_iiterator result (*this);
       --this->m_iit;
       return result;
    }
 
-   friend bool operator== (const iterator& l, const iterator& r) AUTOBOOST_CONTAINER_NOEXCEPT
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator== (const iterator_from_iiterator& l, const iterator_from_iiterator& r) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return l.m_iit == r.m_iit;   }
 
-   friend bool operator!= (const iterator& l, const iterator& r) AUTOBOOST_CONTAINER_NOEXCEPT
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator!= (const iterator_from_iiterator& l, const iterator_from_iiterator& r) AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return !(l == r); }
 
-   reference operator*()  const AUTOBOOST_CONTAINER_NOEXCEPT
-   {  return (*this->m_iit).get_data();  }
+   AUTOBOOST_CONTAINER_FORCEINLINE reference operator*()  const AUTOBOOST_NOEXCEPT_OR_NOTHROW
+   {  return this->m_iit->get_data();  }
 
-   pointer   operator->() const AUTOBOOST_CONTAINER_NOEXCEPT
+   AUTOBOOST_CONTAINER_FORCEINLINE pointer   operator->() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return ::autoboost::intrusive::pointer_traits<pointer>::pointer_to(this->operator*());  }
 
-   const IIterator &get() const AUTOBOOST_CONTAINER_NOEXCEPT
+   AUTOBOOST_CONTAINER_FORCEINLINE const IIterator &get() const AUTOBOOST_NOEXCEPT_OR_NOTHROW
    {  return this->m_iit;   }
 
    private:
    IIterator m_iit;
 };
 
-using ::autoboost::intrusive::detail::reverse_iterator;
-
 }  //namespace container_detail {
+
+using ::autoboost::intrusive::reverse_iterator;
+
 }  //namespace container {
 }  //namespace autoboost {
 

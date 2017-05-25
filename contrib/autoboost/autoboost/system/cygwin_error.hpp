@@ -7,8 +7,8 @@
 
 //  See library home page at http://www.boost.org/libs/system
 
-#ifndef AUTOBOOST_CYGWIN_ERROR_HPP
-#define AUTOBOOST_CYGWIN_ERROR_HPP
+#ifndef AUTOBOOST_SYSTEM_CYGWIN_ERROR_HPP
+#define AUTOBOOST_SYSTEM_CYGWIN_ERROR_HPP
 
 //  This header is effectively empty for compiles on operating systems where
 //  it is not applicable.
@@ -53,4 +53,4 @@ namespace autoboost
 
 #endif  // __CYGWIN__
 
-#endif  // AUTOBOOST_CYGWIN_ERROR_HPP
+#endif  // AUTOBOOST_SYSTEM_CYGWIN_ERROR_HPP

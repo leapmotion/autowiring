@@ -56,11 +56,11 @@ namespace detail {
     //
     inline int signbit_impl(long double x, generic_tag<true> const&)
     {
-       return autoboost::math::signbit(static_cast<double>(x));
+       return (autoboost::math::signbit)(static_cast<double>(x));
     }
     inline int signbit_impl(long double x, generic_tag<false> const&)
     {
-       return autoboost::math::signbit(static_cast<double>(x));
+       return (autoboost::math::signbit)(static_cast<double>(x));
     }
 #endif
 

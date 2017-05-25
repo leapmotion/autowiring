@@ -85,4 +85,11 @@
 #  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
 #endif
 
+// C++14 features
+#  define AUTOBOOST_NO_CXX14_STD_EXCHANGE
+
+// C++17 features
+#  define AUTOBOOST_NO_CXX17_STD_APPLY
+#  define AUTOBOOST_NO_CXX17_STD_INVOKE
+
 #define AUTOBOOST_STDLIB "Metrowerks Standard Library version " AUTOBOOST_STRINGIZE(__MSL_CPP__)

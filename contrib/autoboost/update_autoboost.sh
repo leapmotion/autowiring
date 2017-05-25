@@ -20,8 +20,8 @@ while read line; do
   cpfile=${line##*/}
   directory=${line%/*}
 
-  if [[ -n ${cpfile// /} ]]; then
-    cpfile="*"
+  if [[ -z ${cpfile// /} ]]; then
+    cpfile='*'
   fi
 
   mkdir -p ${directory}
@@ -32,11 +32,13 @@ done <AUTOBOOST_MANIFEST
 
 mv ./boost ./autoboost
 
-filelist=`find . -iname "*.h" -o -iname "*.cpp" -o -iname "*.hpp" -o -iname "*.ipp"`
+filelist=$(find . -iname "*.h" -o -iname "*.cpp" -o -iname "*.hpp" -o -iname "*.ipp")
 
 echo "changing boost to autoboost"
 sed -ri 's/(^|[^\.o])boost/\1autoboost/g' ${filelist}
 echo "changing BOOST to AUTOBOOST"
-sed -ri 's/(^|[^\.O])BOOST/\1AUTOBOOST/g' ${filelist}
+sed -ri 's/(^|[^O])BOOST/\1AUTOBOOST/g' ${filelist}
+echo "fixing up workaround include guard"
+sed -ri 's/ WORKAROUND/ AUTOBOOST_WORKAROUND/g' autoboost/detail/workaround.hpp
 echo "removing trailing whitespace"
 sed -ri 's/[[:space:]]*$//g' ${filelist}

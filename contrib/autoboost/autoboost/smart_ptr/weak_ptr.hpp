@@ -16,6 +16,7 @@
 #include <memory> // autoboost.TR1 include order fix
 #include <autoboost/smart_ptr/detail/shared_count.hpp>
 #include <autoboost/smart_ptr/shared_ptr.hpp>
+#include <autoboost/smart_ptr/detail/sp_noexcept.hpp>
 
 namespace autoboost
 {
@@ -31,7 +32,7 @@ public:
 
     typedef typename autoboost::detail::sp_element< T >::type element_type;
 
-    weak_ptr() AUTOBOOST_NOEXCEPT : px(0), pn() // never throws in 1.30+
+    weak_ptr() AUTOBOOST_SP_NOEXCEPT : px(0), pn() // never throws in 1.30+
     {
     }
 
@@ -41,11 +42,11 @@ public:
 
 // ... except in C++0x, move disables the implicit copy
 
-    weak_ptr( weak_ptr const & r ) AUTOBOOST_NOEXCEPT : px( r.px ), pn( r.pn )
+    weak_ptr( weak_ptr const & r ) AUTOBOOST_SP_NOEXCEPT : px( r.px ), pn( r.pn )
     {
     }
 
-    weak_ptr & operator=( weak_ptr const & r ) AUTOBOOST_NOEXCEPT
+    weak_ptr & operator=( weak_ptr const & r ) AUTOBOOST_SP_NOEXCEPT
     {
         px = r.px;
         pn = r.pn;
@@ -106,13 +107,13 @@ public:
 
     // for better efficiency in the T == Y case
     weak_ptr( weak_ptr && r )
-    AUTOBOOST_NOEXCEPT : px( r.px ), pn( static_cast< autoboost::detail::weak_count && >( r.pn ) )
+    AUTOBOOST_SP_NOEXCEPT : px( r.px ), pn( static_cast< autoboost::detail::weak_count && >( r.pn ) )
     {
         r.px = 0;
     }
 
     // for better efficiency in the T == Y case
-    weak_ptr & operator=( weak_ptr && r ) AUTOBOOST_NOEXCEPT
+    weak_ptr & operator=( weak_ptr && r ) AUTOBOOST_SP_NOEXCEPT
     {
         this_type( static_cast< weak_ptr && >( r ) ).swap( *this );
         return *this;

@@ -12,7 +12,7 @@
 
 //  Comeau C++ compiler setup:
 
-#include "autoboost/config/compiler/common_edg.hpp"
+#include <autoboost/config/compiler/common_edg.hpp>
 
 #if (__COMO_VERSION__ <= 4245)
 

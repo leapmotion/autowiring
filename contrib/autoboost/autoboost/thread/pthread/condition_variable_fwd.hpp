@@ -17,6 +17,7 @@
 #if defined AUTOBOOST_THREAD_USES_DATETIME
 #include <autoboost/thread/xtime.hpp>
 #endif
+
 #ifdef AUTOBOOST_THREAD_USES_CHRONO
 #include <autoboost/chrono/system_clocks.hpp>
 #include <autoboost/chrono/ceil.hpp>
@@ -28,6 +29,26 @@
 
 namespace autoboost
 {
+  namespace detail {
+    inline int monotonic_pthread_cond_init(pthread_cond_t& cond) {
+
+#ifdef AUTOBOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            pthread_condattr_t attr;
+            int res = pthread_condattr_init(&attr);
+            if (res)
+            {
+              return res;
+            }
+            pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+            res=pthread_cond_init(&cond,&attr);
+            pthread_condattr_destroy(&attr);
+            return res;
+#else
+            return pthread_cond_init(&cond,NULL);
+#endif
+
+    }
+  }
 
     class condition_variable
     {
@@ -48,27 +69,41 @@ namespace autoboost
             unique_lock<mutex>& lock,
             struct timespec const &timeout)
         {
-          return do_wait_until(lock, autoboost::detail::timespec_plus(timeout, autoboost::detail::timespec_now()));
+#if ! defined AUTOBOOST_THREAD_USEFIXES_TIMESPEC
+            return do_wait_until(lock, autoboost::detail::timespec_plus(timeout, autoboost::detail::timespec_now()));
+#elif ! defined AUTOBOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            //using namespace chrono;
+            //nanoseconds ns = chrono::system_clock::now().time_since_epoch();
+
+            struct timespec ts = autoboost::detail::timespec_now_realtime();
+            //ts.tv_sec = static_cast<long>(chrono::duration_cast<chrono::seconds>(ns).count());
+            //ts.tv_nsec = static_cast<long>((ns - chrono::duration_cast<chrono::seconds>(ns)).count());
+            return do_wait_until(lock, autoboost::detail::timespec_plus(timeout, ts));
+#else
+            // old behavior was fine for monotonic
+            return do_wait_until(lock, autoboost::detail::timespec_plus(timeout, autoboost::detail::timespec_now_realtime()));
+#endif
         }
 
     public:
       AUTOBOOST_THREAD_NO_COPYABLE(condition_variable)
         condition_variable()
         {
+            int res;
 #if defined AUTOBOOST_THREAD_PROVIDES_INTERRUPTIONS
-            int const res=pthread_mutex_init(&internal_mutex,NULL);
+            res=pthread_mutex_init(&internal_mutex,NULL);
             if(res)
             {
                 autoboost::throw_exception(thread_resource_error(res, "autoboost::condition_variable::condition_variable() constructor failed in pthread_mutex_init"));
             }
 #endif
-            int const res2=pthread_cond_init(&cond,NULL);
-            if(res2)
+            res = detail::monotonic_pthread_cond_init(cond);
+            if (res)
             {
 #if defined AUTOBOOST_THREAD_PROVIDES_INTERRUPTIONS
                 AUTOBOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
 #endif
-                autoboost::throw_exception(thread_resource_error(res2, "autoboost::condition_variable::condition_variable() constructor failed in pthread_cond_init"));
+                autoboost::throw_exception(thread_resource_error(res, "autoboost::condition_variable::condition_variable() constructor failed in detail::monotonic_pthread_cond_init"));
             }
         }
         ~condition_variable()
@@ -93,7 +128,6 @@ namespace autoboost
         {
             while(!pred()) wait(m);
         }
-
 
 #if defined AUTOBOOST_THREAD_USES_DATETIME
         inline bool timed_wait(
@@ -120,6 +154,15 @@ namespace autoboost
             unique_lock<mutex>& m,
             duration_type const& wait_duration)
         {
+            if (wait_duration.is_pos_infinity())
+            {
+                wait(m); // or do_wait(m,detail::timeout::sentinel());
+                return true;
+            }
+            if (wait_duration.is_special())
+            {
+                return true;
+            }
             return timed_wait(m,get_system_time()+wait_duration);
         }
 
@@ -149,9 +192,23 @@ namespace autoboost
             unique_lock<mutex>& m,
             duration_type const& wait_duration,predicate_type pred)
         {
+            if (wait_duration.is_pos_infinity())
+            {
+                while (!pred())
+                {
+                  wait(m); // or do_wait(m,detail::timeout::sentinel());
+                }
+                return true;
+            }
+            if (wait_duration.is_special())
+            {
+                return pred();
+            }
             return timed_wait(m,get_system_time()+wait_duration,pred);
         }
 #endif
+
+#ifndef AUTOBOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
 
 #ifdef AUTOBOOST_THREAD_USES_CHRONO
 
@@ -182,20 +239,6 @@ namespace autoboost
           return Clock::now() < t ? cv_status::no_timeout : cv_status::timeout;
         }
 
-        template <class Clock, class Duration, class Predicate>
-        bool
-        wait_until(
-                unique_lock<mutex>& lock,
-                const chrono::time_point<Clock, Duration>& t,
-                Predicate pred)
-        {
-            while (!pred())
-            {
-                if (wait_until(lock, t) == cv_status::timeout)
-                    return pred();
-            }
-            return true;
-        }
 
 
         template <class Rep, class Period>
@@ -213,6 +256,90 @@ namespace autoboost
 
         }
 
+        inline cv_status wait_until(
+            unique_lock<mutex>& lk,
+            chrono::time_point<chrono::system_clock, chrono::nanoseconds> tp)
+        {
+            using namespace chrono;
+            nanoseconds d = tp.time_since_epoch();
+            timespec ts = autoboost::detail::to_timespec(d);
+            if (do_wait_until(lk, ts)) return cv_status::no_timeout;
+            else return cv_status::timeout;
+        }
+#endif
+
+#else // defined AUTOBOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#ifdef AUTOBOOST_THREAD_USES_CHRONO
+
+        template <class Duration>
+        cv_status
+        wait_until(
+              unique_lock<mutex>& lock,
+              const chrono::time_point<chrono::steady_clock, Duration>& t)
+        {
+            using namespace chrono;
+            typedef time_point<steady_clock, nanoseconds> nano_sys_tmpt;
+            wait_until(lock,
+                        nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
+            return steady_clock::now() < t ? cv_status::no_timeout :
+                                             cv_status::timeout;
+        }
+
+        template <class Clock, class Duration>
+        cv_status
+        wait_until(
+            unique_lock<mutex>& lock,
+            const chrono::time_point<Clock, Duration>& t)
+        {
+            using namespace chrono;
+            steady_clock::time_point     s_now = steady_clock::now();
+            typename Clock::time_point  c_now = Clock::now();
+            wait_until(lock, s_now + ceil<nanoseconds>(t - c_now));
+            return Clock::now() < t ? cv_status::no_timeout : cv_status::timeout;
+        }
+
+        template <class Rep, class Period>
+        cv_status
+        wait_for(
+            unique_lock<mutex>& lock,
+            const chrono::duration<Rep, Period>& d)
+        {
+            using namespace chrono;
+            steady_clock::time_point c_now = steady_clock::now();
+            wait_until(lock, c_now + ceil<nanoseconds>(d));
+            return steady_clock::now() - c_now < d ? cv_status::no_timeout :
+                                                   cv_status::timeout;
+        }
+
+        inline cv_status wait_until(
+            unique_lock<mutex>& lk,
+            chrono::time_point<chrono::steady_clock, chrono::nanoseconds> tp)
+        {
+            using namespace chrono;
+            nanoseconds d = tp.time_since_epoch();
+            timespec ts = autoboost::detail::to_timespec(d);
+            if (do_wait_until(lk, ts)) return cv_status::no_timeout;
+            else return cv_status::timeout;
+        }
+#endif
+
+#endif // defined AUTOBOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+
+#ifdef AUTOBOOST_THREAD_USES_CHRONO
+        template <class Clock, class Duration, class Predicate>
+        bool
+        wait_until(
+                unique_lock<mutex>& lock,
+                const chrono::time_point<Clock, Duration>& t,
+                Predicate pred)
+        {
+            while (!pred())
+            {
+                if (wait_until(lock, t) == cv_status::timeout)
+                    return pred();
+            }
+            return true;
+        }
 
         template <class Rep, class Period, class Predicate>
         bool
@@ -222,13 +349,6 @@ namespace autoboost
                 Predicate pred)
         {
           return wait_until(lock, chrono::steady_clock::now() + d, autoboost::move(pred));
-
-//          while (!pred())
-//          {
-//              if (wait_for(lock, d) == cv_status::timeout)
-//                  return pred();
-//          }
-//          return true;
         }
 #endif
 
@@ -242,21 +362,10 @@ namespace autoboost
         void notify_one() AUTOBOOST_NOEXCEPT;
         void notify_all() AUTOBOOST_NOEXCEPT;
 
-#ifdef AUTOBOOST_THREAD_USES_CHRONO
-        inline cv_status wait_until(
-            unique_lock<mutex>& lk,
-            chrono::time_point<chrono::system_clock, chrono::nanoseconds> tp)
-        {
-            using namespace chrono;
-            nanoseconds d = tp.time_since_epoch();
-            timespec ts = autoboost::detail::to_timespec(d);
-            if (do_wait_until(lk, ts)) return cv_status::no_timeout;
-            else return cv_status::timeout;
-        }
-#endif
+
     };
 
-    AUTOBOOST_THREAD_DECL void notify_all_autoboostat_thread_exit(condition_variable& cond, unique_lock<mutex> lk);
+    AUTOBOOST_THREAD_DECL void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk);
 
 }
 

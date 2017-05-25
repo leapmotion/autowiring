@@ -14,15 +14,15 @@
 #define AUTOBOOST_CHRONO_DETAIL_INLINED_WIN_PROCESS_CLOCK_HPP
 
 #include <autoboost/chrono/config.hpp>
-//#include <autoboost/chrono/system_clocks.hpp>
 #include <autoboost/chrono/process_cpu_clocks.hpp>
 #include <cassert>
 #include <time.h>
+#include <autoboost/assert.hpp>
 
-#include <autoboost/detail/winapi/GetLastError.hpp>
-#include <autoboost/detail/winapi/GetCurrentProcess.hpp>
+#include <autoboost/detail/winapi/get_last_error.hpp>
+#include <autoboost/detail/winapi/get_current_process.hpp>
 #if AUTOBOOST_PLAT_WINDOWS_DESKTOP
-#include <autoboost/detail/winapi/GetProcessTimes.hpp>
+#include <autoboost/detail/winapi/get_process_times.hpp>
 #endif
 
 namespace autoboost

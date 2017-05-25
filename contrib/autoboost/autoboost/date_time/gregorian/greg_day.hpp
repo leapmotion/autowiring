@@ -1,5 +1,5 @@
-#ifndef AB_GREG_DAY_HPP___
-#define AB_GREG_DAY_HPP___
+#ifndef GREG_DAY_HPP___
+#define GREG_DAY_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -9,7 +9,8 @@
  * $Date$
  */
 
-#include "autoboost/date_time/constrained_value.hpp"
+#include <autoboost/date_time/constrained_value.hpp>
+#include <autoboost/date_time/compiler_config.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -17,7 +18,7 @@ namespace autoboost {
 namespace gregorian {
 
   //! Exception type for gregorian day of month (1..31)
-  struct bad_day_of_month : public std::out_of_range
+  struct AUTOBOOST_SYMBOL_VISIBLE bad_day_of_month : public std::out_of_range
   {
     bad_day_of_month() :
       std::out_of_range(std::string("Day of month value is out of range 1..31"))
@@ -39,7 +40,7 @@ namespace gregorian {
       is automatically range checked so values outside of the range 1-31
       will cause a bad_day_of_month exception
   */
-  class greg_day : public greg_day_rep {
+  class AUTOBOOST_SYMBOL_VISIBLE greg_day : public greg_day_rep {
   public:
     greg_day(unsigned short day_of_month) : greg_day_rep(day_of_month) {}
     unsigned short as_number() const {return value_;}

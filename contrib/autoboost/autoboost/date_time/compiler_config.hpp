@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_COMPILER_CONFIG_HPP___
-#define AB_DATE_TIME_COMPILER_CONFIG_HPP___
+#ifndef DATE_TIME_COMPILER_CONFIG_HPP___
+#define DATE_TIME_COMPILER_CONFIG_HPP___
 
 /* Copyright (c) 2002-2004 CrystalClear Software, Inc.
  * Subject to the Boost Software License, Version 1.0. (See accompanying
@@ -135,6 +135,27 @@ namespace std {
 #ifndef AUTOBOOST_DATE_TIME_DECL
 #  define AUTOBOOST_DATE_TIME_DECL
 #endif
+
+//
+// Automatically link to the correct build variant where possible.
+//
+#if !defined(AUTOBOOST_ALL_NO_LIB) && !defined(AUTOBOOST_DATE_TIME_NO_LIB) && !defined(AUTOBOOST_DATE_TIME_SOURCE)
+//
+// Set the name of our library, this will get undef'ed by auto_link.hpp
+// once it's done with it:
+//
+#define AUTOBOOST_LIB_NAME autoboost_date_time
+//
+// If we're importing code from a dll, then tell auto_link.hpp about it:
+//
+#if defined(AUTOBOOST_ALL_DYN_LINK) || defined(AUTOBOOST_DATE_TIME_DYN_LINK)
+#  define AUTOBOOST_DYN_LINK
+#endif
+//
+// And include the header that does the work:
+//
+#include <autoboost/config/auto_link.hpp>
+#endif  // auto-linking disabled
 
 #if defined(AUTOBOOST_HAS_THREADS)
 #  if defined(_MSC_VER) || defined(__MWERKS__) || defined(__MINGW32__) ||  defined(__BORLANDC__)

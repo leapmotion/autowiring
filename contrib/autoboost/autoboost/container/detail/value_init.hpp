@@ -13,7 +13,11 @@
 #ifndef AUTOBOOST_CONTAINER_DETAIL_VALUE_INIT_HPP
 #define AUTOBOOST_CONTAINER_DETAIL_VALUE_INIT_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -32,6 +36,8 @@ struct value_init
    {}
 
    operator T &() { return m_t; }
+
+   T &get() { return m_t; }
 
    T m_t;
 };

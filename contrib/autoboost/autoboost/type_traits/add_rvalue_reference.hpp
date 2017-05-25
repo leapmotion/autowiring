@@ -15,9 +15,6 @@
 #include <autoboost/type_traits/is_void.hpp>
 #include <autoboost/type_traits/is_reference.hpp>
 
-// should be the last #include
-#include <autoboost/type_traits/detail/type_trait_def.hpp>
-
 //----------------------------------------------------------------------------//
 //                                                                            //
 //                           C++03 implementation of                          //
@@ -56,11 +53,12 @@ namespace type_traits_detail {
 
 }
 
-AUTOBOOST_TT_AUX_TYPE_TRAIT_DEF1(add_rvalue_reference,T,typename autoboost::type_traits_detail::add_rvalue_reference_imp<T>::type)
+template <class T> struct add_rvalue_reference
+{
+   typedef typename autoboost::type_traits_detail::add_rvalue_reference_imp<T>::type type;
+};
 
 }  // namespace autoboost
-
-#include <autoboost/type_traits/detail/type_trait_undef.hpp>
 
 #endif  // AUTOBOOST_TYPE_TRAITS_EXT_ADD_RVALUE_REFERENCE__HPP
 

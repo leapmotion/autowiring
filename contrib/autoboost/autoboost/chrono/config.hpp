@@ -192,6 +192,25 @@
 
 
 
+//  enable automatic library variant selection  ------------------------------//
+
+#if !defined(AUTOBOOST_CHRONO_SOURCE) && !defined(AUTOBOOST_ALL_NO_LIB) && !defined(AUTOBOOST_CHRONO_NO_LIB)
+//
+// Set the name of our library; this will get undef'ed by auto_link.hpp
+// once it's done with it:
+//
+#define AUTOBOOST_LIB_NAME autoboost_chrono
+//
+// If we're importing code from a dll, then tell auto_link.hpp about it:
+//
+#if defined(AUTOBOOST_ALL_DYN_LINK) || defined(AUTOBOOST_CHRONO_DYN_LINK)
+#  define AUTOBOOST_DYN_LINK
+#endif
+//
+// And include the header that does the work:
+//
+#include <autoboost/config/auto_link.hpp>
+#endif  // auto-linking disabled
 #endif // AUTOBOOST_CHRONO_HEADER_ONLY
 #endif // AUTOBOOST_CHRONO_CONFIG_HPP
 

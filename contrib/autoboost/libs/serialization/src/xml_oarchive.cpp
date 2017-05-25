@@ -13,6 +13,7 @@
 #endif
 
 #define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/serialization/config.hpp>
 #include <autoboost/archive/xml_oarchive.hpp>
 #include <autoboost/archive/detail/archive_serializer_map.hpp>
 

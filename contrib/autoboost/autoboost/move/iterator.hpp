@@ -14,9 +14,18 @@
 #ifndef AUTOBOOST_MOVE_ITERATOR_HPP
 #define AUTOBOOST_MOVE_ITERATOR_HPP
 
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <autoboost/move/detail/config_begin.hpp>
+#include <autoboost/move/detail/workaround.hpp>  //forceinline
+#include <autoboost/move/detail/iterator_traits.hpp>
 #include <autoboost/move/utility_core.hpp>
-#include <iterator>  //std::iterator
 
 namespace autoboost {
 
@@ -36,7 +45,7 @@ class move_iterator
 {
    public:
    typedef It                                                              iterator_type;
-   typedef typename std::iterator_traits<iterator_type>::value_type        value_type;
+   typedef typename autoboost::movelib::iterator_traits<iterator_type>::value_type        value_type;
    #if !defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES) || defined(AUTOBOOST_MOVE_DOXYGEN_INVOKED)
    typedef value_type &&                                                   reference;
    #else
@@ -46,25 +55,23 @@ class move_iterator
       , value_type & >::type                                               reference;
    #endif
    typedef It                                                              pointer;
-   typedef typename std::iterator_traits<iterator_type>::difference_type   difference_type;
-   typedef typename std::iterator_traits<iterator_type>::iterator_category iterator_category;
+   typedef typename autoboost::movelib::iterator_traits<iterator_type>::difference_type   difference_type;
+   typedef typename autoboost::movelib::iterator_traits<iterator_type>::iterator_category iterator_category;
 
-   move_iterator()
+   AUTOBOOST_MOVE_FORCEINLINE move_iterator()
+      : m_it()
    {}
 
-   explicit move_iterator(It i)
+   AUTOBOOST_MOVE_FORCEINLINE explicit move_iterator(const It &i)
       :  m_it(i)
    {}
 
    template <class U>
-   move_iterator(const move_iterator<U>& u)
-      :  m_it(u.base())
+   AUTOBOOST_MOVE_FORCEINLINE move_iterator(const move_iterator<U>& u)
+      :  m_it(u.m_it)
    {}
 
-   iterator_type base() const
-   {  return m_it;   }
-
-   reference operator*() const
+   AUTOBOOST_MOVE_FORCEINLINE reference operator*() const
    {
       #if defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES) || defined(AUTOBOOST_MOVE_OLD_RVALUE_REF_BINDING_RULES)
       return *m_it;
@@ -73,34 +80,34 @@ class move_iterator
       #endif
    }
 
-   pointer   operator->() const
+   AUTOBOOST_MOVE_FORCEINLINE pointer   operator->() const
    {  return m_it;   }
 
-   move_iterator& operator++()
+   AUTOBOOST_MOVE_FORCEINLINE move_iterator& operator++()
    {  ++m_it; return *this;   }
 
-   move_iterator<iterator_type>  operator++(int)
+   AUTOBOOST_MOVE_FORCEINLINE move_iterator<iterator_type>  operator++(int)
    {  move_iterator<iterator_type> tmp(*this); ++(*this); return tmp;   }
 
-   move_iterator& operator--()
+   AUTOBOOST_MOVE_FORCEINLINE move_iterator& operator--()
    {  --m_it; return *this;   }
 
-   move_iterator<iterator_type>  operator--(int)
+   AUTOBOOST_MOVE_FORCEINLINE move_iterator<iterator_type>  operator--(int)
    {  move_iterator<iterator_type> tmp(*this); --(*this); return tmp;   }
 
    move_iterator<iterator_type>  operator+ (difference_type n) const
    {  return move_iterator<iterator_type>(m_it + n);  }
 
-   move_iterator& operator+=(difference_type n)
+   AUTOBOOST_MOVE_FORCEINLINE move_iterator& operator+=(difference_type n)
    {  m_it += n; return *this;   }
 
-   move_iterator<iterator_type>  operator- (difference_type n) const
+   AUTOBOOST_MOVE_FORCEINLINE move_iterator<iterator_type>  operator- (difference_type n) const
    {  return move_iterator<iterator_type>(m_it - n);  }
 
-   move_iterator& operator-=(difference_type n)
+   AUTOBOOST_MOVE_FORCEINLINE move_iterator& operator-=(difference_type n)
    {  m_it -= n; return *this;   }
 
-   reference operator[](difference_type n) const
+   AUTOBOOST_MOVE_FORCEINLINE reference operator[](difference_type n) const
    {
       #if defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES) || defined(AUTOBOOST_MOVE_OLD_RVALUE_REF_BINDING_RULES)
       return m_it[n];
@@ -109,29 +116,29 @@ class move_iterator
       #endif
    }
 
-   friend bool operator==(const move_iterator& x, const move_iterator& y)
-   {  return x.base() == y.base();  }
+   AUTOBOOST_MOVE_FORCEINLINE friend bool operator==(const move_iterator& x, const move_iterator& y)
+   {  return x.m_it == y.m_it;  }
 
-   friend bool operator!=(const move_iterator& x, const move_iterator& y)
-   {  return x.base() != y.base();  }
+   AUTOBOOST_MOVE_FORCEINLINE friend bool operator!=(const move_iterator& x, const move_iterator& y)
+   {  return x.m_it != y.m_it;  }
 
-   friend bool operator< (const move_iterator& x, const move_iterator& y)
-   {  return x.base() < y.base();   }
+   AUTOBOOST_MOVE_FORCEINLINE friend bool operator< (const move_iterator& x, const move_iterator& y)
+   {  return x.m_it < y.m_it;   }
 
-   friend bool operator<=(const move_iterator& x, const move_iterator& y)
-   {  return x.base() <= y.base();  }
+   AUTOBOOST_MOVE_FORCEINLINE friend bool operator<=(const move_iterator& x, const move_iterator& y)
+   {  return x.m_it <= y.m_it;  }
 
-   friend bool operator> (const move_iterator& x, const move_iterator& y)
-   {  return x.base() > y.base();  }
+   AUTOBOOST_MOVE_FORCEINLINE friend bool operator> (const move_iterator& x, const move_iterator& y)
+   {  return x.m_it > y.m_it;  }
 
-   friend bool operator>=(const move_iterator& x, const move_iterator& y)
-   {  return x.base() >= y.base();  }
+   AUTOBOOST_MOVE_FORCEINLINE friend bool operator>=(const move_iterator& x, const move_iterator& y)
+   {  return x.m_it >= y.m_it;  }
 
-   friend difference_type operator-(const move_iterator& x, const move_iterator& y)
-   {  return x.base() - y.base();   }
+   AUTOBOOST_MOVE_FORCEINLINE friend difference_type operator-(const move_iterator& x, const move_iterator& y)
+   {  return x.m_it - y.m_it;   }
 
-   friend move_iterator operator+(difference_type n, const move_iterator& x)
-   {  return move_iterator(x.base() + n);   }
+   AUTOBOOST_MOVE_FORCEINLINE friend move_iterator operator+(difference_type n, const move_iterator& x)
+   {  return move_iterator(x.m_it + n);   }
 
    private:
    It m_it;

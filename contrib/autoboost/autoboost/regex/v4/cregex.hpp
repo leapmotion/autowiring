@@ -221,7 +221,7 @@ namespace autoboost{
 
 class RegEx;
 
-namespace re_detail{
+namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 class RegExData;
 struct pred1;
@@ -229,7 +229,7 @@ struct pred2;
 struct pred3;
 struct pred4;
 
-}  /* namespace re_detail */
+}  /* namespace AUTOBOOST_REGEX_DETAIL_NS */
 
 #if (defined(AUTOBOOST_MSVC) || defined(__BORLANDC__)) && !defined(AUTOBOOST_DISABLE_WIN32)
 typedef bool (__cdecl *GrepCallback)(const RegEx& expression);
@@ -244,7 +244,7 @@ typedef bool (*FindFilesCallback)(const char* file);
 class AUTOBOOST_REGEX_DECL RegEx
 {
 private:
-   re_detail::RegExData* pdata;
+   AUTOBOOST_REGEX_DETAIL_NS::RegExData* pdata;
 public:
    RegEx();
    RegEx(const RegEx& o);
@@ -296,10 +296,10 @@ public:
 
    static const std::size_t npos;
 
-   friend struct re_detail::pred1;
-   friend struct re_detail::pred2;
-   friend struct re_detail::pred3;
-   friend struct re_detail::pred4;
+   friend struct AUTOBOOST_REGEX_DETAIL_NS::pred1;
+   friend struct AUTOBOOST_REGEX_DETAIL_NS::pred2;
+   friend struct AUTOBOOST_REGEX_DETAIL_NS::pred3;
+   friend struct AUTOBOOST_REGEX_DETAIL_NS::pred4;
 };
 
 #ifdef AUTOBOOST_MSVC

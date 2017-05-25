@@ -2,8 +2,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-#ifndef AB_WORKAROUND_DWA2002126_HPP
-# define AB_WORKAROUND_DWA2002126_HPP
+#ifndef AUTOBOOST_WORKAROUND_DWA2002126_HPP
+# define AUTOBOOST_WORKAROUND_DWA2002126_HPP
 
 // Compiler/library version workaround macro
 //
@@ -84,6 +84,11 @@
 #define __GNUC_PATCHLEVEL___WORKAROUND_GUARD 1
 #else
 #define __GNUC_PATCHLEVEL___WORKAROUND_GUARD 0
+#endif
+#ifndef AUTOBOOST_GCC
+#define AUTOBOOST_GCC_WORKAROUND_GUARD 1
+#else
+#define AUTOBOOST_GCC_WORKAROUND_GUARD 0
 #endif
 #ifndef __IBMCPP__
 #define __IBMCPP___WORKAROUND_GUARD 1
@@ -264,4 +269,4 @@
 
 # endif
 
-#endif // WORKAROUND_DWA2002126_HPP
+#endif // AUTOBOOST_WORKAROUND_DWA2002126_HPP

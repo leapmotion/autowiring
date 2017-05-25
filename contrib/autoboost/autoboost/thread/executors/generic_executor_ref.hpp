@@ -32,7 +32,7 @@ namespace autoboost
 
     /// executor is not copyable.
     AUTOBOOST_THREAD_NO_COPYABLE(executor_ref)
-    executor_ref(Executor& ex) : ex(ex) {}
+    executor_ref(Executor& ex_) : ex(ex_) {}
 
     /**
      * \par Effects
@@ -41,7 +41,7 @@ namespace autoboost
      * \par Synchronization
      * The completion of all the closures happen before the completion of the executor destructor.
      */
-    ~executor_ref() {};
+    ~executor_ref() {}
 
     /**
      * \par Effects
@@ -98,9 +98,9 @@ namespace autoboost
     typedef executors::work work;
 
     template<typename Executor>
-    generic_executor_ref(Executor& ex)
-    //: ex(make_shared<executor_ref<Executor> >(ex)) // todo check why this doesn't works with C++03
-    : ex( new executor_ref<Executor>(ex) )
+    generic_executor_ref(Executor& ex_)
+    //: ex(make_shared<executor_ref<Executor> >(ex_)) // todo check why this doesn't works with C++03
+    : ex( new executor_ref<Executor>(ex_) )
     {
     }
 
@@ -121,11 +121,6 @@ namespace autoboost
      */
     bool closed() { return ex->closed(); }
 
-    void submit(AUTOBOOST_THREAD_RV_REF(work) closure)
-    {
-      ex->submit(autoboost::forward<work>(closure));
-    }
-
     /**
      * \par Requires
      * \c Closure is a model of Callable(void()) and a model of CopyConstructible/MoveConstructible.
@@ -142,24 +137,31 @@ namespace autoboost
      * Whatever exception that can be throw while storing the closure.
      */
 
+    void submit(AUTOBOOST_THREAD_RV_REF(work) closure)
+    {
+      ex->submit(autoboost::move(closure));
+    }
+
 #if defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES)
     template <typename Closure>
     void submit(Closure & closure)
     {
-      work w ((closure));
-      submit(autoboost::move(w));
+      //work w ((closure));
+      //submit(autoboost::move(w));
+      submit(work(closure));
     }
 #endif
     void submit(void (*closure)())
     {
       work w ((closure));
       submit(autoboost::move(w));
+      //submit(work(closure));
     }
 
     template <typename Closure>
-    void submit(AUTOBOOST_THREAD_RV_REF(Closure) closure)
+    void submit(AUTOBOOST_THREAD_FWD_REF(Closure) closure)
     {
-      work w = autoboost::move(closure);
+      work w((autoboost::forward<Closure>(closure)));
       submit(autoboost::move(w));
     }
 

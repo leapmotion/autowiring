@@ -15,6 +15,7 @@
 #include <autoboost/assert.hpp>
 #include <autoboost/checked_delete.hpp>
 #include <autoboost/smart_ptr/detail/sp_nullptr_t.hpp>
+#include <autoboost/smart_ptr/detail/sp_noexcept.hpp>
 
 #include <autoboost/detail/workaround.hpp>
 
@@ -54,7 +55,7 @@ public:
 
     typedef T element_type;
 
-    explicit scoped_array( T * p = 0 ) AUTOBOOST_NOEXCEPT : px( p )
+    explicit scoped_array( T * p = 0 ) AUTOBOOST_SP_NOEXCEPT : px( p )
     {
 #if defined(AUTOBOOST_SP_ENABLE_DEBUG_HOOKS)
         autoboost::sp_array_constructor_hook( px );

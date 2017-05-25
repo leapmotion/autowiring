@@ -1,5 +1,5 @@
-#ifndef AB_POSIX_TIME_PRE133_OPERATORS_HPP___
-#define AB_POSIX_TIME_PRE133_OPERATORS_HPP___
+#ifndef POSIX_TIME_PRE133_OPERATORS_HPP___
+#define POSIX_TIME_PRE133_OPERATORS_HPP___
 
 /* Copyright (c) 2002-2004 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

@@ -22,58 +22,36 @@
 // http://www.boost.org/more/separate_compilation.html
 
 #include <autoboost/config.hpp>
-#include <autoboost/preprocessor/facilities/empty.hpp>
 
-#if defined(AUTOBOOST_HAS_DECLSPEC)
-    #if (defined(AUTOBOOST_ALL_DYN_LINK) || defined(AUTOBOOST_SERIALIZATION_DYN_LINK))
-        #if defined(AUTOBOOST_ARCHIVE_SOURCE)
-            #if defined(__BORLANDC__)
-            #define AUTOBOOST_ARCHIVE_DECL(T) T __export
-            #define AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(T)  T __export
-            #else
-            #define AUTOBOOST_ARCHIVE_DECL(T) __declspec(dllexport) T
-            #define AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(T)  __declspec(dllexport) T
-            #endif
-        #else
-            #if defined(__BORLANDC__)
-            #define AUTOBOOST_ARCHIVE_DECL(T) T __import
-            #else
-            #define AUTOBOOST_ARCHIVE_DECL(T) __declspec(dllimport) T
-            #endif
-        #endif
-        #if defined(AUTOBOOST_WARCHIVE_SOURCE)
-            #if defined(__BORLANDC__)
-            #define AUTOBOOST_WARCHIVE_DECL(T) T __export
-            #define AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(T) T __export
-            #else
-            #define AUTOBOOST_WARCHIVE_DECL(T) __declspec(dllexport) T
-            #define AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(T) __declspec(dllexport) T
-            #endif
-        #else
-            #if defined(__BORLANDC__)
-            #define AUTOBOOST_WARCHIVE_DECL(T) T __import
-            #else
-            #define AUTOBOOST_WARCHIVE_DECL(T) __declspec(dllimport) T
-            #endif
-        #endif
-        #if !defined(AUTOBOOST_WARCHIVE_SOURCE) && !defined(AUTOBOOST_ARCHIVE_SOURCE)
-            #if defined(__BORLANDC__)
-            #define AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(T) T __import
-            #else
-            #define AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(T) __declspec(dllimport) T
-            #endif
-        #endif
+#if (defined(AUTOBOOST_ALL_DYN_LINK) || defined(AUTOBOOST_SERIALIZATION_DYN_LINK))
+    #if defined(AUTOBOOST_ARCHIVE_SOURCE)
+        #define AUTOBOOST_ARCHIVE_DECL AUTOBOOST_SYMBOL_EXPORT
+    #else
+        #define AUTOBOOST_ARCHIVE_DECL AUTOBOOST_SYMBOL_IMPORT
     #endif
-#endif // AUTOBOOST_HAS_DECLSPEC
+
+    #if defined(AUTOBOOST_WARCHIVE_SOURCE)
+        #define AUTOBOOST_WARCHIVE_DECL AUTOBOOST_SYMBOL_EXPORT
+    #else
+        #define AUTOBOOST_WARCHIVE_DECL AUTOBOOST_SYMBOL_IMPORT
+    #endif
+
+    #if defined(AUTOBOOST_WARCHIVE_SOURCE) || defined(AUTOBOOST_ARCHIVE_SOURCE)
+        #define AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL AUTOBOOST_SYMBOL_EXPORT
+    #else
+        #define AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL AUTOBOOST_SYMBOL_IMPORT
+    #endif
+
+#endif
 
 #if ! defined(AUTOBOOST_ARCHIVE_DECL)
-    #define AUTOBOOST_ARCHIVE_DECL(T) T
+    #define AUTOBOOST_ARCHIVE_DECL
 #endif
 #if ! defined(AUTOBOOST_WARCHIVE_DECL)
-    #define AUTOBOOST_WARCHIVE_DECL(T) T
+    #define AUTOBOOST_WARCHIVE_DECL
 #endif
 #if ! defined(AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL)
-    #define AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(T) T
+    #define AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
 #endif
 
 #endif // AUTOBOOST_ARCHIVE_DETAIL_DECL_HPP

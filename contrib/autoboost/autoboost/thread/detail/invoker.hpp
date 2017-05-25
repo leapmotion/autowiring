@@ -72,13 +72,21 @@ namespace autoboost
       AUTOBOOST_SYMBOL_VISIBLE
       invoker& operator=(AUTOBOOST_THREAD_RV_REF(invoker) f)
       {
-        f_ = autoboost::move(AUTOBOOST_THREAD_RV(f).f_);
+        if (this != &f)
+        {
+          f_ = autoboost::move(AUTOBOOST_THREAD_RV(f).f_);
+        }
+        return *this;
       }
 
       AUTOBOOST_SYMBOL_VISIBLE
       invoker& operator=( AUTOBOOST_THREAD_COPY_ASSIGN_REF(invoker) f)
       {
-        f_ = f.f_;
+        if (this != &f)
+        {
+          f_ = f.f_;
+        }
+        return *this;
       }
 
       result_type operator()()
@@ -91,7 +99,7 @@ namespace autoboost
       result_type
       execute(tuple_indices<Indices...>)
       {
-        return invoke(autoboost::move(csbl::get<0>(f_)), autoboost::move(csbl::get<Indices>(f_))...);
+        return detail::invoke(autoboost::move(csbl::get<0>(f_)), autoboost::move(csbl::get<Indices>(f_))...);
       }
     };
 
@@ -128,13 +136,13 @@ namespace autoboost
       result_type
       execute(tuple_indices<Indices...>)
       {
-        return invoke<R>(autoboost::move(csbl::get<0>(f_)), autoboost::move(csbl::get<Indices>(f_))...);
+        return detail::invoke<R>(autoboost::move(csbl::get<0>(f_)), autoboost::move(csbl::get<Indices>(f_))...);
       }
     };
   //AUTOBOOST_THREAD_DCL_MOVABLE_BEG(X) invoker<Fp> AUTOBOOST_THREAD_DCL_MOVABLE_END
 #else
 
-#if ! defined AUTOBOOST_MSVC
+#if ! defined AUTOBOOST_MSVC && defined(AUTOBOOST_THREAD_PROVIDES_INVOKE)
 
 #define AUTOBOOST_THREAD_RV_REF_ARG_T(z, n, unused) AUTOBOOST_PP_COMMA_IF(n) AUTOBOOST_THREAD_RV_REF(Arg##n)
 #define AUTOBOOST_THREAD_RV_REF_A_T(z, n, unused) AUTOBOOST_PP_COMMA_IF(n) AUTOBOOST_THREAD_RV_REF(A##n)
@@ -182,7 +190,7 @@ namespace autoboost
       {} \
       \
       result_type operator()() { \
-        return invoke(autoboost::move(fp_) \
+        return detail::invoke(autoboost::move(fp_) \
             AUTOBOOST_PP_REPEAT(n, AUTOBOOST_THREAD_MOVE_DCL, ~) \
         ); \
       } \
@@ -307,7 +315,7 @@ namespace autoboost
 
       result_type operator()()
       {
-        return invoke(autoboost::move(fp_)
+        return detail::invoke(autoboost::move(fp_)
             , autoboost::move(v0_)
             , autoboost::move(v1_)
             , autoboost::move(v2_)
@@ -373,7 +381,7 @@ namespace autoboost
 
       result_type operator()()
       {
-        return invoke(autoboost::move(fp_)
+        return detail::invoke(autoboost::move(fp_)
             , autoboost::move(v0_)
             , autoboost::move(v1_)
             , autoboost::move(v2_)
@@ -434,7 +442,7 @@ namespace autoboost
 
       result_type operator()()
       {
-        return invoke(autoboost::move(fp_)
+        return detail::invoke(autoboost::move(fp_)
             , autoboost::move(v0_)
             , autoboost::move(v1_)
             , autoboost::move(v2_)
@@ -490,7 +498,7 @@ namespace autoboost
 
       result_type operator()()
       {
-        return invoke(autoboost::move(fp_)
+        return detail::invoke(autoboost::move(fp_)
             , autoboost::move(v0_)
             , autoboost::move(v1_)
             , autoboost::move(v2_)
@@ -541,7 +549,7 @@ namespace autoboost
 
       result_type operator()()
       {
-        return invoke(autoboost::move(fp_)
+        return detail::invoke(autoboost::move(fp_)
             , autoboost::move(v0_)
             , autoboost::move(v1_)
             , autoboost::move(v2_)
@@ -587,7 +595,7 @@ namespace autoboost
 
       result_type operator()()
       {
-        return invoke(autoboost::move(fp_)
+        return detail::invoke(autoboost::move(fp_)
             , autoboost::move(v0_)
             , autoboost::move(v1_)
             , autoboost::move(v2_)
@@ -628,7 +636,7 @@ namespace autoboost
 
       result_type operator()()
       {
-        return invoke(autoboost::move(fp_)
+        return detail::invoke(autoboost::move(fp_)
             , autoboost::move(v0_)
             , autoboost::move(v1_)
             , autoboost::move(v2_)
@@ -664,7 +672,7 @@ namespace autoboost
 
       result_type operator()()
       {
-        return invoke(autoboost::move(fp_)
+        return detail::invoke(autoboost::move(fp_)
             , autoboost::move(v0_)
             , autoboost::move(v1_)
         );
@@ -695,7 +703,7 @@ namespace autoboost
 
       result_type operator()()
       {
-        return invoke(autoboost::move(fp_)
+        return detail::invoke(autoboost::move(fp_)
             , autoboost::move(v0_)
         );
       }

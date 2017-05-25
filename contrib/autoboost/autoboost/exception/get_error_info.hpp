@@ -3,8 +3,8 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef AB_UUID_1A590226753311DD9E4CCF6156D89593
-#define AB_UUID_1A590226753311DD9E4CCF6156D89593
+#ifndef UUID_1A590226753311DD9E4CCF6156D89593
+#define UUID_1A590226753311DD9E4CCF6156D89593
 #if (__GNUC__*100+__GNUC_MINOR__>301) && !defined(AUTOBOOST_EXCEPTION_ENABLE_WARNINGS)
 #pragma GCC system_header
 #endif
@@ -15,7 +15,8 @@
 #include <autoboost/exception/exception.hpp>
 #include <autoboost/exception/detail/error_info_impl.hpp>
 #include <autoboost/exception/detail/type_info.hpp>
-#include <autoboost/shared_ptr.hpp>
+#include <autoboost/exception/detail/shared_ptr.hpp>
+#include <autoboost/assert.hpp>
 
 namespace
 autoboost

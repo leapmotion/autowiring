@@ -39,23 +39,19 @@ namespace serialization {
 namespace archive {
 namespace detail {
 
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_iarchive;
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_pointer_iserializer;
+class basic_iarchive;
+class basic_pointer_iserializer;
 
-class AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) basic_iserializer :
+class AUTOBOOST_SYMBOL_VISIBLE basic_iserializer :
     public basic_serializer
 {
 private:
     basic_pointer_iserializer *m_bpis;
 protected:
-    explicit basic_iserializer(
+    explicit AUTOBOOST_ARCHIVE_DECL basic_iserializer(
         const autoboost::serialization::extended_type_info & type
     );
-    // account for bogus gcc warning
-    #if defined(__GNUC__)
-    virtual
-    #endif
-    ~basic_iserializer();
+    virtual AUTOBOOST_ARCHIVE_DECL ~basic_iserializer();
 public:
     bool serialized_as_pointer() const {
         return m_bpis != NULL;

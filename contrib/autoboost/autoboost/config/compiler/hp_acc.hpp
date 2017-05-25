@@ -13,7 +13,7 @@
 //  HP aCC C++ compiler setup:
 
 #if defined(__EDG__)
-#include "autoboost/config/compiler/common_edg.hpp"
+#include <autoboost/config/compiler/common_edg.hpp>
 #endif
 
 #if (__HP_aCC <= 33100)
@@ -114,6 +114,7 @@
 #define AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
 #define AUTOBOOST_NO_CXX11_SCOPED_ENUMS
 #define AUTOBOOST_NO_SFINAE_EXPR
+#define AUTOBOOST_NO_CXX11_SFINAE_EXPR
 #define AUTOBOOST_NO_CXX11_STATIC_ASSERT
 #define AUTOBOOST_NO_CXX11_TEMPLATE_ALIASES
 #define AUTOBOOST_NO_CXX11_UNICODE_LITERALS
@@ -123,6 +124,7 @@
 #define AUTOBOOST_NO_CXX11_TRAILING_RESULT_TYPES
 #define AUTOBOOST_NO_CXX11_INLINE_NAMESPACES
 #define AUTOBOOST_NO_CXX11_REF_QUALIFIERS
+#define AUTOBOOST_NO_CXX11_THREAD_LOCAL
 
 /*
   See https://forums13.itrc.hp.com/service/forums/questionanswer.do?threadId=1443331 and

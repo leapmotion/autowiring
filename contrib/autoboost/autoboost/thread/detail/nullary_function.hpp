@@ -228,7 +228,7 @@ namespace autoboost
 
     };
   }
-  //AUTOBOOST_THREAD_DCL_MOVABLE_BEG(F) detail::nullary_function<F> AUTOBOOST_THREAD_DCL_MOVABLE_END
+  AUTOBOOST_THREAD_DCL_MOVABLE_BEG(F) detail::nullary_function<F> AUTOBOOST_THREAD_DCL_MOVABLE_END
 }
 
 #endif // header

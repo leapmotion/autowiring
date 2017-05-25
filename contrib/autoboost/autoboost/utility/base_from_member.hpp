@@ -47,11 +47,11 @@
 //         {}
 // This macro should only persist within this file.
 
-#define AUTOBOOST_PRIVATE_CTR_DEF( z, n, data )                            \
-    template < AUTOBOOST_PP_ENUM_PARAMS(n, typename T) >                   \
-    explicit base_from_member( AUTOBOOST_PP_ENUM_BINARY_PARAMS(n, T, x) )  \
-        : member( AUTOBOOST_PP_ENUM_PARAMS(n, x) )                         \
-        {}                                                             \
+#define AUTOBOOST_PRIVATE_CTR_DEF( z, n, data )                   \
+    template < AUTOBOOST_PP_ENUM_PARAMS(n, typename T) >          \
+    base_from_member( AUTOBOOST_PP_ENUM_BINARY_PARAMS(n, T, x) )  \
+        : member( AUTOBOOST_PP_ENUM_PARAMS(n, x) )                \
+        {}                                                    \
     /**/
 
 
@@ -142,7 +142,8 @@ protected:
         : member()
         {}
 
-    AUTOBOOST_PP_REPEAT_FROM_TO( 1, AUTOBOOST_PP_INC(AUTOBOOST_BASE_FROM_MEMBER_MAX_ARITY),
+    template < typename T0 > explicit base_from_member( T0 x0 ) : member( x0 ) {}
+    AUTOBOOST_PP_REPEAT_FROM_TO( 2, AUTOBOOST_PP_INC(AUTOBOOST_BASE_FROM_MEMBER_MAX_ARITY),
      AUTOBOOST_PRIVATE_CTR_DEF, _ )
 #endif
 

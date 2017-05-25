@@ -19,6 +19,7 @@
 #include <autoboost/format/exceptions.hpp>
 #include <autoboost/throw_exception.hpp>
 #include <autoboost/assert.hpp>
+#include <autoboost/config.hpp>
 
 
 namespace autoboost {
@@ -50,7 +51,7 @@ namespace detail {
 # else
         (void) fac;     // remove "unused parameter" warning
         using namespace std;
-        return isdigit(c);
+        return isdigit(c) != 0;
 #endif
     }
 
@@ -267,6 +268,7 @@ namespace detail {
         switch ( wrap_narrow(fac, *start, 0) ) {
         case 'X':
             fpar->fmtstate_.flags_ |= std::ios_base::uppercase;
+            AUTOBOOST_FALLTHROUGH;
         case 'p': // pointer => set hex.
         case 'x':
             fpar->fmtstate_.flags_ &= ~std::ios_base::basefield;
@@ -280,6 +282,7 @@ namespace detail {
 
         case 'E':
             fpar->fmtstate_.flags_ |=  std::ios_base::uppercase;
+            AUTOBOOST_FALLTHROUGH;
         case 'e':
             fpar->fmtstate_.flags_ &= ~std::ios_base::floatfield;
             fpar->fmtstate_.flags_ |=  std::ios_base::scientific;
@@ -291,6 +294,7 @@ namespace detail {
         case 'f':
             fpar->fmtstate_.flags_ &= ~std::ios_base::floatfield;
             fpar->fmtstate_.flags_ |=  std::ios_base::fixed;
+            AUTOBOOST_FALLTHROUGH;
         case 'u':
         case 'd':
         case 'i':
@@ -471,7 +475,8 @@ namespace detail {
         if( !ordered_args) {
             if(max_argN >= 0 ) {  // dont mix positional with non-positionnal directives
                 if(exceptions() & io::bad_format_string_bit)
-                    autoboost::throw_exception(io::bad_format_string(max_argN, 0));
+                    autoboost::throw_exception(
+                        io::bad_format_string(static_cast<std::size_t>(max_argN), 0));
                 // else do nothing. => positionnal arguments are processed as non-positionnal
             }
             // set things like it would have been with positional directives :

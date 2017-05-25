@@ -47,7 +47,7 @@ namespace detail {
 } // namespace detail
 
 template<class Archive>
-class xml_oarchive_impl :
+class AUTOBOOST_SYMBOL_VISIBLE xml_oarchive_impl :
     public basic_text_oprimitive<std::ostream>,
     public basic_xml_oarchive<Archive>
 {
@@ -55,21 +55,10 @@ class xml_oarchive_impl :
 public:
 #else
 protected:
-    #if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1500)
-        // for some inexplicable reason insertion of "class" generates compile erro
-        // on msvc 7.1
-        friend detail::interface_oarchive<Archive>;
-        friend basic_xml_oarchive<Archive>;
-        friend save_access;
-    #else
-        friend class detail::interface_oarchive<Archive>;
-        friend class basic_xml_oarchive<Archive>;
-        friend class save_access;
-    #endif
+    friend class detail::interface_oarchive<Archive>;
+    friend class basic_xml_oarchive<Archive>;
+    friend class save_access;
 #endif
-    //void end_preamble(){
-    //    basic_xml_oarchive<Archive>::end_preamble();
-    //}
     template<class T>
     void save(const T & t){
         basic_text_oprimitive<std::ostream>::save(t);
@@ -82,35 +71,42 @@ protected:
     save(const autoboost::serialization::item_version_type & t){
         save(static_cast<const unsigned int>(t));
     }
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     save(const char * t);
     #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     save(const wchar_t * t);
     #endif
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     save(const std::string &s);
     #ifndef AUTOBOOST_NO_STD_WSTRING
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     save(const std::wstring &ws);
     #endif
-    AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_DECL
     xml_oarchive_impl(std::ostream & os, unsigned int flags);
-    ~xml_oarchive_impl(){}
+    AUTOBOOST_ARCHIVE_DECL
+    ~xml_oarchive_impl();
 public:
-    void save_binary(const void *address, std::size_t count){
-        this->end_preamble();
-        #if ! defined(__MWERKS__)
-        this->basic_text_oprimitive<std::ostream>::save_binary(
-        #else
-        this->basic_text_oprimitive::save_binary(
-        #endif
-            address,
-            count
-        );
-        this->indent_next = true;
-    }
+    AUTOBOOST_ARCHIVE_DECL
+    void save_binary(const void *address, std::size_t count);
 };
+
+} // namespace archive
+} // namespace autoboost
+
+#ifdef AUTOBOOST_MSVC
+#pragma warning(pop)
+#endif
+
+#include <autoboost/archive/detail/abi_suffix.hpp> // pops abi_suffix.hpp pragmas
+#ifdef AUTOBOOST_MSVC
+#  pragma warning(push)
+#  pragma warning(disable : 4511 4512)
+#endif
+
+namespace autoboost {
+namespace archive {
 
 // we use the following because we can't use
 // typedef xml_oarchive_impl<xml_oarchive_impl<...> > xml_oarchive;
@@ -118,7 +114,7 @@ public:
 // do not derive from this class.  If you want to extend this functionality
 // via inhertance, derived from xml_oarchive_impl instead.  This will
 // preserve correct static polymorphism.
-class xml_oarchive :
+class AUTOBOOST_SYMBOL_VISIBLE xml_oarchive :
     public xml_oarchive_impl<xml_oarchive>
 {
 public:
@@ -137,7 +133,5 @@ AUTOBOOST_SERIALIZATION_REGISTER_ARCHIVE(autoboost::archive::xml_oarchive)
 #ifdef AUTOBOOST_MSVC
 #pragma warning(pop)
 #endif
-
-#include <autoboost/archive/detail/abi_suffix.hpp> // pops abi_suffix.hpp pragmas
 
 #endif // AUTOBOOST_ARCHIVE_XML_OARCHIVE_HPP

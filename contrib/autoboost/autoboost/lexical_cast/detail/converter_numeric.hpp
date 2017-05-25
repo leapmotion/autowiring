@@ -1,6 +1,6 @@
 // Copyright Kevlin Henney, 2000-2005.
 // Copyright Alexander Nasonov, 2006-2010.
-// Copyright Antony Polukhin, 2011-2014.
+// Copyright Antony Polukhin, 2011-2016.
 //
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
@@ -13,7 +13,7 @@
 //        Beman Dawes, Dave Abrahams, Daryle Walker, Peter Dimov,
 //        Alexander Nasonov, Antony Polukhin, Justin Viiret, Michael Hofmann,
 //        Cheng Yang, Matthew Bradbury, David W. Birdsall, Pavel Korzh and other Boosters
-// when:  November 2000, March 2003, June 2005, June 2006, March 2011 - 2014
+// when:  November 2000, March 2003, June 2005, June 2006, March 2011 - 2016
 
 #ifndef AUTOBOOST_LEXICAL_CAST_DETAIL_CONVERTER_NUMERIC_HPP
 #define AUTOBOOST_LEXICAL_CAST_DETAIL_CONVERTER_NUMERIC_HPP
@@ -24,13 +24,15 @@
 #endif
 
 #include <autoboost/limits.hpp>
+#include <autoboost/mpl/eval_if.hpp>
+#include <autoboost/mpl/identity.hpp>
 #include <autoboost/mpl/if.hpp>
-#include <autoboost/type_traits/ice.hpp>
 #include <autoboost/type_traits/make_unsigned.hpp>
 #include <autoboost/type_traits/is_signed.hpp>
 #include <autoboost/type_traits/is_integral.hpp>
 #include <autoboost/type_traits/is_arithmetic.hpp>
 #include <autoboost/type_traits/is_base_of.hpp>
+#include <autoboost/type_traits/is_float.hpp>
 
 #include <autoboost/numeric/conversion/cast.hpp>
 
@@ -152,19 +154,10 @@ struct dynamic_num_converter_impl
 {
     static inline bool try_convert(const Source &arg, Target& result) AUTOBOOST_NOEXCEPT {
         typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::mpl::if_c<
-            autoboost::type_traits::ice_and<
-                autoboost::is_unsigned<Target>::value,
-                autoboost::type_traits::ice_or<
-                    autoboost::is_signed<Source>::value,
-                    autoboost::is_float<Source>::value
-                >::value,
-                autoboost::type_traits::ice_not<
-                    autoboost::is_same<Source, bool>::value
-                >::value,
-                autoboost::type_traits::ice_not<
-                    autoboost::is_same<Target, bool>::value
-                >::value
-            >::value,
+            autoboost::is_unsigned<Target>::value &&
+            (autoboost::is_signed<Source>::value || autoboost::is_float<Source>::value) &&
+            !(autoboost::is_same<Source, bool>::value) &&
+            !(autoboost::is_same<Target, bool>::value),
             lexical_cast_dynamic_num_ignoring_minus<Target, Source>,
             lexical_cast_dynamic_num_not_ignoring_minus<Target, Source>
         >::type caster_type;

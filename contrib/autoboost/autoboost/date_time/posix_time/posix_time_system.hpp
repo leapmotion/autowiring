@@ -1,5 +1,5 @@
-#ifndef AB_POSIX_TIME_SYSTEM_HPP___
-#define AB_POSIX_TIME_SYSTEM_HPP___
+#ifndef POSIX_TIME_SYSTEM_HPP___
+#define POSIX_TIME_SYSTEM_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

@@ -34,10 +34,10 @@ namespace autoboost
    *     autoboost::strict_scoped_thread<> t((autoboost::thread(F)));
    *
    */
-  template <class CallableThread = join_if_joinable>
+  template <class CallableThread = join_if_joinable, class Thread=::autoboost::thread>
   class strict_scoped_thread
   {
-    thread t_;
+    Thread t_;
     struct dummy;
   public:
 
@@ -47,13 +47,13 @@ namespace autoboost
      *
      */
 #if ! defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
-    template <class F, class ...Args, typename = typename disable_if<is_same<typename decay<F>::type, thread>, void* >::type>
+    template <class F, class ...Args, typename = typename disable_if<is_same<typename decay<F>::type, Thread>, void* >::type>
     explicit strict_scoped_thread(AUTOBOOST_THREAD_FWD_REF(F) f, AUTOBOOST_THREAD_FWD_REF(Args)... args) :
       t_(autoboost::forward<F>(f), autoboost::forward<Args>(args)...) {}
 #else
     template <class F>
     explicit strict_scoped_thread(AUTOBOOST_THREAD_FWD_REF(F) f,
-        typename disable_if<is_same<typename decay<F>::type, thread>, void* >::type=0) :
+        typename disable_if<is_same<typename decay<F>::type, Thread>, void* >::type=0) :
       t_(autoboost::forward<F>(f)) {}
     template <class F, class A1>
     strict_scoped_thread(AUTOBOOST_THREAD_FWD_REF(F) f, AUTOBOOST_THREAD_FWD_REF(A1) a1) :
@@ -73,7 +73,7 @@ namespace autoboost
      *
      * Effects: move the thread to own @c t.
      */
-    explicit strict_scoped_thread(AUTOBOOST_THREAD_RV_REF(thread) t) AUTOBOOST_NOEXCEPT :
+    explicit strict_scoped_thread(AUTOBOOST_THREAD_RV_REF(Thread) t) AUTOBOOST_NOEXCEPT :
     t_(autoboost::move(t))
     {
     }
@@ -111,14 +111,15 @@ namespace autoboost
    *     t.interrupt();
    *
    */
-  template <class CallableThread = join_if_joinable>
+  template <class CallableThread = join_if_joinable, class Thread=::autoboost::thread>
   class scoped_thread
   {
-    thread t_;
+    Thread t_;
     struct dummy;
   public:
 
-    typedef thread::id id;
+    typedef typename Thread::id id;
+    typedef typename Thread::native_handle_type native_handle_type;
 
     AUTOBOOST_THREAD_MOVABLE_ONLY( scoped_thread) /// Movable only
 
@@ -137,13 +138,13 @@ namespace autoboost
      */
 
 #if ! defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
-    template <class F, class ...Args, typename = typename disable_if<is_same<typename decay<F>::type, thread>, void* >::type>
+    template <class F, class ...Args, typename = typename disable_if<is_same<typename decay<F>::type, Thread>, void* >::type>
     explicit scoped_thread(AUTOBOOST_THREAD_FWD_REF(F) f, AUTOBOOST_THREAD_FWD_REF(Args)... args) :
       t_(autoboost::forward<F>(f), autoboost::forward<Args>(args)...) {}
 #else
     template <class F>
     explicit scoped_thread(AUTOBOOST_THREAD_FWD_REF(F) f,
-        typename disable_if<is_same<typename decay<F>::type, thread>, void* >::type=0) :
+        typename disable_if<is_same<typename decay<F>::type, Thread>, void* >::type=0) :
       t_(autoboost::forward<F>(f)) {}
     template <class F, class A1>
     scoped_thread(AUTOBOOST_THREAD_FWD_REF(F) f, AUTOBOOST_THREAD_FWD_REF(A1) a1) :
@@ -163,12 +164,12 @@ namespace autoboost
      *
      * Effects: move the thread to own @c t.
      */
-    explicit scoped_thread(AUTOBOOST_THREAD_RV_REF(thread) t) AUTOBOOST_NOEXCEPT :
+    explicit scoped_thread(AUTOBOOST_THREAD_RV_REF(Thread) t) AUTOBOOST_NOEXCEPT :
     t_(autoboost::move(t))
     {
     }
 
-//    explicit operator thread()
+//    explicit operator Thread()
 //    {
 //      return autoboost::move(t_);
 //    }
@@ -197,6 +198,9 @@ namespace autoboost
      */
     scoped_thread& operator=(AUTOBOOST_RV_REF(scoped_thread) x)
     {
+      CallableThread on_destructor;
+
+      on_destructor(t_);
       t_ = autoboost::move(AUTOBOOST_THREAD_RV(x).t_);
       return *this;
     }
@@ -210,7 +214,7 @@ namespace autoboost
     }
 
     // forwarded thread functions
-    inline thread::id get_id() const AUTOBOOST_NOEXCEPT
+    inline id get_id() const AUTOBOOST_NOEXCEPT
     {
       return t_.get_id();
     }
@@ -239,7 +243,7 @@ namespace autoboost
     }
 #endif
 
-    thread::native_handle_type native_handle()AUTOBOOST_NOEXCEPT
+    native_handle_type native_handle()AUTOBOOST_NOEXCEPT
     {
       return t_.native_handle();
     }
@@ -263,13 +267,13 @@ namespace autoboost
 
     static unsigned hardware_concurrency() AUTOBOOST_NOEXCEPT
     {
-      return thread::hardware_concurrency();
+      return Thread::hardware_concurrency();
     }
 
 #ifdef AUTOBOOST_THREAD_PROVIDES_PHYSICAL_CONCURRENCY
     static unsigned physical_concurrency() AUTOBOOST_NOEXCEPT
     {
-      return thread::physical_concurrency();
+      return Thread::physical_concurrency();
     }
 #endif
   };
@@ -277,12 +281,13 @@ namespace autoboost
   /**
    * Effects: swaps the contents of two scoped threads.
    */
-  template <class Destroyer>
-  void swap(scoped_thread<Destroyer>& lhs, scoped_thread<Destroyer>& rhs)
+  template <class Destroyer, class Thread >
+  void swap(scoped_thread<Destroyer, Thread>& lhs, scoped_thread<Destroyer, Thread>& rhs)
 AUTOBOOST_NOEXCEPT {
   return lhs.swap(rhs);
 }
 
+  typedef scoped_thread<> joining_thread;
 }
 #include <autoboost/config/abi_suffix.hpp>
 

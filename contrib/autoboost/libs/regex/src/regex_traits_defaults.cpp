@@ -36,7 +36,7 @@ namespace std{
 #endif
 
 
-namespace autoboost{ namespace re_detail{
+namespace autoboost{ namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 AUTOBOOST_REGEX_DECL const char* AUTOBOOST_REGEX_CALL get_default_syntax(regex_constants::syntax_type n)
 {
@@ -688,5 +688,5 @@ AUTOBOOST_REGEX_DECL regex_constants::syntax_type AUTOBOOST_REGEX_CALL get_defau
 }
 
 
-} // re_detail
+} // AUTOBOOST_REGEX_DETAIL_NS
 } // autoboost

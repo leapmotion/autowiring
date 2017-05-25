@@ -1,5 +1,5 @@
-#ifndef AB_GREG_DURATION_HPP___
-#define AB_GREG_DURATION_HPP___
+#ifndef GREG_DURATION_HPP___
+#define GREG_DURATION_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -9,6 +9,7 @@
  * $Date$
  */
 
+#include <autoboost/date_time/compiler_config.hpp>
 #include <autoboost/date_time/date_duration.hpp>
 #include <autoboost/date_time/int_adapter.hpp>
 #include <autoboost/date_time/special_defs.hpp>
@@ -22,7 +23,7 @@ namespace gregorian {
   //! Durations in days for gregorian system
   /*! \ingroup date_basics
    */
-  class date_duration :
+  class AUTOBOOST_SYMBOL_VISIBLE date_duration :
     public autoboost::date_time::date_duration< date_duration_rep >
   {
     typedef autoboost::date_time::date_duration< date_duration_rep > base_type;

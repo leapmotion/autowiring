@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_DATE_DURATION__
-#define AB_DATE_TIME_DATE_DURATION__
+#ifndef DATE_TIME_DATE_DURATION__
+#define DATE_TIME_DATE_DURATION__
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -12,6 +12,7 @@
 
 #include <autoboost/operators.hpp>
 #include <autoboost/date_time/special_defs.hpp>
+#include <autoboost/date_time/compiler_config.hpp>
 
 namespace autoboost {
 namespace date_time {
@@ -19,7 +20,7 @@ namespace date_time {
 
   //! Duration type with date level resolution
   template<class duration_rep_traits>
-  class date_duration : private
+  class AUTOBOOST_SYMBOL_VISIBLE date_duration : private
               autoboost::less_than_comparable1< date_duration< duration_rep_traits >
             , autoboost::equality_comparable1< date_duration< duration_rep_traits >
             , autoboost::addable1< date_duration< duration_rep_traits >
@@ -121,7 +122,7 @@ namespace date_time {
   /*! Struct for instantiating date_duration with <b>NO</b> special values
    * functionality. Allows for transparent implementation of either
    * date_duration<long> or date_duration<int_adapter<long> > */
-  struct duration_traits_long
+  struct AUTOBOOST_SYMBOL_VISIBLE duration_traits_long
   {
     typedef long int_type;
     typedef long impl_type;
@@ -131,7 +132,7 @@ namespace date_time {
   /*! Struct for instantiating date_duration <b>WITH</b> special values
    * functionality. Allows for transparent implementation of either
    * date_duration<long> or date_duration<int_adapter<long> > */
-  struct duration_traits_adapted
+  struct AUTOBOOST_SYMBOL_VISIBLE duration_traits_adapted
   {
     typedef long int_type;
     typedef autoboost::date_time::int_adapter<long> impl_type;

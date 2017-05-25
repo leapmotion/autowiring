@@ -14,8 +14,8 @@
 #include <autoboost/utility/binary.hpp>
 #include <autoboost/utility/enable_if.hpp>
 #include <autoboost/utility/identity_type.hpp>
-#include <autoboost/checked_delete.hpp>
+#include <autoboost/core/checked_delete.hpp>
+#include <autoboost/core/noncopyable.hpp>
 #include <autoboost/next_prior.hpp>
-#include <autoboost/noncopyable.hpp>
 
 #endif  // AUTOBOOST_UTILITY_HPP

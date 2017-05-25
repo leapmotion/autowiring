@@ -30,7 +30,6 @@
 #include <cstdio>
 #include <autoboost/limits.hpp>
 #include <autoboost/mpl/if.hpp>
-#include <autoboost/type_traits/ice.hpp>
 #include <autoboost/static_assert.hpp>
 #include <autoboost/detail/workaround.hpp>
 
@@ -144,7 +143,7 @@ namespace autoboost
                 int_type const digit = static_cast<int_type>(m_value % 10U);
                 Traits::assign(*m_finish, Traits::to_char_type(m_zero + digit));
                 m_value /= 10;
-                return !!m_value; // supressing warnings
+                return !!m_value; // suppressing warnings
             }
 
             inline CharT* main_convert_loop() AUTOBOOST_NOEXCEPT {

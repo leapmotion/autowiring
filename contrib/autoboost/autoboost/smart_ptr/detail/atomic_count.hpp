@@ -73,6 +73,9 @@
 #elif defined( AUTOBOOST_DISABLE_THREADS ) && !defined( AUTOBOOST_SP_ENABLE_THREADS ) && !defined( AUTOBOOST_DISABLE_WIN32 )
 # include <autoboost/smart_ptr/detail/atomic_count_nt.hpp>
 
+#elif !defined( AUTOBOOST_NO_CXX11_HDR_ATOMIC )
+# include <autoboost/smart_ptr/detail/atomic_count_std_atomic.hpp>
+
 #elif defined( __GNUC__ ) && ( defined( __i386__ ) || defined( __x86_64__ ) ) && !defined( __PATHSCALE__ )
 # include <autoboost/smart_ptr/detail/atomic_count_gcc_x86.hpp>
 

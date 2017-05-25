@@ -9,31 +9,16 @@
 #ifndef AUTOBOOST_DETAIL_WINAPI_GETPROCESSTIMES_HPP
 #define AUTOBOOST_DETAIL_WINAPI_GETPROCESSTIMES_HPP
 
-#include <autoboost/detail/winapi/time.hpp>
+#include <autoboost/detail/winapi/get_process_times.hpp>
 
 #ifdef AUTOBOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
-namespace autoboost {
-namespace detail {
-namespace winapi {
-#if !defined(UNDER_CE)  // Windows CE does not define GetProcessTimes
-#if defined( AUTOBOOST_USE_WINDOWS_H )
-    using ::GetProcessTimes;
-#else
-    extern "C" __declspec(dllimport) BOOL_ WINAPI
-        GetProcessTimes(
-            HANDLE_ hProcess,
-            LPFILETIME_ lpCreationTime,
-            LPFILETIME_ lpExitTime,
-            LPFILETIME_ lpKernelTime,
-            LPFILETIME_ lpUserTime
-        );
+#if defined(__GNUC__) && (((__GNUC__*100)+__GNUC_MINOR__) > 403)
+#pragma message "This header is deprecated, use autoboost/detail/winapi/get_process_times.hpp instead."
+#elif defined(_MSC_VER)
+#pragma message("This header is deprecated, use autoboost/detail/winapi/get_process_times.hpp instead.")
 #endif
-#endif
-}
-}
-}
 
 #endif // AUTOBOOST_DETAIL_WINAPI_GETPROCESSTIMES_HPP

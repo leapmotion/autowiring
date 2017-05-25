@@ -30,8 +30,9 @@
 #include <cstddef>
 #include <string>
 #include <autoboost/limits.hpp>
+#include <autoboost/mpl/bool.hpp>
+#include <autoboost/mpl/identity.hpp>
 #include <autoboost/mpl/if.hpp>
-#include <autoboost/type_traits/ice.hpp>
 #include <autoboost/type_traits/is_integral.hpp>
 #include <autoboost/type_traits/is_float.hpp>
 #include <autoboost/type_traits/has_left_shift.hpp>
@@ -322,30 +323,6 @@ namespace autoboost {
         };
     }
 
-    namespace detail // is_this_float_conversion_optimized<Float, Char>
-    {
-        // this metafunction evaluates to true, if we have optimized comnversion
-        // from Float type to Char array.
-        // Must be in sync with lexical_stream_limited_src<Char, ...>::shl_real_type(...)
-        template <typename Float, typename Char>
-        struct is_this_float_conversion_optimized
-        {
-            typedef autoboost::type_traits::ice_and<
-                autoboost::is_float<Float>::value,
-#if !defined(AUTOBOOST_LCAST_NO_WCHAR_T) && !defined(AUTOBOOST_NO_SWPRINTF) && !defined(__MINGW32__)
-                autoboost::type_traits::ice_or<
-                    autoboost::type_traits::ice_eq<sizeof(Char), sizeof(char) >::value,
-                    autoboost::is_same<Char, wchar_t>::value
-                >::value
-#else
-                autoboost::type_traits::ice_eq<sizeof(Char), sizeof(char) >::value
-#endif
-            > result_type;
-
-            AUTOBOOST_STATIC_CONSTANT(bool, value = (result_type::value) );
-        };
-    }
-
     namespace detail // lcast_src_length
     {
         // Return max. length of string representation of Source;
@@ -387,7 +364,6 @@ namespace autoboost {
 #endif
         };
 
-#ifndef AUTOBOOST_LCAST_NO_COMPILE_TIME_PRECISION
         // Helper for floating point types.
         // -1.23456789e-123456
         // ^                   sign
@@ -403,6 +379,8 @@ namespace autoboost {
                 Source, AUTOBOOST_DEDUCED_TYPENAME autoboost::enable_if<autoboost::is_float<Source> >::type
             >
         {
+
+#ifndef AUTOBOOST_LCAST_NO_COMPILE_TIME_PRECISION
             AUTOBOOST_STATIC_ASSERT(
                     std::numeric_limits<Source>::max_exponent10 <=  999999L &&
                     std::numeric_limits<Source>::min_exponent10 >= -999999L
@@ -411,8 +389,10 @@ namespace autoboost {
             AUTOBOOST_STATIC_CONSTANT(std::size_t, value =
                     5 + lcast_precision<Source>::value + 6
                 );
-        };
+#else // #ifndef AUTOBOOST_LCAST_NO_COMPILE_TIME_PRECISION
+            AUTOBOOST_STATIC_CONSTANT(std::size_t, value = 156);
 #endif // #ifndef AUTOBOOST_LCAST_NO_COMPILE_TIME_PRECISION
+        };
     }
 
     namespace detail // lexical_cast_stream_traits<Source, Target>
@@ -447,28 +427,26 @@ namespace autoboost {
                 AUTOBOOST_DEDUCED_TYPENAME autoboost::detail::extract_char_traits<char_type, no_cv_src>
             >::type::trait_t traits;
 
-            typedef autoboost::type_traits::ice_and<
-                autoboost::is_same<char, src_char_t>::value,                                  // source is not a wide character based type
-                autoboost::type_traits::ice_ne<sizeof(char), sizeof(target_char_t) >::value,  // target type is based on wide character
-                autoboost::type_traits::ice_not<
-                    autoboost::detail::is_character<no_cv_src>::value                     // single character widening is optimized
-                >::value                                                                  // and does not requires stringbuffer
-            >   is_string_widening_required_t;
+            typedef autoboost::mpl::bool_
+            	<
+                autoboost::is_same<char, src_char_t>::value &&                                 // source is not a wide character based type
+                (sizeof(char) != sizeof(target_char_t)) &&  // target type is based on wide character
+                (!(autoboost::detail::is_character<no_cv_src>::value))
+            	> is_string_widening_required_t;
 
-            typedef autoboost::type_traits::ice_not< autoboost::type_traits::ice_or<
-                autoboost::is_integral<no_cv_src>::value,
-                autoboost::detail::is_this_float_conversion_optimized<no_cv_src, char_type >::value,
-                autoboost::detail::is_character<
+            typedef autoboost::mpl::bool_
+            	<
+            	!(autoboost::is_integral<no_cv_src>::value ||
+                  autoboost::detail::is_character<
                     AUTOBOOST_DEDUCED_TYPENAME deduce_src_char_metafunc::stage1_type          // if we did not get character type at stage1
-                >::value                                                                  // then we have no optimization for that type
-            >::value >   is_source_input_not_optimized_t;
+                  >::value                                                           // then we have no optimization for that type
+            	 )
+            	> is_source_input_not_optimized_t;
 
             // If we have an optimized conversion for
             // Source, we do not need to construct stringbuf.
             AUTOBOOST_STATIC_CONSTANT(bool, requires_stringbuf =
-                (autoboost::type_traits::ice_or<
-                    is_string_widening_required_t::value, is_source_input_not_optimized_t::value
-                >::value)
+            	(is_string_widening_required_t::value || is_source_input_not_optimized_t::value)
             );
 
             typedef autoboost::detail::lcast_src_length<no_cv_src> len_t;

@@ -11,7 +11,11 @@
 #ifndef AUTOBOOST_CONTAINER_ALLOCATION_TYPE_HPP
 #define AUTOBOOST_CONTAINER_ALLOCATION_TYPE_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -36,7 +40,7 @@ enum allocation_type_v
    try_shrink_in_place_v = 0x40
 };
 
-typedef int allocation_type;
+typedef unsigned int allocation_type;
 #endif   //#ifndef AUTOBOOST_CONTAINER_DOXYGEN_INVOKED
 static const allocation_type allocate_new       = (allocation_type)allocate_new_v;
 static const allocation_type expand_fwd         = (allocation_type)expand_fwd_v;

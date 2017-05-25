@@ -1,6 +1,7 @@
 //  GetCurrentThread.hpp  --------------------------------------------------------------//
 
 //  Copyright 2010 Vicente J. Botet Escriba
+//  Copyright 2015 Andrey Semashev
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
@@ -9,30 +10,16 @@
 #ifndef AUTOBOOST_DETAIL_WINAPI_GETCURRENTTHREAD_HPP
 #define AUTOBOOST_DETAIL_WINAPI_GETCURRENTTHREAD_HPP
 
-#include <autoboost/detail/winapi/basic_types.hpp>
+#include <autoboost/detail/winapi/get_current_thread.hpp>
 
 #ifdef AUTOBOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
-namespace autoboost {
-namespace detail {
-namespace winapi {
-#if defined( UNDER_CE )
-// Windows CE define GetCurrentThread as an inline function in kfuncs.h
-inline HANDLE_ GetCurrentThread()
-{
-  return ::GetCurrentThread();
-}
-#else
-#if defined( AUTOBOOST_USE_WINDOWS_H )
-    using ::GetCurrentThread;
-#else
-    extern "C" __declspec(dllimport) HANDLE_ WINAPI GetCurrentThread();
+#if defined(__GNUC__) && (((__GNUC__*100)+__GNUC_MINOR__) > 403)
+#pragma message "This header is deprecated, use autoboost/detail/winapi/get_current_thread.hpp instead."
+#elif defined(_MSC_VER)
+#pragma message("This header is deprecated, use autoboost/detail/winapi/get_current_thread.hpp instead.")
 #endif
-#endif
-}
-}
-}
 
 #endif // AUTOBOOST_DETAIL_WINAPI_GETCURRENTTHREAD_HPP

@@ -32,7 +32,7 @@
 #endif
 
 namespace autoboost{
-namespace re_detail{
+namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 class AUTOBOOST_REGEX_DECL abstract_protected_call
 {

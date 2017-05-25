@@ -14,7 +14,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // utf8_codecvt_facet.hpp
 
-// This header defines class utf8_codecvt_facet, derived fro
+// This header defines class utf8_codecvt_facet, derived from
 // std::codecvt<wchar_t, char>, which can be used to convert utf8 data in
 // files into wchar_t strings in the application.
 //
@@ -28,12 +28,13 @@
 //   This seems inconvenient, and asking a user to link to an unrevieved
 //   library is strange.
 // Until the above points are fixed, a library which wants to use utf8 must:
-// - include this header from one of it's headers or sources
-// - include the corresponding .cpp file from one of the sources
+// - include this header in one of it's headers or sources
+// - include the corresponding autoboost/detail/utf8_codecvt_facet.ipp file in one
+//   of its sources
 // - before including either file, the library must define
 //   - AUTOBOOST_UTF8_BEGIN_NAMESPACE to the namespace declaration that must be used
 //   - AUTOBOOST_UTF8_END_NAMESPACE to the code to close the previous namespace
-//   - declaration.
+//     declaration.
 //   - AUTOBOOST_UTF8_DECL -- to the code which must be used for all 'exportable'
 //     symbols.
 //
@@ -42,7 +43,7 @@
 //             namespace autoboost { namespace program_options {
 //    #define AUTOBOOST_UTF8_END_NAMESPACE }}
 //    #define AUTOBOOST_UTF8_DECL AUTOBOOST_PROGRAM_OPTIONS_DECL
-//    #include "../../detail/utf8/utf8_codecvt.cpp"
+//    #include <autoboost/detail/utf8_codecvt_facet.ipp>
 //
 // Essentially, each library will have its own copy of utf8 code, in
 // different namespaces.
@@ -92,26 +93,30 @@ namespace std {
 }
 #endif
 
-#if !defined(__MSL_CPP__) && !defined(__LIBCOMO__)
-    #define AUTOBOOST_CODECVT_DO_LENGTH_CONST const
-#else
-    #define AUTOBOOST_CODECVT_DO_LENGTH_CONST
-#endif
-
 // maximum lenght of a multibyte string
 #define MB_LENGTH_MAX 8
 
 AUTOBOOST_UTF8_BEGIN_NAMESPACE
 
-struct AUTOBOOST_UTF8_DECL utf8_codecvt_facet :
+//----------------------------------------------------------------------------//
+//                                                                            //
+//                          utf8_codecvt_facet                                //
+//                                                                            //
+//            See utf8_codecvt_facet.ipp for the implementation.              //
+//----------------------------------------------------------------------------//
+
+#ifndef AUTOBOOST_UTF8_DECL
+#define AUTOBOOST_UTF8_DECL
+#endif
+
+struct AUTOBOOST_SYMBOL_VISIBLE utf8_codecvt_facet :
     public std::codecvt<wchar_t, char, std::mbstate_t>
 {
 public:
-    explicit utf8_codecvt_facet(std::size_t no_locale_manage=0)
-        : std::codecvt<wchar_t, char, std::mbstate_t>(no_locale_manage)
-    {}
+    AUTOBOOST_UTF8_DECL explicit utf8_codecvt_facet(std::size_t no_locale_manage=0);
+    virtual  ~utf8_codecvt_facet(){}
 protected:
-    virtual std::codecvt_base::result do_in(
+    AUTOBOOST_UTF8_DECL virtual std::codecvt_base::result do_in(
         std::mbstate_t& state,
         const char * from,
         const char * from_end,
@@ -121,7 +126,7 @@ protected:
         wchar_t*& to_next
     ) const;
 
-    virtual std::codecvt_base::result do_out(
+    AUTOBOOST_UTF8_DECL virtual std::codecvt_base::result do_out(
         std::mbstate_t & state,
         const wchar_t * from,
         const wchar_t * from_end,
@@ -145,11 +150,11 @@ protected:
         return get_octet_count(lead_octet) - 1;
     }
 
-    static unsigned int get_octet_count(unsigned char lead_octet);
+    AUTOBOOST_UTF8_DECL static unsigned int get_octet_count(unsigned char lead_octet);
 
     // How many "continuing octets" will be needed for this word
     // ==   total octets - 1.
-    int get_cont_octet_out_count(wchar_t word) const ;
+    AUTOBOOST_UTF8_DECL int get_cont_octet_out_count(wchar_t word) const ;
 
     virtual bool do_always_noconv() const AUTOBOOST_NOEXCEPT_OR_NOTHROW {
         return false;
@@ -173,13 +178,33 @@ protected:
 
     // How many char objects can I process to get <= max_limit
     // wchar_t objects?
-    virtual int do_length(
-        AUTOBOOST_CODECVT_DO_LENGTH_CONST std::mbstate_t &,
+    AUTOBOOST_UTF8_DECL virtual int do_length(
+        const std::mbstate_t &,
         const char * from,
         const char * from_end,
         std::size_t max_limit
-    ) const;
-
+    ) const
+#if AUTOBOOST_WORKAROUND(__IBMCPP__, AUTOBOOST_TESTED_AT(600))
+    throw()
+#endif
+    ;
+    virtual int do_length(
+        std::mbstate_t & s,
+        const char * from,
+        const char * from_end,
+        std::size_t max_limit
+    ) const
+#if AUTOBOOST_WORKAROUND(__IBMCPP__, AUTOBOOST_TESTED_AT(600))
+    throw()
+#endif
+    {
+        return do_length(
+            const_cast<const std::mbstate_t &>(s),
+            from,
+            from_end,
+            max_limit
+        );
+    }
     // Largest possible value do_length(state,from,from_end,1) could return.
     virtual int do_max_length() const AUTOBOOST_NOEXCEPT_OR_NOTHROW {
         return 6; // largest UTF-8 encoding of a UCS-4 character

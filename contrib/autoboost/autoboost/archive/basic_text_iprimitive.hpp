@@ -24,7 +24,6 @@
 // in such cases.   So we can't use basic_ostream<IStream::char_type> but rather
 // use two template parameters
 
-#include <autoboost/assert.hpp>
 #include <locale>
 #include <cstddef> // size_t
 
@@ -38,17 +37,15 @@ namespace std{
 } // namespace std
 #endif
 
+#include <autoboost/io/ios_state.hpp>
+#include <autoboost/static_assert.hpp>
+
 #include <autoboost/detail/workaround.hpp>
 #if AUTOBOOST_WORKAROUND(AUTOBOOST_DINKUMWARE_STDLIB, == 1)
 #include <autoboost/archive/dinkumware.hpp>
 #endif
-
-#include <autoboost/limits.hpp>
-#include <autoboost/io/ios_state.hpp>
-#include <autoboost/scoped_ptr.hpp>
-#include <autoboost/static_assert.hpp>
-
 #include <autoboost/serialization/throw_exception.hpp>
+#include <autoboost/archive/codecvt_null.hpp>
 #include <autoboost/archive/archive_exception.hpp>
 #include <autoboost/archive/basic_streambuf_locale_saver.hpp>
 #include <autoboost/archive/detail/abi_prefix.hpp> // must be the last header
@@ -64,15 +61,23 @@ namespace archive {
 #endif
 
 template<class IStream>
-class basic_text_iprimitive {
+class AUTOBOOST_SYMBOL_VISIBLE basic_text_iprimitive {
 protected:
     IStream &is;
     io::ios_flags_saver flags_saver;
     io::ios_precision_saver precision_saver;
 
     #ifndef AUTOBOOST_NO_STD_LOCALE
-    autoboost::scoped_ptr<std::locale> archive_locale;
-    basic_streambuf_locale_saver<
+    // note order! - if you change this, libstd++ will fail!
+    // a) create new locale with new codecvt facet
+    // b) save current locale
+    // c) change locale to new one
+    // d) use stream buffer
+    // e) change locale back to original
+    // f) destroy new codecvt facet
+    autoboost::archive::codecvt_null<typename IStream::char_type> codecvt_null_facet;
+    std::locale archive_locale;
+    basic_istream_locale_saver<
         typename IStream::char_type,
         typename IStream::traits_type
     > locale_saver;
@@ -116,12 +121,12 @@ protected:
         t = i;
     }
     #endif
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     basic_text_iprimitive(IStream  &is, bool no_codecvt);
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     ~basic_text_iprimitive();
 public:
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     load_binary(void *address, std::size_t count);
 };
 

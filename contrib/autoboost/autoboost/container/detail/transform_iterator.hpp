@@ -14,15 +14,18 @@
 #ifndef AUTOBOOST_CONTAINER_DETAIL_TRANSFORM_ITERATORS_HPP
 #define AUTOBOOST_CONTAINER_DETAIL_TRANSFORM_ITERATORS_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
 #include <autoboost/container/detail/config_begin.hpp>
 #include <autoboost/container/detail/workaround.hpp>
-
 #include <autoboost/container/detail/type_traits.hpp>
-#include <iterator>
+#include <autoboost/container/detail/iterator.hpp>
 
 namespace autoboost {
 namespace container {
@@ -58,7 +61,7 @@ struct operator_arrow_proxy<T&>
 template <class Iterator, class UnaryFunction>
 class transform_iterator
    : public UnaryFunction
-   , public std::iterator
+   , public autoboost::container::iterator
       < typename Iterator::iterator_category
       , typename container_detail::remove_reference<typename UnaryFunction::result_type>::type
       , typename Iterator::difference_type
@@ -156,10 +159,10 @@ class transform_iterator
    { return UnaryFunction::operator()(*m_it); }
 
    void advance(typename Iterator::difference_type n)
-   {  std::advance(m_it, n); }
+   {  autoboost::container::iterator_advance(m_it, n); }
 
    typename Iterator::difference_type distance_to(const transform_iterator &other)const
-   {  return std::distance(other.m_it, m_it); }
+   {  return autoboost::container::iterator_distance(other.m_it, m_it); }
 };
 
 template <class Iterator, class UnaryFunc>

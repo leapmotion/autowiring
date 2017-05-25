@@ -39,4 +39,20 @@
 #define AUTOBOOST_ATOMIC_DECL
 #endif
 
+///////////////////////////////////////////////////////////////////////////////
+//  Auto library naming
+#if !defined(AUTOBOOST_ATOMIC_SOURCE) && !defined(AUTOBOOST_ALL_NO_LIB) && \
+    !defined(AUTOBOOST_ATOMIC_NO_LIB)
+
+#define AUTOBOOST_LIB_NAME autoboost_atomic
+
+// tell the auto-link code to select a dll when required:
+#if defined(AUTOBOOST_ALL_DYN_LINK) || defined(AUTOBOOST_ATOMIC_DYN_LINK)
+#define AUTOBOOST_DYN_LINK
+#endif
+
+#include <autoboost/config/auto_link.hpp>
+
+#endif  // auto-linking disabled
+
 #endif

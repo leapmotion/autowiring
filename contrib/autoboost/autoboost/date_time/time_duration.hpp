@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_TIME_DURATION_HPP___
-#define AB_DATE_TIME_TIME_DURATION_HPP___
+#ifndef DATE_TIME_TIME_DURATION_HPP___
+#define DATE_TIME_TIME_DURATION_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -31,7 +31,7 @@ namespace date_time {
       @param rep_type The time resolution traits for this duration type.
   */
   template<class T, typename rep_type>
-  class time_duration : private
+  class AUTOBOOST_SYMBOL_VISIBLE time_duration : private
       autoboost::less_than_comparable<T
     , autoboost::equality_comparable<T
     > >
@@ -42,6 +42,8 @@ namespace date_time {
    * either (haven't tried) */
   {
   public:
+    // A tag for type categorization. Can be used to detect Boost.DateTime duration types in generic code.
+    typedef void _is_autoboost_date_time_duration;
     typedef T duration_type;  //the subclass
     typedef rep_type traits_type;
     typedef typename rep_type::day_type  day_type;
@@ -263,7 +265,7 @@ namespace date_time {
    * 10 for frac_of_second and resoultion adjustment
    */
   template<class base_duration, autoboost::int64_t frac_of_second>
-  class subsecond_duration : public base_duration
+  class AUTOBOOST_SYMBOL_VISIBLE subsecond_duration : public base_duration
   {
   public:
     typedef typename base_duration::impl_type impl_type;

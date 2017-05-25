@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2014
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -49,13 +49,12 @@ http://www.boost.org/LICENSE_1_0.txt)
 
 #define AUTOBOOST_COMP_PGI_NAME "Portland Group C/C++"
 
+#endif
+
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_COMP_PGI,AUTOBOOST_COMP_PGI_NAME)
 
 #ifdef AUTOBOOST_COMP_PGI_EMULATED
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_COMP_PGI_EMULATED,AUTOBOOST_COMP_PGI_NAME)
-#endif
-
-
 #endif

@@ -17,7 +17,6 @@
 //  See http://www.boost.org for updates, documentation, and revision history.
 
 #include <autoboost/assert.hpp>
-#include <autoboost/serialization/pfto.hpp>
 #include <autoboost/archive/iterators/escape.hpp>
 
 namespace autoboost {
@@ -40,8 +39,8 @@ public:
     wchar_t fill(const wchar_t * & bstart, const wchar_t * & bend);
 
     template<class T>
-    xml_escape(AUTOBOOST_PFTO_WRAPPER(T) start) :
-        super_t(Base(AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast< T >(start))))
+    xml_escape(T start) :
+        super_t(Base(static_cast< T >(start)))
     {}
     // intel 7.1 doesn't like default copy constructor
     xml_escape(const xml_escape & rhs) :

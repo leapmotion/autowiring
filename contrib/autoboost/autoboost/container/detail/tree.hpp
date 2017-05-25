@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2015. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,90 +11,59 @@
 #ifndef AUTOBOOST_CONTAINER_TREE_HPP
 #define AUTOBOOST_CONTAINER_TREE_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
 #include <autoboost/container/detail/config_begin.hpp>
 #include <autoboost/container/detail/workaround.hpp>
+// container
+#include <autoboost/container/allocator_traits.hpp>
 #include <autoboost/container/container_fwd.hpp>
+#include <autoboost/container/options.hpp>
+#include <autoboost/container/node_handle.hpp>
 
-#include <autoboost/container/detail/utilities.hpp>
-#include <autoboost/container/detail/iterators.hpp>
-#include <autoboost/container/detail/algorithms.hpp>
-#include <autoboost/container/detail/node_alloc_holder.hpp>
+// container/detail
+#include <autoboost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
+#include <autoboost/container/detail/compare_functors.hpp>
 #include <autoboost/container/detail/destroyers.hpp>
+#include <autoboost/container/detail/iterator.hpp>
+#include <autoboost/container/detail/iterators.hpp>
+#include <autoboost/container/detail/node_alloc_holder.hpp>
 #include <autoboost/container/detail/pair.hpp>
 #include <autoboost/container/detail/type_traits.hpp>
-#include <autoboost/container/allocator_traits.hpp>
-#include <autoboost/container/options.hpp>
-
-//
+// intrusive
 #include <autoboost/intrusive/pointer_traits.hpp>
 #include <autoboost/intrusive/rbtree.hpp>
 #include <autoboost/intrusive/avltree.hpp>
 #include <autoboost/intrusive/splaytree.hpp>
 #include <autoboost/intrusive/sgtree.hpp>
-//
+// intrusive/detail
+#include <autoboost/intrusive/detail/minimal_pair_header.hpp>   //pair
+#include <autoboost/intrusive/detail/tree_value_compare.hpp>    //tree_value_compare
+// move
 #include <autoboost/move/utility_core.hpp>
-#include <autoboost/type_traits/has_trivial_destructor.hpp>
-#include <autoboost/core/no_exceptions_support.hpp>
-//
-#ifndef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
-#include <autoboost/container/detail/preprocessor.hpp>
+// move/detail
+#if !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#include <autoboost/move/detail/fwd_macros.hpp>
 #endif
+#include <autoboost/move/detail/move_helpers.hpp>
+// other
+#include <autoboost/core/no_exceptions_support.hpp>
 
-#include <utility>   //std::pair
-#include <iterator>
-#include <algorithm>
+
+
+#include <autoboost/container/detail/std_fwd.hpp>
 
 namespace autoboost {
 namespace container {
 namespace container_detail {
 
-template<class Key, class Value, class KeyCompare, class KeyOfValue>
-struct tree_value_compare
-   :  public KeyCompare
-{
-   typedef Value        value_type;
-   typedef KeyCompare   key_compare;
-   typedef KeyOfValue   key_of_value;
-   typedef Key          key_type;
-
-   explicit tree_value_compare(const key_compare &kcomp)
-      :  KeyCompare(kcomp)
-   {}
-
-   tree_value_compare()
-      :  KeyCompare()
-   {}
-
-   const key_compare &key_comp() const
-   {  return static_cast<const key_compare &>(*this);  }
-
-   key_compare &key_comp()
-   {  return static_cast<key_compare &>(*this);  }
-
-   template<class T>
-   struct is_key
-   {
-      static const bool value = is_same<const T, const key_type>::value;
-   };
-
-   template<class T>
-   typename enable_if_c<is_key<T>::value, const key_type &>::type
-      key_forward(const T &key) const
-   {  return key; }
-
-   template<class T>
-   typename enable_if_c<!is_key<T>::value, const key_type &>::type
-      key_forward(const T &key) const
-   {  return KeyOfValue()(key);  }
-
-   template<class KeyType, class KeyType2>
-   bool operator()(const KeyType &key1, const KeyType2 &key2) const
-   {  return key_compare::operator()(this->key_forward(key1), this->key_forward(key2));  }
-};
+using autoboost::intrusive::tree_value_compare;
 
 template<class VoidPointer, autoboost::container::tree_type_enum tree_type_value, bool OptimizeSize>
 struct intrusive_tree_hook;
@@ -148,7 +117,7 @@ struct tree_internal_data_type
 template<class T1, class T2>
 struct tree_internal_data_type< std::pair<T1, T2> >
 {
-   typedef pair<T1, T2> type;
+   typedef pair<typename autoboost::move_detail::remove_const<T1>::type, T2> type;
 };
 
 //The node to be store in the tree
@@ -167,15 +136,15 @@ struct tree_node
    typedef typename tree_internal_data_type<T>::type     internal_type;
 
    typedef tree_node< T, VoidPointer
-                    , tree_type_value, OptimizeSize>     node_type;
+                    , tree_type_value, OptimizeSize>     node_t;
 
-   T &get_data()
+   AUTOBOOST_CONTAINER_FORCEINLINE T &get_data()
    {
       T* ptr = reinterpret_cast<T*>(&this->m_data);
       return *ptr;
    }
 
-   const T &get_data() const
+   AUTOBOOST_CONTAINER_FORCEINLINE const T &get_data() const
    {
       const T* ptr = reinterpret_cast<const T*>(&this->m_data);
       return *ptr;
@@ -183,40 +152,40 @@ struct tree_node
 
    internal_type m_data;
 
-   template<class A, class B>
-   void do_assign(const std::pair<const A, B> &p)
+   template<class T1, class T2>
+   AUTOBOOST_CONTAINER_FORCEINLINE void do_assign(const std::pair<const T1, T2> &p)
    {
-      const_cast<A&>(m_data.first) = p.first;
+      const_cast<T1&>(m_data.first) = p.first;
       m_data.second  = p.second;
    }
 
-   template<class A, class B>
-   void do_assign(const pair<const A, B> &p)
+   template<class T1, class T2>
+   AUTOBOOST_CONTAINER_FORCEINLINE void do_assign(const pair<const T1, T2> &p)
    {
-      const_cast<A&>(m_data.first) = p.first;
+      const_cast<T1&>(m_data.first) = p.first;
       m_data.second  = p.second;
    }
 
    template<class V>
-   void do_assign(const V &v)
+   AUTOBOOST_CONTAINER_FORCEINLINE void do_assign(const V &v)
    {  m_data = v; }
 
-   template<class A, class B>
-   void do_move_assign(std::pair<const A, B> &p)
+   template<class T1, class T2>
+   AUTOBOOST_CONTAINER_FORCEINLINE void do_move_assign(std::pair<const T1, T2> &p)
    {
-      const_cast<A&>(m_data.first) = ::autoboost::move(p.first);
+      const_cast<T1&>(m_data.first) = ::autoboost::move(p.first);
       m_data.second = ::autoboost::move(p.second);
    }
 
-   template<class A, class B>
-   void do_move_assign(pair<const A, B> &p)
+   template<class T1, class T2>
+   AUTOBOOST_CONTAINER_FORCEINLINE void do_move_assign(pair<const T1, T2> &p)
    {
-      const_cast<A&>(m_data.first) = ::autoboost::move(p.first);
+      const_cast<T1&>(m_data.first) = ::autoboost::move(p.first);
       m_data.second  = ::autoboost::move(p.second);
    }
 
    template<class V>
-   void do_move_assign(V &v)
+   AUTOBOOST_CONTAINER_FORCEINLINE void do_move_assign(V &v)
    {  m_data = ::autoboost::move(v); }
 };
 
@@ -231,11 +200,11 @@ class insert_equal_end_hint_functor
    Icont &icont_;
 
    public:
-   insert_equal_end_hint_functor(Icont &icont)
+   AUTOBOOST_CONTAINER_FORCEINLINE insert_equal_end_hint_functor(Icont &icont)
       :  icont_(icont)
    {}
 
-   void operator()(Node &n)
+   AUTOBOOST_CONTAINER_FORCEINLINE void operator()(Node &n)
    {  this->icont_.insert_equal(this->icont_.cend(), n); }
 };
 
@@ -245,11 +214,11 @@ class push_back_functor
    Icont &icont_;
 
    public:
-   push_back_functor(Icont &icont)
+   AUTOBOOST_CONTAINER_FORCEINLINE push_back_functor(Icont &icont)
       :  icont_(icont)
    {}
 
-   void operator()(Node &n)
+   AUTOBOOST_CONTAINER_FORCEINLINE void operator()(Node &n)
    {  this->icont_.push_back(n); }
 };
 
@@ -314,29 +283,30 @@ struct intrusive_tree_dispatch
       >::type  type;
 };
 
-template<class A, class ValueCompare, autoboost::container::tree_type_enum tree_type_value, bool OptimizeSize>
+template<class Allocator, class ValueCompare, autoboost::container::tree_type_enum tree_type_value, bool OptimizeSize>
 struct intrusive_tree_type
 {
    private:
    typedef typename autoboost::container::
-      allocator_traits<A>::value_type              value_type;
+      allocator_traits<Allocator>::value_type              value_type;
    typedef typename autoboost::container::
-      allocator_traits<A>::void_pointer            void_pointer;
+      allocator_traits<Allocator>::void_pointer            void_pointer;
    typedef typename autoboost::container::
-      allocator_traits<A>::size_type               size_type;
+      allocator_traits<Allocator>::size_type               size_type;
    typedef typename container_detail::tree_node
          < value_type, void_pointer
-         , tree_type_value, OptimizeSize>          node_type;
-   typedef node_compare<ValueCompare, node_type>   node_compare_type;
-   //Deducing the hook type from node_type (e.g. node_type::hook_type) would
-   //provoke an early instantiation of node_type that could ruin recursive
+         , tree_type_value, OptimizeSize>                   node_t;
+   typedef value_to_node_compare
+      <node_t, ValueCompare>                                node_compare_type;
+   //Deducing the hook type from node_t (e.g. node_t::hook_type) would
+   //provoke an early instantiation of node_t that could ruin recursive
    //tree definitions, so retype the complete type to avoid any problem.
    typedef typename intrusive_tree_hook
       <void_pointer, tree_type_value
       , OptimizeSize>::type                        hook_type;
    public:
    typedef typename intrusive_tree_dispatch
-      < node_type, node_compare_type
+      < node_t, node_compare_type
       , size_type, hook_type
       , tree_type_value>::type                     type;
 };
@@ -359,14 +329,14 @@ template< autoboost::container::tree_type_enum tree_type_value
 struct intrusive_tree_proxy
 {
    template<class Icont>
-   static void rebalance(Icont &)   {}
+   AUTOBOOST_CONTAINER_FORCEINLINE static void rebalance(Icont &)   {}
 };
 
 template<autoboost::container::tree_type_enum tree_type_value>
 struct intrusive_tree_proxy<tree_type_value, true>
 {
    template<class Icont>
-   static void rebalance(Icont &c)
+   AUTOBOOST_CONTAINER_FORCEINLINE static void rebalance(Icont &c)
    {  c.rebalance(); }
 };
 
@@ -382,7 +352,7 @@ template<class AllocHolder, bool DoMove>
 class RecyclingCloner
 {
    typedef typename AllocHolder::intrusive_container  intrusive_container;
-   typedef typename AllocHolder::Node                 node_type;
+   typedef typename AllocHolder::Node                 node_t;
    typedef typename AllocHolder::NodePtr              node_ptr_type;
 
    public:
@@ -390,13 +360,13 @@ class RecyclingCloner
       :  m_holder(holder), m_icont(itree)
    {}
 
-   static void do_assign(node_ptr_type &p, const node_type &other, bool_<true>)
+   AUTOBOOST_CONTAINER_FORCEINLINE static void do_assign(node_ptr_type &p, const node_t &other, bool_<true>)
+   {  p->do_move_assign(const_cast<node_t &>(other).m_data);   }
+
+   AUTOBOOST_CONTAINER_FORCEINLINE static void do_assign(node_ptr_type &p, const node_t &other, bool_<false>)
    {  p->do_assign(other.m_data);   }
 
-   static void do_assign(node_ptr_type &p, const node_type &other, bool_<false>)
-   {  p->do_move_assign(const_cast<node_type &>(other).m_data);   }
-
-   node_ptr_type operator()(const node_type &other) const
+   node_ptr_type operator()(const node_t &other) const
    {
       if(node_ptr_type p = m_icont.unlink_leftmost_without_rebalance()){
          //First recycle a node (this can't throw)
@@ -424,65 +394,72 @@ class RecyclingCloner
    intrusive_container &m_icont;
 };
 
-template<class KeyValueCompare, class Node>
-//where KeyValueCompare is tree_value_compare<Key, Value, KeyCompare, KeyOfValue>
+template<class KeyCompare, class KeyOfValue>
 struct key_node_compare
-   :  private KeyValueCompare
+   :  public autoboost::intrusive::detail::ebo_functor_holder<KeyCompare>
 {
-   explicit key_node_compare(const KeyValueCompare &comp)
-      :  KeyValueCompare(comp)
+   AUTOBOOST_CONTAINER_FORCEINLINE explicit key_node_compare(const KeyCompare &comp)
+      :  base_t(comp)
    {}
 
-   template<class T>
-   struct is_node
-   {
-      static const bool value = is_same<T, Node>::value;
-   };
+   typedef autoboost::intrusive::detail::ebo_functor_holder<KeyCompare> base_t;
+   typedef KeyCompare                  key_compare;
+   typedef KeyOfValue                  key_of_value;
+   typedef typename KeyOfValue::type   key_type;
 
-   template<class T>
-   typename enable_if_c<is_node<T>::value, const typename KeyValueCompare::value_type &>::type
-      key_forward(const T &node) const
-   {  return node.get_data();  }
+   AUTOBOOST_CONTAINER_FORCEINLINE const key_compare &key_comp() const
+   {  return static_cast<const key_compare &>(*this);  }
 
-   template<class T>
-   typename enable_if_c<!is_node<T>::value, const T &>::type
-      key_forward(const T &key) const
-   {  return key; }
+   AUTOBOOST_CONTAINER_FORCEINLINE key_compare &key_comp()
+   {  return static_cast<key_compare &>(*this);  }
 
-   template<class KeyType, class KeyType2>
-   bool operator()(const KeyType &key1, const KeyType2 &key2) const
-   {  return KeyValueCompare::operator()(this->key_forward(key1), this->key_forward(key2));  }
+   AUTOBOOST_CONTAINER_FORCEINLINE bool operator()(const key_type &key1, const key_type &key2) const
+   {  return this->key_comp()(key1, key2);  }
+
+   template<class U>
+   AUTOBOOST_CONTAINER_FORCEINLINE bool operator()(const key_type &key1, const U &nonkey2) const
+   {  return this->key_comp()(key1, key_of_value()(nonkey2.get_data()));  }
+
+   template<class U>
+   AUTOBOOST_CONTAINER_FORCEINLINE bool operator()(const U &nonkey1, const key_type &key2) const
+   {  return this->key_comp()(key_of_value()(nonkey1.get_data()), key2);  }
+
+   template<class U, class V>
+   AUTOBOOST_CONTAINER_FORCEINLINE bool operator()(const U &nonkey1, const V &nonkey2) const
+   {  return this->key_comp()(key_of_value()(nonkey1.get_data()), key_of_value()(nonkey2.get_data()));  }
 };
 
-template <class Key, class Value, class KeyOfValue,
-          class KeyCompare, class A,
+template <class T, class KeyOfValue,
+          class Compare, class Allocator,
           class Options = tree_assoc_defaults>
 class tree
-   : protected container_detail::node_alloc_holder
-      < A
+   : public container_detail::node_alloc_holder
+      < Allocator
       , typename container_detail::intrusive_tree_type
-         < A, tree_value_compare<Key, Value, KeyCompare, KeyOfValue> //ValComp
+         < Allocator, tree_value_compare
+            <typename allocator_traits<Allocator>::pointer, Compare, KeyOfValue>
          , Options::tree_type, Options::optimize_size>::type
       >
 {
    typedef tree_value_compare
-            <Key, Value, KeyCompare, KeyOfValue>            ValComp;
+      < typename allocator_traits<Allocator>::pointer
+      , Compare, KeyOfValue>                                ValComp;
    typedef typename container_detail::intrusive_tree_type
-         < A, ValComp, Options::tree_type
+         < Allocator, ValComp, Options::tree_type
          , Options::optimize_size>::type                    Icont;
    typedef container_detail::node_alloc_holder
-      <A, Icont>                                            AllocHolder;
+      <Allocator, Icont>                                    AllocHolder;
    typedef typename AllocHolder::NodePtr                    NodePtr;
-   typedef tree < Key, Value, KeyOfValue
-                , KeyCompare, A, Options>                   ThisType;
+   typedef tree < T, KeyOfValue
+                , Compare, Allocator, Options>              ThisType;
    typedef typename AllocHolder::NodeAlloc                  NodeAlloc;
+   typedef autoboost::container::
+      allocator_traits<NodeAlloc>                           allocator_traits_type;
    typedef typename AllocHolder::ValAlloc                   ValAlloc;
    typedef typename AllocHolder::Node                       Node;
    typedef typename Icont::iterator                         iiterator;
    typedef typename Icont::const_iterator                   iconst_iterator;
    typedef container_detail::allocator_destroyer<NodeAlloc> Destroyer;
-   typedef typename AllocHolder::allocator_v1               allocator_v1;
-   typedef typename AllocHolder::allocator_v2               allocator_v2;
    typedef typename AllocHolder::alloc_version              alloc_version;
    typedef intrusive_tree_proxy<Options::tree_type>         intrusive_tree_proxy_t;
 
@@ -490,49 +467,53 @@ class tree
 
    public:
 
-   typedef Key                                        key_type;
-   typedef Value                                      value_type;
-   typedef A                                          allocator_type;
-   typedef KeyCompare                                 key_compare;
+   typedef typename KeyOfValue::type                  key_type;
+   typedef T                                          value_type;
+   typedef Allocator                                  allocator_type;
+   typedef Compare                                    key_compare;
    typedef ValComp                                    value_compare;
    typedef typename autoboost::container::
-      allocator_traits<A>::pointer                    pointer;
+      allocator_traits<Allocator>::pointer            pointer;
    typedef typename autoboost::container::
-      allocator_traits<A>::const_pointer              const_pointer;
+      allocator_traits<Allocator>::const_pointer      const_pointer;
    typedef typename autoboost::container::
-      allocator_traits<A>::reference                  reference;
+      allocator_traits<Allocator>::reference          reference;
    typedef typename autoboost::container::
-      allocator_traits<A>::const_reference            const_reference;
+      allocator_traits<Allocator>::const_reference    const_reference;
    typedef typename autoboost::container::
-      allocator_traits<A>::size_type                  size_type;
+      allocator_traits<Allocator>::size_type          size_type;
    typedef typename autoboost::container::
-      allocator_traits<A>::difference_type            difference_type;
-   typedef difference_type                            tree_difference_type;
-   typedef pointer                                    tree_pointer;
-   typedef const_pointer                              tree_const_pointer;
-   typedef reference                                  tree_reference;
-   typedef const_reference                            tree_const_reference;
+      allocator_traits<Allocator>::difference_type    difference_type;
+   typedef container_detail::iterator_from_iiterator
+      <iiterator, false>                              iterator;
+   typedef container_detail::iterator_from_iiterator
+      <iiterator, true >                              const_iterator;
+   typedef autoboost::container::reverse_iterator
+      <iterator>                                      reverse_iterator;
+   typedef autoboost::container::reverse_iterator
+      <const_iterator>                                const_reverse_iterator;
+   typedef node_handle
+      < Node, value_type, allocator_type, void>       node_type;
+   typedef insert_return_type_base
+      <iterator, node_type>                           insert_return_type;
+
    typedef NodeAlloc                                  stored_allocator_type;
 
    private:
 
-   typedef key_node_compare<value_compare, Node>  KeyNodeCompare;
+   typedef key_node_compare<key_compare, KeyOfValue>  KeyNodeCompare;
 
    public:
-   typedef container_detail::iterator<iiterator, false>        iterator;
-   typedef container_detail::iterator<iiterator, true >        const_iterator;
-   typedef container_detail::reverse_iterator<iterator>        reverse_iterator;
-   typedef container_detail::reverse_iterator<const_iterator>  const_reverse_iterator;
 
-   tree()
-      : AllocHolder(ValComp(key_compare()))
+   AUTOBOOST_CONTAINER_FORCEINLINE tree()
+      : AllocHolder()
    {}
 
-   explicit tree(const key_compare& comp, const allocator_type& a = allocator_type())
-      : AllocHolder(a, ValComp(comp))
+   AUTOBOOST_CONTAINER_FORCEINLINE explicit tree(const key_compare& comp, const allocator_type& a = allocator_type())
+      : AllocHolder(ValComp(comp), a)
    {}
 
-   explicit tree(const allocator_type& a)
+   AUTOBOOST_CONTAINER_FORCEINLINE explicit tree(const allocator_type& a)
       : AllocHolder(a)
    {}
 
@@ -540,13 +521,14 @@ class tree
    tree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp,
           const allocator_type& a
       #if !defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < container_detail::is_input_iterator<InputIterator>::value
-            || container_detail::is_same<alloc_version, allocator_v1>::value
+      , typename container_detail::enable_if_or
+         < void
+         , container_detail::is_same<alloc_version, version_1>
+         , container_detail::is_input_iterator<InputIterator>
          >::type * = 0
       #endif
          )
-      : AllocHolder(a, value_compare(comp))
+      : AllocHolder(value_compare(comp), a)
    {
       //Use cend() as hint to achieve linear time for
       //ordered ranges as required by the standard
@@ -554,12 +536,12 @@ class tree
       const const_iterator end_it(this->cend());
       if(unique_insertion){
          for ( ; first != last; ++first){
-            this->insert_unique(end_it, *first);
+            this->insert_unique_convertible(end_it, *first);
          }
       }
       else{
          for ( ; first != last; ++first){
-            this->insert_equal(end_it, *first);
+            this->insert_equal_convertible(end_it, *first);
          }
       }
    }
@@ -568,13 +550,14 @@ class tree
    tree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp,
           const allocator_type& a
       #if !defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !(container_detail::is_input_iterator<InputIterator>::value
-            || container_detail::is_same<alloc_version, allocator_v1>::value)
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_same<alloc_version, version_1>
+         , container_detail::is_input_iterator<InputIterator>
          >::type * = 0
       #endif
          )
-      : AllocHolder(a, value_compare(comp))
+      : AllocHolder(value_compare(comp), a)
    {
       if(unique_insertion){
          //Use cend() as hint to achieve linear time for
@@ -582,13 +565,13 @@ class tree
          //for the constructor
          const const_iterator end_it(this->cend());
          for ( ; first != last; ++first){
-            this->insert_unique(end_it, *first);
+            this->insert_unique_convertible(end_it, *first);
          }
       }
       else{
          //Optimized allocation and construction
          this->allocate_many_and_construct
-            ( first, std::distance(first, last)
+            ( first, autoboost::container::iterator_distance(first, last)
             , insert_equal_end_hint_functor<Node, Icont>(this->icont()));
       }
    }
@@ -597,13 +580,14 @@ class tree
    tree( ordered_range_t, InputIterator first, InputIterator last
          , const key_compare& comp = key_compare(), const allocator_type& a = allocator_type()
          #if !defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
-         , typename container_detail::enable_if_c
-            < container_detail::is_input_iterator<InputIterator>::value
-               || container_detail::is_same<alloc_version, allocator_v1>::value
-            >::type * = 0
+      , typename container_detail::enable_if_or
+         < void
+         , container_detail::is_same<alloc_version, version_1>
+         , container_detail::is_input_iterator<InputIterator>
+         >::type * = 0
          #endif
          )
-      : AllocHolder(a, value_compare(comp))
+      : AllocHolder(value_compare(comp), a)
    {
       for ( ; first != last; ++first){
          this->push_back_impl(*first);
@@ -614,51 +598,53 @@ class tree
    tree( ordered_range_t, InputIterator first, InputIterator last
          , const key_compare& comp = key_compare(), const allocator_type& a = allocator_type()
          #if !defined(AUTOBOOST_CONTAINER_DOXYGEN_INVOKED)
-         , typename container_detail::enable_if_c
-            < !(container_detail::is_input_iterator<InputIterator>::value
-               || container_detail::is_same<alloc_version, allocator_v1>::value)
-            >::type * = 0
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_same<alloc_version, version_1>
+         , container_detail::is_input_iterator<InputIterator>
+         >::type * = 0
          #endif
          )
-      : AllocHolder(a, value_compare(comp))
+      : AllocHolder(value_compare(comp), a)
    {
       //Optimized allocation and construction
       this->allocate_many_and_construct
-         ( first, std::distance(first, last)
+         ( first, autoboost::container::iterator_distance(first, last)
          , container_detail::push_back_functor<Node, Icont>(this->icont()));
    }
 
-   tree(const tree& x)
-      :  AllocHolder(x, x.value_comp())
+   AUTOBOOST_CONTAINER_FORCEINLINE tree(const tree& x)
+      :  AllocHolder(x.value_comp(), x)
    {
       this->icont().clone_from
          (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
    }
 
-   tree(AUTOBOOST_RV_REF(tree) x)
-      :  AllocHolder(::autoboost::move(static_cast<AllocHolder&>(x)), x.value_comp())
+   AUTOBOOST_CONTAINER_FORCEINLINE tree(AUTOBOOST_RV_REF(tree) x)
+      AUTOBOOST_NOEXCEPT_IF(autoboost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
+      :  AllocHolder(AUTOBOOST_MOVE_BASE(AllocHolder, x), x.value_comp())
    {}
 
-   tree(const tree& x, const allocator_type &a)
-      :  AllocHolder(a, x.value_comp())
+   AUTOBOOST_CONTAINER_FORCEINLINE tree(const tree& x, const allocator_type &a)
+      :  AllocHolder(x.value_comp(), a)
    {
       this->icont().clone_from
          (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
    }
 
    tree(AUTOBOOST_RV_REF(tree) x, const allocator_type &a)
-      :  AllocHolder(a, x.value_comp())
+      :  AllocHolder(x.value_comp(), a)
    {
       if(this->node_alloc() == x.node_alloc()){
          this->icont().swap(x.icont());
       }
       else{
          this->icont().clone_from
-            (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
+            (autoboost::move(x.icont()), typename AllocHolder::move_cloner(*this), Destroyer(this->node_alloc()));
       }
    }
 
-   ~tree()
+   AUTOBOOST_CONTAINER_FORCEINLINE ~tree()
    {} //AllocHolder clears the tree
 
    tree& operator=(AUTOBOOST_COPY_ASSIGN_REF(tree) x)
@@ -693,6 +679,9 @@ class tree
    }
 
    tree& operator=(AUTOBOOST_RV_REF(tree) x)
+      AUTOBOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
+                          allocator_traits_type::is_always_equal::value) &&
+                           autoboost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
    {
       AUTOBOOST_ASSERT(this != &x);
       NodeAlloc &this_alloc = this->node_alloc();
@@ -719,7 +708,7 @@ class tree
 
          //Now recreate the source tree reusing nodes stored by other_tree
          this->icont().clone_from
-            (x.icont()
+            (::autoboost::move(x.icont())
             , RecyclingCloner<AllocHolder, true>(*this, other_tree)
             , Destroyer(this->node_alloc()));
 
@@ -734,43 +723,43 @@ class tree
 
    public:
    // accessors:
-   value_compare value_comp() const
-   {  return this->icont().value_comp().value_comp(); }
+   AUTOBOOST_CONTAINER_FORCEINLINE value_compare value_comp() const
+   {  return this->icont().value_comp().predicate(); }
 
-   key_compare key_comp() const
-   {  return this->icont().value_comp().value_comp().key_comp(); }
+   AUTOBOOST_CONTAINER_FORCEINLINE key_compare key_comp() const
+   {  return this->icont().value_comp().predicate().key_comp(); }
 
-   allocator_type get_allocator() const
+   AUTOBOOST_CONTAINER_FORCEINLINE allocator_type get_allocator() const
    {  return allocator_type(this->node_alloc()); }
 
-   const stored_allocator_type &get_stored_allocator() const
+   AUTOBOOST_CONTAINER_FORCEINLINE const stored_allocator_type &get_stored_allocator() const
    {  return this->node_alloc(); }
 
-   stored_allocator_type &get_stored_allocator()
+   AUTOBOOST_CONTAINER_FORCEINLINE stored_allocator_type &get_stored_allocator()
    {  return this->node_alloc(); }
 
-   iterator begin()
+   AUTOBOOST_CONTAINER_FORCEINLINE iterator begin()
    { return iterator(this->icont().begin()); }
 
-   const_iterator begin() const
+   AUTOBOOST_CONTAINER_FORCEINLINE const_iterator begin() const
    {  return this->cbegin();  }
 
-   iterator end()
+   AUTOBOOST_CONTAINER_FORCEINLINE iterator end()
    {  return iterator(this->icont().end());  }
 
-   const_iterator end() const
+   AUTOBOOST_CONTAINER_FORCEINLINE const_iterator end() const
    {  return this->cend();  }
 
-   reverse_iterator rbegin()
+   AUTOBOOST_CONTAINER_FORCEINLINE reverse_iterator rbegin()
    {  return reverse_iterator(end());  }
 
-   const_reverse_iterator rbegin() const
+   AUTOBOOST_CONTAINER_FORCEINLINE const_reverse_iterator rbegin() const
    {  return this->crbegin();  }
 
-   reverse_iterator rend()
+   AUTOBOOST_CONTAINER_FORCEINLINE reverse_iterator rend()
    {  return reverse_iterator(begin());   }
 
-   const_reverse_iterator rend() const
+   AUTOBOOST_CONTAINER_FORCEINLINE const_reverse_iterator rend() const
    {  return this->crend();   }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the container.
@@ -778,7 +767,7 @@ class tree
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cbegin() const
+   AUTOBOOST_CONTAINER_FORCEINLINE const_iterator cbegin() const
    { return const_iterator(this->non_const_icont().begin()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the container.
@@ -786,7 +775,7 @@ class tree
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cend() const
+   AUTOBOOST_CONTAINER_FORCEINLINE const_iterator cend() const
    { return const_iterator(this->non_const_icont().end()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -795,7 +784,7 @@ class tree
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crbegin() const
+   AUTOBOOST_CONTAINER_FORCEINLINE const_reverse_iterator crbegin() const
    { return const_reverse_iterator(cend()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -804,19 +793,21 @@ class tree
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crend() const
+   AUTOBOOST_CONTAINER_FORCEINLINE const_reverse_iterator crend() const
    { return const_reverse_iterator(cbegin()); }
 
-   bool empty() const
+   AUTOBOOST_CONTAINER_FORCEINLINE bool empty() const
    {  return !this->size();  }
 
-   size_type size() const
+   AUTOBOOST_CONTAINER_FORCEINLINE size_type size() const
    {  return this->icont().size();   }
 
-   size_type max_size() const
+   AUTOBOOST_CONTAINER_FORCEINLINE size_type max_size() const
    {  return AllocHolder::max_size();  }
 
-   void swap(ThisType& x)
+   AUTOBOOST_CONTAINER_FORCEINLINE void swap(ThisType& x)
+      AUTOBOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && autoboost::container::container_detail::is_nothrow_swappable<Compare>::value )
    {  AllocHolder::swap(x);   }
 
    public:
@@ -828,21 +819,24 @@ class tree
       (const key_type& key, insert_commit_data &data)
    {
       std::pair<iiterator, bool> ret =
-         this->icont().insert_unique_check(key, KeyNodeCompare(value_comp()), data);
+         this->icont().insert_unique_check(key, KeyNodeCompare(key_comp()), data);
       return std::pair<iterator, bool>(iterator(ret.first), ret.second);
    }
 
    std::pair<iterator,bool> insert_unique_check
       (const_iterator hint, const key_type& key, insert_commit_data &data)
    {
+      AUTOBOOST_ASSERT((priv_is_linked)(hint));
       std::pair<iiterator, bool> ret =
-         this->icont().insert_unique_check(hint.get(), key, KeyNodeCompare(value_comp()), data);
+         this->icont().insert_unique_check(hint.get(), key, KeyNodeCompare(key_comp()), data);
       return std::pair<iterator, bool>(iterator(ret.first), ret.second);
    }
 
-   iterator insert_unique_commit(const value_type& v, insert_commit_data &data)
+   template<class MovableConvertible>
+   iterator insert_unique_commit
+      (AUTOBOOST_FWD_REF(MovableConvertible) v, insert_commit_data &data)
    {
-      NodePtr tmp = AllocHolder::create_node(v);
+      NodePtr tmp = AllocHolder::create_node(autoboost::forward<MovableConvertible>(v));
       scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
       iterator ret(this->icont().insert_unique_commit(*tmp, data));
       destroy_deallocator.release();
@@ -850,45 +844,43 @@ class tree
    }
 
    template<class MovableConvertible>
-   iterator insert_unique_commit
-      (AUTOBOOST_FWD_REF(MovableConvertible) mv, insert_commit_data &data)
-   {
-      NodePtr tmp = AllocHolder::create_node(autoboost::forward<MovableConvertible>(mv));
-      scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
-      iterator ret(this->icont().insert_unique_commit(*tmp, data));
-      destroy_deallocator.release();
-      return ret;
-   }
-
-   std::pair<iterator,bool> insert_unique(const value_type& v)
+   std::pair<iterator,bool> insert_unique(AUTOBOOST_FWD_REF(MovableConvertible) v)
    {
       insert_commit_data data;
       std::pair<iterator,bool> ret =
          this->insert_unique_check(KeyOfValue()(v), data);
       if(ret.second){
-         ret.first = this->insert_unique_commit(v, data);
-      }
-      return ret;
-   }
-
-   template<class MovableConvertible>
-   std::pair<iterator,bool> insert_unique(AUTOBOOST_FWD_REF(MovableConvertible) mv)
-   {
-      insert_commit_data data;
-      std::pair<iterator,bool> ret =
-         this->insert_unique_check(KeyOfValue()(mv), data);
-      if(ret.second){
-         ret.first = this->insert_unique_commit(autoboost::forward<MovableConvertible>(mv), data);
+         ret.first = this->insert_unique_commit(autoboost::forward<MovableConvertible>(v), data);
       }
       return ret;
    }
 
    private:
 
-   template<class MovableConvertible>
-   void push_back_impl(AUTOBOOST_FWD_REF(MovableConvertible) mv)
+   template<class KeyConvertible, class M>
+   iiterator priv_insert_or_assign_commit
+      (AUTOBOOST_FWD_REF(KeyConvertible) key, AUTOBOOST_FWD_REF(M) obj, insert_commit_data &data)
    {
-      NodePtr tmp(AllocHolder::create_node(autoboost::forward<MovableConvertible>(mv)));
+      NodePtr tmp = AllocHolder::create_node(autoboost::forward<KeyConvertible>(key), autoboost::forward<M>(obj));
+      scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
+      iiterator ret(this->icont().insert_unique_commit(*tmp, data));
+      destroy_deallocator.release();
+      return ret;
+   }
+
+   bool priv_is_linked(const_iterator const position) const
+   {
+      iiterator const cur(position.get());
+      return   cur == this->icont().end() ||
+               cur == this->icont().root() ||
+               iiterator(cur).go_parent().go_left()  == cur ||
+               iiterator(cur).go_parent().go_right() == cur;
+   }
+
+   template<class MovableConvertible>
+   void push_back_impl(AUTOBOOST_FWD_REF(MovableConvertible) v)
+   {
+      NodePtr tmp(AllocHolder::create_node(autoboost::forward<MovableConvertible>(v)));
       //push_back has no-throw guarantee so avoid any deallocator/destroyer
       this->icont().push_back(*tmp);
    }
@@ -906,12 +898,13 @@ class tree
       //No throw insertion part, release rollback
       destroy_deallocator.release();
       return std::pair<iterator,bool>
-         ( iterator(iiterator(this->icont().insert_unique_commit(*p, data)))
+         ( iterator(this->icont().insert_unique_commit(*p, data))
          , true );
    }
 
    iterator emplace_unique_hint_impl(const_iterator hint, NodePtr p)
    {
+      AUTOBOOST_ASSERT((priv_is_linked)(hint));
       value_type &v = p->get_data();
       insert_commit_data data;
       std::pair<iterator,bool> ret =
@@ -920,23 +913,23 @@ class tree
          Destroyer(this->node_alloc())(p);
          return ret.first;
       }
-      return iterator(iiterator(this->icont().insert_unique_commit(*p, data)));
+      return iterator(this->icont().insert_unique_commit(*p, data));
    }
 
    public:
 
-   #ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
+   #if !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    template <class... Args>
-   std::pair<iterator, bool> emplace_unique(Args&&... args)
+   AUTOBOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> emplace_unique(AUTOBOOST_FWD_REF(Args)... args)
    {  return this->emplace_unique_impl(AllocHolder::create_node(autoboost::forward<Args>(args)...));   }
 
    template <class... Args>
-   iterator emplace_hint_unique(const_iterator hint, Args&&... args)
+   AUTOBOOST_CONTAINER_FORCEINLINE iterator emplace_hint_unique(const_iterator hint, AUTOBOOST_FWD_REF(Args)... args)
    {  return this->emplace_unique_hint_impl(hint, AllocHolder::create_node(autoboost::forward<Args>(args)...));   }
 
    template <class... Args>
-   iterator emplace_equal(Args&&... args)
+   iterator emplace_equal(AUTOBOOST_FWD_REF(Args)... args)
    {
       NodePtr tmp(AllocHolder::create_node(autoboost::forward<Args>(args)...));
       scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
@@ -946,8 +939,9 @@ class tree
    }
 
    template <class... Args>
-   iterator emplace_hint_equal(const_iterator hint, Args&&... args)
+   iterator emplace_hint_equal(const_iterator hint, AUTOBOOST_FWD_REF(Args)... args)
    {
+      AUTOBOOST_ASSERT((priv_is_linked)(hint));
       NodePtr tmp(AllocHolder::create_node(autoboost::forward<Args>(args)...));
       scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
       iterator ret(this->icont().insert_equal(hint.get(), *tmp));
@@ -955,70 +949,88 @@ class tree
       return ret;
    }
 
-   #else //#ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
-
-   #define AUTOBOOST_PP_LOCAL_MACRO(n)                                                                          \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >)                   \
-   std::pair<iterator, bool> emplace_unique(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))             \
-   {                                                                                                        \
-      return this->emplace_unique_impl                                                                      \
-         (AllocHolder::create_node(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _)));                 \
-   }                                                                                                        \
-                                                                                                            \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >)                   \
-   iterator emplace_hint_unique(const_iterator hint                                                         \
-                       AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))                         \
-   {                                                                                                        \
-      return this->emplace_unique_hint_impl                                                                 \
-         (hint, AllocHolder::create_node(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _)));           \
-   }                                                                                                        \
-                                                                                                            \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >)                   \
-   iterator emplace_equal(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))                               \
-   {                                                                                                        \
-      NodePtr tmp(AllocHolder::create_node(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _)));         \
-      scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());                   \
-      iterator ret(this->icont().insert_equal(this->icont().end(), *tmp));                                  \
-      destroy_deallocator.release();                                                                        \
-      return ret;                                                                                           \
-   }                                                                                                        \
-                                                                                                            \
-   AUTOBOOST_PP_EXPR_IF(n, template<) AUTOBOOST_PP_ENUM_PARAMS(n, class P) AUTOBOOST_PP_EXPR_IF(n, >)                   \
-   iterator emplace_hint_equal(const_iterator hint                                                          \
-                       AUTOBOOST_PP_ENUM_TRAILING(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))                         \
-   {                                                                                                        \
-      NodePtr tmp(AllocHolder::create_node(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _)));         \
-      scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());                   \
-      iterator ret(this->icont().insert_equal(hint.get(), *tmp));                                           \
-      destroy_deallocator.release();                                                                        \
-      return ret;                                                                                           \
-   }                                                                                                        \
-   //!
-   #define AUTOBOOST_PP_LOCAL_LIMITS (0, AUTOBOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include AUTOBOOST_PP_LOCAL_ITERATE()
-
-   #endif   //#ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
-
-   iterator insert_unique(const_iterator hint, const value_type& v)
+   template <class KeyType, class... Args>
+   AUTOBOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> try_emplace
+      (const_iterator hint, AUTOBOOST_FWD_REF(KeyType) key, AUTOBOOST_FWD_REF(Args)... args)
    {
+      insert_commit_data data;
+      const key_type & k = key;  //Support emulated rvalue references
+      std::pair<iiterator, bool> ret =
+         hint == const_iterator() ? this->icont().insert_unique_check(            k, KeyNodeCompare(key_comp()), data)
+                                  : this->icont().insert_unique_check(hint.get(), k, KeyNodeCompare(key_comp()), data);
+      if(ret.second){
+         ret.first = this->icont().insert_unique_commit
+            (*AllocHolder::create_node(try_emplace_t(), autoboost::forward<KeyType>(key), autoboost::forward<Args>(args)...), data);
+      }
+      return std::pair<iterator, bool>(iterator(ret.first), ret.second);
+   }
+
+   #else // !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+
+   #define AUTOBOOST_CONTAINER_TREE_EMPLACE_CODE(N) \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N \
+   std::pair<iterator, bool> emplace_unique(AUTOBOOST_MOVE_UREF##N)\
+   {  return this->emplace_unique_impl(AllocHolder::create_node(AUTOBOOST_MOVE_FWD##N));  }\
+   \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N \
+   iterator emplace_hint_unique(const_iterator hint AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_UREF##N)\
+   {  return this->emplace_unique_hint_impl(hint, AllocHolder::create_node(AUTOBOOST_MOVE_FWD##N)); }\
+   \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N \
+   iterator emplace_equal(AUTOBOOST_MOVE_UREF##N)\
+   {\
+      NodePtr tmp(AllocHolder::create_node(AUTOBOOST_MOVE_FWD##N));\
+      scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());\
+      iterator ret(this->icont().insert_equal(this->icont().end(), *tmp));\
+      destroy_deallocator.release();\
+      return ret;\
+   }\
+   \
+   AUTOBOOST_MOVE_TMPL_LT##N AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_GT##N \
+   iterator emplace_hint_equal(const_iterator hint AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_UREF##N)\
+   {\
+      AUTOBOOST_ASSERT((priv_is_linked)(hint));\
+      NodePtr tmp(AllocHolder::create_node(AUTOBOOST_MOVE_FWD##N));\
+      scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());\
+      iterator ret(this->icont().insert_equal(hint.get(), *tmp));\
+      destroy_deallocator.release();\
+      return ret;\
+   }\
+   \
+   template <class KeyType AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_CLASS##N>\
+   AUTOBOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool>\
+      try_emplace(const_iterator hint, AUTOBOOST_FWD_REF(KeyType) key AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_UREF##N)\
+   {\
+      insert_commit_data data;\
+      const key_type & k = key;\
+      std::pair<iiterator, bool> ret =\
+         hint == const_iterator() ? this->icont().insert_unique_check(            k, KeyNodeCompare(key_comp()), data)\
+                                  : this->icont().insert_unique_check(hint.get(), k, KeyNodeCompare(key_comp()), data);\
+      if(ret.second){\
+         ret.first = this->icont().insert_unique_commit\
+            (*AllocHolder::create_node(try_emplace_t(), autoboost::forward<KeyType>(key) AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_FWD##N), data);\
+      }\
+      return std::pair<iterator, bool>(iterator(ret.first), ret.second);\
+   }\
+   //
+   AUTOBOOST_MOVE_ITERATE_0TO9(AUTOBOOST_CONTAINER_TREE_EMPLACE_CODE)
+   #undef AUTOBOOST_CONTAINER_TREE_EMPLACE_CODE
+
+   #endif   // !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+
+   template<class MovableConvertible>
+   iterator insert_unique_convertible(const_iterator hint, AUTOBOOST_FWD_REF(MovableConvertible) v)
+   {
+      AUTOBOOST_ASSERT((priv_is_linked)(hint));
       insert_commit_data data;
       std::pair<iterator,bool> ret =
          this->insert_unique_check(hint, KeyOfValue()(v), data);
       if(!ret.second)
          return ret.first;
-      return this->insert_unique_commit(v, data);
+      return this->insert_unique_commit(autoboost::forward<MovableConvertible>(v), data);
    }
 
-   template<class MovableConvertible>
-   iterator insert_unique(const_iterator hint, AUTOBOOST_FWD_REF(MovableConvertible) mv)
-   {
-      insert_commit_data data;
-      std::pair<iterator,bool> ret =
-         this->insert_unique_check(hint, KeyOfValue()(mv), data);
-      if(!ret.second)
-         return ret.first;
-      return this->insert_unique_commit(autoboost::forward<MovableConvertible>(mv), data);
-   }
+   AUTOBOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert_unique, value_type, iterator, this->insert_unique_convertible, const_iterator, const_iterator)
 
    template <class InputIterator>
    void insert_unique(InputIterator first, InputIterator last)
@@ -1037,33 +1049,27 @@ class tree
    }
 
    template<class MovableConvertible>
-   iterator insert_equal(AUTOBOOST_FWD_REF(MovableConvertible) mv)
+   iterator insert_equal(AUTOBOOST_FWD_REF(MovableConvertible) v)
    {
-      NodePtr tmp(AllocHolder::create_node(autoboost::forward<MovableConvertible>(mv)));
+      NodePtr tmp(AllocHolder::create_node(autoboost::forward<MovableConvertible>(v)));
       scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
       iterator ret(this->icont().insert_equal(this->icont().end(), *tmp));
       destroy_deallocator.release();
       return ret;
    }
 
-   iterator insert_equal(const_iterator hint, const value_type& v)
+   template<class MovableConvertible>
+   iterator insert_equal_convertible(const_iterator hint, AUTOBOOST_FWD_REF(MovableConvertible) v)
    {
-      NodePtr tmp(AllocHolder::create_node(v));
+      AUTOBOOST_ASSERT((priv_is_linked)(hint));
+      NodePtr tmp(AllocHolder::create_node(autoboost::forward<MovableConvertible>(v)));
       scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
       iterator ret(this->icont().insert_equal(hint.get(), *tmp));
       destroy_deallocator.release();
       return ret;
    }
 
-   template<class MovableConvertible>
-   iterator insert_equal(const_iterator hint, AUTOBOOST_FWD_REF(MovableConvertible) mv)
-   {
-      NodePtr tmp(AllocHolder::create_node(autoboost::forward<MovableConvertible>(mv)));
-      scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
-      iterator ret(this->icont().insert_equal(hint.get(), *tmp));
-      destroy_deallocator.release();
-      return ret;
-   }
+   AUTOBOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert_equal, value_type, iterator, this->insert_equal_convertible, const_iterator, const_iterator)
 
    template <class InputIterator>
    void insert_equal(InputIterator first, InputIterator last)
@@ -1072,52 +1078,150 @@ class tree
          this->insert_equal(*first);
    }
 
-   iterator erase(const_iterator position)
-   {  return iterator(this->icont().erase_and_dispose(position.get(), Destroyer(this->node_alloc()))); }
+   template<class KeyType, class M>
+   std::pair<iterator, bool> insert_or_assign(const_iterator hint, AUTOBOOST_FWD_REF(KeyType) key, AUTOBOOST_FWD_REF(M) obj)
+   {
+      insert_commit_data data;
+      const key_type & k = key;  //Support emulated rvalue references
+      std::pair<iiterator, bool> ret =
+         hint == const_iterator() ? this->icont().insert_unique_check(k, KeyNodeCompare(key_comp()), data)
+                                  : this->icont().insert_unique_check(hint.get(), k, KeyNodeCompare(key_comp()), data);
+      if(ret.second){
+         ret.first = this->priv_insert_or_assign_commit(autoboost::forward<KeyType>(key), autoboost::forward<M>(obj), data);
+      }
+      else{
+         ret.first->get_data().second = autoboost::forward<M>(obj);
+      }
+      return std::pair<iterator, bool>(iterator(ret.first), ret.second);
+   }
 
-   size_type erase(const key_type& k)
-   {  return AllocHolder::erase_key(k, KeyNodeCompare(value_comp()), alloc_version()); }
+   iterator erase(const_iterator position)
+   {
+      AUTOBOOST_ASSERT(position != this->cend() && (priv_is_linked)(position));
+      return iterator(this->icont().erase_and_dispose(position.get(), Destroyer(this->node_alloc())));
+   }
+
+   AUTOBOOST_CONTAINER_FORCEINLINE size_type erase(const key_type& k)
+   {  return AllocHolder::erase_key(k, KeyNodeCompare(key_comp()), alloc_version()); }
 
    iterator erase(const_iterator first, const_iterator last)
-   {  return iterator(AllocHolder::erase_range(first.get(), last.get(), alloc_version())); }
+   {
+      AUTOBOOST_ASSERT(first == last || (first != this->cend() && (priv_is_linked)(first)));
+      AUTOBOOST_ASSERT(first == last || (priv_is_linked)(last));
+      return iterator(AllocHolder::erase_range(first.get(), last.get(), alloc_version()));
+   }
 
-   void clear()
+   node_type extract(const key_type& k)
+   {
+      iterator const it = this->find(k);
+      if(this->end() != it){
+         return this->extract(it);
+      }
+      return node_type();
+   }
+
+   node_type extract(const_iterator position)
+   {
+      AUTOBOOST_ASSERT(position != this->cend() && (priv_is_linked)(position));
+      iiterator const iit(position.get());
+      this->icont().erase(iit);
+      return node_type(iit.operator->(), this->node_alloc());
+   }
+
+   insert_return_type insert_unique_node(AUTOBOOST_RV_REF_BEG_IF_CXX11 node_type AUTOBOOST_RV_REF_END_IF_CXX11 nh)
+   {
+      return this->insert_unique_node(this->end(), autoboost::move(nh));
+   }
+
+   insert_return_type insert_unique_node(const_iterator hint, AUTOBOOST_RV_REF_BEG_IF_CXX11 node_type AUTOBOOST_RV_REF_END_IF_CXX11 nh)
+   {
+      insert_return_type irt; //inserted == false, node.empty()
+      if(!nh.empty()){
+         insert_commit_data data;
+         std::pair<iterator,bool> ret =
+            this->insert_unique_check(hint, KeyOfValue()(nh.value()), data);
+         if(ret.second){
+            irt.inserted = true;
+            irt.position = iterator(this->icont().insert_unique_commit(*nh.get_node_pointer(), data));
+            nh.release();
+         }
+         else{
+            irt.position = ret.first;
+            irt.node = autoboost::move(nh);
+         }
+      }
+      else{
+         irt.position = this->end();
+      }
+      return AUTOBOOST_MOVE_RET(insert_return_type, irt);
+   }
+
+   iterator insert_equal_node(AUTOBOOST_RV_REF_BEG_IF_CXX11 node_type AUTOBOOST_RV_REF_END_IF_CXX11 nh)
+   {
+      if(nh.empty()){
+         return this->end();
+      }
+      else{
+         NodePtr const p(nh.release());
+         return iterator(this->icont().insert_equal(*p));
+      }
+   }
+
+   iterator insert_equal_node(const_iterator hint, AUTOBOOST_RV_REF_BEG_IF_CXX11 node_type AUTOBOOST_RV_REF_END_IF_CXX11 nh)
+   {
+      if(nh.empty()){
+         return this->end();
+      }
+      else{
+         NodePtr const p(nh.release());
+         return iterator(this->icont().insert_equal(hint.get(), *p));
+      }
+   }
+
+   template<class C2>
+   AUTOBOOST_CONTAINER_FORCEINLINE void merge_unique(tree<T, KeyOfValue, C2, Allocator, Options>& source)
+   {  return this->icont().merge_unique(source.icont()); }
+
+   template<class C2>
+   AUTOBOOST_CONTAINER_FORCEINLINE void merge_equal(tree<T, KeyOfValue, C2, Allocator, Options>& source)
+   {  return this->icont().merge_equal(source.icont());  }
+   AUTOBOOST_CONTAINER_FORCEINLINE void clear()
    {  AllocHolder::clear(alloc_version());  }
 
    // search operations. Const and non-const overloads even if no iterator is returned
    // so splay implementations can to their rebalancing when searching in non-const versions
-   iterator find(const key_type& k)
-   {  return iterator(this->icont().find(k, KeyNodeCompare(value_comp())));  }
+   AUTOBOOST_CONTAINER_FORCEINLINE iterator find(const key_type& k)
+   {  return iterator(this->icont().find(k, KeyNodeCompare(key_comp())));  }
 
-   const_iterator find(const key_type& k) const
-   {  return const_iterator(this->non_const_icont().find(k, KeyNodeCompare(value_comp())));  }
+   AUTOBOOST_CONTAINER_FORCEINLINE const_iterator find(const key_type& k) const
+   {  return const_iterator(this->non_const_icont().find(k, KeyNodeCompare(key_comp())));  }
 
-   size_type count(const key_type& k) const
-   {  return size_type(this->icont().count(k, KeyNodeCompare(value_comp()))); }
+   AUTOBOOST_CONTAINER_FORCEINLINE size_type count(const key_type& k) const
+   {  return size_type(this->icont().count(k, KeyNodeCompare(key_comp()))); }
 
-   iterator lower_bound(const key_type& k)
-   {  return iterator(this->icont().lower_bound(k, KeyNodeCompare(value_comp())));  }
+   AUTOBOOST_CONTAINER_FORCEINLINE iterator lower_bound(const key_type& k)
+   {  return iterator(this->icont().lower_bound(k, KeyNodeCompare(key_comp())));  }
 
-   const_iterator lower_bound(const key_type& k) const
-   {  return const_iterator(this->non_const_icont().lower_bound(k, KeyNodeCompare(value_comp())));  }
+   AUTOBOOST_CONTAINER_FORCEINLINE const_iterator lower_bound(const key_type& k) const
+   {  return const_iterator(this->non_const_icont().lower_bound(k, KeyNodeCompare(key_comp())));  }
 
-   iterator upper_bound(const key_type& k)
-   {  return iterator(this->icont().upper_bound(k, KeyNodeCompare(value_comp())));   }
+   AUTOBOOST_CONTAINER_FORCEINLINE iterator upper_bound(const key_type& k)
+   {  return iterator(this->icont().upper_bound(k, KeyNodeCompare(key_comp())));   }
 
-   const_iterator upper_bound(const key_type& k) const
-   {  return const_iterator(this->non_const_icont().upper_bound(k, KeyNodeCompare(value_comp())));  }
+   AUTOBOOST_CONTAINER_FORCEINLINE const_iterator upper_bound(const key_type& k) const
+   {  return const_iterator(this->non_const_icont().upper_bound(k, KeyNodeCompare(key_comp())));  }
 
    std::pair<iterator,iterator> equal_range(const key_type& k)
    {
       std::pair<iiterator, iiterator> ret =
-         this->icont().equal_range(k, KeyNodeCompare(value_comp()));
+         this->icont().equal_range(k, KeyNodeCompare(key_comp()));
       return std::pair<iterator,iterator>(iterator(ret.first), iterator(ret.second));
    }
 
    std::pair<const_iterator, const_iterator> equal_range(const key_type& k) const
    {
       std::pair<iiterator, iiterator> ret =
-         this->non_const_icont().equal_range(k, KeyNodeCompare(value_comp()));
+         this->non_const_icont().equal_range(k, KeyNodeCompare(key_comp()));
       return std::pair<const_iterator,const_iterator>
          (const_iterator(ret.first), const_iterator(ret.second));
    }
@@ -1125,56 +1229,64 @@ class tree
    std::pair<iterator,iterator> lower_bound_range(const key_type& k)
    {
       std::pair<iiterator, iiterator> ret =
-         this->icont().lower_bound_range(k, KeyNodeCompare(value_comp()));
+         this->icont().lower_bound_range(k, KeyNodeCompare(key_comp()));
       return std::pair<iterator,iterator>(iterator(ret.first), iterator(ret.second));
    }
 
    std::pair<const_iterator, const_iterator> lower_bound_range(const key_type& k) const
    {
       std::pair<iiterator, iiterator> ret =
-         this->non_const_icont().lower_bound_range(k, KeyNodeCompare(value_comp()));
+         this->non_const_icont().lower_bound_range(k, KeyNodeCompare(key_comp()));
       return std::pair<const_iterator,const_iterator>
          (const_iterator(ret.first), const_iterator(ret.second));
    }
 
-   void rebalance()
+   AUTOBOOST_CONTAINER_FORCEINLINE void rebalance()
    {  intrusive_tree_proxy_t::rebalance(this->icont());   }
 
-   friend bool operator==(const tree& x, const tree& y)
-   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator==(const tree& x, const tree& y)
+   {  return x.size() == y.size() && ::autoboost::container::algo_equal(x.begin(), x.end(), y.begin());  }
 
-   friend bool operator<(const tree& x, const tree& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator<(const tree& x, const tree& y)
+   {  return ::autoboost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
-   friend bool operator!=(const tree& x, const tree& y)
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator!=(const tree& x, const tree& y)
    {  return !(x == y);  }
 
-   friend bool operator>(const tree& x, const tree& y)
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator>(const tree& x, const tree& y)
    {  return y < x;  }
 
-   friend bool operator<=(const tree& x, const tree& y)
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator<=(const tree& x, const tree& y)
    {  return !(y < x);  }
 
-   friend bool operator>=(const tree& x, const tree& y)
+   AUTOBOOST_CONTAINER_FORCEINLINE friend bool operator>=(const tree& x, const tree& y)
    {  return !(x < y);  }
 
-   friend void swap(tree& x, tree& y)
+   AUTOBOOST_CONTAINER_FORCEINLINE friend void swap(tree& x, tree& y)
    {  x.swap(y);  }
 };
 
 } //namespace container_detail {
 } //namespace container {
-/*
+
+template <class T>
+struct has_trivial_destructor_after_move;
+
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class K, class V, class KOV,
-class C, class A>
+template <class T, class KeyOfValue, class Compare, class Allocator, class Options>
 struct has_trivial_destructor_after_move
-   <autoboost::container::container_detail::tree<K, V, KOV, C, A> >
+   <
+      ::autoboost::container::container_detail::tree
+         <T, KeyOfValue, Compare, Allocator, Options>
+   >
 {
-   static const bool value = has_trivial_destructor_after_move<A>::value && has_trivial_destructor_after_move<C>::value;
+   typedef typename ::autoboost::container::allocator_traits<Allocator>::pointer pointer;
+   static const bool value = ::autoboost::has_trivial_destructor_after_move<Allocator>::value &&
+                             ::autoboost::has_trivial_destructor_after_move<pointer>::value &&
+                             ::autoboost::has_trivial_destructor_after_move<Compare>::value;
 };
-*/
+
 } //namespace autoboost  {
 
 #include <autoboost/container/detail/config_end.hpp>

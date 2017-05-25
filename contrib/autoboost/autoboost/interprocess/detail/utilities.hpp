@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012.
+// (C) Copyright Ion Gaztanaga 2005-2015.
 // (C) Copyright Gennaro Prota 2003 - 2004.
 //
 // Distributed under the Boost Software License, Version 1.0.
@@ -14,7 +14,11 @@
 #ifndef AUTOBOOST_INTERPROCESS_DETAIL_UTILITIES_HPP
 #define AUTOBOOST_INTERPROCESS_DETAIL_UTILITIES_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -23,17 +27,13 @@
 
 #include <autoboost/interprocess/interprocess_fwd.hpp>
 #include <autoboost/move/utility_core.hpp>
-#include <autoboost/type_traits/has_trivial_destructor.hpp>
 #include <autoboost/interprocess/detail/min_max.hpp>
 #include <autoboost/interprocess/detail/type_traits.hpp>
-#include <autoboost/interprocess/detail/transform_iterator.hpp>
 #include <autoboost/interprocess/detail/mpl.hpp>
-#include <autoboost/interprocess/containers/version_type.hpp>
 #include <autoboost/intrusive/pointer_traits.hpp>
 #include <autoboost/move/utility_core.hpp>
 #include <autoboost/static_assert.hpp>
-#include <utility>
-#include <algorithm>
+#include <autoboost/cstdint.hpp>
 #include <climits>
 
 namespace autoboost {
@@ -48,14 +48,6 @@ template <class Pointer>
 inline typename autoboost::intrusive::pointer_traits<Pointer>::element_type*
 to_raw_pointer(const Pointer &p)
 {  return autoboost::interprocess::ipcdetail::to_raw_pointer(p.operator->());  }
-
-//!To avoid ADL problems with swap
-template <class T>
-inline void do_swap(T& x, T& y)
-{
-   using std::swap;
-   swap(x, y);
-}
 
 //Rounds "orig_size" by excess to round_to bytes
 template<class SizeType>
@@ -131,8 +123,8 @@ struct is_intrusive_index
    static const bool value = false;
 };
 
-template <typename T> T*
-addressof(T& v)
+template <typename T>
+AUTOBOOST_INTERPROCESS_FORCEINLINE T* addressof(T& v)
 {
   return reinterpret_cast<T*>(
        &const_cast<char&>(reinterpret_cast<const volatile char &>(v)));
@@ -156,7 +148,7 @@ inline bool multiplication_overflows(SizeType a, SizeType b)
 }
 
 template<std::size_t SztSizeOfType, class SizeType>
-inline bool size_overflows(SizeType count)
+AUTOBOOST_INTERPROCESS_FORCEINLINE bool size_overflows(SizeType count)
 {
    //Compile time-check
    AUTOBOOST_STATIC_ASSERT(SztSizeOfType <= SizeType(-1));
@@ -164,28 +156,29 @@ inline bool size_overflows(SizeType count)
    return multiplication_overflows(SizeType(SztSizeOfType), count);
 }
 
-template<class RawPointer>
-class pointer_size_t_caster
+template<class RawPointer, class OffsetType>
+class pointer_offset_caster;
+
+template<class T, class OffsetType>
+class pointer_offset_caster<T*, OffsetType>
 {
    public:
-   AUTOBOOST_STATIC_ASSERT(sizeof(std::size_t) == sizeof(void*));
-
-   explicit pointer_size_t_caster(std::size_t sz)
-      : m_ptr(reinterpret_cast<RawPointer>(sz))
+   AUTOBOOST_INTERPROCESS_FORCEINLINE explicit pointer_offset_caster(OffsetType offset)
+      : m_offset(offset)
    {}
 
-   explicit pointer_size_t_caster(RawPointer p)
-      : m_ptr(p)
+   AUTOBOOST_INTERPROCESS_FORCEINLINE explicit pointer_offset_caster(const volatile T *p)
+      : m_offset(reinterpret_cast<OffsetType>(p))
    {}
 
-   std::size_t size() const
-   {   return reinterpret_cast<std::size_t>(m_ptr);   }
+   AUTOBOOST_INTERPROCESS_FORCEINLINE OffsetType offset() const
+   {   return m_offset;   }
 
-   RawPointer pointer() const
-   {   return m_ptr;   }
+   AUTOBOOST_INTERPROCESS_FORCEINLINE T* pointer() const
+   {   return reinterpret_cast<T*>(m_offset);   }
 
    private:
-   RawPointer m_ptr;
+   OffsetType m_offset;
 };
 
 
@@ -203,7 +196,7 @@ class value_eraser
    ~value_eraser()
    {  if(m_erase) m_cont.erase(m_index_it);  }
 
-   void release() {  m_erase = false;  }
+   AUTOBOOST_INTERPROCESS_FORCEINLINE void release() {  m_erase = false;  }
 
    private:
    Cont                   &m_cont;

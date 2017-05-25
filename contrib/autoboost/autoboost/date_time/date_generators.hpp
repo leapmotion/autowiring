@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_DATE_GENERATORS_HPP__
-#define AB_DATE_TIME_DATE_GENERATORS_HPP__
+#ifndef DATE_TIME_DATE_GENERATORS_HPP__
+#define DATE_TIME_DATE_GENERATORS_HPP__
 
 /* Copyright (c) 2002,2003,2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

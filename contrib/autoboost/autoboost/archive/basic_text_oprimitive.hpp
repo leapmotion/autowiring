@@ -26,14 +26,13 @@
 
 #include <iomanip>
 #include <locale>
-#include <autoboost/assert.hpp>
 #include <cstddef> // size_t
 
 #include <autoboost/config.hpp>
 #include <autoboost/static_assert.hpp>
-#include <autoboost/detail/workaround.hpp>
 #include <autoboost/io/ios_state.hpp>
 
+#include <autoboost/detail/workaround.hpp>
 #if AUTOBOOST_WORKAROUND(AUTOBOOST_DINKUMWARE_STDLIB, == 1)
 #include <autoboost/archive/dinkumware.hpp>
 #endif
@@ -52,21 +51,19 @@ namespace std{
 #include <autoboost/limits.hpp>
 #include <autoboost/integer.hpp>
 #include <autoboost/io/ios_state.hpp>
-#include <autoboost/scoped_ptr.hpp>
 #include <autoboost/serialization/throw_exception.hpp>
-#include <autoboost/archive/archive_exception.hpp>
 #include <autoboost/archive/basic_streambuf_locale_saver.hpp>
+#include <autoboost/archive/codecvt_null.hpp>
+#include <autoboost/archive/archive_exception.hpp>
 #include <autoboost/archive/detail/abi_prefix.hpp> // must be the last header
 
 namespace autoboost {
 namespace archive {
 
-class save_access;
-
 /////////////////////////////////////////////////////////////////////////
 // class basic_text_oprimitive - output of prmitives to stream
 template<class OStream>
-class basic_text_oprimitive
+class AUTOBOOST_SYMBOL_VISIBLE basic_text_oprimitive
 {
 protected:
     OStream &os;
@@ -74,8 +71,16 @@ protected:
     io::ios_precision_saver precision_saver;
 
     #ifndef AUTOBOOST_NO_STD_LOCALE
-    autoboost::scoped_ptr<std::locale> archive_locale;
-    basic_streambuf_locale_saver<
+    // note order! - if you change this, libstd++ will fail!
+    // a) create new locale with new codecvt facet
+    // b) save current locale
+    // c) change locale to new one
+    // d) use stream buffer
+    // e) change locale back to original
+    // f) destroy new codecvt facet
+    autoboost::archive::codecvt_null<typename OStream::char_type> codecvt_null_facet;
+    std::locale archive_locale;
+    basic_ostream_locale_saver<
         typename OStream::char_type,
         typename OStream::traits_type
     > locale_saver;
@@ -170,15 +175,13 @@ protected:
 
     template<class T>
     void save(const T & t){
-        autoboost::io::ios_flags_saver fs(os);
-        autoboost::io::ios_precision_saver ps(os);
         typename is_float<T>::type tf;
         save_impl(t, tf);
     }
 
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     basic_text_oprimitive(OStream & os, bool no_codecvt);
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     ~basic_text_oprimitive();
 public:
     // unformatted append of one character
@@ -194,7 +197,7 @@ public:
         while('\0' != *s)
             os.put(*s++);
     }
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     save_binary(const void *address, std::size_t count);
 };
 

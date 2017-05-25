@@ -78,7 +78,7 @@ public:
         autoboost::checked_delete( px_ );
     }
 
-    virtual void * get_deleter( detail::sp_typeinfo const & )
+    virtual void * get_deleter( sp_typeinfo const & )
     {
         return 0;
     }
@@ -153,7 +153,7 @@ public:
         del( ptr );
     }
 
-    virtual void * get_deleter( detail::sp_typeinfo const & ti )
+    virtual void * get_deleter( sp_typeinfo const & ti )
     {
         return ti == AUTOBOOST_SP_TYPEID(D)? &reinterpret_cast<char&>( del ): 0;
     }
@@ -236,20 +236,12 @@ public:
 
         A2 a2( a_ );
 
-#if !defined( AUTOBOOST_NO_CXX11_ALLOCATOR )
-
-        std::allocator_traits<A2>::destroy( a2, this );
-
-#else
-
         this->~this_type();
-
-#endif
 
         a2.deallocate( this, 1 );
     }
 
-    virtual void * get_deleter( detail::sp_typeinfo const & ti )
+    virtual void * get_deleter( sp_typeinfo const & ti )
     {
         return ti == AUTOBOOST_SP_TYPEID( D )? &reinterpret_cast<char&>( d_ ): 0;
     }

@@ -14,11 +14,11 @@
 
 #include <istream>
 #include <algorithm>
-#include <autoboost/config.hpp> // AUTOBOOST_DEDUCED_TYPENAME
+#include <autoboost/config.hpp> // typename
 
 #ifdef AUTOBOOST_MSVC
 #  pragma warning(push)
-#  pragma warning(disable : 4511 4512)
+#  pragma warning(disable : 4244 4511 4512)
 #endif
 
 // spirit stuff
@@ -33,7 +33,6 @@
 // for head_iterator test
 //#include <autoboost/bind.hpp>
 #include <autoboost/function.hpp>
-#include <autoboost/serialization/pfto.hpp>
 
 #include <autoboost/io/ios_state.hpp>
 #include <autoboost/serialization/throw_exception.hpp>
@@ -146,7 +145,7 @@ template<class String>
 struct append_char {
     String & contents;
     void operator()(const unsigned int char_value) const {
-        const AUTOBOOST_DEDUCED_TYPENAME String::value_type z = char_value;
+        const typename String::value_type z = char_value;
         contents += z;
     }
     append_char(String & contents_)
@@ -159,7 +158,7 @@ struct append_lit {
     String & contents;
     template<class X, class Y>
     void operator()(const X & /*x*/, const Y & /*y*/) const {
-        const AUTOBOOST_DEDUCED_TYPENAME String::value_type z = c;
+        const typename String::value_type z = c;
         contents += z;
     }
     append_lit(String & contents_)
@@ -175,45 +174,43 @@ struct append_lit {
 
 template<class CharType>
 bool basic_xml_grammar<CharType>::my_parse(
-    AUTOBOOST_DEDUCED_TYPENAME basic_xml_grammar<CharType>::IStream & is,
+    typename basic_xml_grammar<CharType>::IStream & is,
     const rule_t & rule_,
     CharType delimiter
 ) const {
     if(is.fail()){
-        autoboost::serialization::throw_exception(
-            archive_exception(archive_exception::input_stream_error)
-        );
+        return false;
     }
 
-    autoboost::io::ios_flags_saver ifs(is);
     is >> std::noskipws;
 
     std::basic_string<CharType> arg;
 
-    CharType val;
-    do{
-        AUTOBOOST_DEDUCED_TYPENAME basic_xml_grammar<CharType>::IStream::int_type
-            result = is.get();
+    for(;;){
+        CharType result;
+        is.get(result);
         if(is.fail())
             return false;
-        val = static_cast<CharType>(result);
-        arg += val;
+        if(is.eof())
+            return false;
+        arg += result;
+        if(result == delimiter)
+            break;
     }
-    while(val != delimiter);
 
     // read just one more character.  This will be the newline after the tag
     // this is so that the next operation will return fail if the archive
     // is terminated.  This will permit the archive to be used for debug
     // and transaction data logging in the standard way.
 
-    parse_info<AUTOBOOST_DEDUCED_TYPENAME std::basic_string<CharType>::iterator>
+    parse_info<typename std::basic_string<CharType>::iterator>
         result = autoboost::spirit::classic::parse(arg.begin(), arg.end(), rule_);
     return result.hit;
 }
 
 template<class CharType>
 bool basic_xml_grammar<CharType>::parse_start_tag(
-    AUTOBOOST_DEDUCED_TYPENAME basic_xml_grammar<CharType>::IStream & is
+    typename basic_xml_grammar<CharType>::IStream & is
 ){
     rv.class_name.resize(0);
     return my_parse(is, STag);
@@ -230,7 +227,7 @@ bool basic_xml_grammar<CharType>::parse_string(IStream & is, StringType & s){
     bool result = my_parse(is, content, '<');
     // note: unget caused a problem with dinkumware.  replace with
  // is.unget();
-    // putback another dilimiter instead
+    // putback another delimiter instead
     is.putback('<');
     if(result)
         s = rv.contents;
@@ -283,7 +280,7 @@ basic_xml_grammar<CharType>::basic_xml_grammar(){
         CharDataChars [
             xml::append_string<
                 StringType,
-                AUTOBOOST_DEDUCED_TYPENAME std::basic_string<CharType>::const_iterator
+                typename std::basic_string<CharType>::const_iterator
             >(rv.contents)
         ]
     ;
@@ -456,12 +453,8 @@ void basic_xml_grammar<CharType>::init(IStream & is){
 }
 
 template<class CharType>
-void basic_xml_grammar<CharType>::windup(IStream & is){
-    if(is.fail())
-        return;
-    // uh-oh - don't throw exception from code called by a destructor !
-    // so just ignore any failure.
-    my_parse(is, ETag);
+bool basic_xml_grammar<CharType>::windup(IStream & is) {
+    return my_parse(is, ETag);
 }
 
 } // namespace archive

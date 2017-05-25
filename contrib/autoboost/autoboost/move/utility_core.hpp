@@ -17,7 +17,16 @@
 #ifndef AUTOBOOST_MOVE_MOVE_UTILITY_CORE_HPP
 #define AUTOBOOST_MOVE_MOVE_UTILITY_CORE_HPP
 
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <autoboost/move/detail/config_begin.hpp>
+#include <autoboost/move/detail/workaround.hpp>  //forceinline
 #include <autoboost/move/core.hpp>
 #include <autoboost/move/detail/meta_utils.hpp>
 #include <autoboost/static_assert.hpp>
@@ -39,24 +48,33 @@
    //////////////////////////////////////////////////////////////////////////////
 
    template <class T>
-   inline typename ::autoboost::move_detail::enable_if_c
-      < enable_move_utility_emulation<T>::value && !has_move_emulation_enabled<T>::value, T&>::type
+   AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::enable_if_and
+      < T &
+      , enable_move_utility_emulation<T>
+      , has_move_emulation_disabled<T>
+      >::type
          move(T& x) AUTOBOOST_NOEXCEPT
    {
       return x;
    }
 
    template <class T>
-   inline typename ::autoboost::move_detail::enable_if_c
-      < enable_move_utility_emulation<T>::value && has_move_emulation_enabled<T>::value, rv<T>&>::type
+   AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::enable_if_and
+      < rv<T>&
+      , enable_move_utility_emulation<T>
+      , has_move_emulation_enabled<T>
+      >::type
          move(T& x) AUTOBOOST_NOEXCEPT
    {
-      return *static_cast<rv<T>* >(::autoboost::move_detail::addressof(x));
+      return *AUTOBOOST_MOVE_TO_RV_CAST(::autoboost::rv<T>*, ::autoboost::move_detail::addressof(x) );
    }
 
    template <class T>
-   inline typename ::autoboost::move_detail::enable_if_c
-      < enable_move_utility_emulation<T>::value && has_move_emulation_enabled<T>::value, rv<T>&>::type
+   AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::enable_if_and
+      < rv<T>&
+      , enable_move_utility_emulation<T>
+      , has_move_emulation_enabled<T>
+      >::type
          move(rv<T>& x) AUTOBOOST_NOEXCEPT
    {
       return x;
@@ -69,17 +87,23 @@
    //////////////////////////////////////////////////////////////////////////////
 
    template <class T>
-   inline typename ::autoboost::move_detail::enable_if_c
-      < enable_move_utility_emulation<T>::value && ::autoboost::move_detail::is_rv<T>::value, T &>::type
+   AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::enable_if_and
+      < T &
+      , enable_move_utility_emulation<T>
+      , ::autoboost::move_detail::is_rv<T>
+      >::type
          forward(const typename ::autoboost::move_detail::identity<T>::type &x) AUTOBOOST_NOEXCEPT
    {
       return const_cast<T&>(x);
    }
 
    template <class T>
-   inline typename ::autoboost::move_detail::enable_if_c
-      < enable_move_utility_emulation<T>::value && !::autoboost::move_detail::is_rv<T>::value, const T &>::type
-      forward(const typename ::autoboost::move_detail::identity<T>::type &x) AUTOBOOST_NOEXCEPT
+   AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::enable_if_and
+      < const T &
+      , enable_move_utility_emulation<T>
+      , ::autoboost::move_detail::is_not_rv<T>
+      >::type
+         forward(const typename ::autoboost::move_detail::identity<T>::type &x) AUTOBOOST_NOEXCEPT
    {
       return x;
    }
@@ -91,22 +115,25 @@
    //////////////////////////////////////////////////////////////////////////////
 
    template <class T>
-   inline typename ::autoboost::move_detail::enable_if_c
-      < enable_move_utility_emulation<T>::value &&
-        ::autoboost::move_detail::is_rv<T>::value
-      , T &>::type
+   AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::enable_if_and
+      < T &
+      , enable_move_utility_emulation<T>
+      , ::autoboost::move_detail::is_rv<T>
+      >::type
          move_if_not_lvalue_reference(const typename ::autoboost::move_detail::identity<T>::type &x) AUTOBOOST_NOEXCEPT
    {
       return const_cast<T&>(x);
    }
 
    template <class T>
-   inline typename ::autoboost::move_detail::enable_if_c
-      < enable_move_utility_emulation<T>::value &&
-        !::autoboost::move_detail::is_rv<T>::value  &&
-        (::autoboost::move_detail::is_lvalue_reference<T>::value ||
-         !has_move_emulation_enabled<T>::value)
-      , typename ::autoboost::move_detail::add_lvalue_reference<T>::type
+   AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::enable_if_and
+      < typename ::autoboost::move_detail::add_lvalue_reference<T>::type
+      , enable_move_utility_emulation<T>
+      , ::autoboost::move_detail::is_not_rv<T>
+      , ::autoboost::move_detail::or_
+         < ::autoboost::move_detail::is_lvalue_reference<T>
+         , has_move_emulation_disabled<T>
+         >
       >::type
          move_if_not_lvalue_reference(typename ::autoboost::move_detail::remove_reference<T>::type &x) AUTOBOOST_NOEXCEPT
    {
@@ -114,12 +141,14 @@
    }
 
    template <class T>
-   inline typename ::autoboost::move_detail::enable_if_c
-      < enable_move_utility_emulation<T>::value &&
-        !::autoboost::move_detail::is_rv<T>::value  &&
-        (!::autoboost::move_detail::is_lvalue_reference<T>::value &&
-         has_move_emulation_enabled<T>::value)
-      , rv<T>&
+   AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::enable_if_and
+      < rv<T>&
+      , enable_move_utility_emulation<T>
+      , ::autoboost::move_detail::is_not_rv<T>
+      , ::autoboost::move_detail::and_
+         < ::autoboost::move_detail::not_< ::autoboost::move_detail::is_lvalue_reference<T> >
+         , has_move_emulation_enabled<T>
+         >
       >::type
          move_if_not_lvalue_reference(typename ::autoboost::move_detail::remove_reference<T>::type &x) AUTOBOOST_NOEXCEPT
    {
@@ -174,13 +203,13 @@
 
          //Old move approach, lvalues could bind to rvalue references
          template <class T>
-         inline typename ::autoboost::move_detail::remove_reference<T>::type && move(T&& t) AUTOBOOST_NOEXCEPT
+         AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::remove_reference<T>::type && move(T&& t) AUTOBOOST_NOEXCEPT
          {  return t;   }
 
       #else //AUTOBOOST_MOVE_OLD_RVALUE_REF_BINDING_RULES
 
          template <class T>
-         inline typename ::autoboost::move_detail::remove_reference<T>::type && move(T&& t) AUTOBOOST_NOEXCEPT
+         AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::remove_reference<T>::type && move(T&& t) AUTOBOOST_NOEXCEPT
          { return static_cast<typename ::autoboost::move_detail::remove_reference<T>::type &&>(t); }
 
       #endif   //AUTOBOOST_MOVE_OLD_RVALUE_REF_BINDING_RULES
@@ -210,17 +239,17 @@
          //Old move approach, lvalues could bind to rvalue references
 
          template <class T>
-         inline T&& forward(typename ::autoboost::move_detail::identity<T>::type&& t) AUTOBOOST_NOEXCEPT
+         AUTOBOOST_MOVE_FORCEINLINE T&& forward(typename ::autoboost::move_detail::identity<T>::type&& t) AUTOBOOST_NOEXCEPT
          {  return t;   }
 
       #else //Old move
 
          template <class T>
-         inline T&& forward(typename ::autoboost::move_detail::remove_reference<T>::type& t) AUTOBOOST_NOEXCEPT
+         AUTOBOOST_MOVE_FORCEINLINE T&& forward(typename ::autoboost::move_detail::remove_reference<T>::type& t) AUTOBOOST_NOEXCEPT
          {  return static_cast<T&&>(t);   }
 
          template <class T>
-         inline T&& forward(typename ::autoboost::move_detail::remove_reference<T>::type&& t) AUTOBOOST_NOEXCEPT
+         AUTOBOOST_MOVE_FORCEINLINE T&& forward(typename ::autoboost::move_detail::remove_reference<T>::type&& t) AUTOBOOST_NOEXCEPT
          {
             //"autoboost::forward<T> error: 'T' is a lvalue reference, can't forward as rvalue.";
             AUTOBOOST_STATIC_ASSERT(!autoboost::move_detail::is_lvalue_reference<T>::value);
@@ -237,23 +266,25 @@
 
 
       #if defined(AUTOBOOST_MOVE_DOXYGEN_INVOKED)
+         //! <b>Effects</b>: Calls `autoboost::move` if `input_reference` is not a lvalue reference.
+         //!   Otherwise returns the reference
          template <class T> output_reference move_if_not_lvalue_reference(input_reference) noexcept;
       #elif defined(AUTOBOOST_MOVE_OLD_RVALUE_REF_BINDING_RULES)
 
          //Old move approach, lvalues could bind to rvalue references
 
          template <class T>
-         inline T&& move_if_not_lvalue_reference(typename ::autoboost::move_detail::identity<T>::type&& t) AUTOBOOST_NOEXCEPT
+         AUTOBOOST_MOVE_FORCEINLINE T&& move_if_not_lvalue_reference(typename ::autoboost::move_detail::identity<T>::type&& t) AUTOBOOST_NOEXCEPT
          {  return t;   }
 
       #else //Old move
 
          template <class T>
-         inline T&& move_if_not_lvalue_reference(typename ::autoboost::move_detail::remove_reference<T>::type& t) AUTOBOOST_NOEXCEPT
+         AUTOBOOST_MOVE_FORCEINLINE T&& move_if_not_lvalue_reference(typename ::autoboost::move_detail::remove_reference<T>::type& t) AUTOBOOST_NOEXCEPT
          {  return static_cast<T&&>(t);   }
 
          template <class T>
-         inline T&& move_if_not_lvalue_reference(typename ::autoboost::move_detail::remove_reference<T>::type&& t) AUTOBOOST_NOEXCEPT
+         AUTOBOOST_MOVE_FORCEINLINE T&& move_if_not_lvalue_reference(typename ::autoboost::move_detail::remove_reference<T>::type&& t) AUTOBOOST_NOEXCEPT
          {
             //"autoboost::forward<T> error: 'T' is a lvalue reference, can't forward as rvalue.";
             AUTOBOOST_STATIC_ASSERT(!autoboost::move_detail::is_lvalue_reference<T>::value);
@@ -272,14 +303,6 @@
 
 namespace autoboost{
 namespace move_detail{
-
-template<class T>
-void swap(T &a, T &b)
-{
-   T c((::autoboost::move(a)));
-   a = ::autoboost::move(b);
-   b = ::autoboost::move(c);
-}
 
 template <typename T>
 typename autoboost::move_detail::add_rvalue_reference<T>::type declval();

@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_DATE_HPP___
-#define AB_DATE_TIME_DATE_HPP___
+#ifndef DATE_TIME_DATE_HPP___
+#define DATE_TIME_DATE_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -10,6 +10,7 @@
  */
 
 #include <autoboost/operators.hpp>
+#include <autoboost/date_time/compiler_config.hpp>
 #include <autoboost/date_time/year_month_day.hpp>
 #include <autoboost/date_time/special_defs.hpp>
 
@@ -50,7 +51,7 @@ namespace date_time {
 
 
   template<class T, class calendar, class duration_type_>
-  class date : private
+  class AUTOBOOST_SYMBOL_VISIBLE date : private
        autoboost::less_than_comparable<T
      , autoboost::equality_comparable<T
     > >
@@ -159,7 +160,7 @@ namespace date_time {
       {
         return date_type(date_rep_type(days_) - dd.get_rep());
       }
-      return date_type(date_rep_type(days_) - dd.days());
+      return date_type(date_rep_type(days_) - static_cast<date_int_type>(dd.days()));
     }
     date_type operator-=(const duration_type& dd)
     {
@@ -177,7 +178,7 @@ namespace date_time {
       {
         return date_type(date_rep_type(days_) + dd.get_rep());
       }
-      return date_type(date_rep_type(days_) + dd.days());
+      return date_type(date_rep_type(days_) + static_cast<date_int_type>(dd.days()));
     }
     date_type operator+=(const duration_type& dd)
     {

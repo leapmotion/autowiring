@@ -14,6 +14,7 @@
 #else
 
 #define AUTOBOOST_WARCHIVE_SOURCE
+#include <autoboost/serialization/config.hpp>
 #include <autoboost/archive/text_woarchive.hpp>
 #include <autoboost/archive/detail/archive_serializer_map.hpp>
 

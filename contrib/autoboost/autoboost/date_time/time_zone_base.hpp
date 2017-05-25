@@ -1,5 +1,5 @@
-#ifndef AB__DATE_TIME_TIME_ZONE_BASE__
-#define AB__DATE_TIME_TIME_ZONE_BASE__
+#ifndef _DATE_TIME_TIME_ZONE_BASE__
+#define _DATE_TIME_TIME_ZONE_BASE__
 
 /* Copyright (c) 2003-2005 CrystalClear Software, Inc.
  * Subject to the Boost Software License, Version 1.0.
@@ -11,6 +11,7 @@
 
 #include <string>
 #include <sstream>
+#include <autoboost/date_time/compiler_config.hpp>
 
 namespace autoboost {
 namespace date_time {
@@ -31,7 +32,7 @@ namespace date_time {
    * resource (hence the derivation from autoboost::counted_base.
    */
   template<typename time_type, typename CharT>
-  class time_zone_base  {
+  class AUTOBOOST_SYMBOL_VISIBLE time_zone_base  {
   public:
     typedef CharT char_type;
     typedef std::basic_string<CharT> string_type;

@@ -13,7 +13,11 @@
 #ifndef AUTOBOOST_CONTAINER_CONTAINER_DETAIL_PAIR_HPP
 #define AUTOBOOST_CONTAINER_CONTAINER_DETAIL_PAIR_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -23,21 +27,74 @@
 #include <autoboost/container/detail/mpl.hpp>
 #include <autoboost/container/detail/type_traits.hpp>
 #include <autoboost/container/detail/mpl.hpp>
-#include <autoboost/container/detail/type_traits.hpp>
-
-#include <utility>   //std::pair
-#include <algorithm> //std::swap
-
-#include <autoboost/move/utility_core.hpp>
-
-
-#ifndef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
-#include <autoboost/container/detail/preprocessor.hpp>
+#include <autoboost/container/detail/std_fwd.hpp>
+#if !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#  include <autoboost/container/detail/variadic_templates_tools.hpp>
 #endif
+#include <autoboost/move/adl_move_swap.hpp> //swap
+
+#include <autoboost/intrusive/detail/minimal_pair_header.hpp>      //pair
+#include <autoboost/move/utility_core.hpp>
+#include<autoboost/move/detail/fwd_macros.hpp>
+
+namespace autoboost {
+namespace tuples {
+
+struct null_type;
+
+}  //namespace tuples {
+}  //namespace autoboost {
+
+#if defined(AUTOBOOST_MSVC) && (_CPPLIB_VER == 520)
+//MSVC 2010 tuple marker
+namespace std { namespace tr1 { struct _Nil; }}
+#elif defined(AUTOBOOST_MSVC) && (_CPPLIB_VER == 540)
+//MSVC 2012 tuple marker
+namespace std { struct _Nil; }
+#endif
+
 
 namespace autoboost {
 namespace container {
+
+#ifndef AUTOBOOST_CONTAINER_DOXYGEN_INVOKED
+
+   template <int Dummy = 0>
+   struct std_piecewise_construct_holder
+   {
+      static ::std::piecewise_construct_t *dummy;
+   };
+
+   template <int Dummy>
+   ::std::piecewise_construct_t *std_piecewise_construct_holder<Dummy>::dummy =
+      reinterpret_cast< ::std::piecewise_construct_t *>(0x01234);  //Avoid sanitizer errors on references to null pointers
+
+typedef const std::piecewise_construct_t & piecewise_construct_t;
+
+struct try_emplace_t{};
+
+#else
+
+//! The piecewise_construct_t struct is an empty structure type used as a unique type to
+//! disambiguate used to disambiguate between different functions that take two tuple arguments.
+typedef unspecified piecewise_construct_t;
+
+#endif   //#ifndef AUTOBOOST_CONTAINER_DOXYGEN_INVOKED
+
+//! A instance of type
+//! piecewise_construct_t
+static piecewise_construct_t piecewise_construct = AUTOBOOST_CONTAINER_DOC1ST(unspecified, *std_piecewise_construct_holder<>::dummy);
+
+///@cond
+
 namespace container_detail {
+
+struct piecewise_construct_use
+{
+   //Avoid warnings of unused "piecewise_construct"
+   piecewise_construct_use()
+   {  (void)&::autoboost::container::piecewise_construct;   }
+};
 
 template <class T1, class T2>
 struct pair;
@@ -60,37 +117,30 @@ struct is_pair< std::pair<T1, T2> >
    static const bool value = true;
 };
 
-struct pair_nat;
-
-struct piecewise_construct_t { };
-static const piecewise_construct_t piecewise_construct = piecewise_construct_t();
-
-/*
-template <class T1, class T2>
-struct pair
+template <class T>
+struct is_not_pair
 {
-    template <class U, class V> pair(pair<U, V>&& p);
-    template <class... Args1, class... Args2>
-        pair(piecewise_construct_t, tuple<Args1...> first_args,
-             tuple<Args2...> second_args);
-
-    template <class U, class V> pair& operator=(const pair<U, V>& p);
-    pair& operator=(pair&& p) noexcept(is_nothrow_move_assignable<T1>::value &&
-                                       is_nothrow_move_assignable<T2>::value);
-    template <class U, class V> pair& operator=(pair<U, V>&& p);
-
-    void swap(pair& p) noexcept(noexcept(swap(first, p.first)) &&
-                                noexcept(swap(second, p.second)));
+   static const bool value = !is_pair<T>::value;
 };
 
-template <class T1, class T2> bool operator==(const pair<T1,T2>&, const pair<T1,T2>&);
-template <class T1, class T2> bool operator!=(const pair<T1,T2>&, const pair<T1,T2>&);
-template <class T1, class T2> bool operator< (const pair<T1,T2>&, const pair<T1,T2>&);
-template <class T1, class T2> bool operator> (const pair<T1,T2>&, const pair<T1,T2>&);
-template <class T1, class T2> bool operator>=(const pair<T1,T2>&, const pair<T1,T2>&);
-template <class T1, class T2> bool operator<=(const pair<T1,T2>&, const pair<T1,T2>&);
-*/
+template <class T>
+struct is_std_pair
+{
+   static const bool value = false;
+};
 
+template <class T1, class T2>
+struct is_std_pair< std::pair<T1, T2> >
+{
+   static const bool value = true;
+};
+
+struct pair_nat;
+
+template<typename T, typename U, typename V>
+void get(T); //to enable ADL
+
+///@endcond
 
 template <class T1, class T2>
 struct pair
@@ -161,42 +211,106 @@ struct pair
       : first(::autoboost::move(p.first)), second(::autoboost::move(p.second))
    {}
 
-   //piecewise_construct missing
-   //template <class U, class V> pair(pair<U, V>&& p);
-   //template <class... Args1, class... Args2>
-   //   pair(piecewise_construct_t, tuple<Args1...> first_args,
-   //        tuple<Args2...> second_args);
-/*
-   //Variadic versions
-   template<class U>
-   pair(AUTOBOOST_CONTAINER_PP_PARAM(U, u), typename container_detail::disable_if
-         < container_detail::is_pair< typename container_detail::remove_ref_const<U>::type >, pair_nat>::type* = 0)
-      : first(::autoboost::forward<U>(u))
-      , second()
+   #if !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+   template< class KeyType, class ...Args>
+   pair(try_emplace_t, AUTOBOOST_FWD_REF(KeyType) k, Args && ...args)
+      : first(autoboost::forward<KeyType>(k)), second(::autoboost::forward<Args>(args)...)\
    {}
-
-   #ifdef AUTOBOOST_CONTAINER_PERFECT_FORWARDING
-
-   template<class U, class V, class ...Args>
-   pair(U &&u, V &&v)
-      : first(::autoboost::forward<U>(u))
-      , second(::autoboost::forward<V>(v), ::autoboost::forward<Args>(args)...)
-   {}
-
    #else
 
-   #define AUTOBOOST_PP_LOCAL_MACRO(n)                                                            \
-   template<class U, AUTOBOOST_PP_ENUM_PARAMS(n, class P)>                                        \
-   pair(AUTOBOOST_CONTAINER_PP_PARAM(U, u)                                                          \
-       ,AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_LIST, _))                                  \
-      : first(::autoboost::forward<U>(u))                             \
-      , second(AUTOBOOST_PP_ENUM(n, AUTOBOOST_CONTAINER_PP_PARAM_FORWARD, _))                        \
-   {}                                                                                         \
-   //!
-   #define AUTOBOOST_PP_LOCAL_LIMITS (1, AUTOBOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include AUTOBOOST_PP_LOCAL_ITERATE()
+   //piecewise construction from autoboost::tuple
+   #define AUTOBOOST_PAIR_TRY_EMPLACE_CONSTRUCT_CODE(N)\
+   template< class KeyType AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_CLASS##N > \
+   pair( try_emplace_t, AUTOBOOST_FWD_REF(KeyType) k AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_UREF##N )\
+      : first(autoboost::forward<KeyType>(k)), second(AUTOBOOST_MOVE_FWD##N)\
+   {}\
+   //
+   AUTOBOOST_MOVE_ITERATE_0TO9(AUTOBOOST_PAIR_TRY_EMPLACE_CONSTRUCT_CODE)
+   #undef AUTOBOOST_PAIR_TRY_EMPLACE_CONSTRUCT_CODE
+
+   #endif   //AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES
+
+   //piecewise construction from autoboost::tuple
+   #define AUTOBOOST_PAIR_PIECEWISE_CONSTRUCT_AUTOBOOST_TUPLE_CODE(N,M)\
+   template< template<class, class, class, class, class, class, class, class, class, class> class BoostTuple \
+            AUTOBOOST_MOVE_I_IF(AUTOBOOST_MOVE_OR(N,M)) AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_I_IF(AUTOBOOST_MOVE_AND(N,M)) AUTOBOOST_MOVE_CLASSQ##M > \
+   pair( piecewise_construct_t\
+       , BoostTuple<AUTOBOOST_MOVE_TARG##N  AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_REPEAT(AUTOBOOST_MOVE_SUB(10,N),::autoboost::tuples::null_type)> p\
+       , BoostTuple<AUTOBOOST_MOVE_TARGQ##M AUTOBOOST_MOVE_I##M AUTOBOOST_MOVE_REPEAT(AUTOBOOST_MOVE_SUB(10,M),::autoboost::tuples::null_type)> q)\
+      : first(AUTOBOOST_MOVE_TMPL_GET##N), second(AUTOBOOST_MOVE_TMPL_GETQ##M)\
+   { (void)p; (void)q; }\
+   //
+   AUTOBOOST_MOVE_ITER2D_0TOMAX(9, AUTOBOOST_PAIR_PIECEWISE_CONSTRUCT_AUTOBOOST_TUPLE_CODE)
+   #undef AUTOBOOST_PAIR_PIECEWISE_CONSTRUCT_AUTOBOOST_TUPLE_CODE
+
+   //piecewise construction from variadic tuple (with delegating constructors)
+   #if !defined(AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES)
+   #  if !defined(AUTOBOOST_CONTAINER_NO_CXX11_DELEGATING_CONSTRUCTORS)
+      private:
+      template<template<class ...> class Tuple, class... Args1, class... Args2, size_t... Indexes1, size_t... Indexes2>
+      pair(Tuple<Args1...>& t1, Tuple<Args2...>& t2, index_tuple<Indexes1...>, index_tuple<Indexes2...>)
+         : first (::autoboost::forward<Args1>(get<Indexes1>(t1))...)
+         , second(::autoboost::forward<Args2>(get<Indexes2>(t2))...)
+      {  (void) t1; (void)t2; }
+
+      public:
+      template<template<class ...> class Tuple, class... Args1, class... Args2>
+      pair(piecewise_construct_t, Tuple<Args1...> t1, Tuple<Args2...> t2)
+         : pair(t1, t2, typename build_number_seq<sizeof...(Args1)>::type(), typename build_number_seq<sizeof...(Args2)>::type())
+      {}
+   #  else
+      //piecewise construction from variadic tuple (suboptimal, without delegating constructors)
+      private:
+      template<typename T, template<class ...> class Tuple, typename... Args>
+      static T build_from_args(Tuple<Args...>&& t)
+      {  return do_build_from_args<T>(::autoboost::move(t), typename build_number_seq<sizeof...(Args)>::type());   }
+
+      template<typename T, template<class ...> class Tuple, typename... Args, std::size_t... Indexes>
+      static T do_build_from_args(Tuple<Args...> && t, const index_tuple<Indexes...>&)
+      {  (void)t; return T(::autoboost::forward<Args>(get<Indexes>(t))...);  }
+
+      public:
+      template<template<class ...> class Tuple, class... Args1, class... Args2>
+      pair(piecewise_construct_t, Tuple<Args1...> t1, Tuple<Args2...> t2)
+         : first  (build_from_args<first_type> (::autoboost::move(t1)))
+         , second (build_from_args<second_type>(::autoboost::move(t2)))
+      {}
+   #  endif   //AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES
+   #elif defined(AUTOBOOST_MSVC) && (_CPPLIB_VER == 520)
+      //MSVC 2010 tuple implementation
+      #define AUTOBOOST_PAIR_PIECEWISE_CONSTRUCT_MSVC2010_TUPLE_CODE(N,M)\
+      template< template<class, class, class, class, class, class, class, class, class, class> class StdTuple \
+               AUTOBOOST_MOVE_I_IF(AUTOBOOST_MOVE_OR(N,M)) AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_I_IF(AUTOBOOST_MOVE_AND(N,M)) AUTOBOOST_MOVE_CLASSQ##M > \
+      pair( piecewise_construct_t\
+          , StdTuple<AUTOBOOST_MOVE_TARG##N  AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_REPEAT(AUTOBOOST_MOVE_SUB(10,N),::std::tr1::_Nil)> p\
+          , StdTuple<AUTOBOOST_MOVE_TARGQ##M AUTOBOOST_MOVE_I##M AUTOBOOST_MOVE_REPEAT(AUTOBOOST_MOVE_SUB(10,M),::std::tr1::_Nil)> q)\
+         : first(AUTOBOOST_MOVE_GET_IDX##N), second(AUTOBOOST_MOVE_GET_IDXQ##M)\
+      { (void)p; (void)q; }\
+      //
+      AUTOBOOST_MOVE_ITER2D_0TOMAX(9, AUTOBOOST_PAIR_PIECEWISE_CONSTRUCT_MSVC2010_TUPLE_CODE)
+      #undef AUTOBOOST_PAIR_PIECEWISE_CONSTRUCT_MSVC2010_TUPLE_CODE
+   #elif defined(AUTOBOOST_MSVC) && (_CPPLIB_VER == 540)
+      #if _VARIADIC_MAX >= 9
+      #define AUTOBOOST_PAIR_PIECEWISE_CONSTRUCT_MSVC2012_TUPLE_MAX_IT 9
+      #else
+      #define AUTOBOOST_PAIR_PIECEWISE_CONSTRUCT_MSVC2012_TUPLE_MAX_IT AUTOBOOST_MOVE_ADD(_VARIADIC_MAX, 1)
+      #endif
+
+      //MSVC 2012 tuple implementation
+      #define AUTOBOOST_PAIR_PIECEWISE_CONSTRUCT_MSVC2012_TUPLE_CODE(N,M)\
+      template< template<AUTOBOOST_MOVE_REPEAT(_VARIADIC_MAX, class), class, class, class> class StdTuple \
+               AUTOBOOST_MOVE_I_IF(AUTOBOOST_MOVE_OR(N,M)) AUTOBOOST_MOVE_CLASS##N AUTOBOOST_MOVE_I_IF(AUTOBOOST_MOVE_AND(N,M)) AUTOBOOST_MOVE_CLASSQ##M > \
+      pair( piecewise_construct_t\
+          , StdTuple<AUTOBOOST_MOVE_TARG##N  AUTOBOOST_MOVE_I##N AUTOBOOST_MOVE_REPEAT(AUTOBOOST_MOVE_SUB(AUTOBOOST_MOVE_ADD(_VARIADIC_MAX, 3),N),::std::_Nil) > p\
+          , StdTuple<AUTOBOOST_MOVE_TARGQ##M AUTOBOOST_MOVE_I##M AUTOBOOST_MOVE_REPEAT(AUTOBOOST_MOVE_SUB(AUTOBOOST_MOVE_ADD(_VARIADIC_MAX, 3),M),::std::_Nil) > q)\
+         : first(AUTOBOOST_MOVE_GET_IDX##N), second(AUTOBOOST_MOVE_GET_IDXQ##M)\
+      { (void)p; (void)q; }\
+      //
+      AUTOBOOST_MOVE_ITER2D_0TOMAX(AUTOBOOST_PAIR_PIECEWISE_CONSTRUCT_MSVC2012_TUPLE_MAX_IT, AUTOBOOST_PAIR_PIECEWISE_CONSTRUCT_MSVC2012_TUPLE_CODE)
+      #undef AUTOBOOST_PAIR_PIECEWISE_CONSTRUCT_MSVC2010_TUPLE_CODE
+      #undef AUTOBOOST_PAIR_PIECEWISE_CONSTRUCT_MSVC2012_TUPLE_MAX_IT
    #endif
-*/
+
    //pair copy assignment
    pair& operator=(AUTOBOOST_COPY_ASSIGN_REF(pair) p)
    {
@@ -214,10 +328,11 @@ struct pair
    }
 
    template <class D, class S>
-   typename ::autoboost::container::container_detail::enable_if_c
-      < !(::autoboost::container::container_detail::is_same<T1, D>::value &&
-          ::autoboost::container::container_detail::is_same<T2, S>::value)
-      , pair &>::type
+   typename ::autoboost::container::container_detail::disable_if_or
+      < pair &
+      , ::autoboost::container::container_detail::is_same<T1, D>
+      , ::autoboost::container::container_detail::is_same<T2, S>
+      >::type
       operator=(const pair<D, S>&p)
    {
       first  = p.first;
@@ -226,18 +341,18 @@ struct pair
    }
 
    template <class D, class S>
-   typename ::autoboost::container::container_detail::enable_if_c
-      < !(::autoboost::container::container_detail::is_same<T1, D>::value &&
-          ::autoboost::container::container_detail::is_same<T2, S>::value)
-      , pair &>::type
+   typename ::autoboost::container::container_detail::disable_if_or
+      < pair &
+      , ::autoboost::container::container_detail::is_same<T1, D>
+      , ::autoboost::container::container_detail::is_same<T2, S>
+      >::type
       operator=(AUTOBOOST_RV_REF_BEG pair<D, S> AUTOBOOST_RV_REF_END p)
    {
       first  = ::autoboost::move(p.first);
       second = ::autoboost::move(p.second);
       return *this;
    }
-
-   //std::pair copy assignment
+//std::pair copy assignment
    pair& operator=(const std::pair<T1, T2> &p)
    {
       first  = p.first;
@@ -272,9 +387,8 @@ struct pair
    //swap
    void swap(pair& p)
    {
-      using std::swap;
-      swap(this->first, p.first);
-      swap(this->second, p.second);
+      ::autoboost::adl_move_swap(this->first, p.first);
+      ::autoboost::adl_move_swap(this->second, p.second);
    }
 };
 
@@ -309,37 +423,10 @@ inline pair<T1, T2> make_pair(T1 x, T2 y)
 
 template <class T1, class T2>
 inline void swap(pair<T1, T2>& x, pair<T1, T2>& y)
-{
-   swap(x.first, y.first);
-   swap(x.second, y.second);
-}
+{  x.swap(y);  }
 
 }  //namespace container_detail {
 }  //namespace container {
-
-
-//Without this specialization recursive flat_(multi)map instantiation fails
-//because is_enum needs to instantiate the recursive pair, leading to a compilation error).
-//This breaks the cycle clearly stating that pair is not an enum avoiding any instantiation.
-template<class T>
-struct is_enum;
-
-template<class T, class U>
-struct is_enum< ::autoboost::container::container_detail::pair<T, U> >
-{
-   static const bool value = false;
-};
-
-template <class T>
-struct is_class;
-
-//This specialization is needed to avoid instantiation of pair in
-//is_class, and allow recursive maps.
-template <class T1, class T2>
-struct is_class< ::autoboost::container::container_detail::pair<T1, T2> >
-{
-   static const bool value = true;
-};
 
 #ifdef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
 
@@ -364,6 +451,51 @@ struct is_class_or_union< ::autoboost::container::container_detail::pair<T1, T2>
    static const bool value = true;
 };
 
+template <class T1, class T2>
+struct is_class_or_union< std::pair<T1, T2> >
+//This specialization is needed to avoid instantiation of pair in
+//is_class, and allow recursive maps.
+{
+   static const bool value = true;
+};
+
+template<class T>
+struct is_union;
+
+template <class T1, class T2>
+struct is_union< ::autoboost::container::container_detail::pair<T1, T2> >
+//This specialization is needed to avoid instantiation of pair in
+//is_class, and allow recursive maps.
+{
+   static const bool value = false;
+};
+
+template <class T1, class T2>
+struct is_union< std::pair<T1, T2> >
+//This specialization is needed to avoid instantiation of pair in
+//is_class, and allow recursive maps.
+{
+   static const bool value = false;
+};
+
+template<class T>
+struct is_class;
+
+template <class T1, class T2>
+struct is_class< ::autoboost::container::container_detail::pair<T1, T2> >
+//This specialization is needed to avoid instantiation of pair in
+//is_class, and allow recursive maps.
+{
+   static const bool value = true;
+};
+
+template <class T1, class T2>
+struct is_class< std::pair<T1, T2> >
+//This specialization is needed to avoid instantiation of pair in
+//is_class, and allow recursive maps.
+{
+   static const bool value = true;
+};
 
 }  //namespace move_detail{
 

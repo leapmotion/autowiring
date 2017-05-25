@@ -2,8 +2,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-#ifndef AB_INDIRECT_TRAITS_DWA2002131_HPP
-# define AB_INDIRECT_TRAITS_DWA2002131_HPP
+#ifndef INDIRECT_TRAITS_DWA2002131_HPP
+# define INDIRECT_TRAITS_DWA2002131_HPP
 # include <autoboost/type_traits/is_function.hpp>
 # include <autoboost/type_traits/is_reference.hpp>
 # include <autoboost/type_traits/is_pointer.hpp>
@@ -16,7 +16,6 @@
 # include <autoboost/type_traits/remove_reference.hpp>
 # include <autoboost/type_traits/remove_pointer.hpp>
 
-# include <autoboost/type_traits/detail/ice_and.hpp>
 # include <autoboost/detail/workaround.hpp>
 
 # include <autoboost/mpl/eval_if.hpp>

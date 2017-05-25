@@ -150,6 +150,7 @@ boost/numeric/conversion/
 boost/numeric/conversion/detail/
 boost/numeric/conversion/detail/preprocessed/
 boost/optional/
+boost/optional/detail/
 boost/parameter/
 boost/parameter/aux_/
 boost/pending/
@@ -244,6 +245,7 @@ boost/thread/v2/
 boost/thread/win32/
 boost/tuple/
 boost/tuple/detail/
+boost/type_index/
 boost/type_traits/
 boost/type_traits/detail/
 boost/typeof/
@@ -273,8 +275,6 @@ libs/regex/
 libs/regex/src/
 libs/serialization/
 libs/serialization/src/
-libs/smart_ptr/
-libs/smart_ptr/src/
 libs/system/src/
 libs/thread/
 libs/thread/src/

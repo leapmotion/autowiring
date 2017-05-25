@@ -12,11 +12,6 @@
 #include <autoboost/type_traits/is_base_and_derived.hpp>
 #include <autoboost/type_traits/is_same.hpp>
 #include <autoboost/type_traits/is_class.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
-#include <autoboost/type_traits/detail/ice_and.hpp>
-
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
 
 namespace autoboost {
 
@@ -26,24 +21,19 @@ namespace autoboost {
       {
           typedef typename remove_cv<B>::type ncvB;
           typedef typename remove_cv<D>::type ncvD;
-          AUTOBOOST_STATIC_CONSTANT(bool, value = (::autoboost::type_traits::ice_or<
-            (::autoboost::detail::is_base_and_derived_impl<ncvB,ncvD>::value),
-            (::autoboost::type_traits::ice_and< ::autoboost::is_same<ncvB,ncvD>::value, ::autoboost::is_class<ncvB>::value>::value)>::value));
+          AUTOBOOST_STATIC_CONSTANT(bool, value = (
+            (::autoboost::detail::is_base_and_derived_impl<ncvB,ncvD>::value) ||
+            (::autoboost::is_same<ncvB,ncvD>::value && ::autoboost::is_class<ncvB>::value)));
       };
    }
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF2(
-      is_base_of
-    , Base
-    , Derived
-    , (::autoboost::detail::is_base_of_imp<Base, Derived>::value))
+   template <class Base, class Derived> struct is_base_of
+      : public integral_constant<bool, (::autoboost::detail::is_base_of_imp<Base, Derived>::value)> {};
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_PARTIAL_SPEC2_2(typename Base,typename Derived,is_base_of,Base&,Derived,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_PARTIAL_SPEC2_2(typename Base,typename Derived,is_base_of,Base,Derived&,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_PARTIAL_SPEC2_2(typename Base,typename Derived,is_base_of,Base&,Derived&,false)
+   template <class Base, class Derived> struct is_base_of<Base, Derived&> : false_type{};
+   template <class Base, class Derived> struct is_base_of<Base&, Derived&> : false_type{};
+   template <class Base, class Derived> struct is_base_of<Base&, Derived> : false_type{};
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_IS_BASE_AND_DERIVED_HPP_INCLUDED

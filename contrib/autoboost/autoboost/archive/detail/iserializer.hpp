@@ -39,8 +39,7 @@ namespace std{
 #include <autoboost/mpl/identity.hpp>
 #include <autoboost/mpl/greater_equal.hpp>
 #include <autoboost/mpl/equal_to.hpp>
-#include <autoboost/mpl/bool.hpp>
-#include <autoboost/detail/no_exceptions_support.hpp>
+#include <autoboost/core/no_exceptions_support.hpp>
 
 #ifndef AUTOBOOST_SERIALIZATION_DEFAULT_TYPE_INFO
     #include <autoboost/serialization/extended_type_info_typeid.hpp>
@@ -57,11 +56,16 @@ namespace std{
 #include <autoboost/type_traits/is_polymorphic.hpp>
 
 #include <autoboost/serialization/assume_abstract.hpp>
-#define DONT_USE_HAS_NEW_OPERATOR (                    \
-    defined(__BORLANDC__)                              \
-    || AUTOBOOST_WORKAROUND(__IBMCPP__, < 1210)            \
-    || defined(__SUNPRO_CC) && (__SUNPRO_CC < 0x590)   \
-)
+
+#ifndef AUTOBOOST_MSVC
+    #define DONT_USE_HAS_NEW_OPERATOR (                    \
+           AUTOBOOST_WORKAROUND(__IBMCPP__, < 1210)            \
+        || defined(__SUNPRO_CC) && (__SUNPRO_CC < 0x590)   \
+    )
+#else
+    #define DONT_USE_HAS_NEW_OPERATOR 0
+#endif
+
 #if ! DONT_USE_HAS_NEW_OPERATOR
 #include <autoboost/type_traits/has_new_operator.hpp>
 #endif
@@ -73,10 +77,10 @@ namespace std{
 #include <autoboost/serialization/type_info_implementation.hpp>
 #include <autoboost/serialization/nvp.hpp>
 #include <autoboost/serialization/void_cast.hpp>
-#include <autoboost/serialization/array.hpp>
 #include <autoboost/serialization/collection_size_type.hpp>
 #include <autoboost/serialization/singleton.hpp>
 #include <autoboost/serialization/wrapper.hpp>
+#include <autoboost/serialization/array_wrapper.hpp>
 
 // the following is need only for dynamic cast of polymorphic pointers
 #include <autoboost/archive/archive_exception.hpp>
@@ -224,17 +228,13 @@ struct heap_allocation {
             static void invoke_delete(T * t) {
                 // if compilation fails here, the likely cause that the class
                 // T has a class specific new operator but no class specific
-                // delete operator which matches the following signature.  Fix
-                // your program to have this.  Note that adding operator delete
-                // with only one parameter doesn't seem correct to me since
-                // the standard(3.7.4.2) says "
-                // "If a class T has a member deallocation function named
-                // 'operator delete' with exactly one parameter, then that function
-                // is a usual (non-placement) deallocation function" which I take
-                // to mean that it will call the destructor of type T which we don't
-                // want to do here.
-                // Note: reliance upon automatic conversion from T * to void * here
-                (T::operator delete)(t, sizeof(T));
+                // delete operator which matches the following signature.
+                // note that this solution addresses the issue that two
+                // possible signatures.  But it doesn't address the possibility
+                // that the class might have class specific new with NO
+                // class specific delete at all.  Patches (compatible with
+                // C++03) welcome!
+                delete t;
             }
         };
         struct doesnt_have_new_operator {
@@ -243,7 +243,7 @@ struct heap_allocation {
             }
             static void invoke_delete(T * t) {
                 // Note: I'm reliance upon automatic conversion from T * to void * here
-                (operator delete)(t);
+                delete t;
             }
         };
         static T * invoke_new() {
@@ -588,7 +588,14 @@ struct load_array_type {
                     autoboost::archive::archive_exception::array_size_too_short
                 )
             );
-        ar >> serialization::make_array(static_cast<value_type*>(&t[0]),count);
+        // explict template arguments to pass intel C++ compiler
+        ar >> serialization::make_array<
+            value_type,
+            autoboost::serialization::collection_size_type
+        >(
+            static_cast<value_type *>(&t[0]),
+            count
+        );
     }
 };
 
@@ -617,40 +624,6 @@ inline void load(Archive & ar, T &t){
         >::type typex;
     typex::invoke(ar, t);
 }
-
-#if 0
-
-// BORLAND
-#if AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x560))
-// borland has a couple of problems
-// a) if function is partially specialized - see below
-// const paramters are transformed to non-const ones
-// b) implementation of base_object can't be made to work
-// correctly which results in all base_object s being const.
-// So, strip off the const for borland.  This breaks the trap
-// for loading const objects - but I see no alternative
-template<class Archive, class T>
-inline void load(Archive &ar, const T & t){
-    load(ar, const_cast<T &>(t));
-}
-#endif
-
-// let wrappers through.
-#ifndef AUTOBOOST_NO_FUNCTION_TEMPLATE_ORDERING
-template<class Archive, class T>
-inline void load_wrapper(Archive &ar, const T&t, mpl::true_){
-    autoboost::archive::load(ar, const_cast<T&>(t));
-}
-
-#if !AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x560))
-template<class Archive, class T>
-inline void load(Archive &ar, const T&t){
-  load_wrapper(ar,t,serialization::is_wrapper< T >());
-}
-#endif
-#endif
-
-#endif
 
 } // namespace archive
 } // namespace autoboost

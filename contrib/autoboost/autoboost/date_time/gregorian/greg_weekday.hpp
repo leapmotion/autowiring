@@ -1,5 +1,5 @@
-#ifndef AB_GREG_WEEKDAY_HPP___
-#define AB_GREG_WEEKDAY_HPP___
+#ifndef GREG_WEEKDAY_HPP___
+#define GREG_WEEKDAY_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -9,9 +9,9 @@
  * $Date$
  */
 
-#include "autoboost/date_time/constrained_value.hpp"
-#include "autoboost/date_time/date_defs.hpp"
-#include "autoboost/date_time/compiler_config.hpp"
+#include <autoboost/date_time/constrained_value.hpp>
+#include <autoboost/date_time/date_defs.hpp>
+#include <autoboost/date_time/compiler_config.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -29,7 +29,7 @@ namespace gregorian {
 
 
   //! Exception that flags that a weekday number is incorrect
-  struct bad_weekday : public std::out_of_range
+  struct AUTOBOOST_SYMBOL_VISIBLE bad_weekday : public std::out_of_range
   {
     bad_weekday() : std::out_of_range(std::string("Weekday is out of range 0..6")) {}
   };

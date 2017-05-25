@@ -15,11 +15,14 @@
 #include <typeinfo>
 #include <cstddef> // NULL
 
-#include <autoboost/detail/no_exceptions_support.hpp>
+#include <autoboost/core/no_exceptions_support.hpp>
 
-#include <autoboost/serialization/singleton.hpp>
-
+// it marks our code with proper attributes as being exported when
+// we're compiling it while marking it import when just the headers
+// is being included.
 #define AUTOBOOST_SERIALIZATION_SOURCE
+#include <autoboost/serialization/config.hpp>
+#include <autoboost/serialization/singleton.hpp>
 #include <autoboost/serialization/extended_type_info_typeid.hpp>
 
 namespace autoboost {
@@ -44,7 +47,7 @@ typedef std::multiset<
     type_compare
 > tkmap;
 
-AUTOBOOST_SERIALIZATION_DECL(bool)
+AUTOBOOST_SERIALIZATION_DECL bool
 extended_type_info_typeid_0::is_less_than(
     const autoboost::serialization::extended_type_info & rhs
 ) const {
@@ -56,7 +59,7 @@ extended_type_info_typeid_0::is_less_than(
     );
 }
 
-AUTOBOOST_SERIALIZATION_DECL(bool)
+AUTOBOOST_SERIALIZATION_DECL bool
 extended_type_info_typeid_0::is_equal(
     const autoboost::serialization::extended_type_info & rhs
 ) const {
@@ -70,7 +73,7 @@ extended_type_info_typeid_0::is_equal(
     ;
 }
 
-AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_SERIALIZATION_DECL
 extended_type_info_typeid_0::extended_type_info_typeid_0(
     const char * key
 ) :
@@ -78,17 +81,17 @@ extended_type_info_typeid_0::extended_type_info_typeid_0(
     m_ti(NULL)
 {}
 
-AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_SERIALIZATION_DECL
 extended_type_info_typeid_0::~extended_type_info_typeid_0()
 {}
 
-AUTOBOOST_SERIALIZATION_DECL(void)
+AUTOBOOST_SERIALIZATION_DECL void
 extended_type_info_typeid_0::type_register(const std::type_info & ti){
     m_ti = & ti;
     singleton<tkmap>::get_mutable_instance().insert(this);
 }
 
-AUTOBOOST_SERIALIZATION_DECL(void)
+AUTOBOOST_SERIALIZATION_DECL void
 extended_type_info_typeid_0::type_unregister()
 {
     if(NULL != m_ti){
@@ -144,7 +147,7 @@ public:
 #  pragma warning(pop)
 #endif
 
-AUTOBOOST_SERIALIZATION_DECL(const extended_type_info *)
+AUTOBOOST_SERIALIZATION_DECL const extended_type_info *
 extended_type_info_typeid_0::get_extended_type_info(
     const std::type_info & ti
 ) const {

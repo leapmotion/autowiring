@@ -1,5 +1,5 @@
-#ifndef AB_GREGORIAN_FACET_HPP___
-#define AB_GREGORIAN_FACET_HPP___
+#ifndef GREGORIAN_FACET_HPP___
+#define GREGORIAN_FACET_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -9,9 +9,10 @@
  * $Date$
  */
 
-#include "autoboost/date_time/gregorian/gregorian_types.hpp"
-#include "autoboost/date_time/date_formatting_locales.hpp" // sets AUTOBOOST_DATE_TIME_NO_LOCALE
-#include "autoboost/date_time/gregorian/parsers.hpp"
+#include <autoboost/date_time/compiler_config.hpp>
+#include <autoboost/date_time/gregorian/gregorian_types.hpp>
+#include <autoboost/date_time/date_formatting_locales.hpp> // sets AUTOBOOST_DATE_TIME_NO_LOCALE
+#include <autoboost/date_time/gregorian/parsers.hpp>
 
 //This file is basically commented out if locales are not supported
 #ifndef AUTOBOOST_DATE_TIME_NO_LOCALE
@@ -26,7 +27,7 @@ namespace autoboost {
 namespace gregorian {
 
   //! Configuration of the output facet template
-  struct greg_facet_config
+  struct AUTOBOOST_SYMBOL_VISIBLE greg_facet_config
   {
     typedef autoboost::gregorian::greg_month month_type;
     typedef autoboost::date_time::special_values special_value_enum;
@@ -290,7 +291,17 @@ namespace gregorian {
      * names as a default. */
     catch(std::bad_cast&){
       charT a = '\0';
+
+#if defined(AUTOBOOST_NO_CXX11_SMART_PTR)
+
       std::auto_ptr< const facet_def > f(create_facet_def(a));
+
+#else
+
+      std::unique_ptr< const facet_def > f(create_facet_def(a));
+
+#endif
+
       num = date_time::find_match(f->get_short_month_names(),
                                   f->get_long_month_names(),
                                   (greg_month::max)(), s); // greg_month spans 1..12, so max returns the array size,
@@ -332,7 +343,17 @@ namespace gregorian {
      * names as a default. */
     catch(std::bad_cast&){
       charT a = '\0';
+
+#if defined(AUTOBOOST_NO_CXX11_SMART_PTR)
+
       std::auto_ptr< const facet_def > f(create_facet_def(a));
+
+#else
+
+      std::unique_ptr< const facet_def > f(create_facet_def(a));
+
+#endif
+
       num = date_time::find_match(f->get_short_weekday_names(),
                                   f->get_long_weekday_names(),
                                   (greg_weekday::max)() + 1, s); // greg_weekday spans 0..6, so increment is needed
@@ -346,7 +367,6 @@ namespace gregorian {
 } } //namespace gregorian
 
 #endif
-
 
 #endif
 

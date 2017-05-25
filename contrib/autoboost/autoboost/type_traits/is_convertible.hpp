@@ -13,14 +13,14 @@
 #define AUTOBOOST_TT_IS_CONVERTIBLE_HPP_INCLUDED
 
 #include <autoboost/type_traits/intrinsics.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
 #ifndef AUTOBOOST_IS_CONVERTIBLE
 #include <autoboost/type_traits/detail/yes_no_type.hpp>
-#include <autoboost/type_traits/config.hpp>
+#include <autoboost/type_traits/detail/config.hpp>
 #include <autoboost/type_traits/is_array.hpp>
-#include <autoboost/type_traits/ice.hpp>
 #include <autoboost/type_traits/is_arithmetic.hpp>
 #include <autoboost/type_traits/is_void.hpp>
-#ifndef AUTOBOOST_NO_IS_ABSTRACT
+#if !defined(AUTOBOOST_NO_IS_ABSTRACT)
 #include <autoboost/type_traits/is_abstract.hpp>
 #endif
 #include <autoboost/type_traits/add_lvalue_reference.hpp>
@@ -31,12 +31,12 @@
 #include <autoboost/type_traits/remove_reference.hpp>
 #endif
 #if !defined(AUTOBOOST_NO_SFINAE_EXPR) && !defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES)
-#  include <autoboost/utility/declval.hpp>
+#  include <autoboost/type_traits/declval.hpp>
 #endif
+#elif defined(AUTOBOOST_MSVC) || defined(AUTOBOOST_INTEL)
+#include <autoboost/type_traits/is_function.hpp>
+#include <autoboost/type_traits/is_same.hpp>
 #endif // AUTOBOOST_IS_CONVERTIBLE
-
-// should be always the last #include directive
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
 
 namespace autoboost {
 
@@ -54,7 +54,7 @@ namespace autoboost {
 
 namespace detail {
 
-#if !defined(AUTOBOOST_NO_SFINAE_EXPR) && !defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(AUTOBOOST_NO_SFINAE_EXPR) && !defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES) && !(defined(AUTOBOOST_GCC) && (AUTOBOOST_GCC < 40700))
 
    // This is a C++11 conforming version, place this first and use it wherever possible:
 
@@ -300,13 +300,26 @@ struct is_convertible_basic_impl:
 // This version seems to work pretty well for a wide spectrum of compilers,
 // however it does rely on undefined behaviour by passing UDT's through (...).
 //
+
+//Workaround for old compilers like MSVC 7.1 to avoid
+//forming a reference to an array of unknown bound
+template <typename From>
+struct is_convertible_basic_impl_add_lvalue_reference
+   : add_lvalue_reference<From>
+{};
+
+template <typename From>
+struct is_convertible_basic_impl_add_lvalue_reference<From[]>
+{
+    typedef From type [];
+};
+
 template <typename From, typename To>
 struct is_convertible_basic_impl
 {
     static ::autoboost::type_traits::no_type AUTOBOOST_TT_DECL _m_check(...);
     static ::autoboost::type_traits::yes_type AUTOBOOST_TT_DECL _m_check(To);
-    typedef typename add_lvalue_reference<From>::type lvalue_type;
-    typedef typename add_rvalue_reference<From>::type rvalue_type;
+    typedef typename is_convertible_basic_impl_add_lvalue_reference<From>::type lvalue_type;
     static lvalue_type _m_from;
 #ifdef AUTOBOOST_MSVC
 #pragma warning(push)
@@ -316,6 +329,7 @@ struct is_convertible_basic_impl
 #endif
 #endif
 #ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+    typedef typename add_rvalue_reference<From>::type rvalue_type;
     AUTOBOOST_STATIC_CONSTANT(bool, value =
         sizeof( _m_check(static_cast<rvalue_type>(_m_from)) ) == sizeof(::autoboost::type_traits::yes_type)
         );
@@ -336,38 +350,15 @@ struct is_convertible_basic_impl
 template <typename From, typename To>
 struct is_convertible_impl
 {
-    enum { value =
-        (::autoboost::type_traits::ice_and<
-            ::autoboost::type_traits::ice_or<
-               ::autoboost::detail::is_convertible_basic_impl<From,To>::value,
-               ::autoboost::is_void<To>::value
-            >::value,
-            ::autoboost::type_traits::ice_not<
-               ::autoboost::is_array<To>::value
-            >::value,
-            ::autoboost::type_traits::ice_not<
-               ::autoboost::is_function<To>::value
-            >::value
-        >::value) };
+    enum {
+       value = ( ::autoboost::detail::is_convertible_basic_impl<From,To>::value && ! ::autoboost::is_array<To>::value && ! ::autoboost::is_function<To>::value)
+    };
 };
 #elif !defined(__BORLANDC__) || __BORLANDC__ > 0x551
 template <typename From, typename To>
 struct is_convertible_impl
 {
-    AUTOBOOST_STATIC_CONSTANT(bool, value =
-        (::autoboost::type_traits::ice_and<
-            ::autoboost::type_traits::ice_or<
-               ::autoboost::detail::is_convertible_basic_impl<From,To>::value,
-               ::autoboost::is_void<To>::value
-            >::value,
-            ::autoboost::type_traits::ice_not<
-               ::autoboost::is_array<To>::value
-            >::value,
-            ::autoboost::type_traits::ice_not<
-               ::autoboost::is_function<To>::value
-            >::value
-        >::value)
-        );
+   AUTOBOOST_STATIC_CONSTANT(bool, value = ( ::autoboost::detail::is_convertible_basic_impl<From, To>::value && !::autoboost::is_array<To>::value && !::autoboost::is_function<To>::value));
 };
 #endif
 
@@ -443,52 +434,55 @@ struct is_convertible_impl_dispatch
 // implementation above:
 //
 #ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-#   define TT_AUX_BOOL_CV_VOID_TRAIT_SPEC2_PART1(trait,spec1,spec2,value) \
-    AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC2(trait,spec1,spec2,value) \
-    AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC2(trait,spec1,spec2 const,value) \
-    AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC2(trait,spec1,spec2 volatile,value) \
-    AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC2(trait,spec1,spec2 const volatile,value) \
-    /**/
 
-#   define TT_AUX_BOOL_CV_VOID_TRAIT_SPEC2(trait,spec1,spec2,value) \
-    TT_AUX_BOOL_CV_VOID_TRAIT_SPEC2_PART1(trait,spec1,spec2,value) \
-    TT_AUX_BOOL_CV_VOID_TRAIT_SPEC2_PART1(trait,spec1 const,spec2,value) \
-    TT_AUX_BOOL_CV_VOID_TRAIT_SPEC2_PART1(trait,spec1 volatile,spec2,value) \
-    TT_AUX_BOOL_CV_VOID_TRAIT_SPEC2_PART1(trait,spec1 const volatile,spec2,value) \
-    /**/
+template <> struct is_convertible_impl_dispatch<void, void> : public true_type{};
+template <> struct is_convertible_impl_dispatch<void, void const> : public true_type{};
+template <> struct is_convertible_impl_dispatch<void, void const volatile> : public true_type{};
+template <> struct is_convertible_impl_dispatch<void, void volatile> : public true_type{};
 
-    TT_AUX_BOOL_CV_VOID_TRAIT_SPEC2(is_convertible,void,void,true)
+template <> struct is_convertible_impl_dispatch<void const, void> : public true_type{};
+template <> struct is_convertible_impl_dispatch<void const, void const> : public true_type{};
+template <> struct is_convertible_impl_dispatch<void const, void const volatile> : public true_type{};
+template <> struct is_convertible_impl_dispatch<void const, void volatile> : public true_type{};
 
-#   undef TT_AUX_BOOL_CV_VOID_TRAIT_SPEC2
-#   undef TT_AUX_BOOL_CV_VOID_TRAIT_SPEC2_PART1
+template <> struct is_convertible_impl_dispatch<void const volatile, void> : public true_type{};
+template <> struct is_convertible_impl_dispatch<void const volatile, void const> : public true_type{};
+template <> struct is_convertible_impl_dispatch<void const volatile, void const volatile> : public true_type{};
+template <> struct is_convertible_impl_dispatch<void const volatile, void volatile> : public true_type{};
+
+template <> struct is_convertible_impl_dispatch<void volatile, void> : public true_type{};
+template <> struct is_convertible_impl_dispatch<void volatile, void const> : public true_type{};
+template <> struct is_convertible_impl_dispatch<void volatile, void const volatile> : public true_type{};
+template <> struct is_convertible_impl_dispatch<void volatile, void volatile> : public true_type{};
 
 #else
-    AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC2(is_convertible,void,void,true)
+template <> struct is_convertible_impl_dispatch<void, void> : public true_type{};
 #endif // AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_PARTIAL_SPEC2_1(typename To,is_convertible,void,To,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_PARTIAL_SPEC2_1(typename From,is_convertible,From,void,false)
+template <class To> struct is_convertible_impl_dispatch<void, To> : public false_type{};
+template <class From> struct is_convertible_impl_dispatch<From, void> : public false_type{};
+
 #ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_PARTIAL_SPEC2_1(typename To,is_convertible,void const,To,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_PARTIAL_SPEC2_1(typename To,is_convertible,void volatile,To,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_PARTIAL_SPEC2_1(typename To,is_convertible,void const volatile,To,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_PARTIAL_SPEC2_1(typename From,is_convertible,From,void const,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_PARTIAL_SPEC2_1(typename From,is_convertible,From,void volatile,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_PARTIAL_SPEC2_1(typename From,is_convertible,From,void const volatile,false)
+template <class To> struct is_convertible_impl_dispatch<void const, To> : public false_type{};
+template <class From> struct is_convertible_impl_dispatch<From, void const> : public false_type{};
+template <class To> struct is_convertible_impl_dispatch<void const volatile, To> : public false_type{};
+template <class From> struct is_convertible_impl_dispatch<From, void const volatile> : public false_type{};
+template <class To> struct is_convertible_impl_dispatch<void volatile, To> : public false_type{};
+template <class From> struct is_convertible_impl_dispatch<From, void volatile> : public false_type{};
 #endif
 
 } // namespace detail
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF2(is_convertible,From,To,(::autoboost::detail::is_convertible_impl_dispatch<From,To>::value))
+template <class From, class To>
+struct is_convertible : public integral_constant<bool, ::autoboost::detail::is_convertible_impl_dispatch<From, To>::value> {};
 
 #else
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF2(is_convertible,From,To,AUTOBOOST_IS_CONVERTIBLE(From,To))
+template <class From, class To>
+struct is_convertible : public integral_constant<bool, AUTOBOOST_IS_CONVERTIBLE(From, To)> {};
 
 #endif
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_IS_CONVERTIBLE_HPP_INCLUDED

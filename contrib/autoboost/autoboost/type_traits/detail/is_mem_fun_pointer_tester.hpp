@@ -15,12 +15,22 @@
 #define AUTOBOOST_TT_DETAIL_IS_MEM_FUN_POINTER_TESTER_HPP_INCLUDED
 
 #include <autoboost/type_traits/detail/yes_no_type.hpp>
-#include <autoboost/type_traits/config.hpp>
+#include <autoboost/type_traits/detail/config.hpp>
 
 #if defined(AUTOBOOST_TT_PREPROCESSING_MODE)
-#   include <autoboost/preprocessor/iterate.hpp>
-#   include <autoboost/preprocessor/enum_params.hpp>
-#   include <autoboost/preprocessor/comma_if.hpp>
+//
+// Maintentance mode, hide include dependencies
+// from dependency trackers:
+//
+#define PPI <autoboost/preprocessor/iterate.hpp>
+#include PPI
+#undef PPI
+#define PPI <autoboost/preprocessor/enum_params.hpp>
+#include PPI
+#undef PPI
+#define <autoboost/preprocessor/comma_if.hpp>
+#include PPI
+#undef
 #endif
 
 namespace autoboost {

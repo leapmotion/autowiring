@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_TIME_PRECISION_LIMITS_HPP
-#define AB_DATE_TIME_TIME_PRECISION_LIMITS_HPP
+#ifndef DATE_TIME_TIME_PRECISION_LIMITS_HPP
+#define DATE_TIME_TIME_PRECISION_LIMITS_HPP
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

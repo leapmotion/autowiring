@@ -1,5 +1,5 @@
-#ifndef AB_POSIX_TIME_DURATION_HPP___
-#define AB_POSIX_TIME_DURATION_HPP___
+#ifndef POSIX_TIME_DURATION_HPP___
+#define POSIX_TIME_DURATION_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -9,7 +9,8 @@
  * $Date$
  */
 
-#include "autoboost/date_time/posix_time/posix_time_config.hpp"
+#include <autoboost/date_time/compiler_config.hpp>
+#include <autoboost/date_time/posix_time/posix_time_config.hpp>
 
 namespace autoboost {
 namespace posix_time {
@@ -17,33 +18,33 @@ namespace posix_time {
   //! Allows expression of durations as an hour count
   /*! \ingroup time_basics
    */
-  class hours : public time_duration
+  class AUTOBOOST_SYMBOL_VISIBLE hours : public time_duration
   {
   public:
     explicit hours(long h) :
-      time_duration(h,0,0)
+      time_duration(static_cast<hour_type>(h),0,0)
     {}
   };
 
   //! Allows expression of durations as a minute count
   /*! \ingroup time_basics
    */
-  class minutes : public time_duration
+  class AUTOBOOST_SYMBOL_VISIBLE minutes : public time_duration
   {
   public:
     explicit minutes(long m) :
-      time_duration(0,m,0)
+      time_duration(0,static_cast<min_type>(m),0)
     {}
   };
 
   //! Allows expression of durations as a seconds count
   /*! \ingroup time_basics
    */
-  class seconds : public time_duration
+  class AUTOBOOST_SYMBOL_VISIBLE seconds : public time_duration
   {
   public:
     explicit seconds(long s) :
-      time_duration(0,0,s)
+      time_duration(0,0,static_cast<sec_type>(s))
     {}
   };
 

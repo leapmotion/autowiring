@@ -6,6 +6,7 @@
 // (C) Copyright 2007-9 Anthony Williams
 
 #include <list>
+#include <autoboost/thread/csbl/memory/unique_ptr.hpp>
 #include <autoboost/thread/shared_mutex.hpp>
 #include <autoboost/thread/mutex.hpp>
 #include <autoboost/thread/lock_guard.hpp>
@@ -75,7 +76,7 @@ namespace autoboost
         thread* create_thread(F threadfunc)
         {
             autoboost::lock_guard<shared_mutex> guard(m);
-            std::auto_ptr<thread> new_thread(new thread(threadfunc));
+            autoboost::csbl::unique_ptr<thread> new_thread(new thread(threadfunc));
             threads.push_back(new_thread.get());
             return new_thread.release();
         }

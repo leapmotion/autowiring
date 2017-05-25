@@ -4,8 +4,8 @@
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland
  */
-#ifndef AB_POSIX_TIME_TYPES_HPP___
-#define AB_POSIX_TIME_TYPES_HPP___
+#ifndef POSIX_TIME_TYPES_HPP___
+#define POSIX_TIME_TYPES_HPP___
 
 #include "autoboost/date_time/time_clock.hpp"
 #include "autoboost/date_time/microsec_time_clock.hpp"

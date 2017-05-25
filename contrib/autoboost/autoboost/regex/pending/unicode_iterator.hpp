@@ -117,6 +117,9 @@ inline unsigned utf8_trailing_byte_count(autoboost::uint8_t c)
 #pragma warning(push)
 #pragma warning(disable:4100)
 #endif
+#ifndef AUTOBOOST_NO_EXCEPTIONS
+AUTOBOOST_NORETURN
+#endif
 inline void invalid_utf32_code_point(::autoboost::uint32_t val)
 {
 #ifndef AUTOBOOST_NO_STD_LOCALE

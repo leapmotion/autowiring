@@ -23,6 +23,7 @@
 #   pragma once
 #endif
 
+#include <autoboost/mpl/bool.hpp>
 #include <autoboost/type_traits/is_same.hpp>
 
 namespace autoboost {
@@ -33,22 +34,22 @@ namespace autoboost {
         template < typename T >
         struct is_character
         {
-            typedef autoboost::type_traits::ice_or<
-                    autoboost::is_same< T, char >::value,
+            typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::mpl::bool_<
+                    autoboost::is_same< T, char >::value ||
                     #if !defined(AUTOBOOST_NO_STRINGSTREAM) && !defined(AUTOBOOST_NO_STD_WSTRING)
-                        autoboost::is_same< T, wchar_t >::value,
+                        autoboost::is_same< T, wchar_t >::value ||
                     #endif
                     #ifndef AUTOBOOST_NO_CXX11_CHAR16_T
-                        autoboost::is_same< T, char16_t >::value,
+                        autoboost::is_same< T, char16_t >::value ||
                     #endif
                     #ifndef AUTOBOOST_NO_CXX11_CHAR32_T
-                        autoboost::is_same< T, char32_t >::value,
+                        autoboost::is_same< T, char32_t >::value ||
                     #endif
-                    autoboost::is_same< T, unsigned char >::value,
-                    autoboost::is_same< T, signed char >::value
-            > result_type;
+                   	autoboost::is_same< T, unsigned char >::value ||
+                   	autoboost::is_same< T, signed char >::value
+            > type;
 
-            AUTOBOOST_STATIC_CONSTANT(bool, value = (result_type::value) );
+            AUTOBOOST_STATIC_CONSTANT(bool, value = (type::value) );
         };
     }
 }

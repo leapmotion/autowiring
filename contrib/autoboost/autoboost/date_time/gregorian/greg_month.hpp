@@ -1,5 +1,5 @@
-#ifndef AB_GREG_MONTH_HPP___
-#define AB_GREG_MONTH_HPP___
+#ifndef GREG_MONTH_HPP___
+#define GREG_MONTH_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -9,10 +9,10 @@
  * $Date$
  */
 
-#include "autoboost/date_time/constrained_value.hpp"
-#include "autoboost/date_time/date_defs.hpp"
-#include "autoboost/shared_ptr.hpp"
-#include "autoboost/date_time/compiler_config.hpp"
+#include <autoboost/date_time/constrained_value.hpp>
+#include <autoboost/date_time/date_defs.hpp>
+#include <autoboost/shared_ptr.hpp>
+#include <autoboost/date_time/compiler_config.hpp>
 #include <stdexcept>
 #include <string>
 #include <map>
@@ -41,7 +41,7 @@ namespace gregorian {
   using date_time::NumMonths;
 
   //! Exception thrown if a greg_month is constructed with a value out of range
-  struct bad_month : public std::out_of_range
+  struct AUTOBOOST_SYMBOL_VISIBLE bad_month : public std::out_of_range
   {
     bad_month() : std::out_of_range(std::string("Month number is out of range 1..12")) {}
   };

@@ -19,7 +19,6 @@
 #include <autoboost/assert.hpp>
 
 #include <autoboost/serialization/throw_exception.hpp>
-#include <autoboost/serialization/pfto.hpp>
 #include <autoboost/static_assert.hpp>
 
 #include <autoboost/iterator/transform_iterator.hpp>
@@ -96,9 +95,9 @@ class binary_from_base64 : public
 public:
     // make composible buy using templated constructor
     template<class T>
-    binary_from_base64(AUTOBOOST_PFTO_WRAPPER(T)  start) :
+    binary_from_base64(T  start) :
         super_t(
-            Base(AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast< T >(start))),
+            Base(static_cast< T >(start)),
             detail::to_6_bit<CharType>()
         )
     {}

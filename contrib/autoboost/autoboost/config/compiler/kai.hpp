@@ -9,7 +9,7 @@
 
 //  Kai C++ compiler setup:
 
-#include "autoboost/config/compiler/common_edg.hpp"
+#include <autoboost/config/compiler/common_edg.hpp>
 
 #   if (__KCC_VERSION <= 4001) || !defined(AUTOBOOST_STRICT_CONFIG)
       // at least on Sun, the contents of <cwchar> is not in namespace std

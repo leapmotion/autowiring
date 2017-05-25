@@ -42,6 +42,8 @@ namespace detail {
 
 struct gcc_x86_operations_base
 {
+    static AUTOBOOST_CONSTEXPR_OR_CONST bool is_always_lock_free = true;
+
     static AUTOBOOST_FORCEINLINE void fence_before(memory_order order) AUTOBOOST_NOEXCEPT
     {
         if ((order & memory_order_release) != 0)
@@ -115,6 +117,7 @@ struct operations< 1u, Signed > :
 {
     typedef gcc_x86_operations< typename make_storage_type< 1u, Signed >::type, operations< 1u, Signed > > base_type;
     typedef typename base_type::storage_type storage_type;
+    typedef typename make_storage_type< 1u, Signed >::aligned aligned_storage_type;
 
     static AUTOBOOST_FORCEINLINE storage_type fetch_add(storage_type volatile& storage, storage_type v, memory_order) AUTOBOOST_NOEXCEPT
     {
@@ -123,7 +126,7 @@ struct operations< 1u, Signed > :
             "lock; xaddb %0, %1"
             : "+q" (v), "+m" (storage)
             :
-            : "cc", "memory"
+            : AUTOBOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC_COMMA "memory"
         );
         return v;
     }
@@ -151,7 +154,7 @@ struct operations< 1u, Signed > :
             "sete %2"
             : "+a" (previous), "+m" (storage), "=q" (success)
             : "q" (desired)
-            : "cc", "memory"
+            : AUTOBOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC_COMMA "memory"
         );
         expected = previous;
         return success;
@@ -168,7 +171,7 @@ struct operations< 1u, Signed > :
         "jne 1b"\
         : [res] "+a" (result), [storage] "+m" (storage)\
         : [arg] "q" (argument)\
-        : "cc", AUTOBOOST_ATOMIC_DETAIL_TEMP_CAS_REGISTER, "memory"\
+        : AUTOBOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC_COMMA AUTOBOOST_ATOMIC_DETAIL_TEMP_CAS_REGISTER, "memory"\
     )
 
     static AUTOBOOST_FORCEINLINE storage_type fetch_and(storage_type volatile& storage, storage_type v, memory_order) AUTOBOOST_NOEXCEPT
@@ -201,6 +204,7 @@ struct operations< 2u, Signed > :
 {
     typedef gcc_x86_operations< typename make_storage_type< 2u, Signed >::type, operations< 2u, Signed > > base_type;
     typedef typename base_type::storage_type storage_type;
+    typedef typename make_storage_type< 2u, Signed >::aligned aligned_storage_type;
 
     static AUTOBOOST_FORCEINLINE storage_type fetch_add(storage_type volatile& storage, storage_type v, memory_order) AUTOBOOST_NOEXCEPT
     {
@@ -209,7 +213,7 @@ struct operations< 2u, Signed > :
             "lock; xaddw %0, %1"
             : "+q" (v), "+m" (storage)
             :
-            : "cc", "memory"
+            : AUTOBOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC_COMMA "memory"
         );
         return v;
     }
@@ -237,7 +241,7 @@ struct operations< 2u, Signed > :
             "sete %2"
             : "+a" (previous), "+m" (storage), "=q" (success)
             : "q" (desired)
-            : "cc", "memory"
+            : AUTOBOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC_COMMA "memory"
         );
         expected = previous;
         return success;
@@ -254,7 +258,7 @@ struct operations< 2u, Signed > :
         "jne 1b"\
         : [res] "+a" (result), [storage] "+m" (storage)\
         : [arg] "q" (argument)\
-        : "cc", AUTOBOOST_ATOMIC_DETAIL_TEMP_CAS_REGISTER, "memory"\
+        : AUTOBOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC_COMMA AUTOBOOST_ATOMIC_DETAIL_TEMP_CAS_REGISTER, "memory"\
     )
 
     static AUTOBOOST_FORCEINLINE storage_type fetch_and(storage_type volatile& storage, storage_type v, memory_order) AUTOBOOST_NOEXCEPT
@@ -287,6 +291,7 @@ struct operations< 4u, Signed > :
 {
     typedef gcc_x86_operations< typename make_storage_type< 4u, Signed >::type, operations< 4u, Signed > > base_type;
     typedef typename base_type::storage_type storage_type;
+    typedef typename make_storage_type< 4u, Signed >::aligned aligned_storage_type;
 
     static AUTOBOOST_FORCEINLINE storage_type fetch_add(storage_type volatile& storage, storage_type v, memory_order) AUTOBOOST_NOEXCEPT
     {
@@ -295,7 +300,7 @@ struct operations< 4u, Signed > :
             "lock; xaddl %0, %1"
             : "+r" (v), "+m" (storage)
             :
-            : "cc", "memory"
+            : AUTOBOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC_COMMA "memory"
         );
         return v;
     }
@@ -323,7 +328,7 @@ struct operations< 4u, Signed > :
             "sete %2"
             : "+a" (previous), "+m" (storage), "=q" (success)
             : "r" (desired)
-            : "cc", "memory"
+            : AUTOBOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC_COMMA "memory"
         );
         expected = previous;
         return success;
@@ -340,7 +345,7 @@ struct operations< 4u, Signed > :
         "jne 1b"\
         : [res] "+a" (result), [storage] "+m" (storage)\
         : [arg] "r" (argument)\
-        : "cc", AUTOBOOST_ATOMIC_DETAIL_TEMP_CAS_REGISTER, "memory"\
+        : AUTOBOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC_COMMA AUTOBOOST_ATOMIC_DETAIL_TEMP_CAS_REGISTER, "memory"\
     )
 
     static AUTOBOOST_FORCEINLINE storage_type fetch_and(storage_type volatile& storage, storage_type v, memory_order) AUTOBOOST_NOEXCEPT
@@ -383,6 +388,7 @@ struct operations< 8u, Signed > :
 {
     typedef gcc_x86_operations< typename make_storage_type< 8u, Signed >::type, operations< 8u, Signed > > base_type;
     typedef typename base_type::storage_type storage_type;
+    typedef typename make_storage_type< 8u, Signed >::aligned aligned_storage_type;
 
     static AUTOBOOST_FORCEINLINE storage_type fetch_add(storage_type volatile& storage, storage_type v, memory_order) AUTOBOOST_NOEXCEPT
     {
@@ -391,7 +397,7 @@ struct operations< 8u, Signed > :
             "lock; xaddq %0, %1"
             : "+r" (v), "+m" (storage)
             :
-            : "cc", "memory"
+            : AUTOBOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC_COMMA "memory"
         );
         return v;
     }
@@ -419,7 +425,7 @@ struct operations< 8u, Signed > :
             "sete %2"
             : "+a" (previous), "+m" (storage), "=q" (success)
             : "r" (desired)
-            : "cc", "memory"
+            : AUTOBOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC_COMMA "memory"
         );
         expected = previous;
         return success;
@@ -436,7 +442,7 @@ struct operations< 8u, Signed > :
         "jne 1b"\
         : [res] "+a" (result), [storage] "+m" (storage)\
         : [arg] "r" (argument)\
-        : "cc", AUTOBOOST_ATOMIC_DETAIL_TEMP_CAS_REGISTER, "memory"\
+        : AUTOBOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC_COMMA AUTOBOOST_ATOMIC_DETAIL_TEMP_CAS_REGISTER, "memory"\
     )
 
     static AUTOBOOST_FORCEINLINE storage_type fetch_and(storage_type volatile& storage, storage_type v, memory_order) AUTOBOOST_NOEXCEPT
@@ -481,7 +487,7 @@ AUTOBOOST_FORCEINLINE void thread_fence(memory_order order) AUTOBOOST_NOEXCEPT
     {
         __asm__ __volatile__
         (
-#if defined(__x86_64__) || defined(__SSE2__)
+#if defined(AUTOBOOST_ATOMIC_DETAIL_X86_HAS_MFENCE)
             "mfence\n"
 #else
             "lock; addl $0, (%%esp)\n"

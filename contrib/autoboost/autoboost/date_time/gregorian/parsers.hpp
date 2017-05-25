@@ -1,5 +1,5 @@
-#ifndef AB_GREGORIAN_PARSERS_HPP___
-#define AB_GREGORIAN_PARSERS_HPP___
+#ifndef GREGORIAN_PARSERS_HPP___
+#define GREGORIAN_PARSERS_HPP___
 
 /* Copyright (c) 2002,2003,2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

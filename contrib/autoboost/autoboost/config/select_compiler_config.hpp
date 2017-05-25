@@ -122,27 +122,27 @@
 //
 // This section allows dependency scanners to find all the headers we *might* include:
 //
-#include "autoboost/config/compiler/gcc_xml.hpp"
-#include "autoboost/config/compiler/cray.hpp"
-#include "autoboost/config/compiler/comeau.hpp"
-#include "autoboost/config/compiler/pathscale.hpp"
-#include "autoboost/config/compiler/intel.hpp"
-#include "autoboost/config/compiler/clang.hpp"
-#include "autoboost/config/compiler/digitalmars.hpp"
-#include "autoboost/config/compiler/gcc.hpp"
-#include "autoboost/config/compiler/kai.hpp"
-#include "autoboost/config/compiler/sgi_mipspro.hpp"
-#include "autoboost/config/compiler/compaq_cxx.hpp"
-#include "autoboost/config/compiler/greenhills.hpp"
-#include "autoboost/config/compiler/codegear.hpp"
-#include "autoboost/config/compiler/borland.hpp"
-#include "autoboost/config/compiler/metrowerks.hpp"
-#include "autoboost/config/compiler/sunpro_cc.hpp"
-#include "autoboost/config/compiler/hp_acc.hpp"
-#include "autoboost/config/compiler/mpw.hpp"
-#include "autoboost/config/compiler/vacpp.hpp"
-#include "autoboost/config/compiler/pgi.hpp"
-#include "autoboost/config/compiler/visualc.hpp"
+#include <autoboost/config/compiler/gcc_xml.hpp>
+#include <autoboost/config/compiler/cray.hpp>
+#include <autoboost/config/compiler/comeau.hpp>
+#include <autoboost/config/compiler/pathscale.hpp>
+#include <autoboost/config/compiler/intel.hpp>
+#include <autoboost/config/compiler/clang.hpp>
+#include <autoboost/config/compiler/digitalmars.hpp>
+#include <autoboost/config/compiler/gcc.hpp>
+#include <autoboost/config/compiler/kai.hpp>
+#include <autoboost/config/compiler/sgi_mipspro.hpp>
+#include <autoboost/config/compiler/compaq_cxx.hpp>
+#include <autoboost/config/compiler/greenhills.hpp>
+#include <autoboost/config/compiler/codegear.hpp>
+#include <autoboost/config/compiler/borland.hpp>
+#include <autoboost/config/compiler/metrowerks.hpp>
+#include <autoboost/config/compiler/sunpro_cc.hpp>
+#include <autoboost/config/compiler/hp_acc.hpp>
+#include <autoboost/config/compiler/mpw.hpp>
+#include <autoboost/config/compiler/vacpp.hpp>
+#include <autoboost/config/compiler/pgi.hpp>
+#include <autoboost/config/compiler/visualc.hpp>
 
 #endif
 

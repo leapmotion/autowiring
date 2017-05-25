@@ -11,6 +11,7 @@
 #endif
 
 #include <autoboost/config.hpp>
+#include <autoboost/predef.h>
 #include <autoboost/cstdint.hpp> // for autoboost::uintmax_t
 #include <autoboost/detail/workaround.hpp>
 #include <autoboost/type_traits/is_integral.hpp>
@@ -30,7 +31,7 @@
 #if (defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__NetBSD__) \
    || (defined(__hppa) && !defined(__OpenBSD__)) || (defined(__NO_LONG_DOUBLE_MATH) && (DBL_MANT_DIG != LDBL_MANT_DIG))) \
    && !defined(AUTOBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
-#  define AUTOBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
+//#  define AUTOBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
 #endif
 #if AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x582))
 //
@@ -49,6 +50,18 @@
 // pass at long double precision, but fail with real_concept, those tests
 // are disabled for now.  (JM 2012).
 #  define AUTOBOOST_MATH_NO_REAL_CONCEPT_TESTS
+#endif
+#ifdef sun
+// Any use of __float128 in program startup code causes a segfault  (tested JM 2015, Solaris 11).
+#  define AUTOBOOST_MATH_DISABLE_FLOAT128
+#endif
+#ifdef __HAIKU__
+//
+// Not sure what's up with the math detection on Haiku, but linking fails with
+// float128 code enabled, and we don't have an implementation of __expl, so
+// disabling long double functions for now as well.
+#  define AUTOBOOST_MATH_DISABLE_FLOAT128
+#  define AUTOBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
 #endif
 #if (defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)) && ((LDBL_MANT_DIG == 106) || (__LDBL_MANT_DIG__ == 106)) && !defined(AUTOBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
 //
@@ -171,14 +184,20 @@
 //
 #ifdef AUTOBOOST_MSVC
 #  define AUTOBOOST_MATH_POLY_METHOD 2
+#  define AUTOBOOST_MATH_RATIONAL_METHOD 1
 #elif defined(AUTOBOOST_INTEL)
 #  define AUTOBOOST_MATH_POLY_METHOD 2
-#  define AUTOBOOST_MATH_RATIONAL_METHOD 2
+#  define AUTOBOOST_MATH_RATIONAL_METHOD 1
 #elif defined(__GNUC__)
+#if __GNUC__ < 4
 #  define AUTOBOOST_MATH_POLY_METHOD 3
 #  define AUTOBOOST_MATH_RATIONAL_METHOD 3
 #  define AUTOBOOST_MATH_INT_TABLE_TYPE(RT, IT) RT
 #  define AUTOBOOST_MATH_INT_VALUE_SUFFIX(RV, SUF) RV##.0L
+#else
+#  define AUTOBOOST_MATH_POLY_METHOD 3
+#  define AUTOBOOST_MATH_RATIONAL_METHOD 1
+#endif
 #endif
 
 #if defined(AUTOBOOST_NO_LONG_LONG) && !defined(AUTOBOOST_MATH_INT_TABLE_TYPE)
@@ -187,20 +206,54 @@
 #endif
 
 //
+// constexpr support, early GCC implementations can't cope so disable
+// constexpr for them:
+//
+#if !defined(__clang) && defined(__GNUC__)
+#if (__GNUC__ * 100 + __GNUC_MINOR__) < 490
+#  define AUTOBOOST_MATH_DISABLE_CONSTEXPR
+#endif
+#endif
+
+#ifdef AUTOBOOST_MATH_DISABLE_CONSTEXPR
+#  define AUTOBOOST_MATH_CONSTEXPR
+#else
+#  define AUTOBOOST_MATH_CONSTEXPR AUTOBOOST_CONSTEXPR
+#endif
+
+//
+// noexcept support:
+//
+#ifndef AUTOBOOST_NO_CXX11_NOEXCEPT
+#ifndef AUTOBOOST_NO_CXX11_HDR_TYPE_TRAITS
+#include <type_traits>
+#  define AUTOBOOST_MATH_NOEXCEPT(T) noexcept(std::is_floating_point<T>::value)
+#  define AUTOBOOST_MATH_IS_FLOAT(T) (std::is_floating_point<T>::value)
+#else
+#include <autoboost/type_traits/is_floating_point.hpp>
+#  define AUTOBOOST_MATH_NOEXCEPT(T) noexcept(autoboost::is_floating_point<T>::value)
+#  define AUTOBOOST_MATH_IS_FLOAT(T) (autoboost::is_floating_point<T>::value)
+#endif
+#else
+#  define AUTOBOOST_MATH_NOEXCEPT(T)
+#  define AUTOBOOST_MATH_IS_FLOAT(T) false
+#endif
+
+//
 // The maximum order of polynomial that will be evaluated
 // via an unrolled specialisation:
 //
 #ifndef AUTOBOOST_MATH_MAX_POLY_ORDER
-#  define AUTOBOOST_MATH_MAX_POLY_ORDER 17
+#  define AUTOBOOST_MATH_MAX_POLY_ORDER 20
 #endif
 //
 // Set the method used to evaluate polynomials and rationals:
 //
 #ifndef AUTOBOOST_MATH_POLY_METHOD
-#  define AUTOBOOST_MATH_POLY_METHOD 1
+#  define AUTOBOOST_MATH_POLY_METHOD 2
 #endif
 #ifndef AUTOBOOST_MATH_RATIONAL_METHOD
-#  define AUTOBOOST_MATH_RATIONAL_METHOD 0
+#  define AUTOBOOST_MATH_RATIONAL_METHOD 1
 #endif
 //
 // decide whether to store constants as integers or reals:
@@ -212,7 +265,7 @@
 #  define AUTOBOOST_MATH_INT_VALUE_SUFFIX(RV, SUF) RV##SUF
 #endif
 //
-// Test whether to support __float128:
+// And then the actual configuration:
 //
 #if defined(_GLIBCXX_USE_FLOAT128) && defined(AUTOBOOST_GCC) && !defined(__STRICT_ANSI__) \
    && !defined(AUTOBOOST_MATH_DISABLE_FLOAT128) || defined(AUTOBOOST_MATH_USE_FLOAT128)
@@ -284,13 +337,13 @@ namespace tools
 {
 
 template <class T>
-inline T max AUTOBOOST_PREVENT_MACRO_SUBSTITUTION(T a, T b, T c)
+inline T max AUTOBOOST_PREVENT_MACRO_SUBSTITUTION(T a, T b, T c) AUTOBOOST_MATH_NOEXCEPT(T)
 {
    return (std::max)((std::max)(a, b), c);
 }
 
 template <class T>
-inline T max AUTOBOOST_PREVENT_MACRO_SUBSTITUTION(T a, T b, T c, T d)
+inline T max AUTOBOOST_PREVENT_MACRO_SUBSTITUTION(T a, T b, T c, T d) AUTOBOOST_MATH_NOEXCEPT(T)
 {
    return (std::max)((std::max)(a, b), (std::max)(c, d));
 }
@@ -298,7 +351,7 @@ inline T max AUTOBOOST_PREVENT_MACRO_SUBSTITUTION(T a, T b, T c, T d)
 } // namespace tools
 
 template <class T>
-void suppress_unused_variable_warning(const T&)
+void suppress_unused_variable_warning(const T&) AUTOBOOST_MATH_NOEXCEPT(T)
 {
 }
 
@@ -389,8 +442,16 @@ namespace autoboost{ namespace math{
 
 #endif
 
-#endif // AUTOBOOST_MATH_TOOLS_CONFIG_HPP
+//
+// Thread local storage:
+//
+#if !defined(AUTOBOOST_NO_CXX11_THREAD_LOCAL) && !defined(AUTOBOOST_INTEL)
+#  define AUTOBOOST_MATH_THREAD_LOCAL thread_local
+#else
+#  define AUTOBOOST_MATH_THREAD_LOCAL
+#endif
 
+#endif // AUTOBOOST_MATH_TOOLS_CONFIG_HPP
 
 
 

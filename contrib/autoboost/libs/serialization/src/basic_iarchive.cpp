@@ -24,22 +24,25 @@ namespace std{
 #endif
 
 #include <autoboost/integer_traits.hpp>
-#include <autoboost/serialization/state_saver.hpp>
-#include <autoboost/serialization/throw_exception.hpp>
-#include <autoboost/serialization/tracking.hpp>
 
 #define AUTOBOOST_ARCHIVE_SOURCE
 // include this to prevent linker errors when the
 // same modules are marked export and import.
 #define AUTOBOOST_SERIALIZATION_SOURCE
+#include <autoboost/serialization/config.hpp>
+
+#include <autoboost/serialization/state_saver.hpp>
+#include <autoboost/serialization/throw_exception.hpp>
+#include <autoboost/serialization/tracking.hpp>
 
 #include <autoboost/archive/archive_exception.hpp>
-
 #include <autoboost/archive/detail/decl.hpp>
 #include <autoboost/archive/basic_archive.hpp>
 #include <autoboost/archive/detail/basic_iserializer.hpp>
 #include <autoboost/archive/detail/basic_pointer_iserializer.hpp>
 #include <autoboost/archive/detail/basic_iarchive.hpp>
+
+#include <autoboost/archive/detail/auto_link_archive.hpp>
 
 using namespace autoboost::serialization;
 
@@ -181,7 +184,6 @@ class basic_iarchive_impl {
         m_archive_library_version(AUTOBOOST_ARCHIVE_VERSION()),
         m_flags(flags)
     {}
-    ~basic_iarchive_impl(){}
     void set_library_version(library_version_type archive_library_version){
         m_archive_library_version = archive_library_version;
     }
@@ -226,7 +228,6 @@ class basic_iarchive_impl {
         const basic_pointer_iserializer * (*finder)(
             const autoboost::serialization::extended_type_info & type
         )
-
     );
 };
 
@@ -250,8 +251,8 @@ basic_iarchive_impl::reset_object_address(
     //    but the code may work anyway.  Naturally, a bad practice on the part
     //    of the programmer but we can't detect it - as above.  So maybe we
     //    can save a few more people from themselves as above.
-    object_id_type i;
-    for(i = m_moveable_objects.recent; i < m_moveable_objects.end; ++i){
+    object_id_type i = m_moveable_objects.recent;
+    for(; i < m_moveable_objects.end; ++i){
         if(old_address == object_id_vector[i].address)
             break;
     }
@@ -518,28 +519,26 @@ namespace autoboost {
 namespace archive {
 namespace detail {
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_iarchive::next_object_pointer(void *t){
     pimpl->next_object_pointer(t);
 }
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 basic_iarchive::basic_iarchive(unsigned int flags) :
     pimpl(new basic_iarchive_impl(flags))
 {}
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 basic_iarchive::~basic_iarchive()
-{
-    delete pimpl;
-}
+{}
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_iarchive::set_library_version(library_version_type archive_library_version){
     pimpl->set_library_version(archive_library_version);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_iarchive::reset_object_address(
     const void * new_address,
     const void * old_address
@@ -547,7 +546,7 @@ basic_iarchive::reset_object_address(
     pimpl->reset_object_address(new_address, old_address);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_iarchive::load_object(
     void *t,
     const basic_iserializer & bis
@@ -556,7 +555,7 @@ basic_iarchive::load_object(
 }
 
 // load a pointer object
-AUTOBOOST_ARCHIVE_DECL(const basic_pointer_iserializer *)
+AUTOBOOST_ARCHIVE_DECL const basic_pointer_iserializer *
 basic_iarchive::load_pointer(
     void * &t,
     const basic_pointer_iserializer * bpis_ptr,
@@ -568,23 +567,23 @@ basic_iarchive::load_pointer(
     return pimpl->load_pointer(*this, t, bpis_ptr, finder);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_iarchive::register_basic_serializer(const basic_iserializer & bis){
     pimpl->register_type(bis);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_iarchive::delete_created_pointers()
 {
     pimpl->delete_created_pointers();
 }
 
-AUTOBOOST_ARCHIVE_DECL(autoboost::archive::library_version_type)
+AUTOBOOST_ARCHIVE_DECL autoboost::archive::library_version_type
 basic_iarchive::get_library_version() const{
     return pimpl->m_archive_library_version;
 }
 
-AUTOBOOST_ARCHIVE_DECL(unsigned int)
+AUTOBOOST_ARCHIVE_DECL unsigned int
 basic_iarchive::get_flags() const{
     return pimpl->m_flags;
 }

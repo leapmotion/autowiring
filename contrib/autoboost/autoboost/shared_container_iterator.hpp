@@ -5,8 +5,8 @@
 
 // See http://www.boost.org/libs/utility/shared_container_iterator.html for documentation.
 
-#ifndef AB_SHARED_CONTAINER_ITERATOR_RG08102002_HPP
-#define AB_SHARED_CONTAINER_ITERATOR_RG08102002_HPP
+#ifndef SHARED_CONTAINER_ITERATOR_RG08102002_HPP
+#define SHARED_CONTAINER_ITERATOR_RG08102002_HPP
 
 #include "autoboost/iterator_adaptors.hpp"
 #include "autoboost/shared_ptr.hpp"

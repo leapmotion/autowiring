@@ -31,7 +31,7 @@ namespace archive {
 // do not derive from this class.  If you want to extend this functionality
 // via inhertance, derived from binary_iarchive_impl instead.  This will
 // preserve correct static polymorphism.
-class binary_iarchive :
+class AUTOBOOST_SYMBOL_VISIBLE binary_iarchive :
     public binary_iarchive_impl<
         autoboost::archive::binary_iarchive,
         std::istream::char_type,

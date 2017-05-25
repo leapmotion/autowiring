@@ -1,5 +1,5 @@
-#ifndef AB__DATE_TIME_TIME_PARSING_HPP___
-#define AB__DATE_TIME_TIME_PARSING_HPP___
+#ifndef _DATE_TIME_TIME_PARSING_HPP___
+#define _DATE_TIME_TIME_PARSING_HPP___
 
 /* Copyright (c) 2002,2003,2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

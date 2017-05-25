@@ -1,6 +1,6 @@
 
-#ifndef AB__DATE_TIME_FACET__HPP__
-#define AB__DATE_TIME_FACET__HPP__
+#ifndef _DATE_TIME_FACET__HPP__
+#define _DATE_TIME_FACET__HPP__
 
 /* Copyright (c) 2004-2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -200,7 +200,7 @@ namespace date_time {
   template <class time_type,
             class CharT,
             class OutItrT = std::ostreambuf_iterator<CharT, std::char_traits<CharT> > >
-  class time_facet :
+  class AUTOBOOST_SYMBOL_VISIBLE time_facet :
     public autoboost::date_time::date_facet<typename time_type::date_type , CharT, OutItrT> {
     typedef time_formats< CharT > formats_type;
    public:
@@ -693,7 +693,7 @@ namespace date_time {
   template <class time_type,
             class CharT,
             class InItrT = std::istreambuf_iterator<CharT, std::char_traits<CharT> > >
-  class time_input_facet :
+  class AUTOBOOST_SYMBOL_VISIBLE time_input_facet :
     public autoboost::date_time::date_input_facet<typename time_type::date_type , CharT, InItrT> {
     public:
       typedef typename time_type::date_type date_type;
@@ -1131,9 +1131,10 @@ namespace date_time {
                     if(sec == -1){
                        return check_special_value(sitr, stream_end, t, c);
                     }
-                    if (*itr == 'S')
+                    if (*itr == 'S' || sitr == stream_end)
                       break;
-                    // %s is the same as %S%f so we drop through into %f
+                    // %s is the same as %S%f so we drop through into %f if we are
+                    // not at the end of the stream
                   }
                 case 'f':
                   {

@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_TIME_HPP___
-#define AB_DATE_TIME_TIME_HPP___
+#ifndef DATE_TIME_TIME_HPP___
+#define DATE_TIME_TIME_HPP___
 
 /* Copyright (c) 2002,2003,2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -49,6 +49,8 @@ namespace date_time {
       > >
   {
   public:
+    // A tag for type categorization. Can be used to detect Boost.DateTime time points in generic code.
+    typedef void _is_autoboost_date_time_time_point;
     typedef T time_type;
     typedef typename time_system::time_rep_type time_rep_type;
     typedef typename time_system::date_type date_type;

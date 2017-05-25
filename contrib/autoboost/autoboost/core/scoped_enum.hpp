@@ -43,7 +43,8 @@ namespace autoboost
    * @throws No-throws.
    */
   template <typename UnderlyingType, typename EnumType>
-  UnderlyingType underlying_cast(EnumType v)
+  inline
+  AUTOBOOST_CONSTEXPR UnderlyingType underlying_cast(EnumType v) AUTOBOOST_NOEXCEPT
   {
     return v.get_underlying_value_();
   }
@@ -61,7 +62,7 @@ namespace autoboost
    */
   template <typename EnumType>
   inline
-  typename EnumType::enum_type native_value(EnumType e)
+  AUTOBOOST_CONSTEXPR typename EnumType::enum_type native_value(EnumType e) AUTOBOOST_NOEXCEPT
   {
     return e.get_native_value_();
   }
@@ -75,14 +76,15 @@ namespace autoboost
   };
 
   template <typename UnderlyingType, typename EnumType>
-  UnderlyingType underlying_cast(EnumType v)
+  inline
+  AUTOBOOST_CONSTEXPR UnderlyingType underlying_cast(EnumType v) AUTOBOOST_NOEXCEPT
   {
     return static_cast<UnderlyingType>(v);
   }
 
   template <typename EnumType>
   inline
-  EnumType native_value(EnumType e)
+  AUTOBOOST_CONSTEXPR EnumType native_value(EnumType e) AUTOBOOST_NOEXCEPT
   {
     return e;
   }
@@ -96,7 +98,7 @@ namespace autoboost
 #ifndef AUTOBOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
 
 #define AUTOBOOST_SCOPED_ENUM_UT_DECLARE_CONVERSION_OPERATOR \
-     explicit operator underlying_type() const AUTOBOOST_NOEXCEPT { return get_underlying_value_(); }
+     explicit AUTOBOOST_CONSTEXPR operator underlying_type() const AUTOBOOST_NOEXCEPT { return get_underlying_value_(); }
 
 #else
 
@@ -115,8 +117,8 @@ namespace autoboost
         typedef void is_autoboost_scoped_enum_tag;                          \
         typedef UnderlyingType underlying_type;                         \
         EnumType() AUTOBOOST_NOEXCEPT {}                                    \
-        explicit EnumType(underlying_type v) AUTOBOOST_NOEXCEPT : v_(v) {}                 \
-        underlying_type get_underlying_value_() const AUTOBOOST_NOEXCEPT { return v_; }    \
+        explicit AUTOBOOST_CONSTEXPR EnumType(underlying_type v) AUTOBOOST_NOEXCEPT : v_(v) {}                 \
+        AUTOBOOST_CONSTEXPR underlying_type get_underlying_value_() const AUTOBOOST_NOEXCEPT { return v_; }    \
         AUTOBOOST_SCOPED_ENUM_UT_DECLARE_CONVERSION_OPERATOR                \
     private:                                                            \
         underlying_type v_;                                             \
@@ -125,30 +127,30 @@ namespace autoboost
         enum enum_type
 
 #define AUTOBOOST_SCOPED_ENUM_DECLARE_END2() \
-        enum_type get_native_value_() const AUTOBOOST_NOEXCEPT { return enum_type(v_); } \
-        friend bool operator ==(self_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)==enum_type(rhs.v_); } \
-        friend bool operator ==(self_type lhs, enum_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)==rhs; } \
-        friend bool operator ==(enum_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return lhs==enum_type(rhs.v_); } \
-        friend bool operator !=(self_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)!=enum_type(rhs.v_); } \
-        friend bool operator !=(self_type lhs, enum_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)!=rhs; } \
-        friend bool operator !=(enum_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return lhs!=enum_type(rhs.v_); } \
-        friend bool operator <(self_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)<enum_type(rhs.v_); } \
-        friend bool operator <(self_type lhs, enum_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)<rhs; } \
-        friend bool operator <(enum_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return lhs<enum_type(rhs.v_); } \
-        friend bool operator <=(self_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)<=enum_type(rhs.v_); } \
-        friend bool operator <=(self_type lhs, enum_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)<=rhs; } \
-        friend bool operator <=(enum_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return lhs<=enum_type(rhs.v_); } \
-        friend bool operator >(self_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)>enum_type(rhs.v_); } \
-        friend bool operator >(self_type lhs, enum_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)>rhs; } \
-        friend bool operator >(enum_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return lhs>enum_type(rhs.v_); } \
-        friend bool operator >=(self_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)>=enum_type(rhs.v_); } \
-        friend bool operator >=(self_type lhs, enum_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)>=rhs; } \
-        friend bool operator >=(enum_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return lhs>=enum_type(rhs.v_); } \
+        AUTOBOOST_CONSTEXPR enum_type get_native_value_() const AUTOBOOST_NOEXCEPT { return enum_type(v_); } \
+        friend AUTOBOOST_CONSTEXPR bool operator ==(self_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)==enum_type(rhs.v_); } \
+        friend AUTOBOOST_CONSTEXPR bool operator ==(self_type lhs, enum_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)==rhs; } \
+        friend AUTOBOOST_CONSTEXPR bool operator ==(enum_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return lhs==enum_type(rhs.v_); } \
+        friend AUTOBOOST_CONSTEXPR bool operator !=(self_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)!=enum_type(rhs.v_); } \
+        friend AUTOBOOST_CONSTEXPR bool operator !=(self_type lhs, enum_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)!=rhs; } \
+        friend AUTOBOOST_CONSTEXPR bool operator !=(enum_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return lhs!=enum_type(rhs.v_); } \
+        friend AUTOBOOST_CONSTEXPR bool operator <(self_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)<enum_type(rhs.v_); } \
+        friend AUTOBOOST_CONSTEXPR bool operator <(self_type lhs, enum_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)<rhs; } \
+        friend AUTOBOOST_CONSTEXPR bool operator <(enum_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return lhs<enum_type(rhs.v_); } \
+        friend AUTOBOOST_CONSTEXPR bool operator <=(self_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)<=enum_type(rhs.v_); } \
+        friend AUTOBOOST_CONSTEXPR bool operator <=(self_type lhs, enum_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)<=rhs; } \
+        friend AUTOBOOST_CONSTEXPR bool operator <=(enum_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return lhs<=enum_type(rhs.v_); } \
+        friend AUTOBOOST_CONSTEXPR bool operator >(self_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)>enum_type(rhs.v_); } \
+        friend AUTOBOOST_CONSTEXPR bool operator >(self_type lhs, enum_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)>rhs; } \
+        friend AUTOBOOST_CONSTEXPR bool operator >(enum_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return lhs>enum_type(rhs.v_); } \
+        friend AUTOBOOST_CONSTEXPR bool operator >=(self_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)>=enum_type(rhs.v_); } \
+        friend AUTOBOOST_CONSTEXPR bool operator >=(self_type lhs, enum_type rhs) AUTOBOOST_NOEXCEPT { return enum_type(lhs.v_)>=rhs; } \
+        friend AUTOBOOST_CONSTEXPR bool operator >=(enum_type lhs, self_type rhs) AUTOBOOST_NOEXCEPT { return lhs>=enum_type(rhs.v_); } \
     };
 
 #define AUTOBOOST_SCOPED_ENUM_DECLARE_END(EnumType) \
     ; \
-    EnumType(enum_type v) AUTOBOOST_NOEXCEPT : v_(v) {}                 \
+    AUTOBOOST_CONSTEXPR EnumType(enum_type v) AUTOBOOST_NOEXCEPT : v_(v) {}                 \
     AUTOBOOST_SCOPED_ENUM_DECLARE_END2()
 
 /**

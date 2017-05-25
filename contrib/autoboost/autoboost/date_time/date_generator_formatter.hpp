@@ -1,5 +1,5 @@
-#ifndef AB__DATE_TIME_DATE_GENERATOR_FORMATTER__HPP___
-#define AB__DATE_TIME_DATE_GENERATOR_FORMATTER__HPP___
+#ifndef _DATE_TIME_DATE_GENERATOR_FORMATTER__HPP___
+#define _DATE_TIME_DATE_GENERATOR_FORMATTER__HPP___
 
 /* Copyright (c) 2004 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

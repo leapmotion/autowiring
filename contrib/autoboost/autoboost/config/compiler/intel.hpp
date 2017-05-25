@@ -35,14 +35,23 @@
 
 #endif
 
-#else
+#if (__INTEL_COMPILER <= 1600) && !defined(AUTOBOOST_NO_CXX14_VARIABLE_TEMPLATES)
+#  define AUTOBOOST_NO_CXX14_VARIABLE_TEMPLATES
+#endif
+
+#else // defined(_MSC_VER)
 
 #include <autoboost/config/compiler/gcc.hpp>
 
 #undef AUTOBOOST_GCC_VERSION
 #undef AUTOBOOST_GCC_CXX11
 
+// Broken in all versions up to 17 (newer versions not tested)
+#if (__INTEL_COMPILER <= 1700) && !defined(AUTOBOOST_NO_CXX14_CONSTEXPR)
+#  define AUTOBOOST_NO_CXX14_CONSTEXPR
 #endif
+
+#endif // defined(_MSC_VER)
 
 #undef AUTOBOOST_COMPILER
 
@@ -88,9 +97,9 @@
 #  define AUTOBOOST_INTEL_LINUX AUTOBOOST_INTEL
 #endif
 
-#else
+#else // defined(__INTEL_COMPILER) && (__INTEL_COMPILER >= 1500) && (defined(_MSC_VER) || defined(__GNUC__))
 
-#include "autoboost/config/compiler/common_edg.hpp"
+#include <autoboost/config/compiler/common_edg.hpp>
 
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER == 9999
@@ -406,6 +415,11 @@ template<> struct assert_intrinsic_wchar_t<unsigned short> {};
 #  undef AUTOBOOST_NO_SFINAE_EXPR
 #endif
 
+// AUTOBOOST_NO_CXX11_SFINAE_EXPR
+#if (AUTOBOOST_INTEL_CXX_VERSION >= 1500) && (!defined(AUTOBOOST_INTEL_GCC_VERSION) || (AUTOBOOST_INTEL_GCC_VERSION >= 40800)) && !defined(_MSC_VER)
+#  undef AUTOBOOST_NO_CXX11_SFINAE_EXPR
+#endif
+
 // AUTOBOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
 #if (AUTOBOOST_INTEL_CXX_VERSION >= 1500) && (!defined(AUTOBOOST_INTEL_GCC_VERSION) || (AUTOBOOST_INTEL_GCC_VERSION >= 40500)) && (!defined(_MSC_VER) || (_MSC_FULL_VER >= 180020827))
 // This is available in earlier Intel releases, but breaks Multiprecision:
@@ -479,7 +493,7 @@ template<> struct assert_intrinsic_wchar_t<unsigned short> {};
 #  undef AUTOBOOST_NO_CXX11_FINAL
 #endif
 
-#endif
+#endif // defined(AUTOBOOST_INTEL_STDCXX0X)
 
 //
 // Broken in all versions up to 15:
@@ -514,14 +528,22 @@ template<> struct assert_intrinsic_wchar_t<unsigned short> {};
 #  define AUTOBOOST_HAS_STDINT_H
 #endif
 
-#if defined(__LP64__) && defined(__GNUC__) && (AUTOBOOST_INTEL_CXX_VERSION >= 1310) && !defined(__CUDACC__)
+#if defined(__CUDACC__)
+#  if defined(AUTOBOOST_GCC_CXX11)
+#    define AUTOBOOST_NVCC_CXX11
+#  else
+#    define AUTOBOOST_NVCC_CXX03
+#  endif
+#endif
+
+#if defined(__LP64__) && defined(__GNUC__) && (AUTOBOOST_INTEL_CXX_VERSION >= 1310) && !defined(AUTOBOOST_NVCC_CXX03)
 #  define AUTOBOOST_HAS_INT128
 #endif
 
-#endif
+#endif // defined(__INTEL_COMPILER) && (__INTEL_COMPILER >= 1500) && (defined(_MSC_VER) || defined(__GNUC__))
 //
 // last known and checked version:
-#if (AUTOBOOST_INTEL_CXX_VERSION > 1500)
+#if (AUTOBOOST_INTEL_CXX_VERSION > 1700)
 #  if defined(AUTOBOOST_ASSERT_CONFIG)
 #     error "Unknown compiler version - please run the configure tests and report the results"
 #  elif defined(_MSC_VER)

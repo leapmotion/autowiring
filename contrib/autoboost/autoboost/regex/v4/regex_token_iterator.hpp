@@ -164,14 +164,14 @@ private:
 };
 
 template <class BidirectionalIterator,
-          class charT = AUTOBOOST_DEDUCED_TYPENAME re_detail::regex_iterator_traits<BidirectionalIterator>::value_type,
+          class charT = AUTOBOOST_DEDUCED_TYPENAME AUTOBOOST_REGEX_DETAIL_NS::regex_iterator_traits<BidirectionalIterator>::value_type,
           class traits = regex_traits<charT> >
 class regex_token_iterator
 #ifndef AUTOBOOST_NO_STD_ITERATOR
    : public std::iterator<
          std::forward_iterator_tag,
          sub_match<BidirectionalIterator>,
-         typename re_detail::regex_iterator_traits<BidirectionalIterator>::difference_type,
+         typename AUTOBOOST_REGEX_DETAIL_NS::regex_iterator_traits<BidirectionalIterator>::difference_type,
          const sub_match<BidirectionalIterator>*,
          const sub_match<BidirectionalIterator>& >
 #endif
@@ -182,7 +182,7 @@ private:
 public:
    typedef          basic_regex<charT, traits>                   regex_type;
    typedef          sub_match<BidirectionalIterator>                        value_type;
-   typedef typename re_detail::regex_iterator_traits<BidirectionalIterator>::difference_type
+   typedef typename AUTOBOOST_REGEX_DETAIL_NS::regex_iterator_traits<BidirectionalIterator>::difference_type
                                                                             difference_type;
    typedef          const value_type*                                       pointer;
    typedef          const value_type&                                       reference;

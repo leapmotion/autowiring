@@ -43,11 +43,13 @@ namespace std{
 #include <autoboost/scoped_ptr.hpp>
 #include <autoboost/serialization/throw_exception.hpp>
 
-#include <autoboost/archive/basic_streambuf_locale_saver.hpp>
-#include <autoboost/archive/archive_exception.hpp>
+//#include <autoboost/mpl/placeholders.hpp>
 #include <autoboost/serialization/is_bitwise_serializable.hpp>
-#include <autoboost/mpl/placeholders.hpp>
-#include <autoboost/serialization/array.hpp>
+#include <autoboost/serialization/array_wrapper.hpp>
+
+#include <autoboost/archive/basic_streambuf_locale_saver.hpp>
+#include <autoboost/archive/codecvt_null.hpp>
+#include <autoboost/archive/archive_exception.hpp>
 #include <autoboost/archive/detail/auto_link_archive.hpp>
 #include <autoboost/archive/detail/abi_prefix.hpp> // must be the last header
 
@@ -58,7 +60,7 @@ namespace archive {
 // class basic_binary_oprimitive - binary output of prmitives
 
 template<class Archive, class Elem, class Tr>
-class basic_binary_oprimitive {
+class AUTOBOOST_SYMBOL_VISIBLE basic_binary_oprimitive {
 #ifndef AUTOBOOST_NO_MEMBER_TEMPLATE_FRIENDS
     friend class save_access;
 protected:
@@ -71,8 +73,16 @@ public:
         return static_cast<Archive *>(this);
     }
     #ifndef AUTOBOOST_NO_STD_LOCALE
-    autoboost::scoped_ptr<std::locale> archive_locale;
+    // note order! - if you change this, libstd++ will fail!
+    // a) create new locale with new codecvt facet
+    // b) save current locale
+    // c) change locale to new one
+    // d) use stream buffer
+    // e) change locale back to original
+    // f) destroy new codecvt facet
+    autoboost::archive::codecvt_null<Elem> codecvt_null_facet;
     basic_streambuf_locale_saver<Elem, Tr> locale_saver;
+    std::locale archive_locale;
     #endif
     // default saving of primitives.
     template<class T>
@@ -90,26 +100,26 @@ public:
         AUTOBOOST_ASSERT(0 == static_cast<int>(t) || 1 == static_cast<int>(t));
         save_binary(& t, sizeof(t));
     }
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     save(const std::string &s);
     #ifndef AUTOBOOST_NO_STD_WSTRING
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     save(const std::wstring &ws);
     #endif
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     save(const char * t);
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     save(const wchar_t * t);
 
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     init();
 
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     basic_binary_oprimitive(
         std::basic_streambuf<Elem, Tr> & sb,
         bool no_codecvt
     );
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL
     ~basic_binary_oprimitive();
 public:
 
@@ -128,10 +138,9 @@ public:
         #endif
     };
 
-
     // the optimized save_array dispatches to save_binary
     template <class ValueType>
-    void save_array(autoboost::serialization::array<ValueType> const& a, unsigned int)
+    void save_array(autoboost::serialization::array_wrapper<ValueType> const& a, unsigned int)
     {
       save_binary(a.address(),a.count()*sizeof(ValueType));
     }
@@ -145,9 +154,7 @@ basic_binary_oprimitive<Archive, Elem, Tr>::save_binary(
     const void *address,
     std::size_t count
 ){
-    //AUTOBOOST_ASSERT(
-    //    static_cast<std::size_t>((std::numeric_limits<std::streamsize>::max)()) >= count
-    //);
+    // AUTOBOOST_ASSERT(count <= std::size_t(autoboost::integer_traits<std::streamsize>::const_max));
     // note: if the following assertions fail
     // a likely cause is that the output stream is set to "text"
     // mode where by cr characters recieve special treatment.
@@ -157,9 +164,7 @@ basic_binary_oprimitive<Archive, Elem, Tr>::save_binary(
     //        archive_exception(archive_exception::output_stream_error)
     //    );
     // figure number of elements to output - round up
-    count = ( count + sizeof(Elem) - 1)
-        / sizeof(Elem);
-    AUTOBOOST_ASSERT(count <= std::size_t(autoboost::integer_traits<std::streamsize>::const_max));
+    count = ( count + sizeof(Elem) - 1) / sizeof(Elem);
     std::streamsize scount = m_sb.sputn(
         static_cast<const Elem *>(address),
         static_cast<std::streamsize>(count)

@@ -14,7 +14,8 @@
 
 #include <autoboost/detail/winapi/time.hpp>
 #include <autoboost/detail/winapi/timers.hpp>
-#include <autoboost/detail/winapi/GetLastError.hpp>
+#include <autoboost/detail/winapi/get_last_error.hpp>
+#include <autoboost/assert.hpp>
 
 namespace autoboost
 {

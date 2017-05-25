@@ -1,5 +1,5 @@
-#ifndef AB_LOCAL_TIME_DST_TRANSITION_DAY_RULES_HPP__
-#define AB_LOCAL_TIME_DST_TRANSITION_DAY_RULES_HPP__
+#ifndef LOCAL_TIME_DST_TRANSITION_DAY_RULES_HPP__
+#define LOCAL_TIME_DST_TRANSITION_DAY_RULES_HPP__
 
 /* Copyright (c) 2003-2004 CrystalClear Software, Inc.
  * Subject to the Boost Software License, Version 1.0.

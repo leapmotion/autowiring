@@ -10,79 +10,80 @@
 #define AUTOBOOST_TT_IS_INTEGRAL_HPP_INCLUDED
 
 #include <autoboost/config.hpp>
-
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
 
 namespace autoboost {
+
+#if defined( __CODEGEARC__ )
+   template <class T>
+   struct is_integral : public integral_constant<bool, __is_integral(T)> {};
+#else
+
+template <class T> struct is_integral : public false_type {};
+template <class T> struct is_integral<const T> : public is_integral<T> {};
+template <class T> struct is_integral<volatile const T> : public is_integral<T>{};
+template <class T> struct is_integral<volatile T> : public is_integral<T>{};
 
 //* is a type T an [cv-qualified-] integral type described in the standard (3.9.1p3)
 // as an extension we include long long, as this is likely to be added to the
 // standard at a later date
-#if defined( __CODEGEARC__ )
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_integral,T,__is_integral(T))
-#else
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_integral,T,false)
+template<> struct is_integral<unsigned char> : public true_type {};
+template<> struct is_integral<unsigned short> : public true_type{};
+template<> struct is_integral<unsigned int> : public true_type{};
+template<> struct is_integral<unsigned long> : public true_type{};
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,unsigned char,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,unsigned short,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,unsigned int,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,unsigned long,true)
+template<> struct is_integral<signed char> : public true_type{};
+template<> struct is_integral<short> : public true_type{};
+template<> struct is_integral<int> : public true_type{};
+template<> struct is_integral<long> : public true_type{};
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,signed char,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,signed short,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,signed int,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,signed long,true)
-
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,bool,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,char,true)
+template<> struct is_integral<char> : public true_type{};
+template<> struct is_integral<bool> : public true_type{};
 
 #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
 // If the following line fails to compile and you're using the Intel
 // compiler, see http://lists.boost.org/MailArchives/autoboost-users/msg06567.php,
 // and define AUTOBOOST_NO_INTRINSIC_WCHAR_T on the command line.
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,wchar_t,true)
+template<> struct is_integral<wchar_t> : public true_type{};
 #endif
 
 // Same set of integral types as in autoboost/type_traits/integral_promotion.hpp.
 // Please, keep in sync. -- Alexander Nasonov
 #if (defined(AUTOBOOST_INTEL_CXX_VERSION) && defined(_MSC_VER) && (AUTOBOOST_INTEL_CXX_VERSION <= 600)) \
     || (defined(__BORLANDC__) && (__BORLANDC__ == 0x600) && (_MSC_VER < 1300))
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,unsigned __int8,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,__int8,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,unsigned __int16,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,__int16,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,unsigned __int32,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,__int32,true)
+template<> struct is_integral<unsigned __int8> : public true_type{};
+template<> struct is_integral<unsigned __int16> : public true_type{};
+template<> struct is_integral<unsigned __int32> : public true_type{};
+template<> struct is_integral<__int8> : public true_type{};
+template<> struct is_integral<__int16> : public true_type{};
+template<> struct is_integral<__int32> : public true_type{};
 #ifdef __BORLANDC__
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,unsigned __int64,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,__int64,true)
+template<> struct is_integral<unsigned __int64> : public true_type{};
+template<> struct is_integral<__int64> : public true_type{};
 #endif
 #endif
 
 # if defined(AUTOBOOST_HAS_LONG_LONG)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral, ::autoboost::ulong_long_type,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral, ::autoboost::long_long_type,true)
+template<> struct is_integral< ::autoboost::ulong_long_type> : public true_type{};
+template<> struct is_integral< ::autoboost::long_long_type> : public true_type{};
 #elif defined(AUTOBOOST_HAS_MS_INT64)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,unsigned __int64,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,__int64,true)
+template<> struct is_integral<unsigned __int64> : public true_type{};
+template<> struct is_integral<__int64> : public true_type{};
 #endif
 
 #ifdef AUTOBOOST_HAS_INT128
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,autoboost::int128_type,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,autoboost::uint128_type,true)
+template<> struct is_integral<autoboost::int128_type> : public true_type{};
+template<> struct is_integral<autoboost::uint128_type> : public true_type{};
 #endif
 #ifndef AUTOBOOST_NO_CXX11_CHAR16_T
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,char16_t,true)
+template<> struct is_integral<char16_t> : public true_type{};
 #endif
 #ifndef AUTOBOOST_NO_CXX11_CHAR32_T
-AUTOBOOST_TT_AUX_BOOL_TRAIT_CV_SPEC1(is_integral,char32_t,true)
+template<> struct is_integral<char32_t> : public true_type{};
 #endif
 
 #endif  // non-CodeGear implementation
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_IS_INTEGRAL_HPP_INCLUDED

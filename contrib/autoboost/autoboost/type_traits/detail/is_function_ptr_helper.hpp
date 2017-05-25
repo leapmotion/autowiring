@@ -15,12 +15,20 @@
 #ifndef AUTOBOOST_TT_DETAIL_IS_FUNCTION_PTR_HELPER_HPP_INCLUDED
 #define AUTOBOOST_TT_DETAIL_IS_FUNCTION_PTR_HELPER_HPP_INCLUDED
 
-#include <autoboost/type_traits/config.hpp>
-
 #if defined(AUTOBOOST_TT_PREPROCESSING_MODE)
-#   include <autoboost/preprocessor/iterate.hpp>
-#   include <autoboost/preprocessor/enum_params.hpp>
-#   include <autoboost/preprocessor/comma_if.hpp>
+//
+// Hide these #include from dependency analysers as
+// these are required in maintenance mode only:
+//
+#define PP1 <autoboost/preprocessor/iterate.hpp>
+#include PP1
+#undef PP1
+#define PP1 <autoboost/preprocessor/enum_params.hpp>
+#include PP1
+#undef PP1
+#define PP1 <autoboost/preprocessor/comma_if.hpp>
+#include PP1
+#undef PP1
 #endif
 
 namespace autoboost {

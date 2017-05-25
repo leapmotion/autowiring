@@ -3,8 +3,8 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef AB_UUID_CE6983AC753411DDA764247956D89593
-#define AB_UUID_CE6983AC753411DDA764247956D89593
+#ifndef UUID_CE6983AC753411DDA764247956D89593
+#define UUID_CE6983AC753411DDA764247956D89593
 #if (__GNUC__*100+__GNUC_MINOR__>301) && !defined(AUTOBOOST_EXCEPTION_ENABLE_WARNINGS)
 #pragma GCC system_header
 #endif
@@ -12,6 +12,8 @@
 #pragma warning(push,1)
 #endif
 
+#include <autoboost/config.hpp>
+#include <utility>
 #include <string>
 
 namespace
@@ -46,6 +48,11 @@ autoboost
         typedef T value_type;
 
         error_info( value_type const & value );
+#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+        error_info( error_info const & );
+        error_info( value_type && value ) AUTOBOOST_NOEXCEPT_IF(AUTOBOOST_NOEXCEPT_EXPR(value_type(std::move(value))));
+        error_info( error_info && x ) AUTOBOOST_NOEXCEPT_IF(AUTOBOOST_NOEXCEPT_EXPR(value_type(std::move(x.value_))));
+#endif
         ~error_info() throw();
 
         value_type const &
@@ -61,6 +68,10 @@ autoboost
             }
 
         private:
+        error_info & operator=( error_info const & );
+#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+        error_info & operator=( error_info && x );
+#endif
 
         std::string name_value_string() const;
 

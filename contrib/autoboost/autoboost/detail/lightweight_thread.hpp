@@ -75,7 +75,7 @@ public:
 
 #if defined( AUTOBOOST_HAS_PTHREADS )
 
-extern "C" void * autoboostlw_thread_routine( void * pv )
+extern "C" void * lw_thread_routine( void * pv )
 {
     std::auto_ptr<lw_abstract_thread> pt( static_cast<lw_abstract_thread *>( pv ) );
 
@@ -86,7 +86,7 @@ extern "C" void * autoboostlw_thread_routine( void * pv )
 
 #else
 
-unsigned __stdcall autoboostlw_thread_routine( void * pv )
+unsigned __stdcall lw_thread_routine( void * pv )
 {
     std::auto_ptr<lw_abstract_thread> pt( static_cast<lw_abstract_thread *>( pv ) );
 
@@ -119,7 +119,7 @@ template<class F> int lw_thread_create( pthread_t & pt, F f )
 {
     std::auto_ptr<lw_abstract_thread> p( new lw_thread_impl<F>( f ) );
 
-    int r = pthread_create( &pt, 0, autoboostlw_thread_routine, p.get() );
+    int r = pthread_create( &pt, 0, lw_thread_routine, p.get() );
 
     if( r == 0 )
     {
