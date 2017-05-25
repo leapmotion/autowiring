@@ -30,8 +30,5 @@
   #include <stdlib.h>
 #endif
 
-// Preconfiguration:
-#include "AutowiringConfig.h"
-
 // C++11 glue logic, for platforms that have incomplete C++11 support
 #include "C++11/cpp11.h"

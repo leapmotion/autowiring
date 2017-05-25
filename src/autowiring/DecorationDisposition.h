@@ -1,6 +1,5 @@
 // Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "AutowiringConfig.h"
 #include "altitude.h"
 #include "AnySharedPointer.h"
 #include <atomic>
