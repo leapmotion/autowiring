@@ -43,7 +43,7 @@ add_conditional_sources(
 )
 
 add_library(Autoboost STATIC ${Autoboost_SRCS})
-
+target_compile_definitions(Autoboost PUBLIC AUTOBOOST_ALL_NO_LIB)
 target_include_directories(
   Autoboost
   PUBLIC
