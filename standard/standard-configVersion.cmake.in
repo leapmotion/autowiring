@@ -17,7 +17,7 @@ if(DEFINED @ARG_NAME@_ARCHITECTURE)
     string(REGEX MATCH "amd64|x86_64|x64" @ARG_NAME@_is_x64 ${i})
     string(REGEX MATCH "i386|x86" @ARG_NAME@_is_x86 ${i})
     string(REGEX MATCH "arm$" @ARG_NAME@_is_arm ${i})
-    string(REGEX MATCH "arm64|aarch64" @ARG_NAME@_is_aarch64)
+    string(REGEX MATCH "arm64|aarch64" @ARG_NAME@_is_aarch64 ${i})
 
     # Classify
     if(@ARG_NAME@_is_x86)
