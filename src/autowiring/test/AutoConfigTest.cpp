@@ -109,7 +109,7 @@ TEST_F(AutoConfigTest, ConfigDefault) {
   // because MyConfigurableClass is not actually in a context, which means Autowiring will not
   // attempt to configure it.
   MyConfigurableClass c;
-  ASSERT_EQ(92999, c.bUnsigned);
+  ASSERT_EQ(92999, static_cast<uint64_t>(c.bUnsigned));
 }
 
 TEST_F(AutoConfigTest, String) {
@@ -139,7 +139,7 @@ TEST_F(AutoConfigTest, IntegerUnsigned) {
   ASSERT_STREQ("10929", strVal.c_str());
 
   autowiring::ConfigSet("bUnsigned", c, "999");
-  ASSERT_EQ(c.bUnsigned, 999) << "Integer configuration value not assigned";
+  ASSERT_EQ(static_cast<uint64_t>(c.bUnsigned), 999) << "Integer configuration value not assigned";
   ASSERT_ANY_THROW(autowiring::ConfigSet("bUnsigned", c, "-999")) << "Incorrectly assigned as signed value to an unsigned field";
 }
 
