@@ -291,7 +291,9 @@ TEST_F(DispatchQueueTest, SimpleCancel) {
   DispatchQueue dq;
   auto called = std::make_shared<bool>(false);
   dq += [called] { *called = true; };
+  ASSERT_EQ(1U, dq.GetDispatchQueueLength());
   ASSERT_TRUE(dq.Cancel()) << "Dispatch queue failed to cancel a lambda as expected";
+  ASSERT_EQ(0U, dq.GetDispatchQueueLength());
   ASSERT_FALSE(dq.DispatchEvent()) << "Succeeded in dispatching an event that should not have been dispatched";
   ASSERT_FALSE(*called) << "Dispatch queue executed a lambda that should have been destroyed";
   ASSERT_TRUE(called.unique()) << "Dispatch queue leaked a lambda function";
