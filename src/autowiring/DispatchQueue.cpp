@@ -163,6 +163,7 @@ bool DispatchQueue::Cancel(void) {
     // Found a ready thunk, run from here:
     thunk.reset(m_pHead);
     m_pHead = thunk->m_pFlink;
+    m_count--;
   }
   else if (!m_delayedQueue.empty()) {
     auto& f = m_delayedQueue.top();
