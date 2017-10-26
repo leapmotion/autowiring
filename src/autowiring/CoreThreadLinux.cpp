@@ -12,7 +12,9 @@ using std::chrono::milliseconds;
 using std::chrono::microseconds;
 
 void BasicThread::SetCurrentThreadName(void) const {
+#ifndef __RK1108__
   pthread_setname_np(pthread_self(), m_name);
+#endif
 }
 
 std::chrono::steady_clock::time_point BasicThread::GetCreationTime(void) {
