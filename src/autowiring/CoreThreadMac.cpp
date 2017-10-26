@@ -26,7 +26,6 @@ using std::chrono::milliseconds;
 using std::chrono::nanoseconds;
 
 void BasicThread::SetCurrentThreadName(void) const {
-  pthread_setname_np(m_name);
 }
 
 std::chrono::steady_clock::time_point BasicThread::GetCreationTime(void) {
