@@ -18,7 +18,7 @@ private:
   bool m_running = false;
 
   // The current outstanding async in the thread pool, if one exists:
-  void* m_curEvent = nullptr;
+  std::atomic<void*> m_curEvent{ nullptr };
 
   // Flag, indicating whether curEvent is in a teardown pathway.  This
   // flag is highly stateful.
