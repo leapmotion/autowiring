@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <autowiring/CoreJob.h>
 #include THREAD_HEADER
+#include ARRAY_HEADER
 
 class CoreJobTest:
   public testing::Test
@@ -178,4 +179,29 @@ TEST_F(CoreJobTest, RecursiveDeadlock) {
   *cj += [] {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   };
+}
+
+TEST_F(CoreJobTest, PendFromMultipleThreads) {
+  AutoCurrentContext ctxt;
+  AutoRequired<CoreJob> cj;
+  std::array<std::thread, 4> threads;
+  const size_t times{ 256 };
+  int counter{ 0 };
+
+  for (size_t i = 0; i < threads.size(); i++) {
+    threads[i] = std::thread([&] {
+      ctxt->DelayUntilInitiated();
+      for (int j = 0; j < times; j++) {
+        *cj += [&counter] {
+          counter++; // Should be updated exclusively in the CoreJob's thread
+        };
+      }
+    });
+  }
+  ctxt->Initiate();
+  for (size_t i = 0; i < threads.size(); i++) {
+    threads[i].join();
+  }
+  ctxt->SignalShutdown(true);
+  ASSERT_EQ(times*threads.size(), counter);
 }
