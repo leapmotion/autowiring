@@ -99,7 +99,7 @@ bool CoreJob::OnStart(void) {
 
   m_running = true;
 
-  std::unique_lock<std::mutex> lk;
+  std::unique_lock<std::mutex> lk(m_dispatchLock);
   if(m_pHead)
     // Simulate a pending event, because we need to set up our async:
     OnPended(std::move(lk));
