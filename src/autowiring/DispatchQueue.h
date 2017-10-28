@@ -406,9 +406,10 @@ public:
     // Create the thunk first to reduce the amount of time we spend in lock:
     auto thunk = new autowiring::DispatchThunk<_Fx>(std::forward<_Fx>(fx));
 
-    m_dispatchLock.lock();
+    std::unique_lock<std::mutex> lk(m_dispatchLock);
+
     if (m_count >= m_dispatchCap) {
-      m_dispatchLock.unlock();
+      lk.unlock();
       delete thunk;
       return false;
     }
@@ -420,16 +421,15 @@ public:
     if (m_pHead) {
       m_pTail->m_pFlink = thunk;
       m_pTail = thunk;
-      m_dispatchLock.unlock();
+      // Notification as needed:
+      OnPended(std::move(lk));
     }
     else {
       m_pHead = m_pTail = thunk;
-      m_dispatchLock.unlock();
+      // Notification as needed:
+      OnPended(std::move(lk));
       m_queueUpdated.notify_all();
     }
-
-    // Notification as needed:
-    OnPended(std::unique_lock<std::mutex>{});
     return true;
   }
 };

@@ -52,8 +52,10 @@ void CoreJob::OnPended(std::unique_lock<std::mutex>&& lk){
     // Need to ask the thread pool to handle our events again:
     m_curEventInTeardown = false;
 
-    if (m_curEvent)
-      delete static_cast<std::future<void>*>(m_curEvent);
+    std::future<void>* future = static_cast<std::future<void>*>(std::atomic_exchange<void*>(&m_curEvent, nullptr));
+    if (future) {
+      delete future;
+    }
 
     m_curEvent = new std::future<void>(
       std::async(
@@ -97,7 +99,7 @@ bool CoreJob::OnStart(void) {
 
   m_running = true;
 
-  std::unique_lock<std::mutex> lk;
+  std::unique_lock<std::mutex> lk(m_dispatchLock);
   if(m_pHead)
     // Simulate a pending event, because we need to set up our async:
     OnPended(std::move(lk));
@@ -122,21 +124,20 @@ void CoreJob::OnStop(bool graceful) {
 }
 
 void CoreJob::DoAdditionalWait(void) {
-  if (m_curEvent) {
-    std::future<void>* ptr = static_cast<std::future<void>*>(m_curEvent);
-    ptr->wait();
-    delete ptr;
-    m_curEvent = nullptr;
+  std::future<void>* future = static_cast<std::future<void>*>(std::atomic_exchange<void*>(&m_curEvent, nullptr));
+
+  if (future) {
+    future->wait();
+    delete future;
   }
 }
 
 bool CoreJob::DoAdditionalWait(std::chrono::nanoseconds timeout) {
-  if (!m_curEvent)
+  std::future<void>* future = static_cast<std::future<void>*>(std::atomic_exchange<void*>(&m_curEvent, nullptr));
+  if (!future)
     return true;
 
-  std::future<void>* ptr = static_cast<std::future<void>*>(m_curEvent);
-  auto status = ptr->wait_for(NanosecondsForFutureWait(timeout));
-  delete ptr;
-  m_curEvent = nullptr;
+  const auto status = future->wait_for(NanosecondsForFutureWait(timeout));
+  delete future;
   return status == std::future_status::ready;
 }
