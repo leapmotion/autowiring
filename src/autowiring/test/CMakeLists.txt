@@ -76,11 +76,6 @@ set(AutowiringTest_SRCS
   UuidTest.cpp
 )
 
-add_windows_sources(
-  AutowiringTest_SRCS
-  AutoFutureTest.cpp
-)
-
 set(AutowiringFixture_SRCS
   HasForwardOnlyType.hpp
   HasForwardOnlyType.cpp
