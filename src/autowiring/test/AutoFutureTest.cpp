@@ -49,10 +49,10 @@ TEST_F(AutoFutureTest, CorrectDestructionTest) {
     autowiring::then(f, [captured] {
       *captured = true;
     });
-    f.get();
     ASSERT_FALSE(captured.unique()) << "Lambda was destroyed prematurely";
+    f.get();
+    ASSERT_TRUE(captured.unique()) << "Continuation lambda leaked memory";
   }
 
   ASSERT_TRUE(*captured) << "Continuation lambda did not run as expected";
-  ASSERT_TRUE(captured.unique()) << "Continuation lambda leaked memory";
 }
