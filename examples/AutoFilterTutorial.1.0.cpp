@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2017 Leap Motion, Inc. All rights reserved.
 /// @page AutoFilterTutorial_1_0 AutoFilter Tutorial 1.0
 /// This tutorial will introduce the reader to the different kinds of `AutoFilter` input parameter semantics.
 ///
