@@ -20,7 +20,6 @@ set(Autowiring_SRCS
   auto_id.h
   auto_id.cpp
   auto_in.h
-  auto_future.h
   auto_out.h
   auto_prev.h
   auto_signal.h
@@ -29,8 +28,6 @@ set(Autowiring_SRCS
   AutoFilterDescriptor.h
   AutoFilterDescriptor.cpp
   AutoFilterArgument.h
-  AutoFuture.cpp
-  AutoFuture.h
   AutoPacket.cpp
   AutoPacket.h
   AutoPacketInternal.cpp
@@ -192,7 +189,6 @@ add_conditional_sources(
 )
 
 add_windows_sources(Autowiring_SRCS
-  auto_future_win.h
   CoreThreadWin.cpp
   CreationRulesWin.cpp
   SystemThreadPoolWin.cpp
@@ -205,7 +201,6 @@ add_windows_sources(Autowiring_SRCS
 )
 
 add_mac_sources(Autowiring_SRCS
-  auto_future_mac.h
   CoreThreadMac.cpp
 )
 
