@@ -5,6 +5,7 @@
 #include <autowiring/demangle.h>
 #include <autowiring/at_exit.h>
 #include MEMORY_HEADER
+#include THREAD_HEADER
 
 #ifndef GTEST_INCLUDE_GTEST_GTEST_H_
 #error Please include your version of gtest.h before including the autowiring enclosure
@@ -50,14 +51,24 @@ struct TestInfoProxy {
 };
 
 namespace autowiring {
-  namespace testing {
+  namespace autotesting {
     struct hung {
       CoreContext& ctxt;
     };
 
-    std::ostream& operator<<(std::ostream& os, const hung& lhs) {
+    inline std::ostream& operator<<(std::ostream& os, const hung& lhs) {
       autowiring::dbg::PrintRunnables(os, lhs.ctxt);
       return os;
+    }
+
+    template<typename T, typename Duration>
+    inline bool WaitForUseCount(const std::shared_ptr<T>& sptr, long useCount, Duration duration) {
+      const auto limit = std::chrono::steady_clock::now() + duration;
+      do {
+        if (useCount == sptr.use_count()) return true;
+        std::this_thread::yield();
+      } while (std::chrono::steady_clock::now() < limit);
+      return false;
     }
   }
 }
@@ -135,7 +146,7 @@ public:
       // Do not allow teardown to take more than 5 seconds.  This is considered a "timely teardown" limit.
       // If it takes more than this amount of time to tear down, the test case itself should invoke SignalShutdown
       // and Wait itself with the extended teardown period specified.
-      ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Test case took too long to tear down, unit tests running after this point are untrustworthy.  Runnable dump:\n" << autowiring::testing::hung{ *ctxt };
+      ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Test case took too long to tear down, unit tests running after this point are untrustworthy.  Runnable dump:\n" << autowiring::autotesting::hung{ *ctxt };
 
       // Global context should return to quiescence:
       if (!allowGlobalReferences)
@@ -151,7 +162,7 @@ public:
     }
 
     // No more references to this context except for the pointer we hold ourselves
-    ASSERT_TRUE(ctxt.unique()) << "Detected a dangling context reference after test termination, context may be leaking";
+    ASSERT_TRUE(autowiring::autotesting::WaitForUseCount(ctxt, 1L, std::chrono::seconds(5))) << "Detected a dangling context reference after test termination, context may be leaking";
     ctxt = {};
   }
 };

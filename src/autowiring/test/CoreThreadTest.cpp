@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2017 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/SimpleThreaded.hpp"
+#include "autotesting/AutowiringEnclosure.h"
 #include <autowiring/at_exit.h>
 #include <autowiring/autowiring.h>
 #include <algorithm>
@@ -570,7 +571,7 @@ TEST_F(CoreThreadTest, ContextWaitTimesOutInOnStop) {
   // Let BIOS back out now:
   bios->Continue();
   ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Context did not complete in a timely fashion";
-  ASSERT_EQ(2UL, ctxt.use_count()) << "Entity held a context shared pointer after teardown has taken place";
+  ASSERT_TRUE(autowiring::autotesting::WaitForUseCount(ctxt, 2L, std::chrono::seconds(1))) << "Entity held a context shared pointer after teardown has taken place";
 }
 
 TEST_F(CoreThreadTest, SubContextHoldsParentContext) {
