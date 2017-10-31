@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2017 Leap Motion, Inc. All rights reserved.
 /// @page AutoFilterTutorial_0_0 AutoFilter Tutorial 0.0
 /// This tutorial will introduce the reader to the AutoFilter concept and how to implement a rudimentary
 /// AutoFilter network.  It is recommended that the reader become familiar with the concept of a context

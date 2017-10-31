@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2017 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "Decompose.h"
 #include STL_TUPLE_HEADER
