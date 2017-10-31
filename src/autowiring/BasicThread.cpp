@@ -148,6 +148,9 @@ void BasicThread::OnStop(bool graceful) {
   if (!m_wasStarted) {
     std::lock_guard<std::mutex> lk(m_state->m_lock);
     m_state->m_completed = true;
+  } else {
+    // Make sure that we lock before we notify all
+    std::lock_guard<std::mutex> lk(m_state->m_lock);
   }
 
   // State condition must be notified, in the event that anything is blocking
