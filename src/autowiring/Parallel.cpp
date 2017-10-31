@@ -30,7 +30,7 @@ parallel::parallel(CoreContext& ctxt, size_t concurrency):
   while (concurrency--)
     std::thread(
       [block] {
-        while(block->owned)
+        for(;;)
           try { block->dq.WaitForEvent(); }
           catch(dispatch_aborted_exception&) {
             // Expected behavior, things tearing down, end here
@@ -42,11 +42,6 @@ parallel::parallel(CoreContext& ctxt, size_t concurrency):
   // Configure our signal after everything else is done
   onStopReg = ctxt.onShutdown += [this, block] {
     std::lock_guard<std::mutex> lk(block->m_lock);
-    if (!block->owned)
-      // Status block already destroyed, we're in a teardown race
-      // Short-circuit here, no reason to double-call stop
-      return;
-
     stop_unsafe();
   };
 }
@@ -56,7 +51,10 @@ parallel::~parallel(void) {
 }
 
 void parallel::stop(void) {
-  std::lock_guard<std::mutex> lk(m_block->m_lock);
+  auto block = m_block;
+  if (!block)
+    return;
+  std::lock_guard<std::mutex> lk(block->m_lock);
   stop_unsafe();
 }
 
@@ -65,8 +63,8 @@ void parallel::stop_unsafe(void) {
   if (!m_block)
     return;
 
-  m_block->owned = false;
   m_ctxt->onShutdown -= onStopReg;
   m_ctxt.reset();
+  m_block->dq.Rundown();
   m_block.reset();
 }

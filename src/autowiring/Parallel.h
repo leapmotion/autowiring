@@ -262,9 +262,6 @@ protected:
     std::condition_variable m_queueUpdated;
     std::unordered_map<auto_id, std::deque<AnySharedPointer>> m_queue;
 
-    // Holds true as long as the owner exists; false once the owner has been destroyed
-    bool owned = true;
-
     // Dispatch queue containing input items:
     DispatchQueue dq;
 
