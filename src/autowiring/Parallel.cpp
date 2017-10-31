@@ -56,7 +56,10 @@ parallel::~parallel(void) {
 }
 
 void parallel::stop(void) {
-  std::lock_guard<std::mutex> lk(m_block->m_lock);
+  auto block = m_block;
+  if (!block)
+    return;
+  std::lock_guard<std::mutex> lk(block->m_lock);
   stop_unsafe();
 }
 
@@ -68,5 +71,6 @@ void parallel::stop_unsafe(void) {
   m_block->owned = false;
   m_ctxt->onShutdown -= onStopReg;
   m_ctxt.reset();
+  m_block->dq.Rundown();
   m_block.reset();
 }

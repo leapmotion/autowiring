@@ -154,7 +154,7 @@ public:
   /// In a synchronized context, all attached lambdas are guaranteed to be called when this function returns.
   /// No guarantees are made in an unsynchronized context.
   ///
-  /// Any delayed dispatchers that are ready at the time of the call will be invoked.  All oter delayed
+  /// Any delayed dispatchers that are ready at the time of the call will be invoked.  All other delayed
   /// dispatchers will be aborted.
   ///
   /// If a dispatcher throws any exception other than dispatch_aborted_exception, the remaining dispatchers
