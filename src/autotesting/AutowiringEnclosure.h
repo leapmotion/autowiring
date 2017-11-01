@@ -62,10 +62,10 @@ namespace autowiring {
     }
 
     template<typename T, typename Duration>
-    inline bool WaitForUseCount(const std::shared_ptr<T>& sptr, long useCount, Duration duration) {
+    inline bool WaitForUseCount(const T& type, long useCount, Duration duration) {
       const auto limit = std::chrono::steady_clock::now() + duration;
       do {
-        if (useCount == sptr.use_count()) return true;
+        if (useCount == type.use_count()) return true;
         std::this_thread::yield();
       } while (std::chrono::steady_clock::now() < limit);
       return false;

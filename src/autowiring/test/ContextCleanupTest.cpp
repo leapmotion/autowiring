@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "TestFixtures/SimpleObject.hpp"
 #include "TestFixtures/SimpleThreaded.hpp"
+#include "autotesting/AutowiringEnclosure.h"
 #include <autowiring/autowiring.h>
 #include <autowiring/CoreContext.h>
 #include THREAD_HEADER
@@ -19,7 +20,7 @@ TEST_F(ContextCleanupTest, ValidateTeardownOrder) {
 
     std::weak_ptr<WeakPtrChecker> self;
   };
-  
+
   // Construct, the destroy
   std::make_shared<WeakPtrChecker>();
 }
@@ -227,6 +228,5 @@ TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
   ctxt->SignalShutdown(true);
 
   // At this point, the thread must have returned AND released its shared pointer to the enclosing context
-  ASSERT_EQ(initCount, ctxt.use_count()) << "Context thread persisted even after it should have fallen out of scope";
+  ASSERT_TRUE(autowiring::autotesting::WaitForUseCount(ctxt, initCount, std::chrono::seconds(5))) << "Context thread persisted even after it should have fallen out of scope";
 }
-
