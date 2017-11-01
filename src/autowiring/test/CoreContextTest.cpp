@@ -682,13 +682,15 @@ TEST_F(CoreContextTest, SimultaneousMultiInject) {
   std::thread b([ctxt] { ctxt->Inject<DelaysWithNwa>(); });
 
   // Poor man's barrier
-  while (hmac->hitCount != 2)
+  const auto limit = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+  while (hmac->hitCount != 2 && std::chrono::steady_clock::now() < limit)
     std::this_thread::yield();
   lk.unlock();
 
   a.join();
   b.join();
 
+  lk.lock();
   // Two initializations should have taken place due to the barrier
   ASSERT_EQ(2, hmac->initCount);
 
