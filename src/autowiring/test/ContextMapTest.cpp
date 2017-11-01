@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "TestFixtures/ExitRaceThreaded.hpp"
 #include "TestFixtures/SimpleThreaded.hpp"
+#include "autotesting/AutowiringEnclosure.h"
 #include <autowiring/autowiring.h>
 #include <autowiring/ContextMap.h>
 #include <string>
@@ -76,11 +77,11 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     // Terminate whole context, wait for it to respond
     context->SignalShutdown();
     context->Wait();
-    ASSERT_EQ(1UL, context.use_count()) << "Context reference should have been unique after thread expiration";
+    ASSERT_TRUE(autowiring::autotesting::WaitForUseCount(context, 1L, std::chrono::seconds(5))) << "Context reference should have been unique after thread expiration";
   }
 
   // Release our threaded entity:
-  ASSERT_EQ(1UL, threaded.use_count()) << "Thread was holding a self-reference even after context termination has completed";
+  ASSERT_TRUE(autowiring::autotesting::WaitForUseCount(threaded, 1L, std::chrono::seconds(5))) << "Thread was holding a self-reference even after context termination has completed";
   threaded.reset();
   ASSERT_TRUE(weakContext.expired()) << "Context still existed even after the last reference to it should have been gone";
 
