@@ -648,7 +648,9 @@ TEST_F(CoreThreadTest, LambdaHoldAfterTermination) {
 }
 
 TEST_F(CoreThreadTest, CanElevateAnyPriority) {
+  AutoCurrentContext ctxt;
   AutoRequired<CoreThread> ct;
+  ctxt->Initiate();
 
   for (int i = (int)ThreadPriority::Default; i < (int)ThreadPriority::Multimedia; i++) {
     BasicThread::ElevatePriority ep{ *ct, (ThreadPriority)i };
