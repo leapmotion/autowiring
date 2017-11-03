@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2017 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
+#include "autotesting/AutowiringEnclosure.h"
 #include <autowiring/autowiring.h>
 #include <autowiring/CoreContext.h>
 #include <autowiring/CurrentContextPusher.h>
@@ -35,6 +36,6 @@ TEST_F(CurrentContextPusherTest, NoUnexpectedGlobalHold) {
     }
   );
   rs.join();
-  ASSERT_TRUE(ctxt.unique()) << "The current context pointer was not correctly cleaned up on thread exit";
-  ASSERT_EQ(initUses, global.use_count()) << "A global reference was unexpectedly leaked by the pusher";
+  ASSERT_TRUE(autowiring::autotesting::WaitForUseCount(ctxt, 1L, std::chrono::seconds(5))) << "The current context pointer was not correctly cleaned up on thread exit";
+  ASSERT_TRUE(autowiring::autotesting::WaitForUseCount(global, initUses, std::chrono::seconds(5))) << "A global reference was unexpectedly leaked by the pusher";
 }
