@@ -150,15 +150,23 @@ public:
   operator+=(_Fx&& fx) {
     using RetType = typename std::remove_cv<decltype(fx())>::type;
 
-    // Increment remain jobs. This is decremented by calls to "Pop"
-    (std::lock_guard<std::mutex>)m_block->m_lock, ++m_block->m_outstandingCount;
+    auto block = m_block;
+    if (!block)
+      return;
 
-    m_block->dq += [this, fx] {
+    // Increment remain jobs. This is decremented by calls to "Pop"
+    (std::lock_guard<std::mutex>)block->m_lock, ++block->m_outstandingCount;
+
+    block->dq += [this, fx] {
+      auto block = m_block;
+      if (!block)
+        return;
+
       auto result = std::make_shared<RetType>(fx());
 
-      std::lock_guard<std::mutex>{m_block->m_lock},
-      m_block->m_queue[auto_id_t<RetType>{}].emplace_back(std::move(result));
-      m_block->m_queueUpdated.notify_all();
+      std::lock_guard<std::mutex>{block->m_lock},
+      block->m_queue[auto_id_t<RetType>{}].emplace_back(std::move(result));
+      block->m_queueUpdated.notify_all();
     };
   }
 
@@ -168,48 +176,68 @@ public:
     std::is_same<void, typename std::result_of<_Fx()>::type>::value
   >::type
   operator+=(_Fx&& fx) {
-    // Increment remain jobs. This is decremented by calls to "Pop"
-    (std::lock_guard<std::mutex>)m_block->m_lock, ++m_block->m_outstandingCount;
+    auto block = m_block;
+    if (!block)
+      return;
 
-    m_block->dq += [this, fx] {
+    // Increment remain jobs. This is decremented by calls to "Pop"
+    (std::lock_guard<std::mutex>)block->m_lock, ++block->m_outstandingCount;
+
+    block->dq += [this, fx] {
+      auto block = m_block;
+      if (!block)
+        return;
+
       fx();
 
-      std::lock_guard<std::mutex>{m_block->m_lock},
-      m_block->m_nVoidEntries++;
-      m_block->m_queueUpdated.notify_all();
+      std::lock_guard<std::mutex>{block->m_lock},
+      block->m_nVoidEntries++;
+      block->m_queueUpdated.notify_all();
     };
   }
 
   // Discard the most recent result. Blocks until the next result arives.
   template<typename T>
   void Pop(void) {
-    std::unique_lock<std::mutex> lk(m_block->m_lock);
-    if (!m_block->m_outstandingCount)
+    auto block = m_block;
+    if (!block)
+       return;
+
+    std::unique_lock<std::mutex> lk(block->m_lock);
+    if (!block->m_outstandingCount)
       throw std::out_of_range("No outstanding jobs");
 
     if (std::is_same<void, T>::value) {
-      m_block->m_queueUpdated.wait(lk, [this] { return m_block->m_nVoidEntries != 0; });
-      m_block->m_nVoidEntries--;
+      block->m_queueUpdated.wait(lk, [this] { auto block = m_block; return block ? block->m_nVoidEntries != 0 : true; });
+      block->m_nVoidEntries--;
     } else {
-      auto& qu = m_block->m_queue[auto_id_t<T>{}];
-      m_block->m_queueUpdated.wait(lk, [&qu] { return !qu.empty(); });
+      auto& qu = block->m_queue[auto_id_t<T>{}];
+      block->m_queueUpdated.wait(lk, [&qu] { return !qu.empty(); });
       qu.pop_front();
     }
 
-    --m_block->m_outstandingCount;
+    --block->m_outstandingCount;
   }
 
   // Get the most result from the most recent job. Blocks until a result arrives
   // if there isn't one already available
   template<typename T>
   T Top(void) {
-    std::unique_lock<std::mutex> lk(m_block->m_lock);
+    auto block = m_block;
+    if (!block)
+       return T{};
 
-    if (m_block->m_queue[auto_id_t<T>{}].empty())
-      m_block->m_queueUpdated.wait(lk, [this]{
-        return !m_block->m_queue[auto_id_t<T>{}].empty();
+    std::unique_lock<std::mutex> lk(block->m_lock);
+
+    if (block->m_queue[auto_id_t<T>{}].empty())
+      block->m_queueUpdated.wait(lk, [this]{
+        auto block = m_block;
+        if (!block)
+          return true;
+
+        return !block->m_queue[auto_id_t<T>{}].empty();
       });
-    return *static_cast<T*>(m_block->m_queue[auto_id_t<T>{}].front().ptr());
+    return *static_cast<T*>(block->m_queue[auto_id_t<T>{}].front().ptr());
   }
 
   // Get a collection containing all entries of the specified type
@@ -225,19 +253,30 @@ public:
   /// If a stop call has been made, this method will also block until all owned threads have quit
   /// </remarks>
   void barrier(void) {
-    std::unique_lock<std::mutex> lk(m_block->m_lock);
-    m_block->m_queueUpdated.wait(lk, [this] {
-      size_t totalReady = m_block->m_nVoidEntries;
-      for (auto& entry : m_block->m_queue)
+    auto block = m_block;
+    if (!block)
+       return;
+
+    std::unique_lock<std::mutex> lk(block->m_lock);
+    block->m_queueUpdated.wait(lk, [this] {
+      auto block = m_block;
+      if (!block)
+         return true;
+      size_t totalReady = block->m_nVoidEntries;
+      for (auto& entry : block->m_queue)
         totalReady += entry.second.size();
-      return m_block->m_outstandingCount == totalReady;
+      return block->m_outstandingCount == totalReady;
     });
   }
 
   // Get an iterator to the begining of out queue of job results
   template<typename T>
   parallel_iterator<T> begin(void) {
-    return{ *this, m_block->m_outstandingCount };
+    auto block = m_block;
+    if (!block)
+       return{ *this, 0 };
+
+    return{ *this, block->m_outstandingCount };
   }
 
   // Iterator representing no jobs results remaining
