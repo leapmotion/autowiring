@@ -44,7 +44,8 @@ TEST(SpinLockTest, PathologicalExclusion) {
     );
 
   for (auto& thread : threads)
-    thread.join();
+    if (thread.joinable())
+      thread.join();
 
   // Verify the lock did everything it was supposed to do:
   ASSERT_TRUE(*success) << "Lock failed to exclude multi-access under pathological cases";
