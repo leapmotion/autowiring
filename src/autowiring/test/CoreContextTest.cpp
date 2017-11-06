@@ -640,7 +640,7 @@ TEST_F(CoreContextTest, AwaitTimed) {
 namespace {
   class HoldsMutexAndCount {
   public:
-    volatile int hitCount = 0;
+    std::atomic<int> hitCount{ 0 };
     int initCount = 0;
     int instanceCount = 0;
     std::mutex lk;
@@ -650,13 +650,14 @@ namespace {
   public:
     DelaysWithNwa(void) {
       hmac->hitCount++;
-      std::lock_guard<std::mutex>{ hmac->lk };
+      std::lock_guard<std::mutex> lk{ hmac->lk };
 
       hmac->initCount++;
       hmac->instanceCount++;
     }
 
     virtual ~DelaysWithNwa(void) {
+      std::lock_guard<std::mutex> lk{ hmac->lk };
       hmac->instanceCount--;
     }
 
