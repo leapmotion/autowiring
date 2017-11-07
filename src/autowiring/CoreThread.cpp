@@ -14,6 +14,8 @@ void CoreThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shar
   // Kill everything in the dispatch queue and also run it down
   {
     CurrentContextPusher pshr(ctxt);
+    // Only allow one thread at a time to clean up the dispatch queue
+    std::lock_guard<std::mutex> lk(m_stoppingLock);
     Rundown();
   }
 
@@ -27,6 +29,9 @@ void CoreThread::Run() {
 }
 
 void CoreThread::OnStop(bool graceful) {
+  // Only allow one thread at a time to clean up the dispatch queue
+  std::lock_guard<std::mutex> lk(m_stoppingLock);
+
   // Base class handling first:
   BasicThread::OnStop(graceful);
 

@@ -176,6 +176,9 @@ namespace {
 }
 
 TEST_F(ContextMemberTest, PathologicalResetCase) {
+  if (std::thread::hardware_concurrency() == 1)
+    return; // Don't bother running on a single-core machine
+
   Autowired<TypeThatIsNotInjected>* pv;
   volatile std::atomic<size_t> nBarr{ 0 };
   volatile bool proceed = true;

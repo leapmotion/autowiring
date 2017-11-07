@@ -175,6 +175,8 @@ TEST_F(AnySharedPointerTest, CanHoldCoreObject) {
   ASSERT_EQ(co, x) << "Held CoreObject was not equivalent to constructed instance";
 }
 
+template<> const autowiring::fast_pointer_cast_initializer<CoreObject, CoreObject> autowiring::fast_pointer_cast_initializer<CoreObject, CoreObject>::sc_init;
+
 TEST_F(AnySharedPointerTest, CanFastCastToSelf) {
   (void)autowiring::fast_pointer_cast_initializer<CoreObject, CoreObject>::sc_init;
 

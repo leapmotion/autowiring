@@ -24,9 +24,11 @@ bool CoreRunnable::Start(std::shared_ptr<CoreObject> outstanding) {
     return true;
 
   m_wasStarted = true;
-  m_outstanding = outstanding;
+  m_outstanding = std::move(outstanding);
+  outstanding.reset();
   if(!OnStart()) {
     m_shouldStop = true;
+
     m_outstanding.reset();
 
     // Immediately invoke a graceless stop in response
@@ -38,20 +40,23 @@ bool CoreRunnable::Start(std::shared_ptr<CoreObject> outstanding) {
 }
 
 void CoreRunnable::Stop(bool graceful) {
+  std::unique_lock<std::mutex> lk(m_lock);
   if (!m_shouldStop) {
     // Stop flag should be pulled high
     m_shouldStop = true;
 
     // Do not call this method more than once:
+    lk.unlock();
     OnStop(graceful);
+    lk.lock();
   }
 
   if (m_outstanding) {
     // Ensure we do not invoke the outstanding count dtor while holding a lock
     std::shared_ptr<CoreObject> outstanding;
-    std::lock_guard<std::mutex>{m_lock},
     outstanding.swap(m_outstanding);
   }
+  lk.unlock();
 
   // Everything looks good now
   m_cv.notify_all();

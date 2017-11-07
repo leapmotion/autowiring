@@ -200,7 +200,8 @@ TEST_F(CoreJobTest, PendFromMultipleThreads) {
   }
   ctxt->Initiate();
   for (size_t i = 0; i < threads.size(); i++) {
-    threads[i].join();
+    if (threads[i].joinable())
+      threads[i].join();
   }
   ctxt->SignalShutdown(true);
   ASSERT_EQ(times*threads.size(), counter);

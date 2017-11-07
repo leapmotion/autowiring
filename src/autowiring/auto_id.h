@@ -58,6 +58,10 @@ namespace autowiring {
       )
     {}
 
+#if !defined(_MSC_VER)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc++1z-compat-mangling"
+#endif
     auto_id_block(
       int index,
       const std::type_info* ti,
@@ -75,6 +79,9 @@ namespace autowiring {
       pToObj(pToObj),
       pFromObj(pFromObj)
     {}
+#if !defined(_MSC_VER)
+#pragma clang diagnostic pop
+#endif
 
     // Index and underlying type.  Indexes are guaranteed to start at 1.  The index value of 0
     // is reserved as the invalid index.

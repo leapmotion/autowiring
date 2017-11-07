@@ -208,6 +208,9 @@ TEST_F(PostConstructTest, TestForwardDeclare) {
 */
 
 TEST_F(PostConstructTest, NotificationTeardownRace) {
+  if (std::thread::hardware_concurrency() == 1)
+    return; // Don't bother running on a single-core machine
+
   std::shared_ptr<CoreContext> pContext;
 
   auto quit = false;

@@ -21,7 +21,7 @@ bool AutoPacketFactory::IsRunning(void) const {
 }
 
 std::shared_ptr<AutoPacket> AutoPacketFactory::CurrentPacket(void) {
-  std::lock_guard<std::mutex> lk(m_lock);
+  std::lock_guard<std::mutex> lk(m_apfLock);
   return m_curPacket.lock();
 }
 
@@ -29,7 +29,7 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   std::shared_ptr<AutoPacketInternal> retVal;
   bool isFirstPacket;
   {
-    std::lock_guard<std::mutex> lk(m_lock);
+    std::lock_guard<std::mutex> lk(m_apfLock);
 
     if (ShouldStop())
       throw autowiring_error("Attempted to create a packet on an AutoPacketFactory that was already terminated");
@@ -84,14 +84,14 @@ std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
 }
 
 std::vector<AutoFilterDescriptor> AutoPacketFactory::GetAutoFilters(void) const {
-  std::lock_guard<std::mutex> lk(m_lock);
+  std::lock_guard<std::mutex> lk(m_apfLock);
   std::vector<AutoFilterDescriptor> retVal;
   retVal.assign(m_autoFilters.begin(), m_autoFilters.end());
   return retVal;
 }
 
 SatCounter* AutoPacketFactory::CreateSatCounterList(void) const {
-  std::lock_guard<std::mutex> lk(m_lock);
+  std::lock_guard<std::mutex> lk(m_apfLock);
 
   // Trivial return check
   if (m_autoFilters.empty())
@@ -113,7 +113,7 @@ SatCounter* AutoPacketFactory::CreateSatCounterList(void) const {
 
 bool AutoPacketFactory::OnStart(void) {
   // Initialize first packet
-  std::lock_guard<std::mutex>{m_lock},
+  std::lock_guard<std::mutex>{m_apfLock},
   m_nextPacket = ConstructPacket();
   return true;
 }
@@ -124,7 +124,7 @@ void AutoPacketFactory::OnStop(bool graceful) {
   std::shared_ptr<AutoPacketInternal> nextPacket;
 
   // Lock destruction precedes local variables
-  std::lock_guard<std::mutex>{m_lock},
+  std::lock_guard<std::mutex>{m_apfLock},
     autoFilters.swap(m_autoFilters),
     nextPacket.swap(m_nextPacket);
 }
@@ -156,14 +156,14 @@ void AutoPacketFactory::Clear(void) {
 }
 
 const AutoFilterDescriptor& AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
-  std::lock_guard<std::mutex> lk(m_lock);
+  std::lock_guard<std::mutex> lk(m_apfLock);
   m_autoFilters.insert(rhs);
   return rhs;
 }
 
 void AutoPacketFactory::RemoveSubscriber(const AutoFilterDescriptor& autoFilter) {
   // Trivial removal from the autofilter set:
-  std::lock_guard<std::mutex> lk(m_lock);
+  std::lock_guard<std::mutex> lk(m_apfLock);
   m_autoFilters.erase(autoFilter);
 }
 
@@ -186,7 +186,7 @@ size_t AutoPacketFactory::GetOutstandingPacketCount(void) const {
 }
 
 void AutoPacketFactory::RecordPacketDuration(std::chrono::nanoseconds duration) {
-  std::unique_lock<std::mutex> lk(m_lock);
+  std::unique_lock<std::mutex> lk(m_apfLock);
   m_packetDurationSum += duration.count();
   m_packetDurationSqSum += duration.count() * duration.count();
 }
@@ -202,7 +202,7 @@ double AutoPacketFactory::GetPacketLifetimeStandardDeviation(void) {
 }
 
 void AutoPacketFactory::ResetPacketStatistics(void) {
-  std::unique_lock<std::mutex> lk(m_lock);
+  std::unique_lock<std::mutex> lk(m_apfLock);
   m_packetCount = 0;
   m_packetDurationSum = 0.0;
   m_packetDurationSqSum = 0.0;

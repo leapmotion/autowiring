@@ -58,7 +58,8 @@ TEST_F(LockReducedCollectionTest, ConcurrentWritersCheck) {
 
   // Wait on all threads:
   for(size_t i = 0; i < threadCount; i++)
-    allThreads[i].join();
+    if (allThreads[i].joinable())
+      allThreads[i].join();
 
   // Trivial size validation first:
   auto image = collection.GetImage();
