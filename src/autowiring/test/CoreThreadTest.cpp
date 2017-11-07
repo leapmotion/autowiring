@@ -484,7 +484,8 @@ public:
 };
 
 TEST_F(CoreThreadTest, SpuriousWakeupTest) {
-  AutoCurrentContext()->Initiate();
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
   AutoRequired<CoreThreadExtraction> extraction;
 
   std::mutex lock;
@@ -518,6 +519,8 @@ TEST_F(CoreThreadTest, SpuriousWakeupTest) {
   ASSERT_TRUE(cv.wait_for(lk, std::chrono::seconds(5), [&] { return ready; }));
 
   ASSERT_EQ(2UL, countOnWake) << "Dispatch queue changed size under a spurious wakeup condition";
+
+  ctxt->SignalShutdown(true);
 }
 
 class BlocksInOnStop:
