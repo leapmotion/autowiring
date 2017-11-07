@@ -28,7 +28,7 @@ public:
 
 private:
   // Lock for this type
-  mutable std::mutex m_lock;
+  mutable std::mutex m_apfLock;
 
   // Internal outstanding reference for issued packet:
   std::weak_ptr<void> m_outstandingInternal;
@@ -60,7 +60,7 @@ public:
   /// </summary>
   template<class T>
   void AppendAutoFiltersTo(T& container) const {
-    std::lock_guard<std::mutex> lk(m_lock);
+    std::lock_guard<std::mutex> lk(m_apfLock);
     container.insert(container.end(), m_autoFilters.begin(), m_autoFilters.end());
   }
 
