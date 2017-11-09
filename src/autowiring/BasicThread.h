@@ -6,6 +6,7 @@
 #include FUNCTIONAL_HEADER
 #include MEMORY_HEADER
 #include MUTEX_HEADER
+#include THREAD_HEADER
 
 class BasicThread;
 class CoreContext;
@@ -93,25 +94,22 @@ public:
     /// then the current thread priority. Destroy this ElevatePriority instance
     /// to restore the normal thread priority.
     ElevatePriority(BasicThread& thread, ThreadPriority priority) :
-      m_oldPriority(thread.m_priority),
-      m_thread(thread)
+      m_thread(thread),
+      // Elevate if the new level is greater than the current level:
+      m_oldPriority(thread.ElevateThreadPriority(priority))
     {
-      // Elevate if the new level is higher than the old level:
-      if (priority > m_oldPriority)
-        m_thread.SetThreadPriority(priority);
     }
 
     /// Destroying this object returns the thread to its previous priority
     /// level.
     ~ElevatePriority(void) {
-      // Delevate if the old level is lower than the current level:
-      if (m_thread.m_priority > m_oldPriority)
-        m_thread.SetThreadPriority(m_oldPriority);
+      // De-elevate if the old level is lower than the current level:
+      m_thread.DeelevateThreadPriority(m_oldPriority);
     }
 
   private:
-    ThreadPriority m_oldPriority;
     BasicThread& m_thread;
+    ThreadPriority m_oldPriority;
   };
 
 protected:
@@ -128,9 +126,6 @@ protected:
 
   // Run condition:
   bool m_running = false;
-
-  // The current thread priority
-  ThreadPriority m_priority = ThreadPriority::Default;
 
   /// <summary>
   /// Assigns a name to the thread, displayed in debuggers.
@@ -150,7 +145,41 @@ protected:
   /// invoked before the thread starts to run, the thread will take on the specified priority when
   /// it is started.
   /// </remarks>
-  void SetThreadPriority(ThreadPriority threadPriority);
+  /// <returns>
+  /// The previous thread priority
+  /// </returns>
+  ThreadPriority SetThreadPriority(ThreadPriority threadPriority);
+
+  /// <summary>
+  /// Sets the thread priority of this thread only if it elevates the priority
+  /// </summary>
+  /// <remarks>
+  /// This method may be called while the thread is running, or before it starts to run.  If it is
+  /// invoked before the thread starts to run, the thread will take on the specified priority when
+  /// it is started.
+  /// </remarks>
+  /// <returns>
+  /// The previous thread priority
+  /// </returns>
+  ThreadPriority ElevateThreadPriority(ThreadPriority threadPriority);
+
+  /// <summary>
+  /// Sets the thread priority of this thread only if it de-elevates the priority
+  /// </summary>
+  /// <remarks>
+  /// This method may be called while the thread is running, or before it starts to run.  If it is
+  /// invoked before the thread starts to run, the thread will take on the specified priority when
+  /// it is started.
+  /// </remarks>
+  /// <returns>
+  /// The previous thread priority
+  /// </returns>
+  ThreadPriority DeelevateThreadPriority(ThreadPriority threadPriority);
+
+  /// <summary<>
+  /// Low-level function to set the thread priority
+  /// </summary>
+  static void SetThreadPriority(const std::thread::native_handle_type& handle, ThreadPriority threadPriority);
 
   /// <summary>
   /// Recovers a general lock used to synchronize entities in this thread internally.
@@ -217,7 +246,7 @@ public:
   /// <returns>
   /// The current thread priority
   /// </returns>
-  ThreadPriority GetThreadPriority(void) const { return m_priority; }
+  ThreadPriority GetThreadPriority(void);
 
   /// <returns>
   /// True if this thread has transitioned to a completed state
@@ -310,6 +339,15 @@ public:
   /// True if the calling thread is the main thread
   /// </returns>
   static bool IsMainThread(void);
+
+private:
+  /// <summary>
+  /// Update the thread priority to its current value
+  /// </summary>
+  /// <remarks>
+  /// Useful for re-setting the priority of a thread that may have be specified before it was started.
+  /// </remarks>
+  void UpdateThreadPriority(std::unique_lock<std::mutex>&& lock);
 };
 
 /// <summary>

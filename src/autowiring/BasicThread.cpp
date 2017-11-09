@@ -41,7 +41,7 @@ void BasicThread::DoRun(std::shared_ptr<CoreObject>&& refTracker) {
 
   // Update the thread priority.  This value may have been assigned before we started.  In that case,
   // we want to be sure we get the correct value assigned eventually.
-  SetThreadPriority(m_priority);
+  UpdateThreadPriority(std::unique_lock<std::mutex>{ m_state->m_threadLock });
 
   // Now we wait for the thread to be good to go:
   try {
@@ -134,12 +134,15 @@ bool BasicThread::OnStart(void) {
   // enables us to decide in advance the exact location in memory where the
   // object will be stored.
   auto outstanding = GetOutstanding();
-  m_state->m_thisThread.~thread();
-  new (&m_state->m_thisThread) std::thread(
-    [this, outstanding] () mutable {
-      this->DoRun(std::move(outstanding));
-    }
-  );
+  {
+    std::lock_guard<std::mutex> lk(m_state->m_threadLock);
+    m_state->m_thisThread.~thread();
+    new (&m_state->m_thisThread) std::thread(
+      [this, outstanding] () mutable {
+        this->DoRun(std::move(outstanding));
+      }
+    );
+  }
   return true;
 }
 
@@ -180,6 +183,7 @@ bool BasicThread::DoAdditionalWait(std::chrono::nanoseconds timeout) {
 }
 
 std::shared_ptr<void> BasicThread::GetThread(void) const {
+  std::lock_guard<std::mutex> lk(m_state->m_threadLock);
   // Return an aliased shared pointer
   return {
     m_state,
@@ -204,4 +208,45 @@ void ForceCoreThreadReidentify(void) {
 
 bool BasicThread::IsMainThread(void) {
   return mainTID == std::this_thread::get_id();
+}
+
+ThreadPriority BasicThread::GetThreadPriority(void) {
+  std::lock_guard<std::mutex> lk(m_state->m_threadLock);
+  return m_state->m_priority;
+}
+
+void BasicThread::UpdateThreadPriority(std::unique_lock<std::mutex>&& lock) {
+  if (m_state->m_thisThread.get_id() == std::thread::id())
+    return;
+  SetThreadPriority(m_state->m_thisThread.native_handle(), m_state->m_priority);
+}
+
+ThreadPriority BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
+  std::unique_lock<std::mutex> lk(m_state->m_threadLock);
+  ThreadPriority prevThreadPriority = m_state->m_priority;
+  m_state->m_priority = threadPriority;
+  UpdateThreadPriority(std::move(lk));
+  return prevThreadPriority;
+}
+
+ThreadPriority BasicThread::ElevateThreadPriority(ThreadPriority threadPriority) {
+  std::unique_lock<std::mutex> lk(m_state->m_threadLock);
+  ThreadPriority prevThreadPriority = m_state->m_priority;
+  if (threadPriority < m_state->m_priority) {
+    return prevThreadPriority;
+  }
+  m_state->m_priority = threadPriority;
+  UpdateThreadPriority(std::move(lk));
+  return prevThreadPriority;
+}
+
+ThreadPriority BasicThread::DeelevateThreadPriority(ThreadPriority threadPriority) {
+  std::unique_lock<std::mutex> lk(m_state->m_threadLock);
+  ThreadPriority prevThreadPriority = m_state->m_priority;
+  if (threadPriority >= m_state->m_priority) {
+    return prevThreadPriority;
+  }
+  m_state->m_priority = threadPriority;
+  UpdateThreadPriority(std::move(lk));
+  return prevThreadPriority;
 }

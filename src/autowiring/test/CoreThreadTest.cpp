@@ -655,8 +655,14 @@ TEST_F(CoreThreadTest, CanElevateAnyPriority) {
   AutoRequired<CoreThread> ct;
   ctxt->Initiate();
 
+  const auto origPriority = ct->GetThreadPriority();
   for (int i = (int)ThreadPriority::Default; i < (int)ThreadPriority::Multimedia; i++) {
-    BasicThread::ElevatePriority ep{ *ct, (ThreadPriority)i };
-    ASSERT_EQ((ThreadPriority)i, ct->GetThreadPriority());
+    {
+      BasicThread::ElevatePriority ep{ *ct, (ThreadPriority)i };
+      ASSERT_EQ((ThreadPriority)i, ct->GetThreadPriority());
+    }
+    // Ensure that the priority is restored to its previous value:
+    ASSERT_EQ(origPriority, ct->GetThreadPriority());
   }
+  ctxt->SignalShutdown(true);
 }
