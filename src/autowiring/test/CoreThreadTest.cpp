@@ -58,6 +58,8 @@ TEST_F(CoreThreadTest, VerifyStartSpam) {
   instance->Start(std::shared_ptr<CoreObject>((CoreObject*) 1, [] (CoreObject*) {}));
 
   EXPECT_FALSE(instance->m_multiHit) << "Thread was run more than once unexpectedly";
+
+  ctxt->SignalShutdown(true);
 }
 
 class InvokesIndefiniteWait:
@@ -114,6 +116,7 @@ TEST_F(CoreThreadTest, VerifyNestedTermination) {
 
   // Verify that the child thread has stopped:
   ASSERT_FALSE(st->IsRunning()) << "Child thread was running even though the enclosing context was terminated";
+  ctxt->Wait();
 }
 
 class ListenThread :
@@ -202,6 +205,7 @@ TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
     std::this_thread::yield();
   ASSERT_TRUE(*y) << "A simple ready call was not dispatched within 100ms of being pended";
   ASSERT_FALSE(*x) << "An event which should not have been executed for an hour was executed early";
+  ctxt->SignalShutdown(true);
 }
 
 TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
@@ -221,6 +225,7 @@ TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
   // Verify that the shared pointer isn't unique at this point.  If it is, it's because our CoreThread deleted
   // the event even though it was supposed to have pended it.
   ASSERT_FALSE(x.unique()) << "A pended event was freed before it was called, and appears to be present in a dispatch queue";
+  ctxt->SignalShutdown(true);
 }
 
 TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
@@ -255,6 +260,7 @@ TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
       return;
 
   FAIL() << "An out-of-order delayed dispatch was not executed in time as expected";
+  ctxt->SignalShutdown(true);
 }
 
 TEST_F(CoreThreadTest, VerifyTimedSort) {
@@ -280,6 +286,7 @@ TEST_F(CoreThreadTest, VerifyTimedSort) {
 
   // Verify that the resulting vector is sorted.
   ASSERT_TRUE(std::is_sorted(v.begin(), v.end())) << "A timed sort implementation did not generate a sorted sequence as expected";
+  ctxt->SignalShutdown(true);
 }
 
 TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
@@ -586,14 +593,22 @@ TEST_F(CoreThreadTest, SubContextHoldsParentContext) {
 
     auto cv = std::make_shared<std::condition_variable>();
     auto lock = std::make_shared<std::mutex>();
+    auto invoked = std::make_shared<bool>(false);
     auto proceed = std::make_shared<bool>(false);
-    *thread += [cv, lock, proceed] {
+    *thread += [thread, cv, lock, proceed, invoked] {
+      *invoked = true;
       std::unique_lock<std::mutex> lk(*lock);
+      cv->notify_all();
       cv->wait_for(lk, std::chrono::seconds(5), [&] { return *proceed; });
     };
 
     parent->Initiate();
     child->Initiate();
+
+    { // Wait for lambda to start running before attempting to shutdown
+      std::unique_lock<std::mutex> lk{ *lock };
+      ASSERT_TRUE(cv->wait_for(lk, std::chrono::seconds(5), [&] { return *invoked; })) << "Failed to run lambda";
+    }
 
     // Terminate the parent, verify that the child has exited:
     parent->SignalShutdown();
@@ -604,6 +619,7 @@ TEST_F(CoreThreadTest, SubContextHoldsParentContext) {
     ASSERT_TRUE(parent->Wait(std::chrono::seconds(5))) << "Signalled thread did not terminate in a timely fashion";
   }
   ASSERT_EQ(initUses, parent.use_count()) << "Parent had spurious references after all objects should have been destroyed";
+  parent->Wait();
 }
 
 class DoesNothingButQuit:
@@ -642,12 +658,12 @@ TEST_F(CoreThreadTest, LambdaHoldAfterTermination) {
     *mct += [] {};
     mct->Barrier();
     ASSERT_GE(1U, mct->GetDispatchQueueLength()) << "Dispatch queue had lingering entries after barrier";
-    child->SignalShutdown();
     childWeak = child;
-    child->Wait();
+    child->SignalShutdown(true);
   }
   ASSERT_TRUE(*teardownCalled) << "Teardown listener was not called as expected";
-  ASSERT_TRUE(childWeak.expired()) << "Child context leaked due to lambda pending in teardown";
+  ASSERT_TRUE(!childWeak.lock()) << "Child context leaked due to lambda pending in teardown";
+  ctxt->SignalShutdown(true);
 }
 
 TEST_F(CoreThreadTest, CanElevateAnyPriority) {
