@@ -34,6 +34,7 @@ RunCounter::~RunCounter(void) {
     outstanding = std::move(stateBlock->m_outstanding);
     stateBlock->m_outstanding.reset();
   }
+  outstanding.reset();
 
   // Wake everyone up
   stateBlock->m_stateChanged.notify_all();

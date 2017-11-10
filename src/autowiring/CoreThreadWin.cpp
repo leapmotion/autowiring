@@ -60,7 +60,7 @@ bool SetCapturePriority(void) {
   return true;
 }
 
-void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
+void BasicThread::SetThreadPriority(const std::thread::native_handle_type& handle, ThreadPriority threadPriority) {
   int nPriority;
   switch(threadPriority) {
   case ThreadPriority::Idle:
@@ -98,10 +98,9 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
   }
 
   ::SetThreadPriority(
-    m_state->m_thisThread.native_handle(),
+    handle,
     nPriority
   );
-  m_priority = threadPriority;
 }
 
 std::chrono::steady_clock::time_point BasicThread::GetCreationTime(void) {

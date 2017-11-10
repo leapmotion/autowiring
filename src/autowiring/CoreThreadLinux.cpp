@@ -28,7 +28,7 @@ void BasicThread::GetThreadTimes(std::chrono::milliseconds& kernelTime, std::chr
   userTime = std::chrono::duration_cast<milliseconds>(seconds(usage.ru_utime.tv_sec) + microseconds(usage.ru_utime.tv_usec));
 }
 
-void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
+void BasicThread::SetThreadPriority(const std::thread::native_handle_type& handle, ThreadPriority threadPriority) {
   struct sched_param param = { 0 };
   int policy = SCHED_OTHER;
   int percent = 0;
@@ -66,8 +66,7 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
     throw std::invalid_argument("Attempted to assign an unrecognized thread priority");
   }
   min_priority = sched_get_priority_min(policy);
-  pthread_getschedparam(m_state->m_thisThread.native_handle(), &policy, &param);
+  pthread_getschedparam(handle, &policy, &param);
   param.sched_priority = min_priority + (percent * (sched_get_priority_max(policy) - min_priority) + 50) / 100;
-  pthread_setschedparam(m_state->m_thisThread.native_handle(), policy, &param);
-  m_priority = threadPriority;
+  pthread_setschedparam(handle, policy, &param);
 }

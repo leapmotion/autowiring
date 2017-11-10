@@ -38,9 +38,11 @@ public:
 
 protected:
   /// <summary>
-  /// While stopping, make sure we do it exclusively
+  /// While stopping, make sure we do it cleanly
   /// </summary>
   std::mutex m_stoppingLock;
+  std::condition_variable m_stoppingCond;
+  bool m_onStopCompleted = false;
 
   /// <summary>
   /// Overridden here so we can rundown the dispatch queue
