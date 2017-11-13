@@ -58,7 +58,7 @@ namespace autowiring {
       )
     {}
 
-#if !defined(_MSC_VER)
+#if defined(__clang__) && __clang_major__ >= 9
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++1z-compat-mangling"
 #endif
@@ -79,7 +79,7 @@ namespace autowiring {
       pToObj(pToObj),
       pFromObj(pFromObj)
     {}
-#if !defined(_MSC_VER)
+#if defined(__clang__) && __clang_major__ >= 9
 #pragma clang diagnostic pop
 #endif
 
