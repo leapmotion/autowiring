@@ -76,31 +76,10 @@ set(AutowiringTest_SRCS
   UuidTest.cpp
 )
 
-set(AutowiringFixture_SRCS
-  HasForwardOnlyType.hpp
-  HasForwardOnlyType.cpp
-  MentionsVariousOtherTypes.hpp
-  MentionsVariousOtherTypes.cpp
-  OtherSelectingFixture.hpp
-  OtherSelectingFixture.cpp
-  SelfSelectingFixture.hpp
-  SelfSelectingFixture.cpp
-)
-
-add_library(AutowiringFixture ${AutowiringFixture_SRCS})
-add_pch(AutowiringFixture stdafx.h stdafx.cpp)
-target_link_libraries(AutowiringFixture Autowiring)
-target_include_directories(AutowiringFixture PRIVATE "${CMAKE_SOURCE_DIR}/contrib/autoboost")
-
 add_executable(AutowiringTest ${AutowiringTest_SRCS})
 add_pch(AutowiringTest stdafx.h stdafx.cpp)
-target_link_libraries(AutowiringTest Autowiring AutowiringFixture AutoTesting)
+target_link_libraries(AutowiringTest Autowiring AutowiringFixture)
 target_include_directories(AutowiringTest PRIVATE "${CMAKE_SOURCE_DIR}/contrib/autoboost")
-
-# Link AutoNet if we've got it
-if(TARGET AutoNet)
-  target_link_libraries(AutowiringTest AutoNet)
-endif()
 
 # This is a unit test, let CMake know this
 add_test(NAME AutowiringTest COMMAND $<TARGET_FILE:AutowiringTest>)
