@@ -1,10 +1,6 @@
 set(AutowiringTest_SRCS
-  AutoPacketTest.cpp
-  AutoPacketFactoryTest.cpp
   CommonUseCasesTest.cpp
-  FactoryTest.cpp
   HasForwardOnlyType.cpp
-  PostConstructTest.cpp
 )
 
 add_executable(AutowiringTest ${AutowiringTest_SRCS})
