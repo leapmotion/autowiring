@@ -1,4 +1,5 @@
 set(AutowiringTest_SRCS
+  AutowiringTest.cpp
   CommonUseCasesTest.cpp
   HasForwardOnlyType.cpp
 )
