@@ -6,4 +6,5 @@ include_directories(
   .
 )
 
+add_subdirectory(autotesting)
 add_subdirectory(autowiring)
