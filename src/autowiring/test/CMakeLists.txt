@@ -2,7 +2,6 @@ set(AutowiringTest_SRCS
   AutowiringTest.cpp
   CommonUseCasesTest.cpp
   HasForwardOnlyType.cpp
-  TestFixtures/SimpleObject.hpp
 )
 
 add_executable(AutowiringTest ${AutowiringTest_SRCS})
