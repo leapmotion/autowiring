@@ -177,7 +177,7 @@ static void SimpleCall(std::shared_ptr<const Decoration<4>> d4, const Decoration
 static_assert(auto_arg<Decoration<2>&>::is_output, "Output type not correctly detected");
 
 static_assert(
-  autowiring::choice<Decoration<2>&, autowiring::tuple<const Decoration<0>&, Decoration<1>&, Decoration<2>&>>::is_matched,
+  autowiring::choice<Decoration<2>&, std::tuple<const Decoration<0>&, Decoration<1>&, Decoration<2>&>>::is_matched,
   "Failed to match an obvious choice output"
 );
 

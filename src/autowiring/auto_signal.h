@@ -1,12 +1,11 @@
 // Copyright (C) 2012-2017 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "atomic_list.h"
-#include "auto_tuple.h"
+#include TUPLE_HEADER
 #include "autowiring_error.h"
 #include "callable.h"
 #include "Decompose.h"
 #include "dereferencer.h"
-#include "index_tuple.h"
 #include "noop.h"
 #include "registration.h"
 #include "signal_base.h"
@@ -283,15 +282,15 @@ namespace autowiring {
       {}
 
       const signal& owner;
-      autowiring::tuple<detail::dereferencer<FnArgs&&>...> args;
+      std::tuple<detail::dereferencer<FnArgs&&>...> args;
 
       template<int... N>
-      void call(index_tuple<N...>) {
-        owner.SignalUnsafe(*autowiring::get<N>(args)...);
+      void call(std::index_sequence<N...>) {
+        owner.SignalUnsafe(*std::get<N>(args)...);
       }
 
       void operator()() override {
-        call(typename make_index_tuple<sizeof...(FnArgs)>::type{});
+        call(typename std::make_index_sequence<sizeof...(FnArgs)>{});
       }
     };
 

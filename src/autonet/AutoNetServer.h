@@ -2,8 +2,8 @@
 #pragma once
 #include <autowiring/CoreThread.h>
 #include <autowiring/Decompose.h>
-#include <autowiring/index_tuple.h>
 #include <sstream>
+#include TUPLE_HEADER
 #include STL_UNORDERED_MAP
 #include FUNCTIONAL_HEADER
 
@@ -81,7 +81,7 @@ public:
       event,
       std::forward<Fx&&>(handler),
       &Fx::operator(),
-      typename autowiring::make_index_tuple<autowiring::Decompose<decltype(&Fx::operator())>::N>::type()
+      std::make_index_sequence<autowiring::Decompose<decltype(&Fx::operator())>::N>()
     );
   }
 
@@ -104,7 +104,7 @@ private:
 
   // Extract arguments from list of strings, parse and pass to handler
   template<typename Fx, typename... Args, int... N>
-  void AddEventHandler(const std::string& event, Fx&& handler, void (Fx::*pfn)(Args...) const, autowiring::index_tuple<N...>) {
+  void AddEventHandler(const std::string& event, Fx&& handler, void (Fx::*pfn)(Args...) const, std::index_sequence<N...>) {
     AddEventHandlerInternal(
       event,
       [this, handler, pfn] (const std::vector<std::string>& args) {

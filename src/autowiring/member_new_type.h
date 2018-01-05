@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2017 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "Decompose.h"
-#include STL_TUPLE_HEADER
+#include TUPLE_HEADER
 
 namespace autowiring {
 

@@ -130,7 +130,7 @@ TEST_F(AutoFilterCollapseRulesTest, AutoFilterSharedAliasingRules) {
   // Decorate the packet, verify attribute presence:
   auto packet = factory->NewPacket();
   ASSERT_TRUE(packet->Has<int>()) << "Filter producing a shared pointer of type int did not correctly collapse to the basic int type";
-  ASSERT_EQ(55, autowiring::get<0>(consumes->m_args)) << "Filter consuming a shared pointer output was not called as expected";
+  ASSERT_EQ(55, std::get<0>(consumes->m_args)) << "Filter consuming a shared pointer output was not called as expected";
 }
 
 TEST_F(AutoFilterCollapseRulesTest, UnsatisfiableDecoration) {

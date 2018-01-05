@@ -3,17 +3,17 @@
 #include "AnySharedPointer.h"
 #include "at_exit.h"
 #include "auto_id.h"
-#include "auto_tuple.h"
 #include "AutoFilterArgument.h"
 #include "Decompose.h"
 #include "DecorationDisposition.h"
 #include "is_any.h"
-#include "index_tuple.h"
 #include "is_shared_ptr.h"
 #include "noop.h"
 #include "TeardownNotifier.h"
+#include "tuple_find.h"
 #include <typeinfo>
 #include <unordered_set>
+#include TUPLE_HEADER
 #include CHRONO_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_MAP
@@ -748,8 +748,8 @@ public:
   static AutoPacket& CurrentPacket(void);
 
   template<typename Fn, typename Args, int... N>
-  static void CallWithChoiceTuple(Fn& fn, Args&& args, autowiring::index_tuple<N...>) {
-    fn(autowiring::get<N>(args).value...);
+  static void CallWithChoiceTuple(Fn& fn, Args&& args, std::index_sequence<N...>) {
+    fn(std::get<N>(args).value...);
   }
 
   /// <summary>
@@ -757,7 +757,7 @@ public:
   /// </summary>
   template<typename... InArgs, typename... Outputs>
   void Call(void(*pfn)(InArgs...), Outputs&... outputs) {
-    typedef typename autowiring::make_index_tuple<sizeof...(InArgs)>::type t_index;
+    typedef std::make_index_sequence<sizeof...(InArgs)> t_index;
 
     // Completely unnecessary.  Call will avoid making unneeded copies, and this is guaranteed
     // by a unit test.  Dereference your shared pointers before passing them in.
@@ -766,10 +766,10 @@ public:
       "Do not use shared pointer arguments as output arguments with Call"
     );
 
-    auto outputTuple = autowiring::tie(outputs...);
+    auto outputTuple = std::tie(outputs...);
     CallWithChoiceTuple(
       pfn,
-      autowiring::make_tuple(
+      std::make_tuple(
         autowiring::choice<InArgs, decltype(outputTuple)>{
           *this, outputTuple
         }...
@@ -783,7 +783,7 @@ public:
   /// </summary>
   template<typename Fx, typename... InArgs, typename... Outputs>
   void Call(Fx&& fx, void (Fx::*memfn)(InArgs...) const, Outputs&... outputs) {
-    typedef typename autowiring::make_index_tuple<autowiring::Decompose<decltype(&Fx::operator())>::N>::type t_index;
+    typedef std::make_index_sequence<autowiring::Decompose<decltype(&Fx::operator())>::N> t_index;
 
     // Completely unnecessary.  Call will avoid making unneeded copies, and this is guaranteed
     // by a unit test.  Dereference your shared pointers before passing them in.
@@ -792,10 +792,10 @@ public:
       "Do not use shared pointer arguments as output arguments with Call"
     );
 
-    auto outputTuple = autowiring::tie(outputs...);
+    auto outputTuple = std::tie(outputs...);
     CallWithChoiceTuple(
       fx,
-      autowiring::make_tuple(
+      std::make_tuple(
         autowiring::choice<InArgs, decltype(outputTuple)>{
           *this, outputTuple
         }...
@@ -839,10 +839,10 @@ namespace autowiring {
   template<typename Arg, typename... Outputs>
   struct choice<
     Arg,
-    autowiring::tuple<Outputs...>,
+    std::tuple<Outputs...>,
     typename std::enable_if<
     autowiring::auto_arg<Arg>::is_output &&
-      find<
+      autowiring::find<
         typename std::decay<Arg>::type,
         typename std::decay<Outputs>::type...
       >::value
@@ -850,8 +850,8 @@ namespace autowiring {
   >
   {
     static const bool is_matched = true;
-    choice(AutoPacket&, autowiring::tuple<Outputs...>& outputs):
-      value(get<Arg>(outputs))
+    choice(AutoPacket&, std::tuple<Outputs...>& outputs):
+      value(std::get<Arg>(outputs))
     {}
 
     Arg& value;
