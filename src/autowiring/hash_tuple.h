@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2017 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include STL_TUPLE_HEADER
-#include "index_tuple.h"
+#include "C++11/cpp11.h"
+#include TUPLE_HEADER
 
 namespace std
 {
@@ -26,13 +26,13 @@ namespace std
 
     // Hash each element in the tuple and mix them together
     template<int... I>
-    static size_t hash_tuple(index_tuple<I...>, const std::tuple<Types...>& value) {
+    static size_t hash_tuple(std::index_sequence<I...>, const std::tuple<Types...>& value) {
       return static_cast<size_t>(hash_combine(std::get<I>(value)...));
     }
 
   public:
     size_t operator()(const std::tuple<Types...>& value) const {
-      return hash_tuple(typename make_index_tuple<sizeof...(Types)>::type(), value);
+      return hash_tuple(typename std::make_index_sequence<sizeof...(Types)>::type(), value);
     }
   };
 }

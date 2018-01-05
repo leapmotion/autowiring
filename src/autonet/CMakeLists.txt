@@ -15,8 +15,7 @@ set(AutoNet_SRCS
 
 add_library(AutoNet STATIC ${AutoNet_SRCS})
 add_pch(AutoNet "stdafx.h" "stdafx.cpp")
-target_link_libraries(AutoNet PRIVATE Autowiring)
-set_target_properties(AutoNet PROPERTIES INTERFACE_LINK_LIBRARIES Autowiring)
+target_link_libraries(AutoNet PUBLIC Autowiring)
 
 add_subdirectory(test)
 

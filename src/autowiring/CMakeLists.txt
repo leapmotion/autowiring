@@ -23,7 +23,6 @@ set(Autowiring_SRCS
   auto_out.h
   auto_prev.h
   auto_signal.h
-  auto_tuple.h
   AutoCurrentPacketPusher.h
   AutoFilterDescriptor.h
   AutoFilterDescriptor.cpp
@@ -119,9 +118,9 @@ set(Autowiring_SRCS
   hash_tuple.h
   HeteroBlock.h
   HeteroBlock.cpp
-  index_tuple.h
   is_any.h
   is_shared_ptr.h
+  is_tuple.h
   ManualThreadPool.h
   ManualThreadPool.cpp
   marshaller.h
@@ -158,6 +157,7 @@ set(Autowiring_SRCS
   thread_specific_ptr.h
   ThreadPool.h
   ThreadPool.cpp
+  tuple_find.h
   TypeIdentifier.h
   TypeRegistry.cpp
   TypeRegistry.h
@@ -185,6 +185,7 @@ add_conditional_sources(
   C++11/memory.h
   C++11/memory_nostl11.h
   C++11/mutex.h
+  C++11/tuple.h
   C++11/unique_ptr.h
 )
 

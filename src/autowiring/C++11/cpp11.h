@@ -230,7 +230,17 @@
 /**
  * Tuple
  */
-#define STL_TUPLE_HEADER <tuple>
+#if defined(_MSC_VER) && _MSC_VER < 1910
+#define TUPLE_AVAILABLE 0
+#else
+#define TUPLE_AVAILABLE 1
+#endif
+
+#if TUPLE_AVAILABLE
+#define TUPLE_HEADER <tuple>
+#else
+#define TUPLE_HEADER <autowiring/C++11/tuple.h>
+#endif
 
  /**
  * Mutex

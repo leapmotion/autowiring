@@ -1,8 +1,7 @@
 // Copyright (C) 2012-2017 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "index_tuple.h"
 #include <memory>
-#include <tuple>
+#include TUPLE_HEADER
 
 namespace autowiring {
   // Callable wrapper type, always invoked in a synchronized context
@@ -25,14 +24,14 @@ namespace autowiring {
     std::tuple<typename std::decay<Args>::type...> args;
 
     template<int... N>
-    void call(index_tuple<N...>) {
+    void call(std::index_sequence<N...>) {
       fn(
         std::move(std::get<N>(args))...
       );
     }
 
     void operator()() override {
-      call(typename make_index_tuple<sizeof...(Args)>::type{});
+      call(typename std::make_index_sequence<sizeof...(Args)>{});
     }
   };
 

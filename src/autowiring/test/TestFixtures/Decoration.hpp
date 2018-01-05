@@ -2,9 +2,8 @@
 #pragma once
 #include <autowiring/CoreThread.h>
 #include <autowiring/auto_out.h>
-#include <autowiring/auto_tuple.h>
 #include <autowiring/has_autofilter.h>
-#include STL_TUPLE_HEADER
+#include TUPLE_HEADER
 
 /// <summary>
 /// A simple "decoration" class which will be added to a variety of sample packets
@@ -150,11 +149,11 @@ public:
       ASSERT_FALSE(cur) << "Packet was already decorated with at least one output-only type";
 
     ++m_called;
-    m_args = autowiring::tie(args...);
+    m_args = std::tie(args...);
   }
 
   int m_called;
-  autowiring::tuple<typename std::remove_cv<typename std::decay<Args>::type>::type...> m_args;
+  std::tuple<typename std::remove_cv<typename std::decay<Args>::type>::type...> m_args;
 };
 
 /// <summary>

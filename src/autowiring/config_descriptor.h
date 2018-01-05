@@ -142,7 +142,7 @@ namespace autowiring {
 
   private:
     template<typename U, int... Ns>
-    void bind(const config_field& configField, U& field, index_tuple<Ns...>) {
+    void bind(const config_field& configField, U& field, std::index_sequence<Ns...>) {
       noop(
         (std::get<Ns>(pack).template bind<U>(configField, field), false)...
       );
@@ -153,7 +153,7 @@ namespace autowiring {
       bind<T>(
         configField,
         *static_cast<T*>(pField),
-        typename make_index_tuple<sizeof...(Ms)>::type{}
+        typename std::make_index_sequence<sizeof...(Ms)>{}
       );
     }
   };

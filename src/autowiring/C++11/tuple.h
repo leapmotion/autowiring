@@ -1,26 +1,27 @@
 // Copyright (C) 2012-2017 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "is_any.h"
-#include "index_tuple.h"
-#include "sum.h"
+#include "cpp11.h"
 #include <memory>
 
-namespace autowiring {
+#if TUPLE_AVAILABLE
+#include <tuple>
+#include <utility>
+#else
+#include "../is_any.h"
+#include "../sum.h"
+#endif
+
+#if TUPLE_AVAILABLE
+using std::tuple;
+using std::index_sequence;
+using std::integer_sequence;
+#else
+namespace std {
   /// <summary>
   /// Autowiring specialized tuple type
   /// </summary>
   template<class... Args>
   struct tuple {};
-
-  template<typename T>
-  struct is_tuple {
-    static const bool value = false;
-  };
-
-  template<typename... Args>
-  struct is_tuple<tuple<Args...>> {
-    static const bool value = true;
-  };
 
   /// <summary>
   /// Finds the specified type T in the argument pack
@@ -214,4 +215,28 @@ namespace autowiring {
   tuple<Args...> make_tuple(Args&&... args) {
     return tuple<Args...>(std::forward<Args&&>(args)...);
   }
-}
+
+  /// <summary>
+/// Utility type which enables the composition of a sequence [0, sizeof...(Ts))
+/// </summary>
+template<int ...>
+struct index_sequence {};
+
+template<unsigned int N, unsigned int... S>
+struct make_index_sequence: make_index_sequence<N - 1, N - 1, S...> {};
+
+template<unsigned int... S>
+struct make_index_sequence<0, S...> {
+  typedef index_sequence<S...> type;
+};
+
+static_assert(
+  std::is_same<
+    make_index_sequence<3>::type,
+    index_sequence<0,1,2>
+  >::value,
+  "Index tuple base case was not correctly specialized"
+);
+
+#endif
+

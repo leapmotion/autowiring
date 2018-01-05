@@ -2,12 +2,11 @@
 #pragma once
 #include "auto_arg.h"
 #include "auto_in.h"
-#include "auto_tuple.h"
 #include "AutoPacket.h"
 #include "CurrentContextPusher.h"
 #include "Decompose.h"
-#include "index_tuple.h"
 #include "noop.h"
+#include TUPLE_HEADER
 
 class Deferred;
 
@@ -15,6 +14,20 @@ namespace autowiring {
 
 // The type of the call centralizer
 typedef void(*t_extractedCall)(const void* obj, AutoPacket&);
+
+
+  template<int N, class... Args>
+  struct nth_type;
+
+  template<class Head, class... Tail>
+  struct nth_type<0, Head, Tail...> {
+    typedef Head type;
+  };
+
+  template<int N, class Head, class... Tail>
+  struct nth_type<N, Head, Tail...> :
+    nth_type<N - 1, Tail...>
+  {};
 
 /// <summary>
 /// An argument pack that holds all of the inputs and outputs to an AutoFilter during its invocation
@@ -30,14 +43,14 @@ struct CESetup {
 
   AutoPacket& packet;
   CurrentContextPusher pshr;
-  autowiring::tuple<typename auto_arg<Args>::type...> args;
+  std::tuple<typename auto_arg<Args>::type...> args;
 
   template<int N>
   typename std::enable_if<
     auto_arg<typename autowiring::nth_type<N, Args...>::type>::is_output,
     bool
   >::type Commit(bool) {
-    auto_arg<typename autowiring::nth_type<N, Args...>::type>::Commit(packet, autowiring::get<N>(args));
+    auto_arg<typename autowiring::nth_type<N, Args...>::type>::Commit(packet, std::get<N>(args));
     return true;
   }
 
@@ -57,14 +70,14 @@ struct CESetup<>
   bool Commit(...) { return false; }
 };
 
-template<class MemFn, class Index = typename make_index_tuple<Decompose<MemFn>::N>::type>
+template<class MemFn, class Index = typename std::make_index_sequence<Decompose<MemFn>::N>>
 struct CE;
 
 /// <summary>
 /// Specialization for nonmember function calls
 /// </summary>
 template<class RetType, class... Args, int... N>
-struct CE<RetType (*)(Args...), index_tuple<N...>>:
+struct CE<RetType (*)(Args...), std::index_sequence<N...>>:
   Decompose<RetType(*)(Args...)>
 {
   typedef CESetup<Args...> t_ceSetup;
@@ -82,7 +95,7 @@ struct CE<RetType (*)(Args...), index_tuple<N...>>:
     // Setup, handoff, commit
     t_ceSetup extractor(packet);
     ((t_pfn)pfn)(
-      static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
+      static_cast<typename auto_arg<Args>::arg_type>(std::get<N>(extractor.args))...
     );
     autowiring::noop(extractor.template Commit<N>(false)...);
   }
@@ -92,7 +105,7 @@ struct CE<RetType (*)(Args...), index_tuple<N...>>:
 /// Specialization for member function AutoFilter functions
 /// </summary>
 template<class T, class... Args, int... N>
-struct CE<void (T::*)(Args...), index_tuple<N...>> :
+struct CE<void (T::*)(Args...), std::index_sequence<N...>> :
   Decompose<void (T::*)(Args...)>
 {
   typedef CESetup<Args...> t_ceSetup;
@@ -106,7 +119,7 @@ struct CE<void (T::*)(Args...), index_tuple<N...>> :
     // Extract, call, commit
     t_ceSetup extractor(packet);
     (((T*) pObj)->*memFn)(
-      static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
+      static_cast<typename auto_arg<Args>::arg_type>(std::get<N>(extractor.args))...
     );
     autowiring::noop(extractor.template Commit<N>(false)...);
   }
@@ -116,7 +129,7 @@ struct CE<void (T::*)(Args...), index_tuple<N...>> :
 /// Specialization for stateless member function AutoFilter routines
 /// </summary>
 template<class T, class... Args, int... N>
-struct CE<void (T::*)(Args...) const, index_tuple<N...>> :
+struct CE<void (T::*)(Args...) const, std::index_sequence<N...>> :
   Decompose<void (T::*)(Args...)>
 {
   typedef CESetup<Args...> t_ceSetup;
@@ -127,7 +140,7 @@ struct CE<void (T::*)(Args...) const, index_tuple<N...>> :
     // Extract, call, commit
     t_ceSetup extractor(packet);
     (((const T*) pObj)->*memFn)(
-      static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
+      static_cast<typename auto_arg<Args>::arg_type>(std::get<N>(extractor.args))...
     );
     autowiring::noop(extractor.template Commit<N>(false)...);
   }
@@ -137,7 +150,7 @@ struct CE<void (T::*)(Args...) const, index_tuple<N...>> :
 /// Specialization for deferred member function AutoFilter routines
 /// </summary>
 template<class T, class... Args, int... N>
-struct CE<Deferred(T::*)(Args...), index_tuple<N...>> :
+struct CE<Deferred(T::*)(Args...), std::index_sequence<N...>> :
   Decompose<void (T::*)(Args...)>
 {
   typedef CESetup<Args...> t_ceSetup;
@@ -156,7 +169,7 @@ struct CE<Deferred(T::*)(Args...), index_tuple<N...>> :
       // Extract, call, commit
       t_ceSetup extractor(*pAutoPacket);
       (((T*) pObj)->*memFn)(
-        static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
+        static_cast<typename auto_arg<Args>::arg_type>(std::get<N>(extractor.args))...
       );
       autowiring::noop(extractor.template Commit<N>(false)...);
     };
