@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2017 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2018 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/CoreThread.h>
 #include ATOMIC_HEADER
