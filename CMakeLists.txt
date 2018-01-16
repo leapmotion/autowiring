@@ -23,9 +23,8 @@ endif()
 
 # Enable conformance mode for newer versions of MSVC
 if(MSVC_VERSION GREATER 1910)
-  string(APPEND CMAKE_CXX_FLAGS " /d1parsePackExpressions-")
+  string(APPEND CMAKE_CXX_FLAGS " /permissive-")
 endif()
-
 
 add_definitions(-DGTEST_HAS_TR1_TUPLE=0)
 
