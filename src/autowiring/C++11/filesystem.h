@@ -2,9 +2,13 @@
 #pragma once
 
 //C++17 Filesystem standard
-#if defined(_MSC_VER) && _MSC_VER >= 1900 //weirdly, only MSVC 2015 supports this so far.
-#include <filesystem>
-namespace awfsnamespace = std::tr2::sys;
+#if defined(_MSC_VER) && _MSC_VER >= 1900
+  #include <filesystem>
+#if _MSC_VER >= 1910
+    namespace awfsnamespace = std::experimental::filesystem;
+  #else
+    namespace awfsnamespace = std::tr2::sys;
+  #endif
 #else
 // Experimental filesystem TS library is rare everywhere else, we have to resort to autoboost
 #include <autoboost/filesystem.hpp>
