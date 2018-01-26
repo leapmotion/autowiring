@@ -531,6 +531,7 @@ public:
   template<class T, typename... Args>
   const T& Emplace(Args&&... args) {
     static_assert(!std::is_pointer<T>::value, "Can't decorate using a pointer type.");
+
     // Create a copy of the input, put the copy in a shared pointer
     auto ptr = std::shared_ptr<T>(new T(std::forward<Args&&>(args)...));
     Decorate(
