@@ -34,6 +34,20 @@ public:
   /// The name assigned to a thread is visible in some debuggers.
   /// <param name="pName">An optional name for this thread.</param>
   CoreThread(const char* pName = nullptr);
+  /// Constructs a core thread object with priority and a name.
+  ///
+  /// The name assigned to a thread is visible in some debuggers.
+  /// <param name="threadPriority">A priority for this thread.</param>
+  /// <param name="pName">An optional name for this thread.</param>
+  CoreThread(ThreadPriority threadPriority, const char* pName = nullptr);
+  /// Constructs a core thread object with priority, scheduling policy,
+  /// and a name.
+  ///
+  /// The name assigned to a thread is visible in some debuggers.
+  /// <param name="threadPriority">A priority for this thread.</param>
+  /// <param name="schedPolicy">A scheduling policy for this thread.</param>
+  /// <param name="pName">An optional name for this thread.</param>
+  CoreThread(ThreadPriority threadPriority, SchedulingPolicy schedPolicy, const char* pName = nullptr);
   virtual ~CoreThread(void);
 
 protected:

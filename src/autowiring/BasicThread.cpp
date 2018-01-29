@@ -14,15 +14,38 @@
 
 using namespace autowiring;
 
+std::atomic<SchedulingPolicy> BasicThread::s_schedulingPolicy{ SchedulingPolicy::StandardRoundRobin };
+
 static auto mainTID = std::this_thread::get_id();
 
 BasicThread::BasicThread(const char* pName):
   ContextMember(pName),
-  m_state(std::make_shared<BasicThreadStateBlock>())
+  m_state(std::make_shared<BasicThreadStateBlock>(ThreadPriority::Default, s_schedulingPolicy))
+{}
+
+BasicThread::BasicThread(ThreadPriority threadPriority, const char* pName):
+  ContextMember(pName),
+  m_state(std::make_shared<BasicThreadStateBlock>(threadPriority, s_schedulingPolicy))
+{}
+
+BasicThread::BasicThread(ThreadPriority threadPriority, SchedulingPolicy schedPolicy, const char* pName):
+ ContextMember(pName),
+ m_state(std::make_shared<BasicThreadStateBlock>(threadPriority, schedPolicy))
 {}
 
 BasicThread::~BasicThread(void) {
   NotifyTeardownListeners();
+}
+
+SchedulingPolicy BasicThread::SetDefaultSchedulingPolicy(SchedulingPolicy schedPolicy) {
+  SchedulingPolicy oldSchedPolicy = s_schedulingPolicy;
+  while (!s_schedulingPolicy.compare_exchange_strong(oldSchedPolicy, schedPolicy))
+    ; // empty body
+  return oldSchedPolicy;
+}
+
+SchedulingPolicy BasicThread::GetDefaultSchedulingPolicy(void) {
+  return s_schedulingPolicy;
 }
 
 std::mutex& BasicThread::GetLock(void) const {
@@ -212,41 +235,55 @@ bool BasicThread::IsMainThread(void) {
 
 ThreadPriority BasicThread::GetThreadPriority(void) {
   std::lock_guard<std::mutex> lk(m_state->m_threadLock);
-  return m_state->m_priority;
+  return m_state->m_threadPriority;
+}
+
+SchedulingPolicy BasicThread::GetSchedulingPolicy(void) {
+  std::lock_guard<std::mutex> lk(m_state->m_threadLock);
+  return m_state->m_schedPolicy;
 }
 
 void BasicThread::UpdateThreadPriority(std::unique_lock<std::mutex>&& lock) {
   if (m_state->m_thisThread.get_id() == std::thread::id())
     return;
-  SetThreadPriority(m_state->m_thisThread.native_handle(), m_state->m_priority);
+  SetThreadPriority(m_state->m_thisThread.native_handle(), m_state->m_threadPriority, m_state->m_schedPolicy);
 }
 
 ThreadPriority BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
   std::unique_lock<std::mutex> lk(m_state->m_threadLock);
-  ThreadPriority prevThreadPriority = m_state->m_priority;
-  m_state->m_priority = threadPriority;
+  ThreadPriority prevThreadPriority = m_state->m_threadPriority;
+  m_state->m_threadPriority = threadPriority;
+  UpdateThreadPriority(std::move(lk));
+  return prevThreadPriority;
+}
+
+ThreadPriority BasicThread::SetThreadPriority(ThreadPriority threadPriority, SchedulingPolicy schedPolicy) {
+  std::unique_lock<std::mutex> lk(m_state->m_threadLock);
+  ThreadPriority prevThreadPriority = m_state->m_threadPriority;
+  m_state->m_threadPriority = threadPriority;
+  m_state->m_schedPolicy = schedPolicy;
   UpdateThreadPriority(std::move(lk));
   return prevThreadPriority;
 }
 
 ThreadPriority BasicThread::ElevateThreadPriority(ThreadPriority threadPriority) {
   std::unique_lock<std::mutex> lk(m_state->m_threadLock);
-  ThreadPriority prevThreadPriority = m_state->m_priority;
-  if (threadPriority < m_state->m_priority) {
+  ThreadPriority prevThreadPriority = m_state->m_threadPriority;
+  if (threadPriority < m_state->m_threadPriority) {
     return prevThreadPriority;
   }
-  m_state->m_priority = threadPriority;
+  m_state->m_threadPriority = threadPriority;
   UpdateThreadPriority(std::move(lk));
   return prevThreadPriority;
 }
 
 ThreadPriority BasicThread::DeelevateThreadPriority(ThreadPriority threadPriority) {
   std::unique_lock<std::mutex> lk(m_state->m_threadLock);
-  ThreadPriority prevThreadPriority = m_state->m_priority;
-  if (threadPriority >= m_state->m_priority) {
+  ThreadPriority prevThreadPriority = m_state->m_threadPriority;
+  if (threadPriority >= m_state->m_threadPriority) {
     return prevThreadPriority;
   }
-  m_state->m_priority = threadPriority;
+  m_state->m_threadPriority = threadPriority;
   UpdateThreadPriority(std::move(lk));
   return prevThreadPriority;
 }

@@ -1,17 +1,13 @@
 // Copyright (C) 2012-2018 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include MEMORY_HEADER
-#include MUTEX_HEADER
-#include THREAD_HEADER
-
-enum class ThreadPriority;
+#include "BasicThread.h"
 
 namespace autowiring {
 
 struct BasicThreadStateBlock:
   std::enable_shared_from_this<BasicThreadStateBlock>
 {
-  BasicThreadStateBlock(void);
+  BasicThreadStateBlock(ThreadPriority threadPriority, SchedulingPolicy schedPolicy);
   ~BasicThreadStateBlock(void);
 
   // Lock used to protect the actual thread
@@ -24,7 +20,8 @@ struct BasicThreadStateBlock:
   // The current thread, if running
   std::thread m_thisThread;
 
-  ThreadPriority m_priority;
+  ThreadPriority m_threadPriority;
+  SchedulingPolicy m_schedPolicy;
 
   // Completion condition, true when this thread is no longer running and has run at least once
   bool m_completed = false;

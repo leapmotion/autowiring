@@ -60,7 +60,7 @@ bool SetCapturePriority(void) {
   return true;
 }
 
-void BasicThread::SetThreadPriority(const std::thread::native_handle_type& handle, ThreadPriority threadPriority) {
+void BasicThread::SetThreadPriority(const std::thread::native_handle_type& handle, ThreadPriority threadPriority, SchedulingPolicy schedPolicy) {
   int nPriority;
   switch(threadPriority) {
   case ThreadPriority::Idle:

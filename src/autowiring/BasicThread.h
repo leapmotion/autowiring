@@ -7,6 +7,7 @@
 #include MEMORY_HEADER
 #include MUTEX_HEADER
 #include THREAD_HEADER
+#include <atomic>
 
 class BasicThread;
 class CoreContext;
@@ -19,8 +20,9 @@ namespace autowiring {
 /// Thread priority classifications from low to high.
 /// </summary>
 /// <remarks>
-/// Use the ThreadPriority enumeration with the BasicThread::ElevatePriority class
-/// to raise the priority of a thread when needed.
+/// Use the ThreadPriority enumeration with BasicThread::BasicThread,
+/// BasicThread::SetThreadPriority, or the BasicThread::ElevatePriority class
+/// to adjust the priority of a thread when needed.
 /// </remarks>
 enum class ThreadPriority {
   /// This is the default thread priority. It is treated as a value lower than any of the
@@ -41,6 +43,25 @@ enum class ThreadPriority {
   /// can provide additional scheduling guarantees to applications which declare themselves as
   /// multimedia-intensive in nature.  For other systems, Multimedia is identical to TimeCritical.
   Multimedia
+};
+
+/// <summary>
+/// Scheduling policies.
+/// </summary>
+/// <remarks>
+/// Use the SchedulingPolicy enumeration with BasicThread::BasicThread,
+/// BasicThread::SetThreadPriority, BasicThread::SetSchedulingPolicy, or
+/// BasicThread::SetDefaultSchedulingPolicy. Not all platforms support the scheduling policy.
+/// </remarks>
+enum class SchedulingPolicy {
+  /// This is the default scheduling policy used by all new threads. It is a standard
+  /// round-robin policy. It will also run with a lower priority than any of the realtime
+  /// policies.
+  StandardRoundRobin,
+
+  /// For time-critical applications, realtime policies may be used:
+  RealtimeFIFO, ///< A realtime first-in, first-out policy
+  RealtimeRoundRobin ///< A realtime round-robin policy
 };
 
 /// <summary>
@@ -71,7 +92,26 @@ public:
   /// Creates a BasicThread object.
   /// <param name="pName">An optional name for this thread. The name is visible in some debuggers.</param>
   BasicThread(const char* pName = nullptr);
+  /// Creates a BasicThread object with the specified thread priority and name.
+  /// <param name="threadPriority">A priority for this thread.</param>
+  /// <param name="pName">An optional name for this thread. The name is visible in some debuggers.</param>
+  BasicThread(ThreadPriority threadPriority, const char* pName = nullptr);
+  /// Creates a BasicThread object with the specified thread priority, scheduling policy, and name.
+  /// <param name="threadPriority">A priority for this thread.</param>
+  /// <param name="schedPolicy">A scheduling policy for this thread.</param>
+  /// <param name="pName">An optional name for this thread. The name is visible in some debuggers.</param>
+  BasicThread(ThreadPriority threadPriority, SchedulingPolicy schedPolicy, const char* pName = nullptr);
   virtual ~BasicThread(void);
+
+  /// <summary>
+  /// Set the default scheduling policy to use for newly created threads
+  /// </summary>
+  static SchedulingPolicy SetDefaultSchedulingPolicy(SchedulingPolicy schedPolicy);
+
+  /// <summary>
+  /// Get the current default scheduling policy
+  /// </summary>
+  static SchedulingPolicy GetDefaultSchedulingPolicy(void);
 
   /// \internal Only implemented on Windows (as of 0.4.1).
   /// <summary>
@@ -93,10 +133,10 @@ public:
     /// Elevates the priority of a BasicThread instance if the specified priority is higher
     /// then the current thread priority. Destroy this ElevatePriority instance
     /// to restore the normal thread priority.
-    ElevatePriority(BasicThread& thread, ThreadPriority priority) :
+    ElevatePriority(BasicThread& thread, ThreadPriority threadPriority) :
       m_thread(thread),
       // Elevate if the new level is greater than the current level:
-      m_oldPriority(thread.ElevateThreadPriority(priority))
+      m_oldPriority(thread.ElevateThreadPriority(threadPriority))
     {
     }
 
@@ -113,6 +153,9 @@ public:
   };
 
 protected:
+  /// The default scheduling policy used when creating threads (defaults to StandardRoundRobin)
+  static std::atomic<SchedulingPolicy> s_schedulingPolicy;
+
   // Internally held thread status block.  This has to be a shared pointer because we need to signal
   // the held state condition after releasing all shared pointers to ourselves, and this could mean
   // we're actually signalling this event after we free ourselves.
@@ -151,6 +194,32 @@ protected:
   ThreadPriority SetThreadPriority(ThreadPriority threadPriority);
 
   /// <summary>
+  /// Sets the thread priority and scheduling policy of this thread
+  /// </summary>
+  /// <remarks>
+  /// This method may be called while the thread is running, or before it starts to run.  If it is
+  /// invoked before the thread starts to run, the thread will take on the specified priority and
+  /// scheduling policy when it is started.
+  /// </remarks>
+  /// <returns>
+  /// The previous thread priority
+  /// </returns>
+  ThreadPriority SetThreadPriority(ThreadPriority threadPriority, SchedulingPolicy schedPolicy);
+
+  /// <summary>
+  /// Sets the scheduling policy of this thread
+  /// </summary>
+  /// <remarks>
+  /// This method may be called while the thread is running, or before it starts to run.  If it is
+  /// invoked before the thread starts to run, the thread will take on the scheduling policy when
+  /// it is started.
+  /// </remarks>
+  /// <returns>
+  /// The previous thread priority
+  /// </returns>
+  SchedulingPolicy SetSchedulingPolicy(SchedulingPolicy schedPolicy);
+
+  /// <summary>
   /// Sets the thread priority of this thread only if it elevates the priority
   /// </summary>
   /// <remarks>
@@ -176,10 +245,10 @@ protected:
   /// </returns>
   ThreadPriority DeelevateThreadPriority(ThreadPriority threadPriority);
 
-  /// <summary<>
-  /// Low-level function to set the thread priority
+  /// <summary>
+  /// Low-level function to set the thread priority and scheduling policy
   /// </summary>
-  static void SetThreadPriority(const std::thread::native_handle_type& handle, ThreadPriority threadPriority);
+  static void SetThreadPriority(const std::thread::native_handle_type& handle, ThreadPriority threadPriority, SchedulingPolicy schedPolicy);
 
   /// <summary>
   /// Recovers a general lock used to synchronize entities in this thread internally.
@@ -247,6 +316,11 @@ public:
   /// The current thread priority
   /// </returns>
   ThreadPriority GetThreadPriority(void);
+
+  /// <returns>
+  /// The current scheduling policy
+  /// </returns>
+  SchedulingPolicy GetSchedulingPolicy(void);
 
   /// <returns>
   /// True if this thread has transitioned to a completed state
