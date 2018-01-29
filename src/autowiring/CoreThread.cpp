@@ -8,6 +8,14 @@ CoreThread::CoreThread(const char* pName):
   BasicThread(pName)
 {}
 
+CoreThread::CoreThread(ThreadPriority threadPriority, const char* pName):
+  BasicThread(threadPriority, pName)
+{}
+
+CoreThread::CoreThread(ThreadPriority threadPriority, SchedulingPolicy schedPolicy, const char* pName):
+  BasicThread(threadPriority, schedPolicy, pName)
+{}
+
 CoreThread::~CoreThread(void){}
 
 void CoreThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<CoreObject>&& refTracker) {

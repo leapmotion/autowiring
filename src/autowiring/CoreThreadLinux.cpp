@@ -28,11 +28,25 @@ void BasicThread::GetThreadTimes(std::chrono::milliseconds& kernelTime, std::chr
   userTime = std::chrono::duration_cast<milliseconds>(seconds(usage.ru_utime.tv_sec) + microseconds(usage.ru_utime.tv_usec));
 }
 
-void BasicThread::SetThreadPriority(const std::thread::native_handle_type& handle, ThreadPriority threadPriority) {
+void BasicThread::SetThreadPriority(const std::thread::native_handle_type& handle, ThreadPriority threadPriority, SchedulingPolicy schedPolicy) {
   struct sched_param param = { 0 };
   int policy = SCHED_OTHER;
   int percent = 0;
-  int min_priority;
+
+  switch (schedPolicy) {
+  case SchedulingPolicy::StandardRoundRobin:
+    policy = SCHED_OTHER;
+    break;
+  case SchedulingPolicy::RealtimeFIFO:
+    policy = SCHED_FIFO;
+    break;
+  case SchedulingPolicy::RealtimeRoundRobin:
+    policy = SCHED_RR;
+    break;
+  default:
+    throw std::invalid_argument("Attempted to assign an unrecognized scheduling policy");
+    break;
+  }
 
   switch (threadPriority) {
   case ThreadPriority::Idle:
@@ -59,14 +73,18 @@ void BasicThread::SetThreadPriority(const std::thread::native_handle_type& handl
     percent = 83;
     break;
   case ThreadPriority::TimeCritical:
+    percent = 99;
+    break;
   case ThreadPriority::Multimedia:
     percent = 100;
     break;
   default:
     throw std::invalid_argument("Attempted to assign an unrecognized thread priority");
   }
-  min_priority = sched_get_priority_min(policy);
-  pthread_getschedparam(handle, &policy, &param);
-  param.sched_priority = min_priority + (percent * (sched_get_priority_max(policy) - min_priority) + 50) / 100;
+  int min_priority = sched_get_priority_min(policy);
+  int max_priority = sched_get_priority_max(policy);
+  int prev_policy;
+  pthread_getschedparam(handle, &prev_policy, &param);
+  param.sched_priority = min_priority + (percent * (max_priority - min_priority) + 50) / 100;
   pthread_setschedparam(handle, policy, &param);
 }

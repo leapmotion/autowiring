@@ -5,8 +5,9 @@
 
 using namespace autowiring;
 
-BasicThreadStateBlock::BasicThreadStateBlock(void) :
-  m_priority{ ThreadPriority::Default }
+BasicThreadStateBlock::BasicThreadStateBlock(ThreadPriority threadPriority, SchedulingPolicy schedPolicy) :
+  m_threadPriority{ threadPriority },
+  m_schedPolicy{ schedPolicy }
 {}
 
 BasicThreadStateBlock::~BasicThreadStateBlock(void)
