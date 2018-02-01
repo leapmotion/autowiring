@@ -130,6 +130,8 @@ function(standard_project_postinit)
   # CMAKE_SYSTEM_PROCESSOR is set by the toolchain, so must happen strictly after project()
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
     set(standard_BUILD_ARCHITECTURES "aarch64" PARENT_SCOPE)
+  elseif(CMAKE_SYSTEM_NAME MATCHES "Android")
+    set(standard_BUILD_ARCHITECTURES "${CMAKE_ANDROID_ARCH_ABI}" PARENT_SCOPE) #prevent mixing armeabi & armeabi-v7a
   elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm")
     set(standard_BUILD_ARCHITECTURES "arm" PARENT_SCOPE)
   elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64;i386")
