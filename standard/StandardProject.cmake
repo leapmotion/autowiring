@@ -16,27 +16,37 @@ does the following:
 
 include(CMakeParseArguments) # Backwards compatibility
 
-# This must be a macro since project defines scope-local variables
-# that we generally rely on being in the root context.
 # IMPORTANT: Note that if there is no *direct* call to 'project' in the root CMakeLists.txt
 # file, CMake will automatically inject one with the default languages of C and CXX.
 # This will cause the toolchain file to be parsed multiple times, and will
 # make much of the work done in standard_project_preinit useless.
 macro(standard_project project_name)
-  cmake_parse_arguments(standard "" "VERSION" "LANGUAGES" ${ARGN})
+  message(AUTHOR_WARNING "Standard_project has been replaced by an override of project.")
+  project(${ARGV})
+endmacro()
 
-  if(NOT standard_VERSION)
-    message(FATAL_ERROR "Standard compliant projects must specify a version")
+if(NOT DEFINED standard_project_OVERRIDE)
+  set(standard_project_OVERRIDE ON)
+endif()
+
+# This must be a macro since project defines scope-local variables
+# that we generally rely on being in the root context.
+macro(project project_name)
+  if(standard_project_OVERRIDE)
+    cmake_parse_arguments(standard "" "VERSION" "" ${ARGN})
+
+    if(NOT standard_VERSION)
+      message(FATAL_ERROR "Standard compliant projects must specify a version")
+    endif()
+
+    standard_project_preinit()
+    _project(${project_name} VERSION ${standard_VERSION} ${standard_UNPARSED_ARGUMENTS})
+    standard_project_postinit()
+
+    set(standard_project_OVERRIDE OFF) #we generally only want to modify the root project.
+  else()
+    _project(${ARGV})
   endif()
-
-  set(_language_arg "")
-  if(standard_LANGUAGES)
-    set(_language_arg LANGUAGES ${standard_LANGUAGES})
-  endif()
-
-  standard_project_preinit()
-  project(${project_name} VERSION ${standard_VERSION} ${_language_arg})
-  standard_project_postinit()
 endmacro()
 
 function(standard_project_preinit)
@@ -48,6 +58,21 @@ function(standard_project_preinit)
     else()
       # Build Fat binaries on OSX by default
       set(CMAKE_OSX_ARCHITECTURES "x86_64;i386" CACHE STRING "Mac OS X build architectures" FORCE)
+      if(NOT CMAKE_OSX_SYSROOT)
+        # CLANG_VERSION requires a sysroot to obtain, so resort to execute_process() here
+        execute_process(COMMAND clang -v ERROR_VARIABLE _clang_version)
+        if(_clang_version MATCHES "clang-7")
+          set(_developer_sdk_version 10.11)
+        elseif(_clang_version MATCHES "clang-8")
+          set(_developer_sdk_version 10.12)
+        endif()
+        if(_developer_sdk_version)
+          set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${_developer_sdk_version}.sdk" CACHE STRING "Mac OS X build environment" FORCE)
+          if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+            set(CMAKE_OSX_DEPLOYMENT_TARGET "10.10" CACHE STRING "Mac OS X deployment target" FORCE)
+          endif()
+        endif()
+      endif()
     endif()
   endif()
 
@@ -55,23 +80,6 @@ function(standard_project_preinit)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
   endif()
 
-  if(APPLE AND NOT (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm"))
-    if(NOT CMAKE_OSX_SYSROOT)
-      # CLANG_VERSION requires a sysroot to obtain, so resort to execute_process() here
-      execute_process(COMMAND clang -v ERROR_VARIABLE _clang_version)
-      if(_clang_version MATCHES "clang-7")
-        set(_developer_sdk_version 10.11)
-      elseif(_clang_version MATCHES "clang-8")
-        set(_developer_sdk_version 10.12)
-      endif()
-      if(_developer_sdk_version)
-        set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${_developer_sdk_version}.sdk" CACHE STRING "Mac OS X build environment" FORCE)
-        if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
-          set(CMAKE_OSX_DEPLOYMENT_TARGET "10.10" CACHE STRING "Mac OS X deployment target" FORCE)
-        endif()
-      endif()
-    endif()
-  endif()
 endfunction()
 
 function(standard_project_postinit)
@@ -122,19 +130,16 @@ function(standard_project_postinit)
   # CMAKE_SYSTEM_PROCESSOR is set by the toolchain, so must happen strictly after project()
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
     set(standard_BUILD_ARCHITECTURES "aarch64" PARENT_SCOPE)
-    set(standard_BUILD_64 ON PARENT_SCOPE)
-  elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+  elseif(CMAKE_SYSTEM_NAME MATCHES "Android")
+    set(standard_BUILD_ARCHITECTURES "${CMAKE_ANDROID_ARCH_ABI}" PARENT_SCOPE) #prevent mixing armeabi & armeabi-v7a
+  elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm")
     set(standard_BUILD_ARCHITECTURES "arm" PARENT_SCOPE)
-    set(standard_BUILD_64 OFF PARENT_SCOPE)
   elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64;i386")
     set(standard_BUILD_ARCHITECTURES x64 x86 PARENT_SCOPE)
-    set(standard_BUILD_64 ON PARENT_SCOPE)
   elseif(CMAKE_SIZEOF_VOID_P STREQUAL 4)
     set(standard_BUILD_ARCHITECTURES "x86" PARENT_SCOPE)
-    set(standard_BUILD_64 OFF PARENT_SCOPE)
   else()
     set(standard_BUILD_ARCHITECTURES "x64" PARENT_SCOPE)
-    set(standard_BUILD_64 ON PARENT_SCOPE)
   endif()
   message(STATUS "Using architecture: ${standard_BUILD_ARCHITECTURES}")
 
