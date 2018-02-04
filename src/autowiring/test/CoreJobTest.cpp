@@ -191,7 +191,7 @@ TEST_F(CoreJobTest, PendFromMultipleThreads) {
   for (size_t i = 0; i < threads.size(); i++) {
     threads[i] = std::thread([&] {
       ctxt->DelayUntilInitiated();
-      for (int j = 0; j < times; j++) {
+      for (size_t j = 0; j < times; j++) {
         *cj += [&counter] {
           counter++; // Should be updated exclusively in the CoreJob's thread
         };
