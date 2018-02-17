@@ -36,7 +36,11 @@ template<typename T>
 class Autowired;
 
 template<typename... Sigils>
-struct Boltable;
+struct InjectBolt;
+
+//Backwards Compatibilty alias
+template<typename... Sigils>
+using Boltable = InjectBolt<Sigils...>;
 
 template<class T>
 class CoreContextT;
@@ -269,7 +273,7 @@ protected:
 
   // Enables a boltable class
   template<typename T, typename... Sigils>
-  void EnableInternal(T*, Boltable<Sigils...>*) {
+  void EnableInternal(T*, InjectBolt<Sigils...>*) {
     autowiring::noop((AutoRequireMicroBolt<T, Sigils>(),false)...);
   }
 
@@ -514,7 +518,7 @@ public:
   /// </summary>
   template<class T, class... Sigils>
   void BoltTo(void) {
-    EnableInternal((T*)nullptr, (Boltable<Sigils...>*)nullptr);
+    EnableInternal((T*)nullptr, (InjectBolt<Sigils...>*)nullptr);
   }
 
   /// <summary>

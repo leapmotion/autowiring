@@ -10,7 +10,7 @@
 /// A bolt is a way to augment the creation of a new context in a declarative, by-name manner.
 /// By inheriting from Bolt, the object will recieve ContextCreated() calls.
 /// To create a class that will have a new instance inserted into each instance of a context
-/// with a given sigil, use Boltable.
+/// with a given sigil, use InjectBolt
 /// </remarks>
 template<typename... Sigil>
 class Bolt:

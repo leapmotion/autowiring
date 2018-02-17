@@ -8,7 +8,7 @@
 /// Causes the class inheriting from this definition to be bolted to the specified contexts
 /// </summary>
 template<typename... Sigils>
-struct Boltable {};
+struct InjectBolt {};
 
 /// <summary>
 /// A default bolt type which will insert the specified type into a matching context

@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <autowiring/autowiring.h>
 #include <autowiring/Bolt.h>
+#include <autowiring/CoreContext.h>
 #include "TestFixtures/SimpleObject.hpp"
 #include <string>
 #include <iostream>
@@ -250,4 +251,87 @@ TEST_F(BoltTest, PrePopulateBolt) {
   AutoRequired<Listener> l;
   ASSERT_TRUE(l->hit) << "Bolt was not hit after contexts were created, even though those contexts still exist";
   ASSERT_EQ(3U, l->hitCount) << "Bolt did not traverse the expected number of child contexts";
+}
+
+template<typename T, typename... Sigils>
+struct select_non_sigil {
+  using type = typename std::conditional<
+    !std::is_empty<T>::value,
+    T,
+    typename select_non_sigil<Sigils...>::type
+  >::type;
+};
+template<typename T>
+struct select_non_sigil<T> {
+  using type = typename std::conditional<!std::is_empty<T>::value, T, void>::type;
+};
+static_assert(std::is_same<typename select_non_sigil<Pipeline>::type, void>::value, "error in selecting non_sigil");
+static_assert(std::is_same<typename select_non_sigil<SimpleObject>::type, SimpleObject>::value, "error in selecting non_sigil");
+static_assert(std::is_same<typename select_non_sigil<SimpleObject, Pipeline>::type, SimpleObject>::value, "error in selecting non_sigil");
+static_assert(std::is_same<typename select_non_sigil<Pipeline, SimpleObject>::type, SimpleObject>::value, "error in selecting non_sigil");
+
+/// <summary>
+/// A default bolt type which will insert the specified type into a matching context
+/// </summary>
+template<typename T, typename... Args>
+struct InterfaceMicroBolt :
+  public Bolt<Args...>
+{
+private:
+  using Listen_t = typename select_non_sigil<Args...>::type;
+
+  template<class W>
+  static bool LoopInject(const std::shared_ptr<CoreContext>& ctxt) {
+    for (auto context : ContextEnumeratorT<W>(ctxt))
+      // Inject<W>() is idempotent, that makes this behavior safe
+      context->NotifyWhenAutowired<Listen_t>([] {
+        AutoCurrentContext()->template Inject<T>();
+      });
+    return true;
+  }
+
+public:
+  InterfaceMicroBolt(void) {
+    // NOTE: Injection of T into all matching contexts may result in
+    // multiple calls to Inject<T>() if a matching context
+    // is created during traversal.
+    const auto ctxt = CoreContext::CurrentContext();
+    autowiring::noop(LoopInject<Args>(ctxt)...);
+  }
+  void ContextCreated(void) override;
+};
+
+template<typename T, typename... Args>
+void InterfaceMicroBolt<T, Args...>::ContextCreated(void) {
+  AutoCurrentContext()->NotifyWhenAutowired<Listen_t>([] {
+    CoreContext::InjectCurrent<T>();
+  });
+}
+
+struct SimpleObject2 {};
+struct SimpleObjectListener
+{
+  SimpleObjectListener() {
+    hitCount++;
+  }
+  static int hitCount;
+};
+int SimpleObjectListener::hitCount = 0;
+
+TEST_F(BoltTest, InterfaceBolt) {
+  AutoCurrentContext ctxt;
+
+  AutoRequired<InterfaceMicroBolt<SimpleObjectListener, Pipeline, SimpleObject>> ();
+
+  AutoCreateContextT<OtherContext> p1;
+  ASSERT_EQ(0, SimpleObjectListener::hitCount) << "InterfaceBolt hit on wrong context";
+
+  AutoCreateContextT<Pipeline> p2;
+  ASSERT_EQ(0, SimpleObjectListener::hitCount) << "InterfaceBolt hit prior to interface injection";
+
+  AutoRequired<SimpleObject> obj(p1);
+  ASSERT_EQ(0, SimpleObjectListener::hitCount) << "InterfaceBolt hit on Interface injection in the wrong context";
+
+  AutoRequired<SimpleObject> obj2(p2);
+  ASSERT_EQ(1, SimpleObjectListener::hitCount) << "InterfaceBolt not hit on interface injection in the correct context";
 }
