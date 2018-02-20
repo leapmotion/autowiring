@@ -58,9 +58,13 @@ namespace autowiring {
       )
     {}
 
-#if defined(__clang__) && __clang_major__ >= 9
+#if defined(__clang__)
 #pragma clang diagnostic push
+#if __clang_major__ >= 9
 #pragma clang diagnostic ignored "-Wc++1z-compat-mangling"
+#elif __clang_major__ >= 5
+#pragma clang diagnostic ignored "-Wc++1z-compat"
+#endif
 #endif
     auto_id_block(
       int index,
