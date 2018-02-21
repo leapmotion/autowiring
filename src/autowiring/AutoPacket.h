@@ -512,7 +512,7 @@ public:
     typedef typename std::decay<T>::type TActual;
 
     // Create a copy of the input, put the copy in a shared pointer
-    auto ptr = std::make_shared<TActual>(std::forward<T&&>(t));
+    auto ptr = std::shared_ptr<TActual>(new TActual(std::forward<T&&>(t)));
     Decorate(
       AnySharedPointer(ptr),
       autowiring::DecorationKey(auto_id_t<TActual>{}, 0)
@@ -531,8 +531,9 @@ public:
   template<class T, typename... Args>
   const T& Emplace(Args&&... args) {
     static_assert(!std::is_pointer<T>::value, "Can't decorate using a pointer type.");
+
     // Create a copy of the input, put the copy in a shared pointer
-    auto ptr = std::make_shared<T>(std::forward<Args&&>(args)...);
+    auto ptr = std::shared_ptr<T>(new T(std::forward<Args&&>(args)...));
     Decorate(
       AnySharedPointer(ptr),
       autowiring::DecorationKey(auto_id_t<T>(), 0)
