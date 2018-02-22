@@ -288,11 +288,4 @@
 #endif
 
 //
-// last known and checked version is 19.00.23026 (VC++ 2015 RTM):
-#if (_MSC_VER > 1900)
-#  if defined(AUTOBOOST_ASSERT_CONFIG)
-#     error "Unknown compiler version - please run the configure tests and report the results"
-#  else
-#     pragma message("Unknown compiler version - please run the configure tests and report the results")
-#  endif
-#endif
+// last known and checked version is VC++ 2017 Version 15.6.0 Preview 5.0 (1913)
