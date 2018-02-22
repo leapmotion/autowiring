@@ -21,6 +21,7 @@
 
 #include <autoboost/utility/enable_if.hpp>
 #include <autoboost/type_traits/is_arithmetic.hpp>
+#include <autoboost/mpl/bool.hpp>
 
 namespace autoboost {
 namespace random {

@@ -158,6 +158,11 @@
 #  define AUTOBOOST_NO_CXX11_DECLTYPE_N3276
 #endif
 
+#if _MSC_FULL_VER >= 180020827
+#define AUTOBOOST_HAS_EXPM1
+#define AUTOBOOST_HAS_LOG1P
+#endif
+
 // C++11 features supported by VC++ 14 (aka 2015)
 //
 #if (_MSC_FULL_VER < 190023026)
@@ -175,6 +180,21 @@
 #  define AUTOBOOST_NO_CXX14_BINARY_LITERALS
 #  define AUTOBOOST_NO_CXX14_GENERIC_LAMBDAS
 #  define AUTOBOOST_NO_CXX14_DIGIT_SEPARATORS
+#  define AUTOBOOST_NO_CXX11_THREAD_LOCAL
+#endif
+// C++11 features supported by VC++ 14 update 3 (aka 2015)
+//
+#if (_MSC_FULL_VER < 190024210)
+#  define AUTOBOOST_NO_CXX14_VARIABLE_TEMPLATES
+#  define AUTOBOOST_NO_SFINAE_EXPR
+#  define AUTOBOOST_NO_CXX11_CONSTEXPR
+#endif
+
+// C++14 features supported by VC++ 14.1 (Visual Studio 2017)
+//
+#if (_MSC_VER < 1910)
+#  define AUTOBOOST_NO_CXX14_AGGREGATE_NSDMI
+#  define AUTOBOOST_NO_CXX14_CONSTEXPR
 #endif
 
 // MSVC including version 14 has not yet completely
@@ -193,24 +213,30 @@
 // See also: http://www.boost.org/libs/utility/value_init.htm#compiler_issues
 // (Niels Dekker, LKEB, May 2010)
 #define AUTOBOOST_NO_COMPLETE_VALUE_INITIALIZATION
-// C++11 features not supported by any versions
-#define AUTOBOOST_NO_SFINAE_EXPR
+//
+// C++ 11:
+//
 #define AUTOBOOST_NO_TWO_PHASE_NAME_LOOKUP
-//
-// This is somewhat supported in VC14, but we may need to wait for
-// a service release before enabling:
-//
-#define AUTOBOOST_NO_CXX11_CONSTEXPR
+#define AUTOBOOST_NO_CXX11_SFINAE_EXPR
 
-// C++ 14:
-#if !defined(__cpp_aggregate_nsdmi) || (__cpp_aggregate_nsdmi < 201304)
-#  define AUTOBOOST_NO_CXX14_AGGREGATE_NSDMI
+//
+// Things that don't work in clr mode:
+//
+#ifdef _M_CEE
+#ifndef AUTOBOOST_NO_CXX11_THREAD_LOCAL
+#  define AUTOBOOST_NO_CXX11_THREAD_LOCAL
 #endif
-#if !defined(__cpp_constexpr) || (__cpp_constexpr < 201304)
-#  define AUTOBOOST_NO_CXX14_CONSTEXPR
+#ifndef AUTOBOOST_NO_SFINAE_EXPR
+#  define AUTOBOOST_NO_SFINAE_EXPR
 #endif
-#if !defined(__cpp_variable_templates) || (__cpp_variable_templates < 201304)
-#  define AUTOBOOST_NO_CXX14_VARIABLE_TEMPLATES
+#ifndef AUTOBOOST_NO_CXX11_REF_QUALIFIERS
+#  define AUTOBOOST_NO_CXX11_REF_QUALIFIERS
+#endif
+#endif
+#ifdef _M_CEE_PURE
+#ifndef AUTOBOOST_NO_CXX11_CONSTEXPR
+#  define AUTOBOOST_NO_CXX11_CONSTEXPR
+#endif
 #endif
 
 //
@@ -277,8 +303,10 @@
 #     define AUTOBOOST_COMPILER_VERSION 11.0
 #   elif _MSC_VER < 1900
 #     define AUTOBOOST_COMPILER_VERSION 12.0
-#   elif _MSC_VER < 2000
+#   elif _MSC_VER < 1910
 #     define AUTOBOOST_COMPILER_VERSION 14.0
+#   elif _MSC_VER < 1920
+#     define AUTOBOOST_COMPILER_VERSION 14.1
 #   else
 #     define AUTOBOOST_COMPILER_VERSION _MSC_VER
 #   endif
@@ -288,8 +316,8 @@
 #endif
 
 //
-// last known and checked version is 19.00.23026 (VC++ 2015 RTM):
-#if (_MSC_VER > 1900)
+// last known and checked version is 19.10.25017 (VC++ 2017):
+#if (_MSC_VER > 1910)
 #  if defined(AUTOBOOST_ASSERT_CONFIG)
 #     error "Unknown compiler version - please run the configure tests and report the results"
 #  else

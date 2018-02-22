@@ -11,7 +11,9 @@
 
 #include <autoboost/version.hpp>
 #include <autoboost/chrono/chrono.hpp>
+#if defined AUTOBOOST_CHRONO_PROVIDE_HYBRID_ERROR_HANDLING
 #include <autoboost/system/system_error.hpp>
+#endif
 #include <autoboost/throw_exception.hpp>
 #include <autoboost/chrono/detail/system.hpp>
 

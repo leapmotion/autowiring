@@ -64,7 +64,7 @@ regex_error::regex_error(const std::string& s, regex_constants::error_type err, 
 }
 
 regex_error::regex_error(regex_constants::error_type err)
-   : std::runtime_error(::autoboost::re_detail::get_default_error_string(err))
+   : std::runtime_error(::autoboost::AUTOBOOST_REGEX_DETAIL_NS::get_default_error_string(err))
    , m_error_code(err)
    , m_position(0)
 {
@@ -83,7 +83,7 @@ void regex_error::raise()const
 
 
 
-namespace re_detail{
+namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL raise_runtime_error(const std::runtime_error& ex)
 {
@@ -191,7 +191,9 @@ AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL put_mem_block(void* p)
 
 #else
 
-#ifdef AUTOBOOST_HAS_THREADS
+#if defined(AUTOBOOST_REGEX_MEM_BLOCK_CACHE_LOCK_FREE)
+mem_block_cache block_cache = { { {nullptr} } } ;
+#elif defined(AUTOBOOST_HAS_THREADS)
 mem_block_cache block_cache = { 0, 0, AUTOBOOST_STATIC_MUTEX_INIT, };
 #else
 mem_block_cache block_cache = { 0, 0, };
@@ -211,7 +213,7 @@ AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL put_mem_block(void* p)
 
 #endif
 
-} // namespace re_detail
+} // namespace AUTOBOOST_REGEX_DETAIL_NS
 
 
 

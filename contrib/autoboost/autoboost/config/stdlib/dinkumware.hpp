@@ -150,11 +150,22 @@
 #if defined(__has_include)
 #if !__has_include(<shared_mutex>)
 #  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
-#elif __cplusplus < 201402
+#elif (__cplusplus < 201402) && !defined(_MSC_VER)
 #  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
 #endif
 #elif !defined(_CPPLIB_VER) || (_CPPLIB_VER < 650)
 #  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#endif
+
+// C++14 features
+#if !defined(_CPPLIB_VER) || (_CPPLIB_VER < 650)
+#  define AUTOBOOST_NO_CXX14_STD_EXCHANGE
+#endif
+
+// C++17 features
+#  define AUTOBOOST_NO_CXX17_STD_APPLY
+#if !defined(_CPPLIB_VER) || (_CPPLIB_VER < 650)
+#  define AUTOBOOST_NO_CXX17_STD_INVOKE
 #endif
 
 #if defined(AUTOBOOST_INTEL) && (AUTOBOOST_INTEL <= 1400)
@@ -183,6 +194,36 @@
 #  if defined(_HAS_AUTO_PTR_ETC) && (_HAS_AUTO_PTR_ETC == 0)
 #    define AUTOBOOST_NO_AUTO_PTR
 #  endif
+#endif
+
+
+//
+// Things not supported by the CLR:
+#ifdef _M_CEE
+#ifndef AUTOBOOST_NO_CXX11_HDR_MUTEX
+#  define AUTOBOOST_NO_CXX11_HDR_MUTEX
+#endif
+#ifndef AUTOBOOST_NO_CXX11_HDR_ATOMIC
+#  define AUTOBOOST_NO_CXX11_HDR_ATOMIC
+#endif
+#ifndef AUTOBOOST_NO_CXX11_HDR_FUTURE
+#  define AUTOBOOST_NO_CXX11_HDR_FUTURE
+#endif
+#ifndef AUTOBOOST_NO_CXX11_HDR_CONDITION_VARIABLE
+#  define AUTOBOOST_NO_CXX11_HDR_CONDITION_VARIABLE
+#endif
+#ifndef AUTOBOOST_NO_CXX11_HDR_THREAD
+#  define AUTOBOOST_NO_CXX11_HDR_THREAD
+#endif
+#ifndef AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
+#endif
+#ifndef AUTOBOOST_NO_CXX14_STD_EXCHANGE
+#  define AUTOBOOST_NO_CXX14_STD_EXCHANGE
+#endif
+#ifndef AUTOBOOST_NO_FENV_H
+#  define AUTOBOOST_NO_FENV_H
+#endif
 #endif
 
 #ifdef _CPPLIB_VER

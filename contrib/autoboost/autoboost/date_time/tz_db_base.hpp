@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_TZ_DB_BASE_HPP__
-#define AB_DATE_TIME_TZ_DB_BASE_HPP__
+#ifndef DATE_TIME_TZ_DB_BASE_HPP__
+#define DATE_TIME_TZ_DB_BASE_HPP__
 
 /* Copyright (c) 2003-2005 CrystalClear Software, Inc.
  * Subject to the Boost Software License, Version 1.0.

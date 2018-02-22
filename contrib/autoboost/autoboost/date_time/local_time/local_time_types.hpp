@@ -1,5 +1,5 @@
-#ifndef AB_LOCAL_TIME_LOCAL_TIME_TYPES_HPP__
-#define AB_LOCAL_TIME_LOCAL_TIME_TYPES_HPP__
+#ifndef LOCAL_TIME_LOCAL_TIME_TYPES_HPP__
+#define LOCAL_TIME_LOCAL_TIME_TYPES_HPP__
 
 /* Copyright (c) 2003-2004 CrystalClear Software, Inc.
  * Subject to the Boost Software License, Version 1.0.

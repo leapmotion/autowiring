@@ -15,8 +15,6 @@
 #include <cstddef> // NULL
 
 #include <autoboost/limits.hpp>
-#include <autoboost/serialization/state_saver.hpp>
-#include <autoboost/serialization/throw_exception.hpp>
 
 // including this here to work around an ICC in intel 7.0
 // normally this would be part of basic_oarchive.hpp below.
@@ -24,6 +22,10 @@
 // include this to prevent linker errors when the
 // same modules are marked export and import.
 #define AUTOBOOST_SERIALIZATION_SOURCE
+#include <autoboost/serialization/config.hpp>
+#include <autoboost/serialization/state_saver.hpp>
+#include <autoboost/serialization/throw_exception.hpp>
+#include <autoboost/serialization/extended_type_info.hpp>
 
 #include <autoboost/archive/detail/decl.hpp>
 #include <autoboost/archive/basic_archive.hpp>
@@ -31,7 +33,6 @@
 #include <autoboost/archive/detail/basic_pointer_oserializer.hpp>
 #include <autoboost/archive/detail/basic_oarchive.hpp>
 #include <autoboost/archive/archive_exception.hpp>
-#include <autoboost/serialization/extended_type_info.hpp>
 
 #ifdef AUTOBOOST_MSVC
 #  pragma warning(push)
@@ -410,18 +411,16 @@ namespace autoboost {
 namespace archive {
 namespace detail {
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 basic_oarchive::basic_oarchive(unsigned int flags)
     : pimpl(new basic_oarchive_impl(flags))
 {}
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 basic_oarchive::~basic_oarchive()
-{
-    delete pimpl;
-}
+{}
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_oarchive::save_object(
     const void *x,
     const basic_oserializer & bos
@@ -429,7 +428,7 @@ basic_oarchive::save_object(
     pimpl->save_object(*this, x, bos);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_oarchive::save_pointer(
     const void * t,
     const basic_pointer_oserializer * bpos_ptr
@@ -437,23 +436,28 @@ basic_oarchive::save_pointer(
     pimpl->save_pointer(*this, t, bpos_ptr);
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_oarchive::register_basic_serializer(const basic_oserializer & bos){
     pimpl->register_type(bos);
 }
 
-AUTOBOOST_ARCHIVE_DECL(library_version_type)
+AUTOBOOST_ARCHIVE_DECL library_version_type
 basic_oarchive::get_library_version() const{
     return AUTOBOOST_ARCHIVE_VERSION();
 }
 
-AUTOBOOST_ARCHIVE_DECL(unsigned int)
+AUTOBOOST_ARCHIVE_DECL unsigned int
 basic_oarchive::get_flags() const{
     return pimpl->m_flags;
 }
 
-AUTOBOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL void
 basic_oarchive::end_preamble(){
+}
+
+AUTOBOOST_ARCHIVE_DECL helper_collection &
+basic_oarchive::get_helper_collection(){
+	return *this;
 }
 
 } // namespace detail

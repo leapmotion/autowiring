@@ -72,7 +72,7 @@
 // boilerplate code:
 #define AUTOBOOST_HAS_UNISTD_H
 #include <autoboost/config/posix_features.hpp>
-#ifdef __USE_GNU
+#if defined(__USE_GNU) && !defined(__ANDROID__) && !defined(ANDROID)
 #define AUTOBOOST_HAS_PTHREAD_YIELD
 #endif
 

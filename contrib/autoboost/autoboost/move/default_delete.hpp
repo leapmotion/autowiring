@@ -11,6 +11,14 @@
 #ifndef AUTOBOOST_MOVE_DEFAULT_DELETE_HPP_INCLUDED
 #define AUTOBOOST_MOVE_DEFAULT_DELETE_HPP_INCLUDED
 
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <autoboost/move/detail/config_begin.hpp>
 #include <autoboost/move/detail/workaround.hpp>
 #include <autoboost/move/detail/unique_ptr_meta_utils.hpp>
@@ -23,6 +31,7 @@
 //! Describes the default deleter (destruction policy) of <tt>unique_ptr</tt>: <tt>default_delete</tt>.
 
 namespace autoboost{
+// @cond
 namespace move_upd {
 
 namespace bmupmu = ::autoboost::move_upmu;
@@ -87,7 +96,24 @@ typedef int bool_conversion::* explicit_bool_arg;
    typedef int (bool_conversion::*nullptr_type)();
 #endif
 
+template<bool B>
+struct is_array_del
+{};
+
+template<class T>
+void call_delete(T *p, is_array_del<true>)
+{
+   delete [] p;
+}
+
+template<class T>
+void call_delete(T *p, is_array_del<false>)
+{
+   delete p;
+}
+
 }  //namespace move_upd {
+// @endcond
 
 namespace movelib {
 
@@ -115,7 +141,11 @@ struct default_delete
    #endif
 
    #if defined(AUTOBOOST_MOVE_DOXYGEN_INVOKED)
+   //! Trivial copy constructor
+   //!
    default_delete(const default_delete&) AUTOBOOST_NOEXCEPT = default;
+   //! Trivial assignment
+   //!
    default_delete &operator=(const default_delete&) AUTOBOOST_NOEXCEPT = default;
    #else
    typedef typename bmupmu::remove_extent<T>::type element_type;
@@ -170,7 +200,7 @@ struct default_delete
       //and T has no virtual destructor, then you have a problem
       AUTOBOOST_STATIC_ASSERT(( !::autoboost::move_upmu::missing_virtual_destructor<default_delete, U>::value ));
       element_type * const p = static_cast<element_type*>(ptr);
-      bmupmu::is_array<T>::value ? delete [] p : delete p;
+      move_upd::call_delete(p, move_upd::is_array_del<bmupmu::is_array<T>::value>());
    }
 
    //! <b>Effects</b>: Same as <tt>(*this)(static_cast<element_type*>(nullptr))</tt>.

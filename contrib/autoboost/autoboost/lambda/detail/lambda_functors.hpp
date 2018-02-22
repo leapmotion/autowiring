@@ -300,7 +300,7 @@ public:
 
 namespace autoboost {
 
-#if !defined(AUTOBOOST_RESULT_OF_USE_DECLTYPE) || defined(AUTOBOOST_NO_DECLTYPE)
+#if !defined(AUTOBOOST_RESULT_OF_USE_DECLTYPE) || defined(AUTOBOOST_NO_CXX11_DECLTYPE)
 
 template<class T>
 struct result_of<autoboost::lambda::lambda_functor<T>()>

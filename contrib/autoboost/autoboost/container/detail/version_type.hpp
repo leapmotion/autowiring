@@ -16,7 +16,11 @@
 #ifndef AUTOBOOST_CONTAINER_DETAIL_VERSION_TYPE_HPP
 #define AUTOBOOST_CONTAINER_DETAIL_VERSION_TYPE_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -29,8 +33,6 @@
 namespace autoboost{
 namespace container {
 namespace container_detail {
-
-//using namespace autoboost;
 
 template <class T, unsigned V>
 struct version_type
@@ -95,6 +97,11 @@ struct is_version
 };
 
 }  //namespace container_detail {
+
+typedef container_detail::integral_constant<unsigned, 0> version_0;
+typedef container_detail::integral_constant<unsigned, 1> version_1;
+typedef container_detail::integral_constant<unsigned, 2> version_2;
+
 }  //namespace container {
 }  //namespace autoboost{
 

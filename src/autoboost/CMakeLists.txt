@@ -24,13 +24,13 @@ add_conditional_sources(
   "ON"
   GROUP_NAME "Autoboost"
   FILES
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/codecvt_error_category.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/operations.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/path.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/path_traits.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/portability.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/unique_path.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/utf8_codecvt_facet.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/codecvt_error_category.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/operations.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/path.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/path_traits.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/portability.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/unique_path.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/utf8_codecvt_facet.cpp
 )
 
 add_conditional_sources(
@@ -38,12 +38,12 @@ add_conditional_sources(
   "MSVC"
   GROUP_NAME "Autoboost"
   FILES
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/windows_file_codecvt.cpp
-  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/windows_file_codecvt.hpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/windows_file_codecvt.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/filesystem/src/windows_file_codecvt.hpp
 )
 
 add_library(Autoboost STATIC ${Autoboost_SRCS})
-
+target_compile_definitions(Autoboost PUBLIC AUTOBOOST_ALL_NO_LIB)
 target_include_directories(
   Autoboost
   PUBLIC

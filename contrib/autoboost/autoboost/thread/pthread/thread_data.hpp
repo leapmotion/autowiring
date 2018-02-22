@@ -24,6 +24,11 @@
 #include <vector>
 #include <utility>
 
+#if defined(__ANDROID__)
+# ifndef PAGE_SIZE
+#  define PAGE_SIZE 4096
+# endif
+#endif
 
 #include <pthread.h>
 #include <unistd.h>
@@ -110,8 +115,13 @@ namespace autoboost
             autoboost::detail::thread_exit_callback_node* thread_exit_callbacks;
             std::map<void const*,autoboost::detail::tss_data_node> tss_data;
 
+//#if defined AUTOBOOST_THREAD_PROVIDES_INTERRUPTIONS
+            // These data must be at the end so that the access to the other fields doesn't change
+            // when AUTOBOOST_THREAD_PROVIDES_INTERRUPTIONS is defined.
+            // Another option is to have them always
             pthread_mutex_t* cond_mutex;
             pthread_cond_t* current_cond;
+//#endif
             typedef std::vector<std::pair<condition_variable*, mutex*>
             //, hidden_allocator<std::pair<condition_variable*, mutex*> >
             > notify_list_t;
@@ -131,8 +141,10 @@ namespace autoboost
                 thread_handle(0),
                 done(false),join_started(false),joined(false),
                 thread_exit_callbacks(0),
+//#if defined AUTOBOOST_THREAD_PROVIDES_INTERRUPTIONS
                 cond_mutex(0),
                 current_cond(0),
+//#endif
                 notify(),
                 async_states_()
 //#if defined AUTOBOOST_THREAD_PROVIDES_INTERRUPTIONS
@@ -145,12 +157,12 @@ namespace autoboost
             typedef pthread_t native_handle_type;
 
             virtual void run()=0;
-            virtual void notify_all_autoboostat_thread_exit(condition_variable* cv, mutex* m)
+            virtual void notify_all_at_thread_exit(condition_variable* cv, mutex* m)
             {
               notify.push_back(std::pair<condition_variable*, mutex*>(cv, m));
             }
 
-            void make_ready_autoboostat_thread_exit(shared_ptr<shared_state_base> as)
+            void make_ready_at_thread_exit(shared_ptr<shared_state_base> as)
             {
               async_states_.push_back(as);
             }
@@ -216,7 +228,7 @@ namespace autoboost
 
     namespace this_thread
     {
-        namespace hiden
+        namespace hidden
         {
           void AUTOBOOST_THREAD_DECL sleep_for(const timespec& ts);
           void AUTOBOOST_THREAD_DECL sleep_until(const timespec& ts);
@@ -228,14 +240,14 @@ namespace autoboost
         inline
         void AUTOBOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns)
         {
-            return autoboost::this_thread::hiden::sleep_for(autoboost::detail::to_timespec(ns));
+            return autoboost::this_thread::hidden::sleep_for(autoboost::detail::to_timespec(ns));
         }
 #endif
 #endif // AUTOBOOST_THREAD_USES_CHRONO
 
         namespace no_interruption_point
         {
-          namespace hiden
+          namespace hidden
           {
             void AUTOBOOST_THREAD_DECL sleep_for(const timespec& ts);
             void AUTOBOOST_THREAD_DECL sleep_until(const timespec& ts);
@@ -247,7 +259,7 @@ namespace autoboost
           inline
           void AUTOBOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns)
           {
-              return autoboost::this_thread::hiden::sleep_for(autoboost::detail::to_timespec(ns));
+              return autoboost::this_thread::no_interruption_point::hidden::sleep_for(autoboost::detail::to_timespec(ns));
           }
     #endif
     #endif // AUTOBOOST_THREAD_USES_CHRONO
@@ -263,7 +275,7 @@ namespace autoboost
 #endif
         inline void sleep(system_time const& abs_time)
         {
-          return autoboost::this_thread::hiden::sleep_until(autoboost::detail::to_timespec(abs_time));
+          return autoboost::this_thread::hidden::sleep_until(autoboost::detail::to_timespec(abs_time));
         }
 
         template<typename TimeDuration>

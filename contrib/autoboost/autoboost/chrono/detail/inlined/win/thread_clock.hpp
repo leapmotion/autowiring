@@ -14,10 +14,11 @@
 #include <autoboost/chrono/config.hpp>
 #include <autoboost/chrono/thread_clock.hpp>
 #include <cassert>
+#include <autoboost/assert.hpp>
 
-#include <autoboost/detail/winapi/GetLastError.hpp>
-#include <autoboost/detail/winapi/GetCurrentThread.hpp>
-#include <autoboost/detail/winapi/GetThreadTimes.hpp>
+#include <autoboost/detail/winapi/get_last_error.hpp>
+#include <autoboost/detail/winapi/get_current_thread.hpp>
+#include <autoboost/detail/winapi/get_thread_times.hpp>
 
 namespace autoboost
 {

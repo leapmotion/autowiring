@@ -11,6 +11,7 @@
 //----------------------------------------------------------------------------//
 
 #include <time.h>  // for clock_gettime
+#include <autoboost/assert.hpp>
 
 namespace autoboost
 {

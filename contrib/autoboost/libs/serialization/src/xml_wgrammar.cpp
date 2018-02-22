@@ -15,12 +15,12 @@
 #else
 
 #define AUTOBOOST_WARCHIVE_SOURCE
+#include <autoboost/serialization/config.hpp>
 #include <autoboost/archive/impl/basic_xml_grammar.hpp>
 
 using namespace autoboost::spirit::classic;
 
 // fixup for RogueWave
-#include <autoboost/config.hpp>
 #if ! defined(__SGI_STL_PORT) \
 && defined(AUTOBOOST_RWSTD_VER) && AUTOBOOST_RWSTD_VER<=0x020101
 #include <string>

@@ -583,6 +583,25 @@ namespace std{ using ::type_info; }
 #  define AUTOBOOST_GPU_ENABLED
 #  endif
 
+// AUTOBOOST_RESTRICT ---------------------------------------------//
+// Macro to use in place of 'restrict' keyword variants
+#if !defined(AUTOBOOST_RESTRICT)
+#  if defined(_MSC_VER)
+#    define AUTOBOOST_RESTRICT __restrict
+#    if !defined(AUTOBOOST_NO_RESTRICT_REFERENCES) && (_MSC_FULL_VER < 190023026)
+#      define AUTOBOOST_NO_RESTRICT_REFERENCES
+#    endif
+#  elif defined(__GNUC__) && __GNUC__ > 3
+     // Clang also defines __GNUC__ (as 4)
+#    define AUTOBOOST_RESTRICT __restrict__
+#  else
+#    define AUTOBOOST_RESTRICT
+#    if !defined(AUTOBOOST_NO_RESTRICT_REFERENCES)
+#      define AUTOBOOST_NO_RESTRICT_REFERENCES
+#    endif
+#  endif
+#endif
+
 // AUTOBOOST_FORCEINLINE ---------------------------------------------//
 // Macro to use in place of 'inline' to force a function to be inline
 #if !defined(AUTOBOOST_FORCEINLINE)
@@ -624,10 +643,20 @@ namespace std{ using ::type_info; }
 #    define AUTOBOOST_NORETURN __declspec(noreturn)
 #  elif defined(__GNUC__)
 #    define AUTOBOOST_NORETURN __attribute__ ((__noreturn__))
-#  else
-#    define AUTOBOOST_NO_NORETURN
-#    define AUTOBOOST_NORETURN
+#  elif defined(__has_attribute) && defined(__SUNPRO_CC)
+#    if __has_attribute(noreturn)
+#      define AUTOBOOST_NORETURN [[noreturn]]
+#    endif
+#  elif defined(__has_cpp_attribute)
+#    if __has_cpp_attribute(noreturn)
+#      define AUTOBOOST_NORETURN [[noreturn]]
+#    endif
 #  endif
+#endif
+
+#if !defined(AUTOBOOST_NORETURN)
+#  define AUTOBOOST_NO_NORETURN
+#  define AUTOBOOST_NORETURN
 #endif
 
 // Branch prediction hints

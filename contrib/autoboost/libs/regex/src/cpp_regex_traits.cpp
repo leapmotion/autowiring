@@ -28,7 +28,7 @@ namespace std{
 }
 #endif
 
-namespace autoboost{ namespace re_detail{
+namespace autoboost{ namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 void cpp_regex_traits_char_layer<char>::init()
 {
@@ -51,7 +51,7 @@ void cpp_regex_traits_char_layer<char>::init()
       {
          std::string m("Unable to open message catalog: ");
          std::runtime_error err(m + cat_name);
-         autoboost::re_detail::raise_runtime_error(err);
+         autoboost::AUTOBOOST_REGEX_DETAIL_NS::raise_runtime_error(err);
       }
    }
    //
@@ -111,7 +111,7 @@ void cpp_regex_traits_char_layer<char>::init()
    }while(0xFF != i++);
 }
 
-} // re_detail
+} // AUTOBOOST_REGEX_DETAIL_NS
 } // autoboost
 #endif
 

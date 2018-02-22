@@ -33,6 +33,7 @@
 #include <autoboost/mpl/equal_to.hpp>
 #include <autoboost/mpl/greater_equal.hpp>
 #include <autoboost/mpl/identity.hpp>
+#include <autoboost/mpl/bool_fwd.hpp>
 
 #ifndef AUTOBOOST_SERIALIZATION_DEFAULT_TYPE_INFO
     #include <autoboost/serialization/extended_type_info_typeid.hpp>
@@ -55,8 +56,9 @@
 #include <autoboost/serialization/type_info_implementation.hpp>
 #include <autoboost/serialization/nvp.hpp>
 #include <autoboost/serialization/void_cast.hpp>
-#include <autoboost/serialization/array.hpp>
 #include <autoboost/serialization/collection_size_type.hpp>
+#include <autoboost/serialization/array_wrapper.hpp>
+
 #include <autoboost/serialization/singleton.hpp>
 
 #include <autoboost/archive/archive_exception.hpp>
@@ -500,7 +502,14 @@ struct save_array_type
         );
         autoboost::serialization::collection_size_type count(c);
         ar << AUTOBOOST_SERIALIZATION_NVP(count);
-        ar << serialization::make_array(static_cast<value_type const*>(&t[0]),count);
+        // explict template arguments to pass intel C++ compiler
+        ar << serialization::make_array<
+            const value_type,
+            autoboost::serialization::collection_size_type
+        >(
+            static_cast<const value_type *>(&t[0]),
+            count
+        );
     }
 };
 

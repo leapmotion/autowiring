@@ -2,8 +2,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-#ifndef AB_ITERATOR_TRAITS_DWA200347_HPP
-# define AB_ITERATOR_TRAITS_DWA200347_HPP
+#ifndef ITERATOR_TRAITS_DWA200347_HPP
+# define ITERATOR_TRAITS_DWA200347_HPP
 
 # include <autoboost/detail/iterator.hpp>
 # include <autoboost/detail/workaround.hpp>

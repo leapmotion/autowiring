@@ -30,8 +30,7 @@ extern "C" {
 #  include AUTOBOOST_ABI_PREFIX
 #endif
 
-namespace autoboost {
-namespace coroutines {
+namespace {
 
 void pagesize_( std::size_t * size)
 {
@@ -42,7 +41,7 @@ void pagesize_( std::size_t * size)
 void stacksize_limit_( rlimit * limit)
 {
     // conforming to POSIX.1-2001
-#if defined(AUTOBOOST_DISABLE_ASSERTS)
+#if defined(AUTOBOOST_DISABLE_ASSERTS) || defined(NDEBUG)
     ::getrlimit( RLIMIT_STACK, limit);
 #else
     const int result = ::getrlimit( RLIMIT_STACK, limit);
@@ -65,6 +64,11 @@ rlimit stacksize_limit()
     autoboost::call_once( flag, stacksize_limit_, & limit);
     return limit;
 }
+
+}
+
+namespace autoboost {
+namespace coroutines {
 
 bool
 stack_traits::is_unbounded() AUTOBOOST_NOEXCEPT

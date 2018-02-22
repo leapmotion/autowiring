@@ -24,6 +24,7 @@ namespace autoboost { namespace mpl {
 struct empty_sequence
 {
     struct tag;
+    typedef empty_sequence type;
     struct begin { typedef random_access_iterator_tag category; };
     typedef begin end;
 };

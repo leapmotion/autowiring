@@ -30,7 +30,7 @@
 #  ifndef AUTOBOOST_NO_CXX11_VARIADIC_MACROS
 #     define AUTOBOOST_STATIC_ASSERT_MSG( ... ) static_assert(__VA_ARGS__)
 #  else
-#     define AUTOBOOST_STATIC_ASSERT_MSG( B, Msg ) AUTOBOOST_STATIC_ASSERT( B )
+#     define AUTOBOOST_STATIC_ASSERT_MSG( B, Msg ) static_assert( B, Msg )
 #  endif
 #else
 #     define AUTOBOOST_STATIC_ASSERT_MSG( B, Msg ) AUTOBOOST_STATIC_ASSERT( B )
@@ -63,14 +63,6 @@
 #  else
 #     define AUTOBOOST_STATIC_ASSERT_BOOL_CAST(x) (bool)(x)
 #  endif
-#endif
-//
-// If the compiler warns about unused typedefs then enable this:
-//
-#if defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 7)))
-#  define AUTOBOOST_STATIC_ASSERT_UNUSED_ATTRIBUTE __attribute__((unused))
-#else
-#  define AUTOBOOST_STATIC_ASSERT_UNUSED_ATTRIBUTE
 #endif
 
 #ifndef AUTOBOOST_NO_CXX11_STATIC_ASSERT
@@ -117,14 +109,7 @@ template<int x> struct static_assert_test{};
 //
 #if !defined(AUTOBOOST_BUGGY_INTEGRAL_CONSTANT_EXPRESSIONS)
 
-#if defined(AUTOBOOST_MSVC) && (AUTOBOOST_MSVC < 1300)
-// __LINE__ macro broken when -ZI is used see Q199057
-// fortunately MSVC ignores duplicate typedef's.
-#define AUTOBOOST_STATIC_ASSERT( B ) \
-   typedef ::autoboost::static_assert_test<\
-      sizeof(::autoboost::STATIC_ASSERTION_FAILURE< (bool)( B ) >)\
-      > autoboost_static_assert_typedef_
-#elif defined(AUTOBOOST_MSVC) && defined(AUTOBOOST_NO_CXX11_VARIADIC_MACROS)
+#if defined(AUTOBOOST_MSVC) && defined(AUTOBOOST_NO_CXX11_VARIADIC_MACROS)
 #define AUTOBOOST_STATIC_ASSERT( B ) \
    typedef ::autoboost::static_assert_test<\
       sizeof(::autoboost::STATIC_ASSERTION_FAILURE< AUTOBOOST_STATIC_ASSERT_BOOL_CAST ( B ) >)>\
@@ -167,12 +152,12 @@ template<int x> struct static_assert_test{};
 #     define AUTOBOOST_STATIC_ASSERT( ... ) \
          typedef ::autoboost::static_assert_test<\
             sizeof(::autoboost::STATIC_ASSERTION_FAILURE< AUTOBOOST_STATIC_ASSERT_BOOL_CAST( __VA_ARGS__ ) >)>\
-               AUTOBOOST_JOIN(autoboost_static_assert_typedef_, __LINE__) AUTOBOOST_STATIC_ASSERT_UNUSED_ATTRIBUTE
+               AUTOBOOST_JOIN(autoboost_static_assert_typedef_, __LINE__) AUTOBOOST_ATTRIBUTE_UNUSED
 #  else
 #     define AUTOBOOST_STATIC_ASSERT( B ) \
          typedef ::autoboost::static_assert_test<\
             sizeof(::autoboost::STATIC_ASSERTION_FAILURE< AUTOBOOST_STATIC_ASSERT_BOOL_CAST( B ) >)>\
-               AUTOBOOST_JOIN(autoboost_static_assert_typedef_, __LINE__) AUTOBOOST_STATIC_ASSERT_UNUSED_ATTRIBUTE
+               AUTOBOOST_JOIN(autoboost_static_assert_typedef_, __LINE__) AUTOBOOST_ATTRIBUTE_UNUSED
 #  endif
 #endif
 

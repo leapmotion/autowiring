@@ -30,6 +30,12 @@
 #include <autoboost/atomic/detail/lockpool.hpp>
 #include <autoboost/atomic/detail/pause.hpp>
 
+#if defined(AUTOBOOST_MSVC)
+#pragma warning(push)
+// 'struct_name' : structure was padded due to __declspec(align())
+#pragma warning(disable: 4324)
+#endif
+
 namespace autoboost {
 namespace atomics {
 namespace detail {
@@ -40,46 +46,49 @@ namespace {
 // NOTE: This constant is made as a macro because some compilers (gcc 4.4 for one) don't allow enums or namespace scope constants in alignment attributes
 #define AUTOBOOST_ATOMIC_CACHE_LINE_SIZE 64
 
-template< unsigned int N >
-struct padding
-{
-    char data[N];
-};
-template< >
-struct padding< 0 >
-{
-};
-
-struct AUTOBOOST_ALIGNMENT(AUTOBOOST_ATOMIC_CACHE_LINE_SIZE) padded_lock
-{
 #if defined(AUTOBOOST_ATOMIC_USE_PTHREAD)
-    typedef pthread_mutex_t lock_type;
+typedef pthread_mutex_t lock_type;
 #else
-    typedef atomics::detail::operations< 1u, false > operations;
-    typedef operations::storage_type lock_type;
+typedef atomics::detail::operations< 1u, false > lock_operations;
+typedef lock_operations::storage_type lock_type;
 #endif
 
-    lock_type lock;
-    // The additional padding is needed to avoid false sharing between locks
-    enum { padding_size = (sizeof(lock_type) <= AUTOBOOST_ATOMIC_CACHE_LINE_SIZE ?
+enum
+{
+    padding_size = (sizeof(lock_type) <= AUTOBOOST_ATOMIC_CACHE_LINE_SIZE ?
         (AUTOBOOST_ATOMIC_CACHE_LINE_SIZE - sizeof(lock_type)) :
-        (AUTOBOOST_ATOMIC_CACHE_LINE_SIZE - sizeof(lock_type) % AUTOBOOST_ATOMIC_CACHE_LINE_SIZE)) };
-    padding< padding_size > pad;
+        (AUTOBOOST_ATOMIC_CACHE_LINE_SIZE - sizeof(lock_type) % AUTOBOOST_ATOMIC_CACHE_LINE_SIZE))
 };
 
-static padded_lock g_lock_pool[41]
+template< unsigned int PaddingSize >
+struct AUTOBOOST_ALIGNMENT(AUTOBOOST_ATOMIC_CACHE_LINE_SIZE) padded_lock
+{
+    lock_type lock;
+    // The additional padding is needed to avoid false sharing between locks
+    char padding[PaddingSize];
+};
+
+template< >
+struct AUTOBOOST_ALIGNMENT(AUTOBOOST_ATOMIC_CACHE_LINE_SIZE) padded_lock< 0u >
+{
+    lock_type lock;
+};
+
+typedef padded_lock< padding_size > padded_lock_t;
+
+static padded_lock_t g_lock_pool[41]
 #if defined(AUTOBOOST_ATOMIC_USE_PTHREAD)
 =
 {
-    PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
-    PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
-    PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
-    PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
-    PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
-    PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
-    PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
-    PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
-    PTHREAD_MUTEX_INITIALIZER
+    { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
+    { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
+    { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
+    { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
+    { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
+    { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
+    { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
+    { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
+    { PTHREAD_MUTEX_INITIALIZER }
 }
 #endif
 ;
@@ -93,15 +102,19 @@ static padded_lock g_lock_pool[41]
 AUTOBOOST_ATOMIC_DECL lockpool::scoped_lock::scoped_lock(const volatile void* addr) AUTOBOOST_NOEXCEPT :
     m_lock(&g_lock_pool[reinterpret_cast< std::size_t >(addr) % (sizeof(g_lock_pool) / sizeof(*g_lock_pool))].lock)
 {
-    while (padded_lock::operations::test_and_set(*static_cast< padded_lock::lock_type* >(m_lock), memory_order_acquire))
+    while (lock_operations::test_and_set(*static_cast< lock_type* >(m_lock), memory_order_acquire))
     {
-        atomics::detail::pause();
+        do
+        {
+            atomics::detail::pause();
+        }
+        while (!!lock_operations::load(*static_cast< lock_type* >(m_lock), memory_order_relaxed));
     }
 }
 
 AUTOBOOST_ATOMIC_DECL lockpool::scoped_lock::~scoped_lock() AUTOBOOST_NOEXCEPT
 {
-    padded_lock::operations::clear(*static_cast< padded_lock::lock_type* >(m_lock), memory_order_release);
+    lock_operations::clear(*static_cast< lock_type* >(m_lock), memory_order_release);
 }
 
 AUTOBOOST_ATOMIC_DECL void signal_fence() AUTOBOOST_NOEXCEPT;
@@ -142,3 +155,7 @@ AUTOBOOST_ATOMIC_DECL void lockpool::signal_fence() AUTOBOOST_NOEXCEPT
 } // namespace detail
 } // namespace atomics
 } // namespace autoboost
+
+#if defined(AUTOBOOST_MSVC)
+#pragma warning(pop)
+#endif

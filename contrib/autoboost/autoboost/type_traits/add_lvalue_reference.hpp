@@ -8,19 +8,20 @@
 
 #include <autoboost/type_traits/add_reference.hpp>
 
-// should be the last #include
-#include <autoboost/type_traits/detail/type_trait_def.hpp>
-
 namespace autoboost{
 
-AUTOBOOST_TT_AUX_TYPE_TRAIT_DEF1(add_lvalue_reference,T,typename autoboost::add_reference<T>::type)
+template <class T> struct add_lvalue_reference
+{
+   typedef typename autoboost::add_reference<T>::type type;
+};
 
 #ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
-AUTOBOOST_TT_AUX_TYPE_TRAIT_PARTIAL_SPEC1_1(typename T,add_lvalue_reference,T&&,T&)
+template <class T> struct add_lvalue_reference<T&&>
+{
+   typedef T& type;
+};
 #endif
 
 }
-
-#include <autoboost/type_traits/detail/type_trait_undef.hpp>
 
 #endif  // AUTOBOOST_TYPE_TRAITS_EXT_ADD_LVALUE_REFERENCE__HPP

@@ -18,7 +18,7 @@
    && !defined(AUTOBOOST_INTEL_CXX_VERSION) && \
       !(defined(AUTOBOOST_MSVC) && _MSC_VER == 1800)
 #define AUTOBOOST_TT_CXX11_IS_COPY_ASSIGNABLE
-#include <autoboost/utility/declval.hpp>
+#include <autoboost/type_traits/declval.hpp>
 #else
    //For compilers without decltype
    #include <autoboost/type_traits/is_const.hpp>
@@ -26,10 +26,6 @@
    #include <autoboost/type_traits/add_reference.hpp>
    #include <autoboost/type_traits/remove_reference.hpp>
 #endif
-
-
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
 
 namespace autoboost {
 
@@ -132,16 +128,14 @@ struct is_copy_assignable_impl {
 
 } // namespace detail
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(is_copy_assignable,T,::autoboost::detail::is_copy_assignable_impl<T>::value)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(is_copy_assignable,void,false)
+template <class T> struct is_copy_assignable : public integral_constant<bool, ::autoboost::detail::is_copy_assignable_impl<T>::value>{};
+template <> struct is_copy_assignable<void> : public false_type{};
 #ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(is_copy_assignable,void const,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(is_copy_assignable,void const volatile,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(is_copy_assignable,void volatile,false)
+template <> struct is_copy_assignable<void const> : public false_type{};
+template <> struct is_copy_assignable<void const volatile> : public false_type{};
+template <> struct is_copy_assignable<void volatile> : public false_type{};
 #endif
 
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_IS_COPY_ASSIGNABLE_HPP_INCLUDED

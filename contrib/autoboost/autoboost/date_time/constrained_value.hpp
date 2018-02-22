@@ -1,5 +1,5 @@
-#ifndef AB_CONSTRAINED_VALUE_HPP___
-#define AB_CONSTRAINED_VALUE_HPP___
+#ifndef CONSTRAINED_VALUE_HPP___
+#define CONSTRAINED_VALUE_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -39,7 +39,7 @@ namespace CV {
    *
    */
   template<class value_policies>
-  class constrained_value {
+  class AUTOBOOST_SYMBOL_VISIBLE constrained_value {
   public:
     typedef typename value_policies::value_type value_type;
     //    typedef except_type exception_type;
@@ -80,9 +80,9 @@ namespace CV {
   //! Template to shortcut the constrained_value policy creation process
   template<typename rep_type, rep_type min_value,
            rep_type max_value, class exception_type>
-  class simple_exception_policy
+  class AUTOBOOST_SYMBOL_VISIBLE simple_exception_policy
   {
-    struct exception_wrapper : public exception_type
+    struct AUTOBOOST_SYMBOL_VISIBLE exception_wrapper : public exception_type
     {
       // In order to support throw_exception mechanism in the AUTOBOOST_NO_EXCEPTIONS mode,
       // we'll have to provide a way to acquire std::exception from the exception being thrown.

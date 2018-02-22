@@ -9,40 +9,41 @@
 //  See http://www.boost.org for updates, documentation, and revision history.
 
 #define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/serialization/config.hpp>
 #include <autoboost/archive/basic_xml_archive.hpp>
 
 namespace autoboost {
 namespace archive {
 
-AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_SYMBOL_VISIBLE const char *
 AUTOBOOST_ARCHIVE_XML_OBJECT_ID(){
     return "object_id";
 }
-AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_SYMBOL_VISIBLE const char *
 AUTOBOOST_ARCHIVE_XML_OBJECT_REFERENCE(){
     return "object_id_reference";
 }
-AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_SYMBOL_VISIBLE const char *
 AUTOBOOST_ARCHIVE_XML_CLASS_ID(){
     return "class_id";
 }
-AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_SYMBOL_VISIBLE const char *
 AUTOBOOST_ARCHIVE_XML_CLASS_ID_REFERENCE(){
     return "class_id_reference";
 }
-AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_SYMBOL_VISIBLE const char *
 AUTOBOOST_ARCHIVE_XML_CLASS_NAME(){
     return "class_name";
 }
-AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_SYMBOL_VISIBLE const char *
 AUTOBOOST_ARCHIVE_XML_TRACKING(){
     return "tracking_level";
 }
-AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_SYMBOL_VISIBLE const char *
 AUTOBOOST_ARCHIVE_XML_VERSION(){
     return "version";
 }
-AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_SYMBOL_VISIBLE const char *
 AUTOBOOST_ARCHIVE_XML_SIGNATURE(){
     return "signature";
 }

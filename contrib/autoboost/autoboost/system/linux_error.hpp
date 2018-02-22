@@ -7,8 +7,8 @@
 
 //  See library home page at http://www.boost.org/libs/system
 
-#ifndef AUTOBOOST_LINUX_ERROR_HPP
-#define AUTOBOOST_LINUX_ERROR_HPP
+#ifndef AUTOBOOST_SYSTEM_LINUX_ERROR_HPP
+#define AUTOBOOST_SYSTEM_LINUX_ERROR_HPP
 
 //  This header is effectively empty for compiles on operating systems where
 //  it is not applicable.
@@ -107,4 +107,4 @@ namespace autoboost
 
 #endif  // Linux
 
-#endif  // AUTOBOOST_LINUX_ERROR_HPP
+#endif  // AUTOBOOST_SYSTEM_LINUX_ERROR_HPP

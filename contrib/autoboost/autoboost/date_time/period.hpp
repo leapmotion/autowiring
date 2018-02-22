@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_PERIOD_HPP___
-#define AB_DATE_TIME_PERIOD_HPP___
+#ifndef DATE_TIME_PERIOD_HPP___
+#define DATE_TIME_PERIOD_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -17,7 +17,8 @@
 
 */
 
-#include "autoboost/operators.hpp"
+#include <autoboost/operators.hpp>
+#include <autoboost/date_time/compiler_config.hpp>
 
 
 namespace autoboost {
@@ -48,7 +49,7 @@ namespace date_time {
 
    */
   template<class point_rep, class duration_rep>
-  class period : private
+  class AUTOBOOST_SYMBOL_VISIBLE period : private
       autoboost::less_than_comparable<period<point_rep, duration_rep>
     , autoboost::equality_comparable< period<point_rep, duration_rep>
     > >

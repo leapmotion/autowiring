@@ -1,5 +1,5 @@
-#ifndef AB_LOCAL_TIME_LOCAL_DATE_TIME_HPP__
-#define AB_LOCAL_TIME_LOCAL_DATE_TIME_HPP__
+#ifndef LOCAL_TIME_LOCAL_DATE_TIME_HPP__
+#define LOCAL_TIME_LOCAL_DATE_TIME_HPP__
 
 /* Copyright (c) 2003-2005 CrystalClear Software, Inc.
  * Subject to the Boost Software License, Version 1.0.
@@ -16,6 +16,7 @@
 #include <autoboost/throw_exception.hpp>
 #include <autoboost/date_time/time.hpp>
 #include <autoboost/date_time/posix_time/posix_time.hpp> //todo remove?
+#include <autoboost/date_time/compiler_config.hpp>
 #include <autoboost/date_time/dst_rules.hpp>
 #include <autoboost/date_time/time_zone_base.hpp>
 #include <autoboost/date_time/special_defs.hpp>
@@ -25,18 +26,18 @@ namespace autoboost {
 namespace local_time {
 
   //! simple exception for reporting when STD or DST cannot be determined
-  struct ambiguous_result : public std::logic_error
+  struct AUTOBOOST_SYMBOL_VISIBLE ambiguous_result : public std::logic_error
   {
     ambiguous_result (std::string const& msg = std::string()) :
       std::logic_error(std::string("Daylight Savings Results are ambiguous: " + msg)) {}
   };
   //! simple exception for when time label given cannot exist
-  struct time_label_invalid : public std::logic_error
+  struct AUTOBOOST_SYMBOL_VISIBLE time_label_invalid : public std::logic_error
   {
     time_label_invalid (std::string const& msg = std::string()) :
       std::logic_error(std::string("Time label given is invalid: " + msg)) {}
   };
-  struct dst_not_valid: public std::logic_error
+  struct AUTOBOOST_SYMBOL_VISIBLE dst_not_valid: public std::logic_error
   {
     dst_not_valid(std::string const& msg = std::string()) :
       std::logic_error(std::string("is_dst flag does not match resulting dst for time label given: " + msg)) {}
@@ -61,7 +62,7 @@ namespace local_time {
    */
   template<class utc_time_=posix_time::ptime,
            class tz_type=date_time::time_zone_base<utc_time_,char> >
-  class local_date_time_base :  public date_time::base_time<utc_time_,
+  class AUTOBOOST_SYMBOL_VISIBLE local_date_time_base :  public date_time::base_time<utc_time_,
                                                             autoboost::posix_time::posix_time_system> {
   public:
     typedef utc_time_ utc_time_type;

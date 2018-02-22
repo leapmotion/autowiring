@@ -26,7 +26,13 @@
 
 #define AUTOBOOST_FUNCTION_PARMS AUTOBOOST_PP_ENUM(AUTOBOOST_FUNCTION_NUM_ARGS,AUTOBOOST_FUNCTION_PARM,AUTOBOOST_PP_EMPTY)
 
-#define AUTOBOOST_FUNCTION_ARGS AUTOBOOST_PP_ENUM_PARAMS(AUTOBOOST_FUNCTION_NUM_ARGS, a)
+#ifdef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+#   define AUTOBOOST_FUNCTION_ARGS AUTOBOOST_PP_ENUM_PARAMS(AUTOBOOST_FUNCTION_NUM_ARGS, a)
+#else
+#   include <autoboost/move/utility_core.hpp>
+#   define AUTOBOOST_FUNCTION_ARG(J,I,D) ::autoboost::forward< AUTOBOOST_PP_CAT(T,I) >(AUTOBOOST_PP_CAT(a,I))
+#   define AUTOBOOST_FUNCTION_ARGS AUTOBOOST_PP_ENUM(AUTOBOOST_FUNCTION_NUM_ARGS,AUTOBOOST_FUNCTION_ARG,AUTOBOOST_PP_EMPTY)
+#endif
 
 #define AUTOBOOST_FUNCTION_ARG_TYPE(J,I,D) \
   typedef AUTOBOOST_PP_CAT(T,I) AUTOBOOST_PP_CAT(AUTOBOOST_PP_CAT(arg, AUTOBOOST_PP_INC(I)),_type);
@@ -91,7 +97,7 @@ namespace autoboost {
         static R invoke(function_buffer& function_ptr AUTOBOOST_FUNCTION_COMMA
                         AUTOBOOST_FUNCTION_PARMS)
         {
-          FunctionPtr f = reinterpret_cast<FunctionPtr>(function_ptr.func_ptr);
+          FunctionPtr f = reinterpret_cast<FunctionPtr>(function_ptr.members.func_ptr);
           return f(AUTOBOOST_FUNCTION_ARGS);
         }
       };
@@ -108,7 +114,7 @@ namespace autoboost {
                AUTOBOOST_FUNCTION_PARMS)
 
         {
-          FunctionPtr f = reinterpret_cast<FunctionPtr>(function_ptr.func_ptr);
+          FunctionPtr f = reinterpret_cast<FunctionPtr>(function_ptr.members.func_ptr);
           AUTOBOOST_FUNCTION_RETURN(f(AUTOBOOST_FUNCTION_ARGS));
         }
       };
@@ -126,9 +132,9 @@ namespace autoboost {
         {
           FunctionObj* f;
           if (function_allows_small_object_optimization<FunctionObj>::value)
-            f = reinterpret_cast<FunctionObj*>(&function_obj_ptr.data);
+            f = reinterpret_cast<FunctionObj*>(function_obj_ptr.data);
           else
-            f = reinterpret_cast<FunctionObj*>(function_obj_ptr.obj_ptr);
+            f = reinterpret_cast<FunctionObj*>(function_obj_ptr.members.obj_ptr);
           return (*f)(AUTOBOOST_FUNCTION_ARGS);
         }
       };
@@ -147,9 +153,9 @@ namespace autoboost {
         {
           FunctionObj* f;
           if (function_allows_small_object_optimization<FunctionObj>::value)
-            f = reinterpret_cast<FunctionObj*>(&function_obj_ptr.data);
+            f = reinterpret_cast<FunctionObj*>(function_obj_ptr.data);
           else
-            f = reinterpret_cast<FunctionObj*>(function_obj_ptr.obj_ptr);
+            f = reinterpret_cast<FunctionObj*>(function_obj_ptr.members.obj_ptr);
           AUTOBOOST_FUNCTION_RETURN((*f)(AUTOBOOST_FUNCTION_ARGS));
         }
       };
@@ -166,7 +172,7 @@ namespace autoboost {
 
         {
           FunctionObj* f =
-            reinterpret_cast<FunctionObj*>(function_obj_ptr.obj_ptr);
+            reinterpret_cast<FunctionObj*>(function_obj_ptr.members.obj_ptr);
           return (*f)(AUTOBOOST_FUNCTION_ARGS);
         }
       };
@@ -184,7 +190,7 @@ namespace autoboost {
 
         {
           FunctionObj* f =
-            reinterpret_cast<FunctionObj*>(function_obj_ptr.obj_ptr);
+            reinterpret_cast<FunctionObj*>(function_obj_ptr.members.obj_ptr);
           AUTOBOOST_FUNCTION_RETURN((*f)(AUTOBOOST_FUNCTION_ARGS));
         }
       };
@@ -203,7 +209,7 @@ namespace autoboost {
 
         {
           MemberPtr* f =
-            reinterpret_cast<MemberPtr*>(&function_obj_ptr.data);
+            reinterpret_cast<MemberPtr*>(function_obj_ptr.data);
           return autoboost::mem_fn(*f)(AUTOBOOST_FUNCTION_ARGS);
         }
       };
@@ -221,7 +227,7 @@ namespace autoboost {
 
         {
           MemberPtr* f =
-            reinterpret_cast<MemberPtr*>(&function_obj_ptr.data);
+            reinterpret_cast<MemberPtr*>(function_obj_ptr.data);
           AUTOBOOST_FUNCTION_RETURN(autoboost::mem_fn(*f)(AUTOBOOST_FUNCTION_ARGS));
         }
       };
@@ -514,7 +520,7 @@ namespace autoboost {
           if (f) {
             // should be a reinterpret cast, but some compilers insist
             // on giving cv-qualifiers to free functions
-            functor.func_ptr = reinterpret_cast<void (*)()>(f);
+            functor.members.func_ptr = reinterpret_cast<void (*)()>(f);
             return true;
           } else {
             return false;
@@ -563,7 +569,7 @@ namespace autoboost {
         void
         assign_functor(FunctionObj f, function_buffer& functor, mpl::true_) const
         {
-          new (reinterpret_cast<void*>(&functor.data)) FunctionObj(f);
+          new (reinterpret_cast<void*>(functor.data)) FunctionObj(f);
         }
         template<typename FunctionObj,typename Allocator>
         void
@@ -577,7 +583,7 @@ namespace autoboost {
         void
         assign_functor(FunctionObj f, function_buffer& functor, mpl::false_) const
         {
-          functor.obj_ptr = new FunctionObj(f);
+          functor.members.obj_ptr = new FunctionObj(f);
         }
         template<typename FunctionObj,typename Allocator>
         void
@@ -591,7 +597,7 @@ namespace autoboost {
           wrapper_allocator_pointer_type copy = wrapper_allocator.allocate(1);
           wrapper_allocator.construct(copy, functor_wrapper_type(f,a));
           functor_wrapper_type* new_f = static_cast<functor_wrapper_type*>(copy);
-          functor.obj_ptr = new_f;
+          functor.members.obj_ptr = new_f;
         }
 
         template<typename FunctionObj>
@@ -625,9 +631,9 @@ namespace autoboost {
         assign_to(const reference_wrapper<FunctionObj>& f,
                   function_buffer& functor, function_obj_ref_tag) const
         {
-          functor.obj_ref.obj_ptr = (void *)(f.get_pointer());
-          functor.obj_ref.is_const_qualified = is_const<FunctionObj>::value;
-          functor.obj_ref.is_volatile_qualified = is_volatile<FunctionObj>::value;
+          functor.members.obj_ref.obj_ptr = (void *)(f.get_pointer());
+          functor.members.obj_ref.is_const_qualified = is_const<FunctionObj>::value;
+          functor.members.obj_ref.is_volatile_qualified = is_volatile<FunctionObj>::value;
           return true;
         }
         template<typename FunctionObj,typename Allocator>
@@ -650,17 +656,6 @@ namespace autoboost {
     AUTOBOOST_FUNCTION_TEMPLATE_PARMS
   >
   class AUTOBOOST_FUNCTION_FUNCTION : public function_base
-
-#if AUTOBOOST_FUNCTION_NUM_ARGS == 1
-
-    , public std::unary_function<T0,R>
-
-#elif AUTOBOOST_FUNCTION_NUM_ARGS == 2
-
-    , public std::binary_function<T0,T1,R>
-
-#endif
-
   {
   public:
 #ifndef AUTOBOOST_NO_VOID_RETURNS
@@ -711,9 +706,8 @@ namespace autoboost {
     template<typename Functor>
     AUTOBOOST_FUNCTION_FUNCTION(Functor AUTOBOOST_FUNCTION_TARGET_FIX(const &) f
 #ifndef AUTOBOOST_NO_SFINAE
-                            ,typename enable_if_c<
-                            (autoboost::type_traits::ice_not<
-                             (is_integral<Functor>::value)>::value),
+                            ,typename autoboost::enable_if_c<
+                             !(is_integral<Functor>::value),
                                         int>::type = 0
 #endif // AUTOBOOST_NO_SFINAE
                             ) :
@@ -724,9 +718,8 @@ namespace autoboost {
     template<typename Functor,typename Allocator>
     AUTOBOOST_FUNCTION_FUNCTION(Functor AUTOBOOST_FUNCTION_TARGET_FIX(const &) f, Allocator a
 #ifndef AUTOBOOST_NO_SFINAE
-                            ,typename enable_if_c<
-                            (autoboost::type_traits::ice_not<
-                             (is_integral<Functor>::value)>::value),
+                            ,typename autoboost::enable_if_c<
+                              !(is_integral<Functor>::value),
                                         int>::type = 0
 #endif // AUTOBOOST_NO_SFINAE
                             ) :
@@ -774,9 +767,8 @@ namespace autoboost {
     // construct.
     template<typename Functor>
 #ifndef AUTOBOOST_NO_SFINAE
-    typename enable_if_c<
-               (autoboost::type_traits::ice_not<
-                 (is_integral<Functor>::value)>::value),
+    typename autoboost::enable_if_c<
+                  !(is_integral<Functor>::value),
                AUTOBOOST_FUNCTION_FUNCTION&>::type
 #else
     AUTOBOOST_FUNCTION_FUNCTION&
@@ -842,7 +834,6 @@ namespace autoboost {
     // Move assignment from another AUTOBOOST_FUNCTION_FUNCTION
     AUTOBOOST_FUNCTION_FUNCTION& operator=(AUTOBOOST_FUNCTION_FUNCTION&& f)
     {
-
       if (&f == this)
         return *this;
 
@@ -914,10 +905,10 @@ namespace autoboost {
     template<typename Functor>
     void assign_to(Functor f)
     {
-      using detail::function::vtable_base;
+      using autoboost::detail::function::vtable_base;
 
-      typedef typename detail::function::get_function_tag<Functor>::type tag;
-      typedef detail::function::AUTOBOOST_FUNCTION_GET_INVOKER<tag> get_invoker;
+      typedef typename autoboost::detail::function::get_function_tag<Functor>::type tag;
+      typedef autoboost::detail::function::AUTOBOOST_FUNCTION_GET_INVOKER<tag> get_invoker;
       typedef typename get_invoker::
                          template apply<Functor, R AUTOBOOST_FUNCTION_COMMA
                         AUTOBOOST_FUNCTION_TEMPLATE_ARGS>
@@ -938,9 +929,9 @@ namespace autoboost {
         // coverity[pointless_expression]: suppress coverity warnings on apparant if(const).
         if (autoboost::has_trivial_copy_constructor<Functor>::value &&
             autoboost::has_trivial_destructor<Functor>::value &&
-            detail::function::function_allows_small_object_optimization<Functor>::value)
+            autoboost::detail::function::function_allows_small_object_optimization<Functor>::value)
           value |= static_cast<std::size_t>(0x01);
-        vtable = reinterpret_cast<detail::function::vtable_base *>(value);
+        vtable = reinterpret_cast<autoboost::detail::function::vtable_base *>(value);
       } else
         vtable = 0;
     }
@@ -948,10 +939,10 @@ namespace autoboost {
     template<typename Functor,typename Allocator>
     void assign_to_a(Functor f,Allocator a)
     {
-      using detail::function::vtable_base;
+      using autoboost::detail::function::vtable_base;
 
-      typedef typename detail::function::get_function_tag<Functor>::type tag;
-      typedef detail::function::AUTOBOOST_FUNCTION_GET_INVOKER<tag> get_invoker;
+      typedef typename autoboost::detail::function::get_function_tag<Functor>::type tag;
+      typedef autoboost::detail::function::AUTOBOOST_FUNCTION_GET_INVOKER<tag> get_invoker;
       typedef typename get_invoker::
                          template apply_a<Functor, R AUTOBOOST_FUNCTION_COMMA
                          AUTOBOOST_FUNCTION_TEMPLATE_ARGS,
@@ -973,9 +964,9 @@ namespace autoboost {
         // coverity[pointless_expression]: suppress coverity warnings on apparant if(const).
         if (autoboost::has_trivial_copy_constructor<Functor>::value &&
             autoboost::has_trivial_destructor<Functor>::value &&
-            detail::function::function_allows_small_object_optimization<Functor>::value)
+            autoboost::detail::function::function_allows_small_object_optimization<Functor>::value)
           value |= static_cast<std::size_t>(0x01);
-        vtable = reinterpret_cast<detail::function::vtable_base *>(value);
+        vtable = reinterpret_cast<autoboost::detail::function::vtable_base *>(value);
       } else
         vtable = 0;
     }
@@ -1062,9 +1053,8 @@ public:
   template<typename Functor>
   function(Functor f
 #ifndef AUTOBOOST_NO_SFINAE
-           ,typename enable_if_c<
-                            (autoboost::type_traits::ice_not<
-                          (is_integral<Functor>::value)>::value),
+           ,typename autoboost::enable_if_c<
+                          !(is_integral<Functor>::value),
                        int>::type = 0
 #endif
            ) :
@@ -1074,9 +1064,8 @@ public:
   template<typename Functor,typename Allocator>
   function(Functor f, Allocator a
 #ifndef AUTOBOOST_NO_SFINAE
-           ,typename enable_if_c<
-                            (autoboost::type_traits::ice_not<
-                          (is_integral<Functor>::value)>::value),
+           ,typename autoboost::enable_if_c<
+                           !(is_integral<Functor>::value),
                        int>::type = 0
 #endif
            ) :
@@ -1114,9 +1103,8 @@ public:
 
   template<typename Functor>
 #ifndef AUTOBOOST_NO_SFINAE
-  typename enable_if_c<
-                            (autoboost::type_traits::ice_not<
-                         (is_integral<Functor>::value)>::value),
+  typename autoboost::enable_if_c<
+                         !(is_integral<Functor>::value),
                       self_type&>::type
 #else
   self_type&
@@ -1176,6 +1164,9 @@ public:
 #undef AUTOBOOST_FUNCTION_TEMPLATE_ARGS
 #undef AUTOBOOST_FUNCTION_PARMS
 #undef AUTOBOOST_FUNCTION_PARM
+#ifdef AUTOBOOST_FUNCTION_ARG
+#   undef AUTOBOOST_FUNCTION_ARG
+#endif
 #undef AUTOBOOST_FUNCTION_ARGS
 #undef AUTOBOOST_FUNCTION_ARG_TYPE
 #undef AUTOBOOST_FUNCTION_ARG_TYPES

@@ -18,7 +18,7 @@
 
 #include <istream>
 
-//#include <autoboost/scoped_ptr.hpp>
+#include <autoboost/scoped_ptr.hpp>
 #include <autoboost/archive/detail/auto_link_archive.hpp>
 #include <autoboost/archive/basic_text_iprimitive.hpp>
 #include <autoboost/archive/basic_xml_iarchive.hpp>
@@ -44,7 +44,7 @@ class basic_xml_grammar;
 typedef basic_xml_grammar<char> xml_grammar;
 
 template<class Archive>
-class xml_iarchive_impl :
+class AUTOBOOST_SYMBOL_VISIBLE xml_iarchive_impl :
     public basic_text_iprimitive<std::istream>,
     public basic_xml_iarchive<Archive>
 {
@@ -52,22 +52,12 @@ class xml_iarchive_impl :
 public:
 #else
 protected:
-    #if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1500)
-        // for some inexplicable reason insertion of "class" generates compile erro
-        // on msvc 7.1
-        friend detail::interface_iarchive<Archive>;
-        friend basic_xml_iarchive<Archive>;
-        friend load_access;
-    #else
-        friend class detail::interface_iarchive<Archive>;
-        friend class basic_xml_iarchive<Archive>;
-        friend class load_access;
-    #endif
+    friend class detail::interface_iarchive<Archive>;
+    friend class basic_xml_iarchive<Archive>;
+    friend class load_access;
 #endif
-    // instances of micro xml parser to parse start preambles
-    // scoped_ptr doesn't play nice with borland - so use a naked pointer
-    // scoped_ptr<xml_grammar> gimpl;
-    xml_grammar *gimpl;
+    // use autoboost:scoped_ptr to implement automatic deletion;
+    autoboost::scoped_ptr<xml_grammar> gimpl;
 
     std::istream & get_is(){
         return is;
@@ -88,29 +78,29 @@ protected:
         load(v);
         t = autoboost::serialization::item_version_type(v);
     }
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     load(char * t);
     #ifndef AUTOBOOST_NO_INTRINSIC_WCHAR_T
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     load(wchar_t * t);
     #endif
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     load(std::string &s);
     #ifndef AUTOBOOST_NO_STD_WSTRING
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
     load(std::wstring &ws);
     #endif
     template<class T>
-    void load_override(T & t, AUTOBOOST_PFTO int){
-        basic_xml_iarchive<Archive>::load_override(t, 0);
+    void load_override(T & t){
+        basic_xml_iarchive<Archive>::load_override(t);
     }
-    AUTOBOOST_ARCHIVE_DECL(void)
-    load_override(class_name_type & t, int);
-    AUTOBOOST_ARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_DECL void
+    load_override(class_name_type & t);
+    AUTOBOOST_ARCHIVE_DECL void
     init();
-    AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_DECL
     xml_iarchive_impl(std::istream & is, unsigned int flags);
-    AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+    AUTOBOOST_ARCHIVE_DECL
     ~xml_iarchive_impl();
 };
 
@@ -130,7 +120,7 @@ protected:
 namespace autoboost {
 namespace archive {
 
-class xml_iarchive :
+class AUTOBOOST_SYMBOL_VISIBLE xml_iarchive :
     public xml_iarchive_impl<xml_iarchive>{
 public:
     xml_iarchive(std::istream & is, unsigned int flags = 0) :

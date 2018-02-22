@@ -11,7 +11,11 @@
 #ifndef AUTOBOOST_CONTAINER_DETAIL_STD_FWD_HPP
 #define AUTOBOOST_CONTAINER_DETAIL_STD_FWD_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -19,18 +23,8 @@
 //                        Standard predeclarations
 //////////////////////////////////////////////////////////////////////////////
 
-#if defined(__clang__) && defined(_LIBCPP_VERSION)
-   #define AUTOBOOST_CONTAINER_CLANG_INLINE_STD_NS
-   #pragma GCC diagnostic push
-   #pragma GCC diagnostic ignored "-Wc++11-extensions"
-   #define AUTOBOOST_CONTAINER_STD_NS_BEG _LIBCPP_BEGIN_NAMESPACE_STD
-   #define AUTOBOOST_CONTAINER_STD_NS_END _LIBCPP_END_NAMESPACE_STD
-#else
-   #define AUTOBOOST_CONTAINER_STD_NS_BEG namespace std{
-   #define AUTOBOOST_CONTAINER_STD_NS_END }
-#endif
-
-AUTOBOOST_CONTAINER_STD_NS_BEG
+#include <autoboost/move/detail/std_ns_begin.hpp>
+AUTOBOOST_MOVE_STD_NS_BEG
 
 template<class T>
 class allocator;
@@ -49,11 +43,14 @@ struct forward_iterator_tag;
 struct bidirectional_iterator_tag;
 struct random_access_iterator_tag;
 
-AUTOBOOST_CONTAINER_STD_NS_END
+template<class Container>
+class insert_iterator;
 
-#ifdef AUTOBOOST_CONTAINER_CLANG_INLINE_STD_NS
-   #pragma GCC diagnostic pop
-   #undef AUTOBOOST_CONTAINER_CLANG_INLINE_STD_NS
-#endif   //AUTOBOOST_CONTAINER_CLANG_INLINE_STD_NS
+struct allocator_arg_t;
+
+struct piecewise_construct_t;
+
+AUTOBOOST_MOVE_STD_NS_END
+#include <autoboost/move/detail/std_ns_end.hpp>
 
 #endif //#ifndef AUTOBOOST_CONTAINER_DETAIL_STD_FWD_HPP

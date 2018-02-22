@@ -1,5 +1,5 @@
-#ifndef AB_GREG_DATE_HPP___
-#define AB_GREG_DATE_HPP___
+#ifndef GREG_DATE_HPP___
+#define GREG_DATE_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -10,6 +10,7 @@
  */
 
 #include <autoboost/throw_exception.hpp>
+#include <autoboost/date_time/compiler_config.hpp>
 #include <autoboost/date_time/date.hpp>
 #include <autoboost/date_time/special_defs.hpp>
 #include <autoboost/date_time/gregorian/greg_calendar.hpp>
@@ -34,7 +35,7 @@ namespace gregorian {
       supported.
       \ingroup date_basics
   */
-  class date : public date_time::date<date, gregorian_calendar, date_duration>
+  class AUTOBOOST_SYMBOL_VISIBLE date : public date_time::date<date, gregorian_calendar, date_duration>
   {
    public:
     typedef gregorian_calendar::year_type year_type;

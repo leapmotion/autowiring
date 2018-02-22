@@ -8,175 +8,83 @@
 #ifndef AUTOBOOST_TT_TYPE_WITH_ALIGNMENT_INCLUDED
 #define AUTOBOOST_TT_TYPE_WITH_ALIGNMENT_INCLUDED
 
-#include <autoboost/mpl/if.hpp>
-#include <autoboost/preprocessor/list/for_each_i.hpp>
-#include <autoboost/preprocessor/tuple/to_list.hpp>
-#include <autoboost/preprocessor/cat.hpp>
-#include <autoboost/preprocessor/list/transform.hpp>
-#include <autoboost/preprocessor/list/append.hpp>
 #include <autoboost/type_traits/alignment_of.hpp>
 #include <autoboost/type_traits/is_pod.hpp>
 #include <autoboost/static_assert.hpp>
 #include <autoboost/config.hpp>
-
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
-
-#include <cstddef>
+#include <cstddef> // size_t
+#include <autoboost/detail/workaround.hpp>
 
 #ifdef AUTOBOOST_MSVC
 #   pragma warning(push)
 #   pragma warning(disable: 4121) // alignment is sensitive to packing
 #endif
 
+#ifdef _MSC_VER
+#include <autoboost/type_traits/conditional.hpp>
+#endif
+
 namespace autoboost {
+   namespace detail{
 
 #ifndef __BORLANDC__
 
-namespace detail {
+      union max_align
+      {
+         char c;
+         short s;
+         int i;
+         long l;
+#ifndef AUTOBOOST_NO_LONG_LONG
+         autoboost::long_long_type ll;
+#endif
+#ifdef AUTOBOOST_HAS_INT128
+         autoboost::int128_type i128;
+#endif
+         float f;
+         double d;
+         long double ld;
+#ifdef AUTOBOOST_HAS_FLOAT128
+         __float128 f128;
+#endif
+      };
 
-class alignment_dummy;
-typedef void (*function_ptr)();
-typedef int (alignment_dummy::*member_ptr);
-typedef int (alignment_dummy::*member_function_ptr)();
+template <std::size_t Target, bool check> struct long_double_alignment{ typedef long double type; };
+template <std::size_t Target> struct long_double_alignment<Target, false>{ typedef autoboost::detail::max_align type; };
 
-#ifdef AUTOBOOST_HAS_LONG_LONG
-#define AUTOBOOST_TT_ALIGNMENT_BASE_TYPES AUTOBOOST_PP_TUPLE_TO_LIST( \
-        12, ( \
-        char, short, int, long,  ::autoboost::long_long_type, float, double, long double \
-        , void*, function_ptr, member_ptr, member_function_ptr))
-#else
-#define AUTOBOOST_TT_ALIGNMENT_BASE_TYPES AUTOBOOST_PP_TUPLE_TO_LIST( \
-        11, ( \
-        char, short, int, long, float, double, long double \
-        , void*, function_ptr, member_ptr, member_function_ptr))
+template <std::size_t Target, bool check> struct double_alignment{ typedef double type; };
+template <std::size_t Target> struct double_alignment<Target, false>{ typedef typename long_double_alignment<Target, autoboost::alignment_of<long double>::value >= Target>::type type; };
+
+#ifndef AUTOBOOST_NO_LONG_LONG
+template <std::size_t Target, bool check> struct long_long_alignment{ typedef autoboost::long_long_type type; };
+template <std::size_t Target> struct long_long_alignment<Target, false>{ typedef typename double_alignment<Target, autoboost::alignment_of<double>::value >= Target>::type type; };
 #endif
 
-#define AUTOBOOST_TT_HAS_ONE_T(D,Data,T) autoboost::detail::has_one_T< T >
+template <std::size_t Target, bool check> struct long_alignment{ typedef long type; };
+#ifndef AUTOBOOST_NO_LONG_LONG
+template <std::size_t Target> struct long_alignment<Target, false>{ typedef typename long_long_alignment<Target, autoboost::alignment_of<autoboost::long_long_type>::value >= Target>::type type; };
+#else
+template <std::size_t Target> struct long_alignment<Target, false>{ typedef typename double_alignment<Target, autoboost::alignment_of<double>::value >= Target>::type type; };
+#endif
 
-#define AUTOBOOST_TT_ALIGNMENT_STRUCT_TYPES                         \
-        AUTOBOOST_PP_LIST_TRANSFORM(AUTOBOOST_TT_HAS_ONE_T,             \
-                                X,                              \
-                                AUTOBOOST_TT_ALIGNMENT_BASE_TYPES)
+template <std::size_t Target, bool check> struct int_alignment{ typedef int type; };
+template <std::size_t Target> struct int_alignment<Target, false>{ typedef typename long_alignment<Target, autoboost::alignment_of<long>::value >= Target>::type type; };
 
-#define AUTOBOOST_TT_ALIGNMENT_TYPES                                \
-        AUTOBOOST_PP_LIST_APPEND(AUTOBOOST_TT_ALIGNMENT_BASE_TYPES,     \
-                             AUTOBOOST_TT_ALIGNMENT_STRUCT_TYPES)
+template <std::size_t Target, bool check> struct short_alignment{ typedef short type; };
+template <std::size_t Target> struct short_alignment<Target, false>{ typedef typename int_alignment<Target, autoboost::alignment_of<int>::value >= Target>::type type; };
 
-//
-// lower_alignment_helper --
-//
-// This template gets instantiated a lot, so use partial
-// specialization when available to reduce the compiler burden.
-//
-template <bool found, std::size_t target, class TestType>
-struct lower_alignment_helper
-{
-    typedef char type;
-    enum { value = true };
-};
-
-template <std::size_t target, class TestType>
-struct lower_alignment_helper<false,target,TestType>
-{
-    enum { value = (alignment_of<TestType>::value == target) };
-    typedef typename mpl::if_c<value, TestType, char>::type type;
-};
-
-#define AUTOBOOST_TT_CHOOSE_MIN_ALIGNMENT(R,P,I,T)                                  \
-        typename lower_alignment_helper<                                        \
-          AUTOBOOST_PP_CAT(found,I),target,T                                        \
-        >::type AUTOBOOST_PP_CAT(t,I);                                              \
-        enum {                                                                  \
-            AUTOBOOST_PP_CAT(found,AUTOBOOST_PP_INC(I))                                 \
-              = lower_alignment_helper<AUTOBOOST_PP_CAT(found,I),target,T >::value  \
-        };
-
-#define AUTOBOOST_TT_CHOOSE_T(R,P,I,T) T AUTOBOOST_PP_CAT(t,I);
-
-template <typename T>
-struct has_one_T
-{
-  T data;
-};
-
-template <std::size_t target>
-union lower_alignment
-{
-    enum { found0 = false };
-
-    AUTOBOOST_PP_LIST_FOR_EACH_I(
-          AUTOBOOST_TT_CHOOSE_MIN_ALIGNMENT
-        , ignored
-        , AUTOBOOST_TT_ALIGNMENT_TYPES
-        )
-};
-
-union max_align
-{
-    AUTOBOOST_PP_LIST_FOR_EACH_I(
-          AUTOBOOST_TT_CHOOSE_T
-        , ignored
-        , AUTOBOOST_TT_ALIGNMENT_TYPES
-        )
-};
-
-#undef AUTOBOOST_TT_ALIGNMENT_BASE_TYPES
-#undef AUTOBOOST_TT_HAS_ONE_T
-#undef AUTOBOOST_TT_ALIGNMENT_STRUCT_TYPES
-#undef AUTOBOOST_TT_ALIGNMENT_TYPES
-#undef AUTOBOOST_TT_CHOOSE_MIN_ALIGNMENT
-#undef AUTOBOOST_TT_CHOOSE_T
-
-template<std::size_t TAlign, std::size_t Align>
-struct is_aligned
-{
-    AUTOBOOST_STATIC_CONSTANT(bool,
-        value = (TAlign >= Align) & (TAlign % Align == 0)
-        );
-};
-
-
-} // namespace detail
-
-template<std::size_t Align>
-struct is_pod< ::autoboost::detail::lower_alignment<Align> >
-{
-        AUTOBOOST_STATIC_CONSTANT(std::size_t, value = true);
-};
-
-// This alignment method originally due to Brian Parker, implemented by David
-// Abrahams, and then ported here by Doug Gregor.
-namespace detail{
-
-template <std::size_t Align>
-class type_with_alignment_imp
-{
-    typedef ::autoboost::detail::lower_alignment<Align> t1;
-    typedef typename mpl::if_c<
-          ::autoboost::detail::is_aligned< ::autoboost::alignment_of<t1>::value,Align >::value
-        , t1
-        , ::autoboost::detail::max_align
-        >::type align_t;
-
-    AUTOBOOST_STATIC_CONSTANT(std::size_t, found = alignment_of<align_t>::value);
-
-    AUTOBOOST_STATIC_ASSERT(found >= Align);
-    AUTOBOOST_STATIC_ASSERT(found % Align == 0);
-
- public:
-    typedef align_t type;
-};
+template <std::size_t Target, bool check> struct char_alignment{ typedef char type; };
+template <std::size_t Target> struct char_alignment<Target, false>{ typedef typename short_alignment<Target, autoboost::alignment_of<short>::value >= Target>::type type; };
 
 }
 
 template <std::size_t Align>
-class type_with_alignment
-  : public ::autoboost::detail::type_with_alignment_imp<Align>
+struct type_with_alignment
 {
+   typedef typename autoboost::detail::char_alignment<Align, autoboost::alignment_of<char>::value >= Align>::type type;
 };
 
-#if defined(__GNUC__)
+#if (defined(__GNUC__) || (defined (__SUNPRO_CC) &&  (__SUNPRO_CC >= 0x5130)) || defined(__clang__)) && !defined(AUTOBOOST_TT_DISABLE_INTRINSICS)
 namespace tt_align_ns {
 struct __attribute__((__aligned__(2))) a2 {};
 struct __attribute__((__aligned__(4))) a4 {};
@@ -187,26 +95,25 @@ struct __attribute__((__aligned__(64))) a64 {};
 struct __attribute__((__aligned__(128))) a128 {};
 }
 
-template<> class type_with_alignment<1>  { public: typedef char type; };
-template<> class type_with_alignment<2>  { public: typedef tt_align_ns::a2 type; };
-template<> class type_with_alignment<4>  { public: typedef tt_align_ns::a4 type; };
-template<> class type_with_alignment<8>  { public: typedef tt_align_ns::a8 type; };
-template<> class type_with_alignment<16> { public: typedef tt_align_ns::a16 type; };
-template<> class type_with_alignment<32> { public: typedef tt_align_ns::a32 type; };
-template<> class type_with_alignment<64> { public: typedef tt_align_ns::a64 type; };
-template<> class type_with_alignment<128> { public: typedef tt_align_ns::a128 type; };
+template<> struct type_with_alignment<1>  { public: typedef char type; };
+template<> struct type_with_alignment<2>  { public: typedef tt_align_ns::a2 type; };
+template<> struct type_with_alignment<4>  { public: typedef tt_align_ns::a4 type; };
+template<> struct type_with_alignment<8>  { public: typedef tt_align_ns::a8 type; };
+template<> struct type_with_alignment<16> { public: typedef tt_align_ns::a16 type; };
+template<> struct type_with_alignment<32> { public: typedef tt_align_ns::a32 type; };
+template<> struct type_with_alignment<64> { public: typedef tt_align_ns::a64 type; };
+template<> struct type_with_alignment<128> { public: typedef tt_align_ns::a128 type; };
 
-namespace detail {
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a2,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a4,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a8,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a16,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a32,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a64,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a128,true)
-}
+template<> struct is_pod< ::autoboost::tt_align_ns::a2> : public true_type{};
+template<> struct is_pod< ::autoboost::tt_align_ns::a4> : public true_type{};
+template<> struct is_pod< ::autoboost::tt_align_ns::a8> : public true_type{};
+template<> struct is_pod< ::autoboost::tt_align_ns::a16> : public true_type{};
+template<> struct is_pod< ::autoboost::tt_align_ns::a32> : public true_type{};
+template<> struct is_pod< ::autoboost::tt_align_ns::a64> : public true_type{};
+template<> struct is_pod< ::autoboost::tt_align_ns::a128> : public true_type{};
+
 #endif
-#if defined(AUTOBOOST_MSVC) || (defined(AUTOBOOST_INTEL) && defined(_MSC_VER))
+#if (defined(AUTOBOOST_MSVC) || (defined(AUTOBOOST_INTEL) && defined(_MSC_VER))) && !defined(AUTOBOOST_TT_DISABLE_INTRINSICS)
 //
 // MSVC supports types which have alignments greater than the normal
 // maximum: these are used for example in the types __m64 and __m128
@@ -247,57 +154,56 @@ struct __declspec(align(128)) a128 {
 };
 }
 
-template<> class type_with_alignment<8>
+template<> struct type_with_alignment<8>
 {
-   typedef mpl::if_c<
+   typedef autoboost::conditional<
       ::autoboost::alignment_of<autoboost::detail::max_align>::value < 8,
       tt_align_ns::a8,
-      autoboost::detail::type_with_alignment_imp<8> >::type t1;
+      autoboost::detail::char_alignment<8, false> >::type t1;
 public:
    typedef t1::type type;
 };
-template<> class type_with_alignment<16>
+template<> struct type_with_alignment<16>
 {
-   typedef mpl::if_c<
+   typedef autoboost::conditional<
       ::autoboost::alignment_of<autoboost::detail::max_align>::value < 16,
       tt_align_ns::a16,
-      autoboost::detail::type_with_alignment_imp<16> >::type t1;
+      autoboost::detail::char_alignment<16, false> >::type t1;
 public:
    typedef t1::type type;
 };
-template<> class type_with_alignment<32>
+template<> struct type_with_alignment<32>
 {
-   typedef mpl::if_c<
+   typedef autoboost::conditional<
       ::autoboost::alignment_of<autoboost::detail::max_align>::value < 32,
       tt_align_ns::a32,
-      autoboost::detail::type_with_alignment_imp<32> >::type t1;
+      autoboost::detail::char_alignment<32, false> >::type t1;
 public:
    typedef t1::type type;
 };
-template<> class type_with_alignment<64> {
-   typedef mpl::if_c<
+template<> struct type_with_alignment<64> {
+   typedef autoboost::conditional<
       ::autoboost::alignment_of<autoboost::detail::max_align>::value < 64,
       tt_align_ns::a64,
-      autoboost::detail::type_with_alignment_imp<64> >::type t1;
+      autoboost::detail::char_alignment<64, false> >::type t1;
 public:
    typedef t1::type type;
 };
-template<> class type_with_alignment<128> {
-   typedef mpl::if_c<
+template<> struct type_with_alignment<128> {
+   typedef autoboost::conditional<
       ::autoboost::alignment_of<autoboost::detail::max_align>::value < 128,
       tt_align_ns::a128,
-      autoboost::detail::type_with_alignment_imp<128> >::type t1;
+      autoboost::detail::char_alignment<128, false> >::type t1;
 public:
    typedef t1::type type;
 };
 
-namespace detail {
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a8,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a16,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a32,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a64,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a128,true)
-}
+template<> struct is_pod< ::autoboost::tt_align_ns::a8> : public true_type{};
+template<> struct is_pod< ::autoboost::tt_align_ns::a16> : public true_type{};
+template<> struct is_pod< ::autoboost::tt_align_ns::a32> : public true_type{};
+template<> struct is_pod< ::autoboost::tt_align_ns::a64> : public true_type{};
+template<> struct is_pod< ::autoboost::tt_align_ns::a128> : public true_type{};
+
 #endif
 
 #else
@@ -321,13 +227,13 @@ namespace detail {
 
 typedef ::autoboost::tt_align_ns::a16 max_align;
 
-//#if ! AUTOBOOST_WORKAROUND(__CODEGEARC__, AUTOBOOST_TESTED_AT(0x610))
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a2,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a4,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a8,true)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_IMPL_SPEC1(is_pod,::autoboost::tt_align_ns::a16,true)
-//#endif
 }
+//#if ! AUTOBOOST_WORKAROUND(__CODEGEARC__, AUTOBOOST_TESTED_AT(0x610))
+template <> struct is_pod< ::autoboost::tt_align_ns::a2> : public true_type{};
+template <> struct is_pod< ::autoboost::tt_align_ns::a4> : public true_type{};
+template <> struct is_pod< ::autoboost::tt_align_ns::a8> : public true_type{};
+template <> struct is_pod< ::autoboost::tt_align_ns::a16> : public true_type{};
+//#endif
 
 template <std::size_t N> struct type_with_alignment
 {
@@ -349,8 +255,6 @@ template <> struct type_with_alignment<16>{ typedef tt_align_ns::a16 type; };
 #ifdef AUTOBOOST_MSVC
 #   pragma warning(pop)
 #endif
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_TYPE_WITH_ALIGNMENT_INCLUDED
 

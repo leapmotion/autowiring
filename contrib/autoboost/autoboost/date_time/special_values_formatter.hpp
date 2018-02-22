@@ -1,6 +1,6 @@
 
-#ifndef AB_DATETIME_SPECIAL_VALUE_FORMATTER_HPP___
-#define AB_DATETIME_SPECIAL_VALUE_FORMATTER_HPP___
+#ifndef DATETIME_SPECIAL_VALUE_FORMATTER_HPP___
+#define DATETIME_SPECIAL_VALUE_FORMATTER_HPP___
 
 /* Copyright (c) 2004 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

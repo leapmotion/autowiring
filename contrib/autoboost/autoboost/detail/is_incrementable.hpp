@@ -1,17 +1,14 @@
 // Copyright David Abrahams 2004. Use, modification and distribution is
 // subject to the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef AB_IS_INCREMENTABLE_DWA200415_HPP
-# define AB_IS_INCREMENTABLE_DWA200415_HPP
+#ifndef IS_INCREMENTABLE_DWA200415_HPP
+# define IS_INCREMENTABLE_DWA200415_HPP
 
-# include <autoboost/type_traits/detail/template_arity_spec.hpp>
+# include <autoboost/type_traits/integral_constant.hpp>
 # include <autoboost/type_traits/remove_cv.hpp>
 # include <autoboost/mpl/aux_/lambda_support.hpp>
 # include <autoboost/mpl/bool.hpp>
 # include <autoboost/detail/workaround.hpp>
-
-// Must be the last include
-# include <autoboost/type_traits/detail/bool_trait_def.hpp>
 
 namespace autoboost { namespace detail {
 
@@ -106,25 +103,20 @@ namespace is_incrementable_
 # undef AUTOBOOST_comma
 
 template<typename T>
-struct is_incrementable
-AUTOBOOST_TT_AUX_BOOL_C_BASE(::autoboost::detail::is_incrementable_::impl<T>::value)
+struct is_incrementable :
+    public autoboost::integral_constant<bool, autoboost::detail::is_incrementable_::impl<T>::value>
 {
-    AUTOBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL(::autoboost::detail::is_incrementable_::impl<T>::value)
     AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT(1,is_incrementable,(T))
 };
 
 template<typename T>
-struct is_postfix_incrementable
-AUTOBOOST_TT_AUX_BOOL_C_BASE(::autoboost::detail::is_incrementable_::impl<T>::value)
+struct is_postfix_incrementable :
+    public autoboost::integral_constant<bool, autoboost::detail::is_incrementable_::postfix_impl<T>::value>
 {
-    AUTOBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL(::autoboost::detail::is_incrementable_::postfix_impl<T>::value)
     AUTOBOOST_MPL_AUX_LAMBDA_SUPPORT(1,is_postfix_incrementable,(T))
 };
 
 } // namespace detail
-
-AUTOBOOST_TT_AUX_TEMPLATE_ARITY_SPEC(1, ::autoboost::detail::is_incrementable)
-AUTOBOOST_TT_AUX_TEMPLATE_ARITY_SPEC(1, ::autoboost::detail::is_postfix_incrementable)
 
 } // namespace autoboost
 

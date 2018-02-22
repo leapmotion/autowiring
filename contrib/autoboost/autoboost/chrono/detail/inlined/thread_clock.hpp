@@ -16,7 +16,9 @@
 #if defined(AUTOBOOST_CHRONO_HAS_THREAD_CLOCK)
 #include <autoboost/chrono/thread_clock.hpp>
 #include <autoboost/throw_exception.hpp>
+#if defined AUTOBOOST_CHRONO_PROVIDE_HYBRID_ERROR_HANDLING
 #include <autoboost/system/system_error.hpp>
+#endif
 #include <autoboost/throw_exception.hpp>
 #include <autoboost/chrono/detail/system.hpp>
 

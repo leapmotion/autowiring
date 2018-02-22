@@ -3,13 +3,21 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef AB_UUID_274DA366004E11DCB1DDFE2E56D89593
-#define AB_UUID_274DA366004E11DCB1DDFE2E56D89593
+#ifndef UUID_274DA366004E11DCB1DDFE2E56D89593
+#define UUID_274DA366004E11DCB1DDFE2E56D89593
 #if (__GNUC__*100+__GNUC_MINOR__>301) && !defined(AUTOBOOST_EXCEPTION_ENABLE_WARNINGS)
 #pragma GCC system_header
 #endif
 #if defined(_MSC_VER) && !defined(AUTOBOOST_EXCEPTION_ENABLE_WARNINGS)
 #pragma warning(push,1)
+#endif
+
+#ifdef AUTOBOOST_EXCEPTION_MINI_AUTOBOOST
+#include  <memory>
+namespace autoboost { namespace exception_detail { using std::shared_ptr; } }
+#else
+namespace autoboost { template <class T> class shared_ptr; };
+namespace autoboost { namespace exception_detail { using autoboost::shared_ptr; } }
 #endif
 
 namespace
@@ -144,9 +152,6 @@ autoboost
 # endif
 #endif
 
-    template <class T>
-    class shared_ptr;
-
     namespace
     exception_detail
         {
@@ -181,6 +186,18 @@ autoboost
 
         template <>
         struct get_info<throw_line>;
+
+        template <class>
+        struct set_info_rv;
+
+        template <>
+        struct set_info_rv<throw_function>;
+
+        template <>
+        struct set_info_rv<throw_file>;
+
+        template <>
+        struct set_info_rv<throw_line>;
 
         char const * get_diagnostic_information( exception const &, char const * );
 
@@ -264,6 +281,11 @@ autoboost
         friend struct exception_detail::get_info<throw_function>;
         friend struct exception_detail::get_info<throw_file>;
         friend struct exception_detail::get_info<throw_line>;
+        template <class>
+        friend struct exception_detail::set_info_rv;
+        friend struct exception_detail::set_info_rv<throw_function>;
+        friend struct exception_detail::set_info_rv<throw_file>;
+        friend struct exception_detail::set_info_rv<throw_line>;
         friend void exception_detail::copy_autoboost_exception( exception *, exception const * );
 #endif
         mutable exception_detail::refcount_ptr<exception_detail::error_info_container> data_;
@@ -432,6 +454,11 @@ autoboost
             {
             }
 
+#if defined(__GNUC__)
+# if (__GNUC__ == 4 && __GNUC_MINOR__ >= 1) || (__GNUC__ > 4)
+#  pragma GCC visibility push (default)
+# endif
+#endif
         template <class T>
         class
         clone_impl:
@@ -473,6 +500,11 @@ autoboost
                 }
             };
         }
+#if defined(__GNUC__)
+# if (__GNUC__ == 4 && __GNUC_MINOR__ >= 1) || (__GNUC__ > 4)
+#  pragma GCC visibility pop
+# endif
+#endif
 
     template <class T>
     inline

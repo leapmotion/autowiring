@@ -27,12 +27,12 @@ namespace detail
 
   template <typename Queue>
   class queue_adaptor_copyable_only :
-    public autoboost::queue_base<typename Queue::value_type>
+    public autoboost::queue_base<typename Queue::value_type, typename Queue::size_type>
   {
       Queue queue;
   public:
     typedef typename Queue::value_type value_type;
-    typedef std::size_t size_type;
+    typedef typename Queue::size_type size_type;
 
     // Constructors/Assignment/Destructors
     queue_adaptor_copyable_only()  {}
@@ -46,29 +46,29 @@ namespace detail
     // Modifiers
     void close() { queue.close(); }
 
-    void push_back(const value_type& x) { queue.push_back(x); }
+    void push(const value_type& x) { queue.push(x); }
 
-    void pull_front(value_type& x) { queue.pull_front(x); };
-    value_type pull_front() { return queue.pull_front(); }
+    void pull(value_type& x) { queue.pull(x); };
+    value_type pull() { return queue.pull(); }
 
-    queue_op_status try_push_back(const value_type& x) { return queue.try_push_back(x); }
-    queue_op_status try_pull_front(value_type& x)  { return queue.try_pull_front(x); }
+    queue_op_status try_push(const value_type& x) { return queue.try_push(x); }
+    queue_op_status try_pull(value_type& x)  { return queue.try_pull(x); }
 
-    queue_op_status nonblocking_push_back(const value_type& x) { return queue.nonblocking_push_back(x); }
-    queue_op_status nonblocking_pull_front(value_type& x)  { return queue.nonblocking_pull_front(x); }
+    queue_op_status nonblocking_push(const value_type& x) { return queue.nonblocking_push(x); }
+    queue_op_status nonblocking_pull(value_type& x)  { return queue.nonblocking_pull(x); }
 
-    queue_op_status wait_push_back(const value_type& x) { return queue.wait_push_back(x); }
-    queue_op_status wait_pull_front(value_type& x) { return queue.wait_pull_front(x); }
+    queue_op_status wait_push(const value_type& x) { return queue.wait_push(x); }
+    queue_op_status wait_pull(value_type& x) { return queue.wait_pull(x); }
 
   };
   template <typename Queue>
   class queue_adaptor_movable_only :
-    public autoboost::queue_base<typename Queue::value_type>
+    public autoboost::queue_base<typename Queue::value_type, typename Queue::size_type>
   {
       Queue queue;
   public:
     typedef typename Queue::value_type value_type;
-    typedef std::size_t size_type;
+    typedef typename Queue::size_type size_type;
 
     // Constructors/Assignment/Destructors
 
@@ -84,30 +84,30 @@ namespace detail
     void close() { queue.close(); }
 
 
-    void pull_front(value_type& x) { queue.pull_front(x); };
+    void pull(value_type& x) { queue.pull(x); };
     // enable_if is_nothrow_copy_movable<value_type>
-    value_type pull_front() { return queue.pull_front(); }
+    value_type pull() { return queue.pull(); }
 
-    queue_op_status try_pull_front(value_type& x)  { return queue.try_pull_front(x); }
+    queue_op_status try_pull(value_type& x)  { return queue.try_pull(x); }
 
-    queue_op_status nonblocking_pull_front(value_type& x)  { return queue.nonblocking_pull_front(x); }
+    queue_op_status nonblocking_pull(value_type& x)  { return queue.nonblocking_pull(x); }
 
-    queue_op_status wait_pull_front(value_type& x) { return queue.wait_pull_front(x); }
+    queue_op_status wait_pull(value_type& x) { return queue.wait_pull(x); }
 
-    void push_back(AUTOBOOST_THREAD_RV_REF(value_type) x) { queue.push_back(autoboost::move(x)); }
-    queue_op_status try_push_back(AUTOBOOST_THREAD_RV_REF(value_type) x) { return queue.try_push_back(autoboost::move(x)); }
-    queue_op_status nonblocking_push_back(AUTOBOOST_THREAD_RV_REF(value_type) x) { return queue.nonblocking_push_back(autoboost::move(x)); }
-    queue_op_status wait_push_back(AUTOBOOST_THREAD_RV_REF(value_type) x) { return queue.wait_push_back(autoboost::move(x)); }
+    void push(AUTOBOOST_THREAD_RV_REF(value_type) x) { queue.push(autoboost::move(x)); }
+    queue_op_status try_push(AUTOBOOST_THREAD_RV_REF(value_type) x) { return queue.try_push(autoboost::move(x)); }
+    queue_op_status nonblocking_push(AUTOBOOST_THREAD_RV_REF(value_type) x) { return queue.nonblocking_push(autoboost::move(x)); }
+    queue_op_status wait_push(AUTOBOOST_THREAD_RV_REF(value_type) x) { return queue.wait_push(autoboost::move(x)); }
   };
 
   template <typename Queue>
   class queue_adaptor_copyable_and_movable :
-    public autoboost::queue_base<typename Queue::value_type>
+    public autoboost::queue_base<typename Queue::value_type, typename Queue::size_type>
   {
       Queue queue;
   public:
     typedef typename Queue::value_type value_type;
-    typedef std::size_t size_type;
+    typedef typename Queue::size_type size_type;
 
     // Constructors/Assignment/Destructors
 
@@ -123,31 +123,31 @@ namespace detail
     void close() { queue.close(); }
 
 
-    void push_back(const value_type& x) { queue.push_back(x); }
+    void push(const value_type& x) { queue.push(x); }
 
-    void pull_front(value_type& x) { queue.pull_front(x); };
+    void pull(value_type& x) { queue.pull(x); };
     // enable_if is_nothrow_copy_movable<value_type>
-    value_type pull_front() { return queue.pull_front(); }
+    value_type pull() { return queue.pull(); }
 
-    queue_op_status try_push_back(const value_type& x) { return queue.try_push_back(x); }
-    queue_op_status try_pull_front(value_type& x)  { return queue.try_pull_front(x); }
+    queue_op_status try_push(const value_type& x) { return queue.try_push(x); }
+    queue_op_status try_pull(value_type& x)  { return queue.try_pull(x); }
 
-    queue_op_status nonblocking_push_back(const value_type& x) { return queue.nonblocking_push_back(x); }
-    queue_op_status nonblocking_pull_front(value_type& x)  { return queue.nonblocking_pull_front(x); }
+    queue_op_status nonblocking_push(const value_type& x) { return queue.nonblocking_push(x); }
+    queue_op_status nonblocking_pull(value_type& x)  { return queue.nonblocking_pull(x); }
 
-    queue_op_status wait_push_back(const value_type& x) { return queue.wait_push_back(x); }
-    queue_op_status wait_pull_front(value_type& x) { return queue.wait_pull_front(x); }
+    queue_op_status wait_push(const value_type& x) { return queue.wait_push(x); }
+    queue_op_status wait_pull(value_type& x) { return queue.wait_pull(x); }
 
-    void push_back(AUTOBOOST_THREAD_RV_REF(value_type) x) { queue.push_back(autoboost::move(x)); }
-    queue_op_status try_push_back(AUTOBOOST_THREAD_RV_REF(value_type) x) { return queue.try_push_back(autoboost::move(x)); }
-    queue_op_status nonblocking_push_back(AUTOBOOST_THREAD_RV_REF(value_type) x) { return queue.nonblocking_push_back(autoboost::move(x)); }
-    queue_op_status wait_push_back(AUTOBOOST_THREAD_RV_REF(value_type) x) { return queue.wait_push_back(autoboost::move(x)); }
+    void push(AUTOBOOST_THREAD_RV_REF(value_type) x) { queue.push(autoboost::move(x)); }
+    queue_op_status try_push(AUTOBOOST_THREAD_RV_REF(value_type) x) { return queue.try_push(autoboost::move(x)); }
+    queue_op_status nonblocking_push(AUTOBOOST_THREAD_RV_REF(value_type) x) { return queue.nonblocking_push(autoboost::move(x)); }
+    queue_op_status wait_push(AUTOBOOST_THREAD_RV_REF(value_type) x) { return queue.wait_push(autoboost::move(x)); }
   };
 
 
   template <class Q, class T,
 #if ! defined  AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
-#if defined __GNUC__
+#if defined __GNUC__ && ! defined __clang__
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 5) || !defined(__GXX_EXPERIMENTAL_CXX0X__)
           bool Copyable = is_copy_constructible<T>::value,
           bool Movable = true
@@ -195,7 +195,7 @@ namespace detail
   {
   public:
       typedef typename Queue::value_type value_type;
-      typedef std::size_t size_type;
+      typedef typename Queue::size_type size_type;
     // Constructors/Assignment/Destructors
     virtual ~queue_adaptor() {};
   };

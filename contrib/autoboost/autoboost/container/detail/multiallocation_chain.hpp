@@ -11,20 +11,26 @@
 #ifndef AUTOBOOST_CONTAINER_DETAIL_MULTIALLOCATION_CHAIN_HPP
 #define AUTOBOOST_CONTAINER_DETAIL_MULTIALLOCATION_CHAIN_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
 #include <autoboost/container/detail/config_begin.hpp>
 #include <autoboost/container/detail/workaround.hpp>
-
+// container
 #include <autoboost/container/container_fwd.hpp>
-#include <autoboost/container/detail/utilities.hpp>
-#include <autoboost/container/detail/type_traits.hpp>
+// container/detail
+#include <autoboost/container/detail/to_raw_pointer.hpp>
 #include <autoboost/container/detail/transform_iterator.hpp>
+#include <autoboost/container/detail/type_traits.hpp>
+// intrusive
 #include <autoboost/intrusive/slist.hpp>
 #include <autoboost/intrusive/pointer_traits.hpp>
-#include <autoboost/type_traits/make_unsigned.hpp>
+// move
 #include <autoboost/move/utility_core.hpp>
 
 namespace autoboost {
@@ -47,7 +53,7 @@ class basic_multiallocation_chain
    typedef bi::slist< node
                     , bi::linear<true>
                     , bi::cache_last<true>
-                    , bi::size_type<typename autoboost::make_unsigned<difference_type>::type>
+                    , bi::size_type<typename autoboost::container::container_detail::make_unsigned<difference_type>::type>
                     > slist_impl_t;
    slist_impl_t slist_impl_;
 

@@ -12,6 +12,8 @@
 #include <autoboost/detail/workaround.hpp>
 #include <autoboost/thread/detail/platform.hpp>
 
+//#define AUTOBOOST_THREAD_USEFIXES_TIMESPEC
+//#define AUTOBOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
 //#define AUTOBOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
 // ATTRIBUTE_MAY_ALIAS
 
@@ -100,8 +102,8 @@
 #if !defined AUTOBOOST_THREAD_VERSION
 #define AUTOBOOST_THREAD_VERSION 2
 #else
-#if AUTOBOOST_THREAD_VERSION!=2  && AUTOBOOST_THREAD_VERSION!=3 && AUTOBOOST_THREAD_VERSION!=4
-#error "AUTOBOOST_THREAD_VERSION must be 2, 3 or 4"
+#if AUTOBOOST_THREAD_VERSION!=2  && AUTOBOOST_THREAD_VERSION!=3 && AUTOBOOST_THREAD_VERSION!=4 && AUTOBOOST_THREAD_VERSION!=5
+#error "AUTOBOOST_THREAD_VERSION must be 2, 3, 4 or 5"
 #endif
 #endif
 
@@ -304,6 +306,13 @@
 
 #endif // AUTOBOOST_THREAD_VERSION>=4
 
+
+#if AUTOBOOST_THREAD_VERSION>=5
+//#define AUTOBOOST_THREAD_FUTURE_BLOCKING
+#else
+//#define AUTOBOOST_THREAD_FUTURE_BLOCKING
+#define AUTOBOOST_THREAD_ASYNC_FUTURE_WAITS
+#endif
 // INTERRUPTIONS
 #if ! defined AUTOBOOST_THREAD_PROVIDES_INTERRUPTIONS \
  && ! defined AUTOBOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
@@ -427,6 +436,34 @@
 #else
 #   define AUTOBOOST_THREAD_DECL
 #endif // AUTOBOOST_HAS_DECLSPEC
+
+//
+// Automatically link to the correct build variant where possible.
+//
+#if !defined(AUTOBOOST_ALL_NO_LIB) && !defined(AUTOBOOST_THREAD_NO_LIB) && !defined(AUTOBOOST_THREAD_BUILD_DLL) && !defined(AUTOBOOST_THREAD_BUILD_LIB)
+//
+// Tell the autolink to link dynamically, this will get undef'ed by auto_link.hpp
+// once it's done with it:
+//
+#if defined(AUTOBOOST_THREAD_USE_DLL)
+#   define AUTOBOOST_DYN_LINK
+#endif
+//
+// Set the name of our library, this will get undef'ed by auto_link.hpp
+// once it's done with it:
+//
+#if defined(AUTOBOOST_THREAD_LIB_NAME)
+#    define AUTOBOOST_LIB_NAME AUTOBOOST_THREAD_LIB_NAME
+#else
+#    define AUTOBOOST_LIB_NAME autoboost_thread
+#endif
+//
+// If we're importing code from a dll, then tell auto_link.hpp about it:
+//
+// And include the header that does the work:
+//
+#include <autoboost/config/auto_link.hpp>
+#endif  // auto-linking disabled
 
 #endif // AUTOBOOST_THREAD_CONFIG_WEK1032003_HPP
 

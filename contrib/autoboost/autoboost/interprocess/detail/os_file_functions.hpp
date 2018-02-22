@@ -11,7 +11,11 @@
 #ifndef AUTOBOOST_INTERPROCESS_DETAIL_OS_FILE_FUNCTIONS_HPP
 #define AUTOBOOST_INTERPROCESS_DETAIL_OS_FILE_FUNCTIONS_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -23,7 +27,7 @@
 #include <string>
 #include <limits>
 #include <climits>
-#include <autoboost/type_traits/make_unsigned.hpp>
+#include <autoboost/move/detail/type_traits.hpp> //make_unsigned
 
 #if defined (AUTOBOOST_INTERPROCESS_WINDOWS)
 #  include <autoboost/interprocess/detail/win32_api.hpp>
@@ -52,8 +56,8 @@ namespace interprocess {
 
 #if defined (AUTOBOOST_INTERPROCESS_WINDOWS)
 
-typedef void *             file_handle_t;
-typedef long long          offset_t;
+typedef void *                   file_handle_t;
+typedef __int64  offset_t;
 typedef struct mapping_handle_impl_t{
    void *   handle;
    bool     is_shm;
@@ -97,6 +101,9 @@ inline file_handle_t file_handle_from_mapping_handle(mapping_handle_t hnd)
 
 inline bool create_directory(const char *path)
 {  return winapi::create_directory(path); }
+
+inline bool remove_directory(const char *path)
+{  return winapi::remove_directory(path); }
 
 inline bool get_temporary_path(char *buffer, std::size_t buf_len, std::size_t &required_len)
 {
@@ -150,10 +157,11 @@ inline bool truncate_file (file_handle_t hnd, std::size_t size)
    if(!winapi::get_file_size(hnd, filesize))
       return false;
 
-   typedef autoboost::make_unsigned<offset_t>::type uoffset_t;
+   typedef ::autoboost::move_detail::make_unsigned<offset_t>::type uoffset_t;
    const uoffset_t max_filesize = uoffset_t((std::numeric_limits<offset_t>::max)());
+   const uoffset_t uoff_size = uoffset_t(size);
    //Avoid unused variable warnings in 32 bit systems
-   if(uoffset_t(size) > max_filesize){
+   if(uoff_size > max_filesize){
       winapi::set_last_error(winapi::error_file_too_large);
       return false;
    }
@@ -417,6 +425,9 @@ inline file_handle_t file_handle_from_mapping_handle(mapping_handle_t hnd)
 inline bool create_directory(const char *path)
 {  return ::mkdir(path, 0777) == 0 && ::chmod(path, 0777) == 0; }
 
+inline bool remove_directory(const char *path)
+{  return ::rmdir(path) == 0; }
+
 inline bool get_temporary_path(char *buffer, std::size_t buf_len, std::size_t &required_len)
 {
    required_len = 5u;
@@ -476,7 +487,7 @@ inline bool delete_file(const char *name)
 
 inline bool truncate_file (file_handle_t hnd, std::size_t size)
 {
-   typedef autoboost::make_unsigned<off_t>::type uoff_t;
+   typedef autoboost::move_detail::make_unsigned<off_t>::type uoff_t;
    if(uoff_t((std::numeric_limits<off_t>::max)()) < size){
       errno = EINVAL;
       return false;

@@ -16,6 +16,8 @@
 #
 # include <autoboost/preprocessor/cat.hpp>
 # include <autoboost/preprocessor/debug/error.hpp>
+# include <autoboost/preprocessor/facilities/empty.hpp>
+# include <autoboost/preprocessor/logical/bool.hpp>
 # include <autoboost/preprocessor/detail/auto_rec.hpp>
 #
 # /* AUTOBOOST_PP_FOR */
@@ -42,7 +44,23 @@
 #    include <autoboost/preprocessor/repetition/detail/for.hpp>
 # endif
 #
-# define AUTOBOOST_PP_FOR_257(s, p, o, m) AUTOBOOST_PP_ERROR(0x0002)
+# if AUTOBOOST_PP_CONFIG_FLAGS() & AUTOBOOST_PP_CONFIG_DMC()
+# define AUTOBOOST_PP_FOR_257_PR(s, p) AUTOBOOST_PP_BOOL(p##(257, s))
+# else
+# define AUTOBOOST_PP_FOR_257_PR(s, p) AUTOBOOST_PP_BOOL(p(257, s))
+# endif
+
+# define AUTOBOOST_PP_FOR_257_ERROR() AUTOBOOST_PP_ERROR(0x0002)
+# define AUTOBOOST_PP_FOR_257(s, p, o, m) \
+	AUTOBOOST_PP_IIF \
+		( \
+		AUTOBOOST_PP_FOR_257_PR(s,p), \
+		AUTOBOOST_PP_FOR_257_ERROR, \
+		AUTOBOOST_PP_EMPTY \
+		) \
+	() \
+/**/
+// # define AUTOBOOST_PP_FOR_257(s, p, o, m) AUTOBOOST_PP_ERROR(0x0002)
 #
 # define AUTOBOOST_PP_FOR_CHECK_AUTOBOOST_PP_NIL 1
 #

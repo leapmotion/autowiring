@@ -16,7 +16,18 @@
 #ifndef AUTOBOOST_MOVE_CORE_HPP
 #define AUTOBOOST_MOVE_CORE_HPP
 
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <autoboost/move/detail/config_begin.hpp>
+#include <autoboost/move/detail/workaround.hpp>
+
+// @cond
 
 //autoboost_move_no_copy_constructor_or_assign typedef
 //used to detect noncopyable types for other Boost libraries.
@@ -40,9 +51,17 @@
    //
 #endif   //AUTOBOOST_NO_CXX11_DELETED_FUNCTIONS
 
+// @endcond
+
 #if defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(AUTOBOOST_MOVE_DOXYGEN_INVOKED)
 
-   #include <autoboost/move/detail/meta_utils.hpp>
+   #include <autoboost/move/detail/type_traits.hpp>
+
+   #if defined(AUTOBOOST_MOVE_ADDRESS_SANITIZER_ON)
+      #define AUTOBOOST_MOVE_TO_RV_CAST(RV_TYPE, ARG) reinterpret_cast<RV_TYPE>(ARG)
+   #else
+      #define AUTOBOOST_MOVE_TO_RV_CAST(RV_TYPE, ARG) static_cast<RV_TYPE>(ARG)
+   #endif
 
    //Move emulation rv breaks standard aliasing rules so add workarounds for some compilers
    #if defined(__GNUC__) && (__GNUC__ >= 4) && \
@@ -65,7 +84,7 @@
    template <class T>
    class rv
       : public ::autoboost::move_detail::if_c
-         < ::autoboost::move_detail::is_class_or_union<T>::value
+         < ::autoboost::move_detail::is_class<T>::value
          , T
          , ::autoboost::move_detail::nat
          >::type
@@ -92,6 +111,12 @@
       : integral_constant<bool, ::autoboost::move_detail::is_rv_impl<T>::value >
    {};
 
+   template <class T>
+   struct is_not_rv
+   {
+      static const bool value = !is_rv<T>::value;
+   };
+
    }  //namespace move_detail {
 
    //////////////////////////////////////////////////////////////////////////////
@@ -103,6 +128,12 @@
    struct has_move_emulation_enabled
       : ::autoboost::move_detail::has_move_emulation_enabled_impl<T>
    {};
+
+   template<class T>
+   struct has_move_emulation_disabled
+   {
+      static const bool value = !::autoboost::move_detail::has_move_emulation_enabled_impl<T>::value;
+   };
 
    }  //namespace autoboost {
 
@@ -124,6 +155,14 @@
 
    #define AUTOBOOST_RV_REF_END\
       >& \
+   //
+
+   #define AUTOBOOST_RV_REF_BEG_IF_CXX11 \
+      \
+   //
+
+   #define AUTOBOOST_RV_REF_END_IF_CXX11 \
+      \
    //
 
    #define AUTOBOOST_FWD_REF(TYPE)\
@@ -158,7 +197,7 @@
    namespace move_detail {
 
    template <class Ret, class T>
-   inline typename ::autoboost::move_detail::enable_if_c
+   AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::enable_if_c
       <  ::autoboost::move_detail::is_lvalue_reference<Ret>::value ||
         !::autoboost::has_move_emulation_enabled<T>::value
       , T&>::type
@@ -168,17 +207,17 @@
    }
 
    template <class Ret, class T>
-   inline typename ::autoboost::move_detail::enable_if_c
+   AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::enable_if_c
       < !::autoboost::move_detail::is_lvalue_reference<Ret>::value &&
          ::autoboost::has_move_emulation_enabled<T>::value
       , ::autoboost::rv<T>&>::type
          move_return(T& x) AUTOBOOST_NOEXCEPT
    {
-      return *static_cast< ::autoboost::rv<T>* >(::autoboost::move_detail::addressof(x));
+      return *AUTOBOOST_MOVE_TO_RV_CAST(::autoboost::rv<T>*, ::autoboost::move_detail::addressof(x));
    }
 
    template <class Ret, class T>
-   inline typename ::autoboost::move_detail::enable_if_c
+   AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::enable_if_c
       < !::autoboost::move_detail::is_lvalue_reference<Ret>::value &&
          ::autoboost::has_move_emulation_enabled<T>::value
       , ::autoboost::rv<T>&>::type
@@ -194,6 +233,10 @@
       autoboost::move_detail::move_return< RET_TYPE >(REF)
    //
 
+   #define AUTOBOOST_MOVE_BASE(BASE_TYPE, ARG) \
+      ::autoboost::move((BASE_TYPE&)(ARG))
+   //
+
    //////////////////////////////////////////////////////////////////////////////
    //
    //                         AUTOBOOST_MOVABLE_BUT_NOT_COPYABLE
@@ -202,10 +245,10 @@
    #define AUTOBOOST_MOVABLE_BUT_NOT_COPYABLE(TYPE)\
       AUTOBOOST_MOVE_IMPL_NO_COPY_CTOR_OR_ASSIGN(TYPE)\
       public:\
-      operator ::autoboost::rv<TYPE>&() \
-      {  return *static_cast< ::autoboost::rv<TYPE>* >(this);  }\
-      operator const ::autoboost::rv<TYPE>&() const \
-      {  return *static_cast<const ::autoboost::rv<TYPE>* >(this);  }\
+      AUTOBOOST_MOVE_FORCEINLINE operator ::autoboost::rv<TYPE>&() \
+      {  return *AUTOBOOST_MOVE_TO_RV_CAST(::autoboost::rv<TYPE>*, this);  }\
+      AUTOBOOST_MOVE_FORCEINLINE operator const ::autoboost::rv<TYPE>&() const \
+      {  return *AUTOBOOST_MOVE_TO_RV_CAST(const ::autoboost::rv<TYPE>*, this);  }\
       private:\
    //
 
@@ -217,22 +260,22 @@
 
    #define AUTOBOOST_COPYABLE_AND_MOVABLE(TYPE)\
       public:\
-      TYPE& operator=(TYPE &t)\
-      {  this->operator=(static_cast<const ::autoboost::rv<TYPE> &>(const_cast<const TYPE &>(t))); return *this;}\
+      AUTOBOOST_MOVE_FORCEINLINE TYPE& operator=(TYPE &t)\
+      {  this->operator=(const_cast<const TYPE&>(t)); return *this;}\
       public:\
-      operator ::autoboost::rv<TYPE>&() \
-      {  return *static_cast< ::autoboost::rv<TYPE>* >(this);  }\
-      operator const ::autoboost::rv<TYPE>&() const \
-      {  return *static_cast<const ::autoboost::rv<TYPE>* >(this);  }\
+      AUTOBOOST_MOVE_FORCEINLINE operator ::autoboost::rv<TYPE>&() \
+      {  return *AUTOBOOST_MOVE_TO_RV_CAST(::autoboost::rv<TYPE>*, this);  }\
+      AUTOBOOST_MOVE_FORCEINLINE operator const ::autoboost::rv<TYPE>&() const \
+      {  return *AUTOBOOST_MOVE_TO_RV_CAST(const ::autoboost::rv<TYPE>*, this);  }\
       private:\
    //
 
    #define AUTOBOOST_COPYABLE_AND_MOVABLE_ALT(TYPE)\
       public:\
-      operator ::autoboost::rv<TYPE>&() \
-      {  return *static_cast< ::autoboost::rv<TYPE>* >(this);  }\
-      operator const ::autoboost::rv<TYPE>&() const \
-      {  return *static_cast<const ::autoboost::rv<TYPE>* >(this);  }\
+      AUTOBOOST_MOVE_FORCEINLINE operator ::autoboost::rv<TYPE>&() \
+      {  return *AUTOBOOST_MOVE_TO_RV_CAST(::autoboost::rv<TYPE>*, this);  }\
+      AUTOBOOST_MOVE_FORCEINLINE operator const ::autoboost::rv<TYPE>&() const \
+      {  return *AUTOBOOST_MOVE_TO_RV_CAST(const ::autoboost::rv<TYPE>*, this);  }\
       private:\
    //
 
@@ -251,23 +294,6 @@
 
 #else    //AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
 
-   //Compiler workaround detection
-   #if !defined(AUTOBOOST_MOVE_DOXYGEN_INVOKED)
-      #if defined(__GNUC__) && (__GNUC__ == 4) && (__GNUC_MINOR__ < 5) && !defined(__clang__)
-         //Pre-standard rvalue binding rules
-         #define AUTOBOOST_MOVE_OLD_RVALUE_REF_BINDING_RULES
-      #elif defined(_MSC_VER) && (_MSC_VER == 1600)
-         //Standard rvalue binding rules but with some bugs
-         #define AUTOBOOST_MOVE_MSVC_10_MEMBER_RVALUE_REF_BUG
-         #define AUTOBOOST_MOVE_MSVC_AUTO_MOVE_RETURN_BUG
-         //Use standard library for MSVC to avoid namespace issues as
-         //some move calls in the STL are not fully qualified.
-         //#define AUTOBOOST_MOVE_USE_STANDARD_LIBRARY_MOVE
-      #elif defined(_MSC_VER) && (_MSC_VER == 1700)
-         #define AUTOBOOST_MOVE_MSVC_AUTO_MOVE_RETURN_BUG
-      #endif
-   #endif
-
    //! This macro marks a type as movable but not copyable, disabling copy construction
    //! and assignment. The user will need to write a move constructor/assignment as explained
    //! in the documentation to fully write a movable but not copyable class.
@@ -275,6 +301,7 @@
       AUTOBOOST_MOVE_IMPL_NO_COPY_CTOR_OR_ASSIGN(TYPE)\
       public:\
       typedef int autoboost_move_emulation_t;\
+      private:\
    //
 
    //! This macro marks a type as copyable and movable.
@@ -297,6 +324,12 @@
    struct has_move_emulation_enabled
    {
       static const bool value = false;
+   };
+
+   template<class T>
+   struct has_move_emulation_disabled
+   {
+      static const bool value = true;
    };
 
    }  //namespace autoboost{
@@ -326,6 +359,19 @@
    //!and ended with AUTOBOOST_RV_REF_END
    #define AUTOBOOST_RV_REF_END\
       && \
+   //
+
+   //!This macro expands to AUTOBOOST_RV_REF_BEG if AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+   //!is not defined, empty otherwise
+   #define AUTOBOOST_RV_REF_BEG_IF_CXX11 \
+      AUTOBOOST_RV_REF_BEG \
+   //
+
+   //!This macro expands to AUTOBOOST_RV_REF_END if AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+   //!is not defined, empty otherwise
+   #define AUTOBOOST_RV_REF_END_IF_CXX11 \
+      AUTOBOOST_RV_REF_END \
+   //
 
    //!This macro is used to achieve portable syntax in copy
    //!assignment for classes marked as AUTOBOOST_COPYABLE_AND_MOVABLE.
@@ -369,7 +415,6 @@
       const TYPE & \
    //
 
-
    #endif   //#if !defined(AUTOBOOST_MOVE_DOXYGEN_INVOKED)
 
    #if !defined(AUTOBOOST_MOVE_MSVC_AUTO_MOVE_RETURN_BUG) || defined(AUTOBOOST_MOVE_DOXYGEN_INVOKED)
@@ -406,7 +451,7 @@
       namespace move_detail {
 
       template <class Ret, class T>
-      inline typename ::autoboost::move_detail::enable_if_c
+      AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::enable_if_c
          <  ::autoboost::move_detail::is_lvalue_reference<Ret>::value
          , T&>::type
             move_return(T& x) AUTOBOOST_NOEXCEPT
@@ -415,7 +460,7 @@
       }
 
       template <class Ret, class T>
-      inline typename ::autoboost::move_detail::enable_if_c
+      AUTOBOOST_MOVE_FORCEINLINE typename ::autoboost::move_detail::enable_if_c
          < !::autoboost::move_detail::is_lvalue_reference<Ret>::value
          , Ret && >::type
             move_return(T&& t) AUTOBOOST_NOEXCEPT
@@ -431,6 +476,17 @@
       //
 
    #endif   //!defined(AUTOBOOST_MOVE_MSVC_AUTO_MOVE_RETURN_BUG) || defined(AUTOBOOST_MOVE_DOXYGEN_INVOKED)
+
+   //!This macro is used to achieve portable optimal move constructors.
+   //!
+   //!When implementing the move constructor, in C++03 compilers the moved-from argument must be
+   //!cast to the base type before calling `::autoboost::move()` due to rvalue reference limitations.
+   //!
+   //!In C++11 compilers the cast from a rvalue reference of a derived type to a rvalue reference of
+   //!a base type is implicit.
+   #define AUTOBOOST_MOVE_BASE(BASE_TYPE, ARG) \
+      ::autoboost::move((BASE_TYPE&)(ARG))
+   //
 
    namespace autoboost {
    namespace move_detail {

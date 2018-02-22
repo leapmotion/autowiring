@@ -21,24 +21,31 @@
 
 #include <autoboost/config.hpp>
 #include <autoboost/is_placeholder.hpp>
-#include <autoboost/static_assert.hpp>
 
 namespace autoboost
 {
 
+template<bool Eq> struct _arg_eq
+{
+};
+
+template<> struct _arg_eq<true>
+{
+    typedef void type;
+};
+
 template< int I > struct arg
 {
-    arg()
+    AUTOBOOST_CONSTEXPR arg()
     {
     }
 
-    template< class T > arg( T const & /* t */ )
+    template< class T > AUTOBOOST_CONSTEXPR arg( T const & /* t */, typename _arg_eq< I == is_placeholder<T>::value >::type * = 0 )
     {
-        AUTOBOOST_STATIC_ASSERT( I == is_placeholder<T>::value );
     }
 };
 
-template< int I > bool operator==( arg<I> const &, arg<I> const & )
+template< int I > AUTOBOOST_CONSTEXPR bool operator==( arg<I> const &, arg<I> const & )
 {
     return true;
 }

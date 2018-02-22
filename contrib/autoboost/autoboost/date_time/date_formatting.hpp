@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_DATE_FORMATTING_HPP___
-#define AB_DATE_TIME_DATE_FORMATTING_HPP___
+#ifndef DATE_TIME_DATE_FORMATTING_HPP___
+#define DATE_TIME_DATE_FORMATTING_HPP___
 
 /* Copyright (c) 2002-2004 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

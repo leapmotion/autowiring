@@ -13,6 +13,7 @@
  * accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
  *
+ *  9 Jan 2013 - (mtc) Added constexpr
  * 14 Apr 2012 - (mtc) Added support for autoboost::hash
  * 28 Dec 2010 - (mtc) Added cbegin and cend (and crbegin and crend) for C++Ox compatibility.
  * 10 Mar 2010 - (mtc) fill method added, matching resolution of the standard library working group.
@@ -42,12 +43,12 @@
 #include <cstddef>
 #include <stdexcept>
 #include <autoboost/assert.hpp>
+#include <autoboost/static_assert.hpp>
 #include <autoboost/swap.hpp>
 
 // Handles broken standard libraries better than <iterator>
 #include <autoboost/detail/iterator.hpp>
 #include <autoboost/throw_exception.hpp>
-#include <autoboost/functional/hash_fwd.hpp>
 #include <algorithm>
 
 // FIXES for broken compilers
@@ -81,15 +82,9 @@ namespace autoboost {
         const_iterator cend() const { return elems+N; }
 
         // reverse iterator support
-#if !defined(AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION) && !defined(AUTOBOOST_MSVC_STD_ITERATOR) && !defined(AUTOBOOST_NO_STD_ITERATOR_TRAITS)
+#if !defined(AUTOBOOST_MSVC_STD_ITERATOR) && !defined(AUTOBOOST_NO_STD_ITERATOR_TRAITS)
         typedef std::reverse_iterator<iterator> reverse_iterator;
         typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
-#elif defined(_MSC_VER) && (_MSC_VER == 1300) && defined(AUTOBOOST_DINKUMWARE_STDLIB) && (AUTOBOOST_DINKUMWARE_STDLIB == 310)
-        // workaround for broken reverse_iterator in VC7
-        typedef std::reverse_iterator<std::_Ptrit<value_type, difference_type, iterator,
-                                      reference, iterator, reference> > reverse_iterator;
-        typedef std::reverse_iterator<std::_Ptrit<value_type, difference_type, const_iterator,
-                                      const_reference, iterator, reference> > const_reverse_iterator;
 #elif defined(_RWSTD_NO_CLASS_PARTIAL_SPEC)
         typedef std::reverse_iterator<iterator, std::random_access_iterator_tag,
               value_type, reference, iterator, difference_type> reverse_iterator;
@@ -120,19 +115,17 @@ namespace autoboost {
         // operator[]
         reference operator[](size_type i)
         {
-            AUTOBOOST_ASSERT_MSG( i < N, "out of range" );
-            return elems[i];
+            return AUTOBOOST_ASSERT_MSG( i < N, "out of range" ), elems[i];
         }
 
-        const_reference operator[](size_type i) const
+        /*AUTOBOOST_CONSTEXPR*/ const_reference operator[](size_type i) const
         {
-            AUTOBOOST_ASSERT_MSG( i < N, "out of range" );
-            return elems[i];
+            return AUTOBOOST_ASSERT_MSG( i < N, "out of range" ), elems[i];
         }
 
         // at() with range check
-        reference at(size_type i) { rangecheck(i); return elems[i]; }
-        const_reference at(size_type i) const { rangecheck(i); return elems[i]; }
+        reference                           at(size_type i)       { return rangecheck(i), elems[i]; }
+        /*AUTOBOOST_CONSTEXPR*/ const_reference at(size_type i) const { return rangecheck(i), elems[i]; }
 
         // front() and back()
         reference front()
@@ -140,7 +133,7 @@ namespace autoboost {
             return elems[0];
         }
 
-        const_reference front() const
+        AUTOBOOST_CONSTEXPR const_reference front() const
         {
             return elems[0];
         }
@@ -150,15 +143,15 @@ namespace autoboost {
             return elems[N-1];
         }
 
-        const_reference back() const
+        AUTOBOOST_CONSTEXPR const_reference back() const
         {
             return elems[N-1];
         }
 
         // size is constant
-        static size_type size() { return N; }
-        static bool empty() { return false; }
-        static size_type max_size() { return N; }
+        static AUTOBOOST_CONSTEXPR size_type size() { return N; }
+        static AUTOBOOST_CONSTEXPR bool empty() { return false; }
+        static AUTOBOOST_CONSTEXPR size_type max_size() { return N; }
         enum { static_size = N };
 
         // swap (note: linear complexity)
@@ -189,16 +182,12 @@ namespace autoboost {
         }
 
         // check range (may be private because it is static)
-        static void rangecheck (size_type i) {
-            if (i >= size()) {
-                std::out_of_range e("array<>: index out of range");
-                autoboost::throw_exception(e);
-            }
+        static AUTOBOOST_CONSTEXPR bool rangecheck (size_type i) {
+            return i > size() ? autoboost::throw_exception(std::out_of_range ("array<>: index out of range")), true : true;
         }
 
     };
 
-#if !defined(AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
     template< class T >
     class array< T, 0 > {
 
@@ -222,15 +211,9 @@ namespace autoboost {
         const_iterator cend() const { return cbegin(); }
 
         // reverse iterator support
-#if !defined(AUTOBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION) && !defined(AUTOBOOST_MSVC_STD_ITERATOR) && !defined(AUTOBOOST_NO_STD_ITERATOR_TRAITS)
+#if !defined(AUTOBOOST_MSVC_STD_ITERATOR) && !defined(AUTOBOOST_NO_STD_ITERATOR_TRAITS)
         typedef std::reverse_iterator<iterator> reverse_iterator;
         typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
-#elif defined(_MSC_VER) && (_MSC_VER == 1300) && defined(AUTOBOOST_DINKUMWARE_STDLIB) && (AUTOBOOST_DINKUMWARE_STDLIB == 310)
-        // workaround for broken reverse_iterator in VC7
-        typedef std::reverse_iterator<std::_Ptrit<value_type, difference_type, iterator,
-                                      reference, iterator, reference> > reverse_iterator;
-        typedef std::reverse_iterator<std::_Ptrit<value_type, difference_type, const_iterator,
-                                      const_reference, iterator, reference> > const_reverse_iterator;
 #elif defined(_RWSTD_NO_CLASS_PARTIAL_SPEC)
         typedef std::reverse_iterator<iterator, std::random_access_iterator_tag,
               value_type, reference, iterator, difference_type> reverse_iterator;
@@ -264,14 +247,14 @@ namespace autoboost {
             return failed_rangecheck();
         }
 
-        const_reference operator[](size_type /*i*/) const
+        /*AUTOBOOST_CONSTEXPR*/ const_reference operator[](size_type /*i*/) const
         {
             return failed_rangecheck();
         }
 
         // at() with range check
         reference at(size_type /*i*/)               {   return failed_rangecheck(); }
-        const_reference at(size_type /*i*/) const   {   return failed_rangecheck(); }
+        /*AUTOBOOST_CONSTEXPR*/ const_reference at(size_type /*i*/) const   { return failed_rangecheck(); }
 
         // front() and back()
         reference front()
@@ -279,7 +262,7 @@ namespace autoboost {
             return failed_rangecheck();
         }
 
-        const_reference front() const
+        AUTOBOOST_CONSTEXPR const_reference front() const
         {
             return failed_rangecheck();
         }
@@ -289,15 +272,15 @@ namespace autoboost {
             return failed_rangecheck();
         }
 
-        const_reference back() const
+        AUTOBOOST_CONSTEXPR const_reference back() const
         {
             return failed_rangecheck();
         }
 
         // size is constant
-        static size_type size() { return 0; }
-        static bool empty() { return true; }
-        static size_type max_size() { return 0; }
+        static AUTOBOOST_CONSTEXPR size_type size() { return 0; }
+        static AUTOBOOST_CONSTEXPR bool empty() { return true; }
+        static AUTOBOOST_CONSTEXPR size_type max_size() { return 0; }
         enum { static_size = 0 };
 
         void swap (array<T,0>& /*y*/) {
@@ -335,7 +318,6 @@ namespace autoboost {
 #endif
             }
     };
-#endif
 
     // comparisons
     template<class T, std::size_t N>
@@ -391,7 +373,7 @@ namespace autoboost {
 
    // Specific for autoboost::array: simply returns its elems data member.
    template <typename T, std::size_t N>
-   typename const detail::c_array<T,N>::type& get_c_array(const autoboost::array<T,N>& arg)
+   typename detail::c_array<T,N>::type const& get_c_array(const autoboost::array<T,N>& arg)
    {
        return arg.elems;
    }
@@ -429,6 +411,7 @@ namespace autoboost {
     }
 #endif
 
+    template <class It> std::size_t hash_range(It, It);
 
     template<class T, std::size_t N>
     std::size_t hash_value(const array<T,N>& arr)
@@ -436,8 +419,36 @@ namespace autoboost {
         return autoboost::hash_range(arr.begin(), arr.end());
     }
 
+   template <size_t Idx, typename T, size_t N>
+   T &get(autoboost::array<T,N> &arr) AUTOBOOST_NOEXCEPT {
+       AUTOBOOST_STATIC_ASSERT_MSG ( Idx < N, "autoboost::get<>(autoboost::array &) index out of range" );
+       return arr[Idx];
+       }
+
+   template <size_t Idx, typename T, size_t N>
+   const T &get(const autoboost::array<T,N> &arr) AUTOBOOST_NOEXCEPT {
+       AUTOBOOST_STATIC_ASSERT_MSG ( Idx < N, "autoboost::get<>(const autoboost::array &) index out of range" );
+       return arr[Idx];
+       }
+
 } /* namespace autoboost */
 
+#ifndef AUTOBOOST_NO_CXX11_HDR_ARRAY
+//  If we don't have std::array, I'm assuming that we don't have std::get
+namespace std {
+   template <size_t Idx, typename T, size_t N>
+   T &get(autoboost::array<T,N> &arr) AUTOBOOST_NOEXCEPT {
+       AUTOBOOST_STATIC_ASSERT_MSG ( Idx < N, "std::get<>(autoboost::array &) index out of range" );
+       return arr[Idx];
+       }
+
+   template <size_t Idx, typename T, size_t N>
+   const T &get(const autoboost::array<T,N> &arr) AUTOBOOST_NOEXCEPT {
+       AUTOBOOST_STATIC_ASSERT_MSG ( Idx < N, "std::get<>(const autoboost::array &) index out of range" );
+       return arr[Idx];
+       }
+}
+#endif
 
 #if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1400)
 # pragma warning(pop)

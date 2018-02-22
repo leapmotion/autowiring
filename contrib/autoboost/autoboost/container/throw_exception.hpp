@@ -11,7 +11,11 @@
 #ifndef AUTOBOOST_CONTAINER_THROW_EXCEPTION_HPP
 #define AUTOBOOST_CONTAINER_THROW_EXCEPTION_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -20,6 +24,7 @@
 
 #ifndef AUTOBOOST_NO_EXCEPTIONS
    #include <stdexcept> //for std exception types
+   #include <string>    //for implicit std::string conversion
    #include <new>       //for std::bad_alloc
 #else
    #include <autoboost/assert.hpp>

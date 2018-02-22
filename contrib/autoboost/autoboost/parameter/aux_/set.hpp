@@ -7,8 +7,7 @@
 
 # include <autoboost/detail/workaround.hpp>
 
-# if !AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x564)) \
-  && !AUTOBOOST_WORKAROUND(__GNUC__, < 3)
+# if !AUTOBOOST_WORKAROUND(__BORLANDC__, AUTOBOOST_TESTED_AT(0x564))
 #  include <autoboost/mpl/insert.hpp>
 #  include <autoboost/mpl/set/set0.hpp>
 #  include <autoboost/mpl/has_key.hpp>

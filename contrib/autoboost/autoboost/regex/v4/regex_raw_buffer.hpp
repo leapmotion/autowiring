@@ -29,7 +29,7 @@
 #include <cstddef>
 
 namespace autoboost{
-   namespace re_detail{
+   namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 #ifdef AUTOBOOST_MSVC
 #pragma warning(push)
@@ -198,7 +198,7 @@ inline raw_storage::raw_storage(size_type n)
 #pragma warning(pop)
 #endif
 
-} // namespace re_detail
+} // namespace AUTOBOOST_REGEX_DETAIL_NS
 } // namespace autoboost
 
 #endif

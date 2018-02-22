@@ -9,7 +9,7 @@
 
 #define AUTOBOOST_COMPILER "SGI Irix compiler version " AUTOBOOST_STRINGIZE(_COMPILER_VERSION)
 
-#include "autoboost/config/compiler/common_edg.hpp"
+#include <autoboost/config/compiler/common_edg.hpp>
 
 //
 // Threading support:

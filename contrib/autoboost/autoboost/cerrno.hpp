@@ -7,8 +7,8 @@
 
 //  See library home page at http://www.boost.org/libs/system
 
-#ifndef AUTOBOOST_CERRNO_HPP
-#define AUTOBOOST_CERRNO_HPP
+#ifndef AUTOBOOST_SYSTEM_CERRNO_HPP
+#define AUTOBOOST_SYSTEM_CERRNO_HPP
 
 #include <cerrno>
 

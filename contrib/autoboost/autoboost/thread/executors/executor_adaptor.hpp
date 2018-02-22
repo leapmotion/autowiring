@@ -98,9 +98,6 @@ namespace executors
     void submit(AUTOBOOST_THREAD_RV_REF(work) closure)  {
       return ex.submit(autoboost::move(closure));
     }
-//    void submit(work & closure)  {
-//      return ex.submit(closure);
-//    }
 
 #if defined(AUTOBOOST_NO_CXX11_RVALUE_REFERENCES)
     template <typename Closure>
@@ -115,9 +112,11 @@ namespace executors
     }
 
     template <typename Closure>
-    void submit(AUTOBOOST_THREAD_RV_REF(Closure) closure)
+    void submit(AUTOBOOST_THREAD_FWD_REF(Closure) closure)
     {
-      submit(work(autoboost::forward<Closure>(closure)));
+      //submit(work(autoboost::forward<Closure>(closure)));
+      work w((autoboost::forward<Closure>(closure)));
+      submit(autoboost::move(w));
     }
 
     /**

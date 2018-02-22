@@ -82,6 +82,7 @@ public:
     {
         __asm__ __volatile__( AUTOBOOST_SP_ARM_BARRIER ::: "memory" );
         *const_cast< int volatile* >( &v_ ) = 0;
+        __asm__ __volatile__( AUTOBOOST_SP_ARM_BARRIER ::: "memory" );
     }
 
 public:

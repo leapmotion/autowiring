@@ -1,5 +1,5 @@
-#ifndef AB_DATE_CLOCK_DEVICE_HPP___
-#define AB_DATE_CLOCK_DEVICE_HPP___
+#ifndef DATE_CLOCK_DEVICE_HPP___
+#define DATE_CLOCK_DEVICE_HPP___
 
 /* Copyright (c) 2002,2003,2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

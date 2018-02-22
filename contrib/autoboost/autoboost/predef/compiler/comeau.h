@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2014
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -29,7 +29,7 @@ Version number available as major, minor, and patch.
  */
 
 #if defined(__COMO__)
-#   if !defined(AUTOBOOST_COMP_COMO_DETECTION) && defined(__CONO_VERSION__)
+#   if !defined(AUTOBOOST_COMP_COMO_DETECTION) && defined(__COMO_VERSION__)
 #       define AUTOBOOST_COMP_COMO_DETECTION AUTOBOOST_PREDEF_MAKE_0X_VRP(__COMO_VERSION__)
 #   endif
 #   if !defined(AUTOBOOST_COMP_COMO_DETECTION)
@@ -50,13 +50,12 @@ Version number available as major, minor, and patch.
 
 #define AUTOBOOST_COMP_COMO_NAME "Comeau C++"
 
+#endif
+
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_COMP_COMO,AUTOBOOST_COMP_COMO_NAME)
 
 #ifdef AUTOBOOST_COMP_COMO_EMULATED
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_COMP_COMO_EMULATED,AUTOBOOST_COMP_COMO_NAME)
-#endif
-
-
 #endif

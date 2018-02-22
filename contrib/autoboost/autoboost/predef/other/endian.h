@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2013-2014
+Copyright Rene Rivera 2013-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -13,6 +13,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <autoboost/predef/library/c/gnu.h>
 #include <autoboost/predef/os/macos.h>
 #include <autoboost/predef/os/bsd.h>
+#include <autoboost/predef/os/android.h>
 
 /*`
 [heading `AUTOBOOST_ENDIAN_*`]
@@ -53,7 +54,7 @@ information and acquired knowledge:
  */
 #if !AUTOBOOST_ENDIAN_BIG_BYTE && !AUTOBOOST_ENDIAN_BIG_WORD && \
     !AUTOBOOST_ENDIAN_LITTLE_BYTE && !AUTOBOOST_ENDIAN_LITTLE_WORD
-#   if AUTOBOOST_LIB_C_GNU
+#   if AUTOBOOST_LIB_C_GNU || AUTOBOOST_OS_ANDROID
 #       include <endian.h>
 #   else
 #       if AUTOBOOST_OS_MACOS
@@ -69,29 +70,29 @@ information and acquired knowledge:
 #       endif
 #   endif
 #   if defined(__BYTE_ORDER)
-#       if (__BYTE_ORDER == __BIG_ENDIAN)
+#       if defined(__BIG_ENDIAN) && (__BYTE_ORDER == __BIG_ENDIAN)
 #           undef AUTOBOOST_ENDIAN_BIG_BYTE
 #           define AUTOBOOST_ENDIAN_BIG_BYTE AUTOBOOST_VERSION_NUMBER_AVAILABLE
 #       endif
-#       if (__BYTE_ORDER == __LITTLE_ENDIAN)
+#       if defined(__LITTLE_ENDIAN) && (__BYTE_ORDER == __LITTLE_ENDIAN)
 #           undef AUTOBOOST_ENDIAN_LITTLE_BYTE
 #           define AUTOBOOST_ENDIAN_LITTLE_BYTE AUTOBOOST_VERSION_NUMBER_AVAILABLE
 #       endif
-#       if (__BYTE_ORDER == __PDP_ENDIAN)
+#       if defined(__PDP_ENDIAN) && (__BYTE_ORDER == __PDP_ENDIAN)
 #           undef AUTOBOOST_ENDIAN_LITTLE_WORD
 #           define AUTOBOOST_ENDIAN_LITTLE_WORD AUTOBOOST_VERSION_NUMBER_AVAILABLE
 #       endif
 #   endif
 #   if !defined(__BYTE_ORDER) && defined(_BYTE_ORDER)
-#       if (_BYTE_ORDER == _BIG_ENDIAN)
+#       if defined(_BIG_ENDIAN) && (_BYTE_ORDER == _BIG_ENDIAN)
 #           undef AUTOBOOST_ENDIAN_BIG_BYTE
 #           define AUTOBOOST_ENDIAN_BIG_BYTE AUTOBOOST_VERSION_NUMBER_AVAILABLE
 #       endif
-#       if (_BYTE_ORDER == _LITTLE_ENDIAN)
+#       if defined(_LITTLE_ENDIAN) && (_BYTE_ORDER == _LITTLE_ENDIAN)
 #           undef AUTOBOOST_ENDIAN_LITTLE_BYTE
 #           define AUTOBOOST_ENDIAN_LITTLE_BYTE AUTOBOOST_VERSION_NUMBER_AVAILABLE
 #       endif
-#       if (_BYTE_ORDER == _PDP_ENDIAN)
+#       if defined(_PDP_ENDIAN) && (_BYTE_ORDER == _PDP_ENDIAN)
 #           undef AUTOBOOST_ENDIAN_LITTLE_WORD
 #           define AUTOBOOST_ENDIAN_LITTLE_WORD AUTOBOOST_VERSION_NUMBER_AVAILABLE
 #       endif
@@ -139,7 +140,7 @@ information and acquired knowledge:
     !AUTOBOOST_ENDIAN_LITTLE_BYTE && !AUTOBOOST_ENDIAN_LITTLE_WORD
 #   include <autoboost/predef/architecture.h>
 #   if AUTOBOOST_ARCH_M68K || \
-        AUTOBOOST_ARCH_PARISK || \
+        AUTOBOOST_ARCH_PARISC || \
         AUTOBOOST_ARCH_SPARC || \
         AUTOBOOST_ARCH_SYS370 || \
         AUTOBOOST_ARCH_SYS390 || \
@@ -188,6 +189,8 @@ information and acquired knowledge:
 #define AUTOBOOST_ENDIAN_LITTLE_BYTE_NAME "Byte-Swapped Little-Endian"
 #define AUTOBOOST_ENDIAN_LITTLE_WORD_NAME "Word-Swapped Little-Endian"
 
+#endif
+
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_ENDIAN_BIG_BYTE,AUTOBOOST_ENDIAN_BIG_BYTE_NAME)
 
@@ -199,6 +202,3 @@ AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_ENDIAN_LITTLE_BYTE,AUTOBOOST_ENDIAN_LITT
 
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_ENDIAN_LITTLE_WORD,AUTOBOOST_ENDIAN_LITTLE_WORD_NAME)
-
-
-#endif

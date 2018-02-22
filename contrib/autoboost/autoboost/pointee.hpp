@@ -1,5 +1,5 @@
-#ifndef AB_POINTEE_DWA200415_HPP
-# define AB_POINTEE_DWA200415_HPP
+#ifndef POINTEE_DWA200415_HPP
+# define POINTEE_DWA200415_HPP
 
 //
 // Copyright David Abrahams 2004. Use, modification and distribution is

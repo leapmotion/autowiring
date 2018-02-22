@@ -1,5 +1,5 @@
-#ifndef AB__DATE_TIME_POSIX_TIME_ZONE__
-#define AB__DATE_TIME_POSIX_TIME_ZONE__
+#ifndef _DATE_TIME_POSIX_TIME_ZONE__
+#define _DATE_TIME_POSIX_TIME_ZONE__
 
 /* Copyright (c) 2003-2005 CrystalClear Software, Inc.
  * Subject to the Boost Software License, Version 1.0. (See accompanying
@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <autoboost/tokenizer.hpp>
 #include <autoboost/throw_exception.hpp>
+#include <autoboost/date_time/compiler_config.hpp>
 #include <autoboost/date_time/gregorian/gregorian.hpp>
 #include <autoboost/date_time/time_zone_names.hpp>
 #include <autoboost/date_time/time_zone_base.hpp>
@@ -25,13 +26,13 @@ namespace autoboost{
 namespace local_time{
 
   //! simple exception for UTC and Daylight savings start/end offsets
-  struct bad_offset : public std::out_of_range
+  struct AUTOBOOST_SYMBOL_VISIBLE bad_offset : public std::out_of_range
   {
     bad_offset(std::string const& msg = std::string()) :
       std::out_of_range(std::string("Offset out of range: " + msg)) {}
   };
   //! simple exception for UTC daylight savings adjustment
-  struct bad_adjustment : public std::out_of_range
+  struct AUTOBOOST_SYMBOL_VISIBLE bad_adjustment : public std::out_of_range
   {
     bad_adjustment(std::string const& msg = std::string()) :
       std::out_of_range(std::string("Adjustment out of range: " + msg)) {}
@@ -67,7 +68,7 @@ namespace local_time{
    * http://www.worldtimezone.com/utc/utc+1200.html
    */
   template<class CharT>
-  class posix_time_zone_base : public date_time::time_zone_base<posix_time::ptime,CharT> {
+  class AUTOBOOST_SYMBOL_VISIBLE posix_time_zone_base : public date_time::time_zone_base<posix_time::ptime,CharT> {
   public:
     typedef autoboost::posix_time::time_duration time_duration_type;
     typedef date_time::time_zone_names_base<CharT> time_zone_names;

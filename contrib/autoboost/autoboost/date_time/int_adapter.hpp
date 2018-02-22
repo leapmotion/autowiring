@@ -1,5 +1,5 @@
-#ifndef AB__DATE_TIME_INT_ADAPTER_HPP__
-#define AB__DATE_TIME_INT_ADAPTER_HPP__
+#ifndef _DATE_TIME_INT_ADAPTER_HPP__
+#define _DATE_TIME_INT_ADAPTER_HPP__
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -230,7 +230,7 @@ public:
         return int_adapter::neg_infinity();
       }
     }
-    return int_adapter<int_type>(value_ + rhs.as_number());
+    return int_adapter<int_type>(value_ + static_cast<int_type>(rhs.as_number()));
   }
 
   int_adapter operator+(const int_type rhs) const
@@ -279,7 +279,7 @@ public:
         return int_adapter::pos_infinity();
       }
     }
-    return int_adapter<int_type>(value_ - rhs.as_number());
+    return int_adapter<int_type>(value_ - static_cast<int_type>(rhs.as_number()));
   }
   int_adapter operator-(const int_type rhs) const
   {

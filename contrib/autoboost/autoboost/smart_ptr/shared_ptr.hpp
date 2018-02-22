@@ -29,6 +29,8 @@
 #include <autoboost/detail/workaround.hpp>
 #include <autoboost/smart_ptr/detail/sp_convertible.hpp>
 #include <autoboost/smart_ptr/detail/sp_nullptr_t.hpp>
+#include <autoboost/smart_ptr/detail/sp_disable_deprecated.hpp>
+#include <autoboost/smart_ptr/detail/sp_noexcept.hpp>
 
 #if !defined(AUTOBOOST_SP_NO_ATOMIC_ACCESS)
 #include <autoboost/smart_ptr/detail/spinlock_pool.hpp>
@@ -47,6 +49,11 @@
 #endif
 #endif
 
+#if defined( AUTOBOOST_SP_DISABLE_DEPRECATED )
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 namespace autoboost
 {
 
@@ -54,6 +61,13 @@ template<class T> class shared_ptr;
 template<class T> class weak_ptr;
 template<class T> class enable_shared_from_this;
 class enable_shared_from_raw;
+
+namespace movelib
+{
+
+    template< class T, class D > class unique_ptr;
+
+} // namespace movelib
 
 namespace detail
 {
@@ -331,13 +345,13 @@ public:
 
     typedef typename autoboost::detail::sp_element< T >::type element_type;
 
-    shared_ptr() AUTOBOOST_NOEXCEPT : px( 0 ), pn() // never throws in 1.30+
+    shared_ptr() AUTOBOOST_SP_NOEXCEPT : px( 0 ), pn() // never throws in 1.30+
     {
     }
 
 #if !defined( AUTOBOOST_NO_CXX11_NULLPTR )
 
-    shared_ptr( autoboost::detail::sp_nullptr_t ) AUTOBOOST_NOEXCEPT : px( 0 ), pn() // never throws
+    shared_ptr( autoboost::detail::sp_nullptr_t ) AUTOBOOST_SP_NOEXCEPT : px( 0 ), pn() // never throws
     {
     }
 
@@ -389,7 +403,7 @@ public:
 
 // ... except in C++0x, move disables the implicit copy
 
-    shared_ptr( shared_ptr const & r ) AUTOBOOST_NOEXCEPT : px( r.px ), pn( r.pn )
+    shared_ptr( shared_ptr const & r ) AUTOBOOST_SP_NOEXCEPT : px( r.px ), pn( r.pn )
     {
     }
 
@@ -495,9 +509,20 @@ public:
 
 #endif
 
+    template< class Y, class D >
+    shared_ptr( autoboost::movelib::unique_ptr< Y, D > r ): px( r.get() ), pn()
+    {
+        autoboost::detail::sp_assert_convertible< Y, T >();
+
+        typename autoboost::movelib::unique_ptr< Y, D >::pointer tmp = r.get();
+        pn = autoboost::detail::shared_count( r );
+
+        autoboost::detail::sp_deleter_construct( this, tmp );
+    }
+
     // assignment
 
-    shared_ptr & operator=( shared_ptr const & r ) AUTOBOOST_NOEXCEPT
+    shared_ptr & operator=( shared_ptr const & r ) AUTOBOOST_SP_NOEXCEPT
     {
         this_type(r).swap(*this);
         return *this;
@@ -556,11 +581,32 @@ public:
 
 #endif
 
+    template<class Y, class D>
+    shared_ptr & operator=( autoboost::movelib::unique_ptr<Y, D> r )
+    {
+        // this_type( static_cast< unique_ptr<Y, D> && >( r ) ).swap( *this );
+
+        autoboost::detail::sp_assert_convertible< Y, T >();
+
+        typename autoboost::movelib::unique_ptr< Y, D >::pointer p = r.get();
+
+        shared_ptr tmp;
+
+        tmp.px = p;
+        tmp.pn = autoboost::detail::shared_count( r );
+
+        autoboost::detail::sp_deleter_construct( &tmp, p );
+
+        tmp.swap( *this );
+
+        return *this;
+    }
+
 // Move support
 
 #if !defined( AUTOBOOST_NO_CXX11_RVALUE_REFERENCES )
 
-    shared_ptr( shared_ptr && r ) AUTOBOOST_NOEXCEPT : px( r.px ), pn()
+    shared_ptr( shared_ptr && r ) AUTOBOOST_SP_NOEXCEPT : px( r.px ), pn()
     {
         pn.swap( r.pn );
         r.px = 0;
@@ -584,7 +630,7 @@ public:
         r.px = 0;
     }
 
-    shared_ptr & operator=( shared_ptr && r ) AUTOBOOST_NOEXCEPT
+    shared_ptr & operator=( shared_ptr && r ) AUTOBOOST_SP_NOEXCEPT
     {
         this_type( static_cast< shared_ptr && >( r ) ).swap( *this );
         return *this;
@@ -595,6 +641,14 @@ public:
     {
         this_type( static_cast< shared_ptr<Y> && >( r ) ).swap( *this );
         return *this;
+    }
+
+    // aliasing move
+    template<class Y>
+    shared_ptr( shared_ptr<Y> && r, element_type * p ) AUTOBOOST_NOEXCEPT : px( p ), pn()
+    {
+        pn.swap( r.pn );
+        r.px = 0;
     }
 
 #endif
@@ -635,6 +689,15 @@ public:
         this_type( r, p ).swap( *this );
     }
 
+#if !defined( AUTOBOOST_NO_CXX11_RVALUE_REFERENCES )
+
+    template<class Y> void reset( shared_ptr<Y> && r, element_type * p )
+    {
+        this_type( static_cast< shared_ptr<Y> && >( r ), p ).swap( *this );
+    }
+
+#endif
+
     // never throws (but has a AUTOBOOST_ASSERT in it, so not marked with AUTOBOOST_NOEXCEPT)
     typename autoboost::detail::sp_dereference< T >::type operator* () const
     {
@@ -655,7 +718,7 @@ public:
         AUTOBOOST_ASSERT( px != 0 );
         AUTOBOOST_ASSERT( i >= 0 && ( i < autoboost::detail::sp_extent< T >::value || autoboost::detail::sp_extent< T >::value == 0 ) );
 
-        return px[ i ];
+        return static_cast< typename autoboost::detail::sp_array_access< T >::type >( px[ i ] );
     }
 
     element_type * get() const AUTOBOOST_NOEXCEPT
@@ -819,6 +882,50 @@ template<class T, class U> shared_ptr<T> reinterpret_pointer_cast( shared_ptr<U>
     E * p = reinterpret_cast< E* >( r.get() );
     return shared_ptr<T>( r, p );
 }
+
+#if !defined( AUTOBOOST_NO_CXX11_RVALUE_REFERENCES )
+
+template<class T, class U> shared_ptr<T> static_pointer_cast( shared_ptr<U> && r ) AUTOBOOST_NOEXCEPT
+{
+    (void) static_cast< T* >( static_cast< U* >( 0 ) );
+
+    typedef typename shared_ptr<T>::element_type E;
+
+    E * p = static_cast< E* >( r.get() );
+    return shared_ptr<T>( std::move(r), p );
+}
+
+template<class T, class U> shared_ptr<T> const_pointer_cast( shared_ptr<U> && r ) AUTOBOOST_NOEXCEPT
+{
+    (void) const_cast< T* >( static_cast< U* >( 0 ) );
+
+    typedef typename shared_ptr<T>::element_type E;
+
+    E * p = const_cast< E* >( r.get() );
+    return shared_ptr<T>( std::move(r), p );
+}
+
+template<class T, class U> shared_ptr<T> dynamic_pointer_cast( shared_ptr<U> && r ) AUTOBOOST_NOEXCEPT
+{
+    (void) dynamic_cast< T* >( static_cast< U* >( 0 ) );
+
+    typedef typename shared_ptr<T>::element_type E;
+
+    E * p = dynamic_cast< E* >( r.get() );
+    return p? shared_ptr<T>( std::move(r), p ): shared_ptr<T>();
+}
+
+template<class T, class U> shared_ptr<T> reinterpret_pointer_cast( shared_ptr<U> && r ) AUTOBOOST_NOEXCEPT
+{
+    (void) reinterpret_cast< T* >( static_cast< U* >( 0 ) );
+
+    typedef typename shared_ptr<T>::element_type E;
+
+    E * p = reinterpret_cast< E* >( r.get() );
+    return shared_ptr<T>( std::move(r), p );
+}
+
+#endif // !defined( AUTOBOOST_NO_CXX11_RVALUE_REFERENCES )
 
 // get_pointer() enables autoboost::mem_fn to recognize shared_ptr
 
@@ -1020,9 +1127,13 @@ template< class T > struct hash;
 
 template< class T > std::size_t hash_value( autoboost::shared_ptr<T> const & p ) AUTOBOOST_NOEXCEPT
 {
-    return autoboost::hash< T* >()( p.get() );
+    return autoboost::hash< typename autoboost::shared_ptr<T>::element_type* >()( p.get() );
 }
 
 } // namespace autoboost
+
+#if defined( AUTOBOOST_SP_DISABLE_DEPRECATED )
+#pragma GCC diagnostic pop
+#endif
 
 #endif  // #ifndef AUTOBOOST_SMART_PTR_SHARED_PTR_HPP_INCLUDED

@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_DATE_NAMES_PUT_HPP___
-#define AB_DATE_TIME_DATE_NAMES_PUT_HPP___
+#ifndef DATE_TIME_DATE_NAMES_PUT_HPP___
+#define DATE_TIME_DATE_NAMES_PUT_HPP___
 
 /* Copyright (c) 2002-2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -10,14 +10,15 @@
  */
 
 
-#include "autoboost/date_time/locale_config.hpp" // set AUTOBOOST_DATE_TIME_NO_LOCALE
+#include <autoboost/date_time/locale_config.hpp> // set AUTOBOOST_DATE_TIME_NO_LOCALE
 
 #ifndef AUTOBOOST_DATE_TIME_NO_LOCALE
 
-#include "autoboost/date_time/special_defs.hpp"
-#include "autoboost/date_time/date_defs.hpp"
-#include "autoboost/date_time/parse_format_base.hpp"
-#include "autoboost/lexical_cast.hpp"
+#include <autoboost/date_time/compiler_config.hpp>
+#include <autoboost/date_time/special_defs.hpp>
+#include <autoboost/date_time/date_defs.hpp>
+#include <autoboost/date_time/parse_format_base.hpp>
+#include <autoboost/lexical_cast.hpp>
 #include <locale>
 
 
@@ -39,7 +40,7 @@ namespace date_time {
     template<class Config,
              class charT = char,
              class OutputIterator = std::ostreambuf_iterator<charT> >
-    class date_names_put : public std::locale::facet
+    class AUTOBOOST_SYMBOL_VISIBLE date_names_put : public std::locale::facet
     {
     public:
       date_names_put() {}
@@ -208,7 +209,7 @@ namespace date_time {
     template<class Config,
              class charT = char,
              class OutputIterator = std::ostreambuf_iterator<charT> >
-    class all_date_names_put : public date_names_put<Config, charT, OutputIterator>
+    class AUTOBOOST_SYMBOL_VISIBLE all_date_names_put : public date_names_put<Config, charT, OutputIterator>
     {
     public:
       all_date_names_put(const charT* const month_short_names[],

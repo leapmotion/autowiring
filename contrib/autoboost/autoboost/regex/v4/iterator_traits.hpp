@@ -31,7 +31,7 @@
 #endif
 
 namespace autoboost{
-namespace re_detail{
+namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 #if defined(AUTOBOOST_NO_STD_ITERATOR_TRAITS)
 
@@ -117,7 +117,7 @@ struct regex_iterator_traits : public std::iterator_traits<T> {};
 
 #endif
 
-} // namespace re_detail
+} // namespace AUTOBOOST_REGEX_DETAIL_NS
 } // namespace autoboost
 
 #ifdef AUTOBOOST_MSVC

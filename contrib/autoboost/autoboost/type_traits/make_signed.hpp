@@ -9,7 +9,7 @@
 #ifndef AUTOBOOST_TT_MAKE_SIGNED_HPP_INCLUDED
 #define AUTOBOOST_TT_MAKE_SIGNED_HPP_INCLUDED
 
-#include <autoboost/mpl/if.hpp>
+#include <autoboost/type_traits/conditional.hpp>
 #include <autoboost/type_traits/is_integral.hpp>
 #include <autoboost/type_traits/is_signed.hpp>
 #include <autoboost/type_traits/is_unsigned.hpp>
@@ -20,58 +20,45 @@
 #include <autoboost/type_traits/is_volatile.hpp>
 #include <autoboost/type_traits/add_const.hpp>
 #include <autoboost/type_traits/add_volatile.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
-#include <autoboost/type_traits/detail/ice_and.hpp>
-#include <autoboost/type_traits/detail/ice_not.hpp>
 #include <autoboost/static_assert.hpp>
-
-// should be the last #include
-#include <autoboost/type_traits/detail/type_trait_def.hpp>
 
 namespace autoboost {
 
-namespace detail {
-
 template <class T>
-struct make_signed_imp
+struct make_signed
 {
-   AUTOBOOST_STATIC_ASSERT(
-      (::autoboost::type_traits::ice_or< ::autoboost::is_integral<T>::value, ::autoboost::is_enum<T>::value>::value));
-   AUTOBOOST_STATIC_ASSERT(
-      (::autoboost::type_traits::ice_not< ::autoboost::is_same<
-         typename remove_cv<T>::type, bool>::value>::value));
+private:
+   AUTOBOOST_STATIC_ASSERT_MSG(( ::autoboost::is_integral<T>::value || ::autoboost::is_enum<T>::value), "The template argument to make_signed must be an integer or enum type.");
+   AUTOBOOST_STATIC_ASSERT_MSG(!(::autoboost::is_same<typename remove_cv<T>::type, bool>::value), "The template argument to make_signed must not be the type bool.");
 
    typedef typename remove_cv<T>::type t_no_cv;
-   typedef typename mpl::if_c<
-      (::autoboost::type_traits::ice_and<
-         ::autoboost::is_signed<T>::value,
-         ::autoboost::is_integral<T>::value,
-         ::autoboost::type_traits::ice_not< ::autoboost::is_same<t_no_cv, char>::value>::value,
-         ::autoboost::type_traits::ice_not< ::autoboost::is_same<t_no_cv, wchar_t>::value>::value,
-         ::autoboost::type_traits::ice_not< ::autoboost::is_same<t_no_cv, bool>::value>::value >::value),
+   typedef typename conditional<
+      (::autoboost::is_signed<T>::value
+      && ::autoboost::is_integral<T>::value
+      && ! ::autoboost::is_same<t_no_cv, char>::value
+      && ! ::autoboost::is_same<t_no_cv, wchar_t>::value
+      && ! ::autoboost::is_same<t_no_cv, bool>::value),
       T,
-      typename mpl::if_c<
-         (::autoboost::type_traits::ice_and<
-            ::autoboost::is_integral<T>::value,
-            ::autoboost::type_traits::ice_not< ::autoboost::is_same<t_no_cv, char>::value>::value,
-            ::autoboost::type_traits::ice_not< ::autoboost::is_same<t_no_cv, wchar_t>::value>::value,
-            ::autoboost::type_traits::ice_not< ::autoboost::is_same<t_no_cv, bool>::value>::value>
-         ::value),
-         typename mpl::if_<
-            is_same<t_no_cv, unsigned char>,
+      typename conditional<
+         (::autoboost::is_integral<T>::value
+         && ! ::autoboost::is_same<t_no_cv, char>::value
+         && ! ::autoboost::is_same<t_no_cv, wchar_t>::value
+         && ! ::autoboost::is_same<t_no_cv, bool>::value),
+         typename conditional<
+            is_same<t_no_cv, unsigned char>::value,
             signed char,
-            typename mpl::if_<
-               is_same<t_no_cv, unsigned short>,
+            typename conditional<
+               is_same<t_no_cv, unsigned short>::value,
                signed short,
-               typename mpl::if_<
-                  is_same<t_no_cv, unsigned int>,
+               typename conditional<
+                  is_same<t_no_cv, unsigned int>::value,
                   int,
-                  typename mpl::if_<
-                     is_same<t_no_cv, unsigned long>,
+                  typename conditional<
+                     is_same<t_no_cv, unsigned long>::value,
                      long,
 #if defined(AUTOBOOST_HAS_LONG_LONG)
 #ifdef AUTOBOOST_HAS_INT128
-                     typename mpl::if_c<
+                     typename conditional<
                         sizeof(t_no_cv) == sizeof(autoboost::long_long_type),
                         autoboost::long_long_type,
                         autoboost::int128_type
@@ -89,21 +76,21 @@ struct make_signed_imp
             >::type
          >::type,
          // Not a regular integer type:
-         typename mpl::if_c<
+         typename conditional<
             sizeof(t_no_cv) == sizeof(unsigned char),
             signed char,
-            typename mpl::if_c<
+            typename conditional<
                sizeof(t_no_cv) == sizeof(unsigned short),
                signed short,
-               typename mpl::if_c<
+               typename conditional<
                   sizeof(t_no_cv) == sizeof(unsigned int),
                   int,
-                  typename mpl::if_c<
+                  typename conditional<
                      sizeof(t_no_cv) == sizeof(unsigned long),
                      long,
 #if defined(AUTOBOOST_HAS_LONG_LONG)
 #ifdef AUTOBOOST_HAS_INT128
-                     typename mpl::if_c<
+                     typename conditional<
                         sizeof(t_no_cv) == sizeof(autoboost::long_long_type),
                         autoboost::long_long_type,
                         autoboost::int128_type
@@ -124,28 +111,21 @@ struct make_signed_imp
    >::type base_integer_type;
 
    // Add back any const qualifier:
-   typedef typename mpl::if_<
-      is_const<T>,
+   typedef typename conditional<
+      is_const<T>::value,
       typename add_const<base_integer_type>::type,
       base_integer_type
    >::type const_base_integer_type;
-
+public:
    // Add back any volatile qualifier:
-   typedef typename mpl::if_<
-      is_volatile<T>,
+   typedef typename conditional<
+      is_volatile<T>::value,
       typename add_volatile<const_base_integer_type>::type,
       const_base_integer_type
    >::type type;
 };
 
-
-} // namespace detail
-
-AUTOBOOST_TT_AUX_TYPE_TRAIT_DEF1(make_signed,T,typename autoboost::detail::make_signed_imp<T>::type)
-
 } // namespace autoboost
-
-#include <autoboost/type_traits/detail/type_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_ADD_REFERENCE_HPP_INCLUDED
 

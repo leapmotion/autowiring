@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_SPECIAL_DEFS_HPP__
-#define AB_DATE_TIME_SPECIAL_DEFS_HPP__
+#ifndef DATE_TIME_SPECIAL_DEFS_HPP__
+#define DATE_TIME_SPECIAL_DEFS_HPP__
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

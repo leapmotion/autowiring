@@ -11,7 +11,11 @@
 #ifndef AUTOBOOST_INTERPROCESS_DETAIL_SHARED_DIR_HELPERS_HPP
 #define AUTOBOOST_INTERPROCESS_DETAIL_SHARED_DIR_HELPERS_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -105,6 +109,7 @@ inline void get_shared_dir_root(std::string &dir_path)
    #else
       dir_path = "/tmp";
    #endif
+
    //We always need this path, so throw on error
    if(dir_path.empty()){
       error_info err = system_error_code();
@@ -114,6 +119,17 @@ inline void get_shared_dir_root(std::string &dir_path)
    dir_path += "/autoboost_interprocess";
 }
 
+#if defined(AUTOBOOST_INTERPROCESS_SHARED_DIR_FUNC) && defined(AUTOBOOST_INTERPROCESS_SHARED_DIR_PATH)
+#error "Error: Both AUTOBOOST_INTERPROCESS_SHARED_DIR_FUNC and AUTOBOOST_INTERPROCESS_SHARED_DIR_PATH defined!"
+#endif
+
+#ifdef AUTOBOOST_INTERPROCESS_SHARED_DIR_FUNC
+
+   // When AUTOBOOST_INTERPROCESS_SHARED_DIR_FUNC is defined, users have to implement
+   // get_shared_dir
+   void get_shared_dir(std::string &shared_dir);
+
+#else
 inline void get_shared_dir(std::string &shared_dir)
 {
    #if defined(AUTOBOOST_INTERPROCESS_SHARED_DIR_PATH)
@@ -126,6 +142,7 @@ inline void get_shared_dir(std::string &shared_dir)
       #endif
    #endif
 }
+#endif
 
 inline void shared_filepath(const char *filename, std::string &filepath)
 {
@@ -136,8 +153,8 @@ inline void shared_filepath(const char *filename, std::string &filepath)
 
 inline void create_shared_dir_and_clean_old(std::string &shared_dir)
 {
-   #if defined(AUTOBOOST_INTERPROCESS_SHARED_DIR_PATH)
-      shared_dir = AUTOBOOST_INTERPROCESS_SHARED_DIR_PATH;
+   #if defined(AUTOBOOST_INTERPROCESS_SHARED_DIR_PATH) || defined(AUTOBOOST_INTERPROCESS_SHARED_DIR_FUNC)
+      get_shared_dir(shared_dir);
    #else
       //First get the temp directory
       std::string root_shared_dir;

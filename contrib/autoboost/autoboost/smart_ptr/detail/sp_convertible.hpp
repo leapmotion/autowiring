@@ -16,6 +16,7 @@
 //  http://www.boost.org/LICENSE_1_0.txt
 
 #include <autoboost/config.hpp>
+#include <cstddef>
 
 #if !defined( AUTOBOOST_SP_NO_SP_CONVERTIBLE ) && defined( AUTOBOOST_NO_SFINAE )
 # define AUTOBOOST_SP_NO_SP_CONVERTIBLE

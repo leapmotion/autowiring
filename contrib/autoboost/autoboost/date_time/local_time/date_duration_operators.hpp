@@ -1,5 +1,5 @@
-#ifndef AB_LOCAL_TIME_DATE_DURATION_OPERATORS_HPP___
-#define AB_LOCAL_TIME_DATE_DURATION_OPERATORS_HPP___
+#ifndef LOCAL_TIME_DATE_DURATION_OPERATORS_HPP___
+#define LOCAL_TIME_DATE_DURATION_OPERATORS_HPP___
 
 /* Copyright (c) 2004 CrystalClear Software, Inc.
  * Subject to the Boost Software License, Version 1.0.

@@ -11,47 +11,63 @@
 #ifndef AUTOBOOST_TT_HAS_TRIVIAL_MOVE_ASSIGN_HPP_INCLUDED
 #define AUTOBOOST_TT_HAS_TRIVIAL_MOVE_ASSIGN_HPP_INCLUDED
 
-#include <autoboost/type_traits/config.hpp>
+#include <cstddef> // size_t
+#include <autoboost/type_traits/intrinsics.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
+
+#if !defined(AUTOBOOST_HAS_TRIVIAL_MOVE_ASSIGN) || defined(AUTOBOOST_MSVC) || defined(AUTOBOOST_INTEL)
 #include <autoboost/type_traits/is_pod.hpp>
 #include <autoboost/type_traits/is_const.hpp>
 #include <autoboost/type_traits/is_volatile.hpp>
-#include <autoboost/type_traits/detail/ice_and.hpp>
-#include <autoboost/type_traits/detail/ice_not.hpp>
+#ifdef AUTOBOOST_MSVC
+#include <autoboost/type_traits/is_reference.hpp>
+#endif
+#endif
 
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#if defined(__GNUC__) || defined(__clang)
+#include <autoboost/type_traits/is_assignable.hpp>
+#include <autoboost/type_traits/is_volatile.hpp>
+#endif
 
-namespace autoboost {
+#ifdef __SUNPRO_CC
+#include <autoboost/type_traits/is_assignable.hpp>
+#include <autoboost/type_traits/remove_const.hpp>
+#if __cplusplus >= 201103
+#define SOLARIS_EXTRA_CHECK && is_assignable<typename remove_const<T>::type&, typename remove_const<T>::type&&>::value
+#endif
+#endif
 
-namespace detail {
+#ifndef SOLARIS_EXTRA_CHECK
+#define SOLARIS_EXTRA_CHECK
+#endif
+
+namespace autoboost{
 
 template <typename T>
-struct has_trivial_move_assign_impl
-{
+struct has_trivial_move_assign : public integral_constant<bool,
 #ifdef AUTOBOOST_HAS_TRIVIAL_MOVE_ASSIGN
-   AUTOBOOST_STATIC_CONSTANT(bool, value = (AUTOBOOST_HAS_TRIVIAL_MOVE_ASSIGN(T)));
+   AUTOBOOST_HAS_TRIVIAL_MOVE_ASSIGN(T)
 #else
-   AUTOBOOST_STATIC_CONSTANT(bool, value =
-           (::autoboost::type_traits::ice_and<
-              ::autoboost::is_pod<T>::value,
-              ::autoboost::type_traits::ice_not< ::autoboost::is_const<T>::value >::value,
-              ::autoboost::type_traits::ice_not< ::autoboost::is_volatile<T>::value >::value
-           >::value));
+   ::autoboost::is_pod<T>::value && !::autoboost::is_const<T>::value && !::autoboost::is_volatile<T>::value SOLARIS_EXTRA_CHECK
 #endif
-};
+   > {};
 
-} // namespace detail
-
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(has_trivial_move_assign,T,::autoboost::detail::has_trivial_move_assign_impl<T>::value)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_move_assign,void,false)
+template <> struct has_trivial_move_assign<void> : public false_type{};
 #ifndef AUTOBOOST_NO_CV_VOID_SPECIALIZATIONS
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_move_assign,void const,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_move_assign,void const volatile,false)
-AUTOBOOST_TT_AUX_BOOL_TRAIT_SPEC1(has_trivial_move_assign,void volatile,false)
+template <> struct has_trivial_move_assign<void const> : public false_type{};
+template <> struct has_trivial_move_assign<void const volatile> : public false_type{};
+template <> struct has_trivial_move_assign<void volatile> : public false_type{};
 #endif
+template <class T> struct has_trivial_move_assign<T&> : public false_type{};
+#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+template <class T> struct has_trivial_move_assign<T&&> : public false_type{};
+#endif
+// Array types are not assignable:
+template <class T, std::size_t N> struct has_trivial_move_assign<T[N]> : public false_type{};
+template <class T> struct has_trivial_move_assign<T[]> : public false_type{};
 
 } // namespace autoboost
 
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
+#undef SOLARIS_EXTRA_CHECK
 
 #endif // AUTOBOOST_TT_HAS_TRIVIAL_MOVE_ASSIGN_HPP_INCLUDED

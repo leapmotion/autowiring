@@ -32,6 +32,7 @@
 //  * required only for pointers - optional for objects
 
 #define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/serialization/config.hpp>
 #include <autoboost/archive/basic_archive.hpp>
 
 namespace autoboost {
@@ -41,7 +42,7 @@ namespace archive {
 // constants used in archive signature
 //This should never ever change. note that is not an std::string
 // string.
-AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_SYMBOL_VISIBLE const char *
 AUTOBOOST_ARCHIVE_SIGNATURE(){
     return "serialization::archive";
 }
@@ -71,10 +72,15 @@ AUTOBOOST_ARCHIVE_SIGNATURE(){
 //     separated version_type into library_version_type and class_version_type
 //     changed version_type to be stored as 8 bits.
 // 10- fixed base64 output/input.
+// 11- not changes
+// 12- improved serialization of collections
+// 13- simplified visibility, removed Borland, removed pfto
+// 14- improved visibility, refactor map/set
+// 15- corrections to optional and collection loading
 
-AUTOBOOST_ARCHIVE_DECL(library_version_type)
+AUTOBOOST_SYMBOL_VISIBLE library_version_type
 AUTOBOOST_ARCHIVE_VERSION(){
-    return library_version_type(11);
+    return library_version_type(15);
 }
 
 } // namespace archive

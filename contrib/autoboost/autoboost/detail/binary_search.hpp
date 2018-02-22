@@ -25,8 +25,8 @@
 // representations about the suitability of this software for any
 // purpose.  It is provided "as is" without express or implied warranty.
 //
-#ifndef AB_BINARY_SEARCH_DWA_122600_H_
-# define AB_BINARY_SEARCH_DWA_122600_H_
+#ifndef BINARY_SEARCH_DWA_122600_H_
+# define BINARY_SEARCH_DWA_122600_H_
 
 # include <autoboost/detail/iterator.hpp>
 # include <utility>

@@ -20,6 +20,12 @@
 #include <autoboost/config.hpp>
 #include <autoboost/smart_ptr/detail/sp_has_sync.hpp>
 
+#if !defined( __c2__ ) && defined( __clang__ ) && defined( __has_extension )
+# if __has_extension( __c_atomic__ )
+#   define AUTOBOOST_SP_HAS_CLANG_C11_ATOMICS
+# endif
+#endif
+
 #if defined( AUTOBOOST_SP_DISABLE_THREADS )
 # include <autoboost/smart_ptr/detail/sp_counted_base_nt.hpp>
 
@@ -34,6 +40,12 @@
 
 #elif defined( AUTOBOOST_DISABLE_THREADS ) && !defined( AUTOBOOST_SP_ENABLE_THREADS ) && !defined( AUTOBOOST_DISABLE_WIN32 )
 # include <autoboost/smart_ptr/detail/sp_counted_base_nt.hpp>
+
+#elif defined( AUTOBOOST_SP_HAS_CLANG_C11_ATOMICS )
+# include <autoboost/smart_ptr/detail/sp_counted_base_clang.hpp>
+
+#elif !defined( AUTOBOOST_NO_CXX11_HDR_ATOMIC )
+# include <autoboost/smart_ptr/detail/sp_counted_base_std_atomic.hpp>
 
 #elif defined( __SNC__ )
 # include <autoboost/smart_ptr/detail/sp_counted_base_snc_ps3.hpp>
@@ -56,7 +68,7 @@
 #elif defined( __GNUC__ ) && ( defined( __powerpc__ ) || defined( __ppc__ ) || defined( __ppc ) ) && !defined(__PATHSCALE__) && !defined( _AIX )
 # include <autoboost/smart_ptr/detail/sp_counted_base_gcc_ppc.hpp>
 
-#elif defined( __GNUC__ ) && ( defined( __mips__ ) || defined( _mips ) ) && !defined(__PATHSCALE__)
+#elif defined( __GNUC__ ) && ( defined( __mips__ ) || defined( _mips ) ) && !defined(__PATHSCALE__) && !defined( __mips16 )
 # include <autoboost/smart_ptr/detail/sp_counted_base_gcc_mips.hpp>
 
 #elif defined( AUTOBOOST_SP_HAS_SYNC )
@@ -78,5 +90,7 @@
 # include <autoboost/smart_ptr/detail/sp_counted_base_spin.hpp>
 
 #endif
+
+#undef AUTOBOOST_SP_HAS_CLANG_C11_ATOMICS
 
 #endif  // #ifndef AUTOBOOST_SMART_PTR_DETAIL_SP_COUNTED_BASE_HPP_INCLUDED

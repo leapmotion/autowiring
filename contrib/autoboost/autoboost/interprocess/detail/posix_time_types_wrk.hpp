@@ -11,7 +11,11 @@
 #ifndef AUTOBOOST_INTERPROCESS_POSIX_TIMES_WRK_HPP
 #define AUTOBOOST_INTERPROCESS_POSIX_TIMES_WRK_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -24,8 +28,9 @@
 #endif   //#ifndef WIN32_LEAN_AND_MEAN
 #endif   //#ifdef _WIN32
 
-#include <autoboost/date_time/posix_time/posix_time_types.hpp>
-#include <autoboost/date_time/posix_time/conversion.hpp>
+#include <autoboost/date_time/microsec_time_clock.hpp>
+#include <autoboost/date_time/posix_time/ptime.hpp>
+#include <autoboost/date_time/posix_time/posix_time_duration.hpp>
 
 namespace autoboost {
 namespace interprocess {

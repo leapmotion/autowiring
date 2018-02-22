@@ -1,5 +1,5 @@
-#ifndef AB__DATE_TIME_DATE_FACET__HPP___
-#define AB__DATE_TIME_DATE_FACET__HPP___
+#ifndef _DATE_TIME_DATE_FACET__HPP___
+#define _DATE_TIME_DATE_FACET__HPP___
 
 /* Copyright (c) 2004-2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -46,7 +46,7 @@ namespace autoboost { namespace date_time {
   template <class date_type,
             class CharT,
             class OutItrT = std::ostreambuf_iterator<CharT, std::char_traits<CharT> > >
-  class date_facet : public std::locale::facet {
+  class AUTOBOOST_SYMBOL_VISIBLE date_facet : public std::locale::facet {
   public:
     typedef typename date_type::duration_type duration_type;
     // greg_weekday is gregorian_calendar::day_of_week_type
@@ -408,7 +408,7 @@ namespace autoboost { namespace date_time {
   template <class date_type,
             class CharT,
             class InItrT = std::istreambuf_iterator<CharT, std::char_traits<CharT> > >
-  class date_input_facet : public std::locale::facet {
+  class AUTOBOOST_SYMBOL_VISIBLE date_input_facet : public std::locale::facet {
   public:
     typedef typename date_type::duration_type duration_type;
     // greg_weekday is gregorian_calendar::day_of_week_type

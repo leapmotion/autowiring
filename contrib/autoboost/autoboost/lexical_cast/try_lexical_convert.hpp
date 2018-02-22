@@ -1,6 +1,6 @@
 // Copyright Kevlin Henney, 2000-2005.
 // Copyright Alexander Nasonov, 2006-2010.
-// Copyright Antony Polukhin, 2011-2014.
+// Copyright Antony Polukhin, 2011-2016.
 //
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
@@ -23,9 +23,17 @@
 #   pragma once
 #endif
 
+#if defined(__clang__) || (defined(__GNUC__) && \
+    !(defined(__INTEL_COMPILER) || defined(__ICL) || defined(__ICC) || defined(__ECC)) && \
+    (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
+#endif
+
 #include <string>
+#include <autoboost/mpl/bool.hpp>
+#include <autoboost/mpl/identity.hpp>
 #include <autoboost/mpl/if.hpp>
-#include <autoboost/type_traits/ice.hpp>
 #include <autoboost/type_traits/is_same.hpp>
 #include <autoboost/type_traits/is_arithmetic.hpp>
 
@@ -49,25 +57,30 @@ namespace autoboost {
             : autoboost::true_type
         {};
 
+        // Sun Studio has problem with partial specialization of templates differing only in namespace.
+        // We workaround that by making `is_autobooststring` trait, instead of specializing `is_stdstring` for `autoboost::container::basic_string`.
+        template<typename T>
+        struct is_autobooststring
+            : autoboost::false_type
+        {};
+
         template<typename CharT, typename Traits, typename Alloc>
-        struct is_stdstring< autoboost::container::basic_string<CharT, Traits, Alloc> >
+        struct is_autobooststring< autoboost::container::basic_string<CharT, Traits, Alloc> >
             : autoboost::true_type
         {};
 
         template<typename Target, typename Source>
         struct is_arithmetic_and_not_xchars
         {
-            AUTOBOOST_STATIC_CONSTANT(bool, value = (
-                autoboost::type_traits::ice_and<
-                    autoboost::type_traits::ice_not<
-                        autoboost::detail::is_character<Target>::value
-                    >::value,
-                    autoboost::type_traits::ice_not<
-                        autoboost::detail::is_character<Source>::value
-                    >::value,
-                    autoboost::is_arithmetic<Source>::value,
+            typedef autoboost::mpl::bool_<
+                    !(autoboost::detail::is_character<Target>::value) &&
+                    !(autoboost::detail::is_character<Source>::value) &&
+                    autoboost::is_arithmetic<Source>::value &&
                     autoboost::is_arithmetic<Target>::value
-                >::value
+                > type;
+
+            AUTOBOOST_STATIC_CONSTANT(bool, value = (
+                type::value
             ));
         };
 
@@ -78,13 +91,15 @@ namespace autoboost {
         template<typename Target, typename Source>
         struct is_xchar_to_xchar
         {
-            AUTOBOOST_STATIC_CONSTANT(bool, value = (
-                autoboost::type_traits::ice_and<
-                     autoboost::type_traits::ice_eq<sizeof(Source), sizeof(Target)>::value,
-                     autoboost::type_traits::ice_eq<sizeof(Source), sizeof(char)>::value,
-                     autoboost::detail::is_character<Target>::value,
+            typedef autoboost::mpl::bool_<
+                     sizeof(Source) == sizeof(Target) &&
+                     sizeof(Source) == sizeof(char) &&
+                     autoboost::detail::is_character<Target>::value &&
                      autoboost::detail::is_character<Source>::value
-                >::value
+                > type;
+
+            AUTOBOOST_STATIC_CONSTANT(bool, value = (
+                type::value
             ));
         };
 
@@ -103,13 +118,20 @@ namespace autoboost {
             : autoboost::true_type
         {};
 
+        // Sun Studio has problem with partial specialization of templates differing only in namespace.
+        // We workaround that by making `is_char_array_to_autobooststring` trait, instead of specializing `is_char_array_to_stdstring` for `autoboost::container::basic_string`.
+        template<typename Target, typename Source>
+        struct is_char_array_to_autobooststring
+            : autoboost::false_type
+        {};
+
         template<typename CharT, typename Traits, typename Alloc>
-        struct is_char_array_to_stdstring< autoboost::container::basic_string<CharT, Traits, Alloc>, CharT* >
+        struct is_char_array_to_autobooststring< autoboost::container::basic_string<CharT, Traits, Alloc>, CharT* >
             : autoboost::true_type
         {};
 
         template<typename CharT, typename Traits, typename Alloc>
-        struct is_char_array_to_stdstring< autoboost::container::basic_string<CharT, Traits, Alloc>, const CharT* >
+        struct is_char_array_to_autobooststring< autoboost::container::basic_string<CharT, Traits, Alloc>, const CharT* >
             : autoboost::true_type
         {};
 
@@ -140,17 +162,18 @@ namespace autoboost {
         {
             typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::detail::array_to_pointer_decay<Source>::type src;
 
-            typedef AUTOBOOST_DEDUCED_TYPENAME autoboost::type_traits::ice_or<
-                autoboost::detail::is_xchar_to_xchar<Target, src >::value,
-                autoboost::detail::is_char_array_to_stdstring<Target, src >::value,
-                autoboost::type_traits::ice_and<
-                     autoboost::is_same<Target, src >::value,
-                     autoboost::detail::is_stdstring<Target >::value
-                >::value,
-                autoboost::type_traits::ice_and<
-                     autoboost::is_same<Target, src >::value,
+            typedef autoboost::mpl::bool_<
+                autoboost::detail::is_xchar_to_xchar<Target, src >::value ||
+                autoboost::detail::is_char_array_to_stdstring<Target, src >::value ||
+                autoboost::detail::is_char_array_to_autobooststring<Target, src >::value ||
+                (
+                     autoboost::is_same<Target, src >::value &&
+                     (autoboost::detail::is_stdstring<Target >::value || autoboost::detail::is_autobooststring<Target >::value)
+                ) ||
+                (
+                     autoboost::is_same<Target, src >::value &&
                      autoboost::detail::is_character<Target >::value
-                >::value
+                )
             > shall_we_copy_t;
 
             typedef autoboost::detail::is_arithmetic_and_not_xchars<Target, src >
@@ -193,6 +216,12 @@ namespace autoboost {
     }
 
 } // namespace autoboost
+
+#if defined(__clang__) || (defined(__GNUC__) && \
+    !(defined(__INTEL_COMPILER) || defined(__ICL) || defined(__ICC) || defined(__ECC)) && \
+    (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)))
+#pragma GCC diagnostic pop
+#endif
 
 #endif // AUTOBOOST_LEXICAL_CAST_TRY_LEXICAL_CONVERT_HPP
 

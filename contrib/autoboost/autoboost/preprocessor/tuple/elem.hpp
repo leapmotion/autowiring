@@ -27,14 +27,14 @@
 #    if AUTOBOOST_PP_VARIADICS_MSVC
 #        define AUTOBOOST_PP_TUPLE_ELEM(...) AUTOBOOST_PP_TUPLE_ELEM_I(AUTOBOOST_PP_OVERLOAD(AUTOBOOST_PP_TUPLE_ELEM_O_, __VA_ARGS__), (__VA_ARGS__))
 #        define AUTOBOOST_PP_TUPLE_ELEM_I(m, args) AUTOBOOST_PP_TUPLE_ELEM_II(m, args)
-#        define AUTOBOOST_PP_TUPLE_ELEM_II(m, args) AUTOBOOST_PP_CAT(AUTOBOOST_PP_EXPAND(m ## args),)
+#        define AUTOBOOST_PP_TUPLE_ELEM_II(m, args) AUTOBOOST_PP_CAT(m ## args,)
 /*
   Use AUTOBOOST_PP_REM_CAT if it is a single element tuple ( which might be empty )
   else use AUTOBOOST_PP_REM. This fixes a VC++ problem with an empty tuple and AUTOBOOST_PP_TUPLE_ELEM
   functionality. See tuple_elem_bug_test.cxx.
 */
 #    	 define AUTOBOOST_PP_TUPLE_ELEM_O_2(n, tuple) \
-			AUTOBOOST_PP_VARIADIC_ELEM(n, AUTOBOOST_PP_TUPLE_IS_SINGLE_RETURN(AUTOBOOST_PP_REM_CAT,AUTOBOOST_PP_REM,tuple) tuple) \
+			AUTOBOOST_PP_VARIADIC_ELEM(n, AUTOBOOST_PP_EXPAND(AUTOBOOST_PP_TUPLE_IS_SINGLE_RETURN(AUTOBOOST_PP_REM_CAT,AUTOBOOST_PP_REM,tuple) tuple)) \
 			/**/
 #    else
 #        define AUTOBOOST_PP_TUPLE_ELEM(...) AUTOBOOST_PP_OVERLOAD(AUTOBOOST_PP_TUPLE_ELEM_O_, __VA_ARGS__)(__VA_ARGS__)

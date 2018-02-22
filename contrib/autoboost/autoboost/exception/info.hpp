@@ -3,8 +3,8 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef AB_UUID_8D22C4CA9CC811DCAA9133D256D89593
-#define AB_UUID_8D22C4CA9CC811DCAA9133D256D89593
+#ifndef UUID_8D22C4CA9CC811DCAA9133D256D89593
+#define UUID_8D22C4CA9CC811DCAA9133D256D89593
 #if (__GNUC__*100+__GNUC_MINOR__>301) && !defined(AUTOBOOST_EXCEPTION_ENABLE_WARNINGS)
 #pragma GCC system_header
 #endif
@@ -15,7 +15,7 @@
 #include <autoboost/exception/exception.hpp>
 #include <autoboost/exception/to_string_stub.hpp>
 #include <autoboost/exception/detail/error_info_impl.hpp>
-#include <autoboost/shared_ptr.hpp>
+#include <autoboost/exception/detail/shared_ptr.hpp>
 #include <autoboost/config.hpp>
 #include <map>
 
@@ -45,6 +45,30 @@ autoboost
         value_(value)
         {
         }
+
+#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+    template <class Tag,class T>
+    inline
+    error_info<Tag,T>::
+    error_info( error_info const & x ):
+        value_(x.value_)
+        {
+        }
+    template <class Tag,class T>
+    inline
+    error_info<Tag,T>::
+    error_info( value_type && value ) AUTOBOOST_NOEXCEPT_IF(AUTOBOOST_NOEXCEPT_EXPR(value_type(std::move(value)))):
+        value_(std::move(value))
+        {
+        }
+    template <class Tag,class T>
+    inline
+    error_info<Tag,T>::
+    error_info( error_info && x ) AUTOBOOST_NOEXCEPT_IF(AUTOBOOST_NOEXCEPT_EXPR(value_type(std::move(x.value_)))):
+        value_(std::move(x.value_))
+        {
+        }
+#endif
 
     template <class Tag,class T>
     inline
@@ -175,6 +199,85 @@ autoboost
             return x;
             }
 
+#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+        template <class E,class Tag,class T>
+        E const & set_info( E const &, error_info<Tag,T> && );
+        template <class T>
+        struct set_info_rv;
+        template <class Tag,class T>
+        struct
+        set_info_rv<error_info<Tag,T> >
+            {
+            template <class E,class Tag1,class T1>
+            friend E const & set_info( E const &, error_info<Tag1,T1> && );
+            template <class E>
+            static
+            E const &
+            set( E const & x, error_info<Tag,T> && v )
+                {
+                typedef error_info<Tag,T> error_info_tag_t;
+                shared_ptr<error_info_tag_t> p( new error_info_tag_t(std::move(v)) );
+                exception_detail::error_info_container * c=x.data_.get();
+                if( !c )
+                    x.data_.adopt(c=new exception_detail::error_info_container_impl);
+                c->set(p,AUTOBOOST_EXCEPTION_STATIC_TYPEID(error_info_tag_t));
+                return x;
+                }
+            };
+        template <>
+        struct
+        set_info_rv<throw_function>
+            {
+            template <class E,class Tag1,class T1>
+            friend E const & set_info( E const &, error_info<Tag1,T1> && );
+            template <class E>
+            static
+            E const &
+            set( E const & x, throw_function && y )
+                {
+                x.throw_function_=y.v_;
+                return x;
+                }
+            };
+        template <>
+        struct
+        set_info_rv<throw_file>
+            {
+            template <class E,class Tag1,class T1>
+            friend E const & set_info( E const &, error_info<Tag1,T1> && );
+            template <class E>
+            static
+            E const &
+            set( E const & x, throw_file && y )
+                {
+                x.throw_file_=y.v_;
+                return x;
+                }
+            };
+        template <>
+        struct
+        set_info_rv<throw_line>
+            {
+            template <class E,class Tag1,class T1>
+            friend E const & set_info( E const &, error_info<Tag1,T1> && );
+            template <class E>
+            static
+            E const &
+            set( E const & x, throw_line && y )
+                {
+                x.throw_line_=y.v_;
+                return x;
+                }
+            };
+        template <class E,class Tag,class T>
+        inline
+        E const &
+        set_info( E const & x, error_info<Tag,T> && v )
+            {
+            return set_info_rv<error_info<Tag,T> >::template set<E>(x,std::move(v));
+            }
+#endif
+
         template <class T>
         struct
         derives_autoboost_exception
@@ -190,6 +293,16 @@ autoboost
         {
         return exception_detail::set_info(x,v);
         }
+
+#ifndef AUTOBOOST_NO_CXX11_RVALUE_REFERENCES
+    template <class E,class Tag,class T>
+    inline
+    typename enable_if<exception_detail::derives_autoboost_exception<E>,E const &>::type
+    operator<<( E const & x, error_info<Tag,T> && v )
+        {
+        return exception_detail::set_info(x,std::move(v));
+        }
+#endif
     }
 
 #if defined(_MSC_VER) && !defined(AUTOBOOST_EXCEPTION_ENABLE_WARNINGS)

@@ -7,7 +7,7 @@
 //  See http://www.boost.org/libs/type_traits for most recent version including documentation.
 
 #include <autoboost/config.hpp>
-#include <autoboost/type_traits/ice.hpp>
+#include <autoboost/type_traits/detail/yes_no_type.hpp>
 #include <autoboost/type_traits/integral_constant.hpp>
 #include <autoboost/type_traits/is_base_of.hpp>
 #include <autoboost/type_traits/is_const.hpp>
@@ -20,9 +20,6 @@
 #include <autoboost/type_traits/remove_cv.hpp>
 #include <autoboost/type_traits/remove_pointer.hpp>
 #include <autoboost/type_traits/remove_reference.hpp>
-
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
 
 // cannot include this header without getting warnings of the kind:
 // gcc:
@@ -40,7 +37,10 @@
 #   pragma GCC system_header
 #elif defined(AUTOBOOST_MSVC)
 #   pragma warning ( push )
-#   pragma warning ( disable : 4018 4244 4547 4800 4804 4805 4913 )
+#   pragma warning ( disable : 4018 4244 4547 4800 4804 4805 4913)
+#   if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC_FULL_VER, >= 140050000)
+#       pragma warning ( disable : 6334)
+#   endif
 #endif
 
 namespace autoboost {
@@ -177,13 +177,7 @@ struct trait_impl1 < Lhs, Rhs, Ret, true > {
 template < typename Lhs, typename Rhs, typename Ret >
 struct trait_impl1 < Lhs, Rhs, Ret, false > {
    AUTOBOOST_STATIC_CONSTANT(bool,
-      value = (
-         ::autoboost::type_traits::ice_and<
-            operator_exists < Lhs, Rhs >::value,
-            operator_returns_Ret < Lhs, Rhs, Ret, operator_returns_void < Lhs, Rhs >::value >::value
-         >::value
-      )
-   );
+      value = (operator_exists < Lhs, Rhs >::value && operator_returns_Ret < Lhs, Rhs, Ret, operator_returns_void < Lhs, Rhs >::value >::value));
 };
 
 // some specializations needs to be declared for the special void case
@@ -218,12 +212,11 @@ struct trait_impl {
 } // namespace detail
 
 // this is the accessible definition of the trait to end user
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF3(AUTOBOOST_TT_TRAIT_NAME, Lhs, Rhs=Lhs, Ret=::autoboost::detail::AUTOBOOST_JOIN(AUTOBOOST_TT_TRAIT_NAME,_impl)::dont_care, (::autoboost::detail::AUTOBOOST_JOIN(AUTOBOOST_TT_TRAIT_NAME,_impl)::trait_impl < Lhs, Rhs, Ret >::value))
+template <class Lhs, class Rhs=Lhs, class Ret=::autoboost::detail::AUTOBOOST_JOIN(AUTOBOOST_TT_TRAIT_NAME,_impl)::dont_care>
+struct AUTOBOOST_TT_TRAIT_NAME : public integral_constant<bool, (::autoboost::detail::AUTOBOOST_JOIN(AUTOBOOST_TT_TRAIT_NAME, _impl)::trait_impl < Lhs, Rhs, Ret >::value)>{};
 
 } // namespace autoboost
 
 #if defined(AUTOBOOST_MSVC)
 #   pragma warning ( pop )
 #endif
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>

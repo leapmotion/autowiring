@@ -1,5 +1,5 @@
-#ifndef AB__GREGORIAN_TYPES_HPP__
-#define AB__GREGORIAN_TYPES_HPP__
+#ifndef _GREGORIAN_TYPES_HPP__
+#define _GREGORIAN_TYPES_HPP__
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

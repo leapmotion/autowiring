@@ -2,8 +2,8 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2008 Anthony Williams
-#ifndef AB_THREAD_HEAP_ALLOC_PTHREAD_HPP
-#define AB_THREAD_HEAP_ALLOC_PTHREAD_HPP
+#ifndef THREAD_HEAP_ALLOC_PTHREAD_HPP
+#define THREAD_HEAP_ALLOC_PTHREAD_HPP
 
 #include <autoboost/config/abi_prefix.hpp>
 

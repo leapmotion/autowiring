@@ -24,11 +24,8 @@
 // in such cases.   So we can't use basic_ostream<OStream::char_type> but rather
 // use two template parameters
 
-#include <autoboost/assert.hpp>
 #include <autoboost/config.hpp>
-#include <autoboost/serialization/pfto.hpp>
 #include <autoboost/detail/workaround.hpp>
-
 #include <autoboost/archive/detail/common_oarchive.hpp>
 #include <autoboost/serialization/string.hpp>
 
@@ -49,7 +46,7 @@ namespace detail {
 /////////////////////////////////////////////////////////////////////////
 // class basic_text_oarchive
 template<class Archive>
-class basic_text_oarchive :
+class AUTOBOOST_SYMBOL_VISIBLE basic_text_oarchive :
     public detail::common_oarchive<Archive>
 {
 #ifdef AUTOBOOST_NO_MEMBER_TEMPLATE_FRIENDS
@@ -71,7 +68,7 @@ protected:
         space
     } delimiter;
 
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     newtoken();
 
     void newline(){
@@ -82,25 +79,25 @@ protected:
     // extra stuff to get it passed borland compilers
     typedef detail::common_oarchive<Archive> detail_common_oarchive;
     template<class T>
-    void save_override(T & t, AUTOBOOST_PFTO int){
-        this->detail_common_oarchive::save_override(t, 0);
+    void save_override(T & t){
+        this->detail_common_oarchive::save_override(t);
     }
 
     // start new objects on a new line
-    void save_override(const object_id_type & t, int){
+    void save_override(const object_id_type & t){
         this->This()->newline();
-        this->detail_common_oarchive::save_override(t, 0);
+        this->detail_common_oarchive::save_override(t);
     }
 
     // text file don't include the optional information
-    void save_override(const class_id_optional_type & /* t */, int){}
+    void save_override(const class_id_optional_type & /* t */){}
 
-    void save_override(const class_name_type & t, int){
+    void save_override(const class_name_type & t){
         const std::string s(t);
         * this->This() << s;
     }
 
-    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
+    AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
     init();
 
     basic_text_oarchive(unsigned int flags) :

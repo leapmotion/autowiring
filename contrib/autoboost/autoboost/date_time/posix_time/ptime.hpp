@@ -1,5 +1,5 @@
-#ifndef AB_POSIX_PTIME_HPP___
-#define AB_POSIX_PTIME_HPP___
+#ifndef POSIX_PTIME_HPP___
+#define POSIX_PTIME_HPP___
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -9,8 +9,9 @@
  * $Date$
  */
 
-#include "autoboost/date_time/posix_time/posix_time_system.hpp"
-#include "autoboost/date_time/time.hpp"
+#include <autoboost/date_time/posix_time/posix_time_system.hpp>
+#include <autoboost/date_time/time.hpp>
+#include <autoboost/date_time/compiler_config.hpp>
 
 namespace autoboost {
 
@@ -28,7 +29,7 @@ namespace posix_time {
   //! Time type with no timezone or other adjustments
   /*! \ingroup time_basics
    */
-  class ptime : public date_time::base_time<ptime, posix_time_system>
+  class AUTOBOOST_SYMBOL_VISIBLE ptime : public date_time::base_time<ptime, posix_time_system>
   {
   public:
     typedef posix_time_system time_system_type;

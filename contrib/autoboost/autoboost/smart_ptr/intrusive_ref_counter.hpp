@@ -83,7 +83,7 @@ struct thread_safe_counter
 
     static unsigned int decrement(autoboost::detail::atomic_count& counter) AUTOBOOST_NOEXCEPT
     {
-        return --counter;
+        return static_cast< unsigned int >(--counter);
     }
 };
 

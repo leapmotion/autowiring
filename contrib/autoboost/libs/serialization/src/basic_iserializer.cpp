@@ -11,13 +11,14 @@
 #include <cstddef> // NULL
 
 #define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/serialization/config.hpp>
 #include <autoboost/archive/detail/basic_iserializer.hpp>
 
 namespace autoboost {
 namespace archive {
 namespace detail {
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 basic_iserializer::basic_iserializer(
     const autoboost::serialization::extended_type_info & eti
 ) :
@@ -25,7 +26,7 @@ basic_iserializer::basic_iserializer(
     m_bpis(NULL)
 {}
 
-AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL
 basic_iserializer::~basic_iserializer(){}
 
 } // namespace detail

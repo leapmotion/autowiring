@@ -17,7 +17,10 @@
 # pragma once
 #endif
 
-#if defined( __clang__ ) && defined( __has_include )
+// __has_include is currently supported by GCC and Clang. However GCC 4.9 may have issues and
+// returns 1 for 'defined( __has_include )', while '__has_include' is actually not supported:
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63662
+#if defined( __has_include ) && (!defined( AUTOBOOST_GCC ) || (__GNUC__ + 0) >= 5)
 # if __has_include(<cxxabi.h>)
 #  define AUTOBOOST_CORE_HAS_CXXABI_H
 # endif
@@ -27,8 +30,15 @@
 
 #if defined( AUTOBOOST_CORE_HAS_CXXABI_H )
 # include <cxxabi.h>
-# include <cstdlib>
-# include <cstddef>
+// For some archtectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
+// (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
+// abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
+# if defined( __GABIXX_CXXABI_H__ )
+#  undef AUTOBOOST_CORE_HAS_CXXABI_H
+# else
+#  include <cstdlib>
+#  include <cstddef>
+# endif
 #endif
 
 namespace autoboost
@@ -83,15 +93,10 @@ inline void demangle_free( char const * name ) AUTOBOOST_NOEXCEPT
 inline std::string demangle( char const * name )
 {
     scoped_demangled_name demangled_name( name );
-    char const * const p = demangled_name.get();
-    if( p )
-    {
-        return p;
-    }
-    else
-    {
-        return name;
-    }
+    char const * p = demangled_name.get();
+    if( !p )
+        p = name;
+    return p;
 }
 
 #else

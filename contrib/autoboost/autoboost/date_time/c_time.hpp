@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_C_TIME_HPP___
-#define AB_DATE_TIME_C_TIME_HPP___
+#ifndef DATE_TIME_C_TIME_HPP___
+#define DATE_TIME_C_TIME_HPP___
 
 /* Copyright (c) 2002,2003,2005 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the
@@ -57,15 +57,15 @@ namespace date_time {
       static std::tm* localtime(const std::time_t* t, std::tm* result)
       {
         // localtime_r() not in namespace std???
- 	#if defined(__VMS) && __INITIAL_POINTER_SIZE == 64
- 	std::tm tmp;
- 	if(!localtime_r(t,&tmp))
+#if defined(__VMS) && __INITIAL_POINTER_SIZE == 64
+        std::tm tmp;
+        if(!localtime_r(t,&tmp))
             result = 0;
-	else
+        else
             *result = tmp;
- 	#else
+#else
         result = localtime_r(t, result);
-	#endif
+#endif
         if (!result)
           autoboost::throw_exception(std::runtime_error("could not convert calendar time to local time"));
         return result;
@@ -75,15 +75,15 @@ namespace date_time {
       static std::tm* gmtime(const std::time_t* t, std::tm* result)
       {
         // gmtime_r() not in namespace std???
- 	#if defined(__VMS) && __INITIAL_POINTER_SIZE == 64
- 	std::tm tmp;
- 	if(!gmtime_r(t,&tmp))
+#if defined(__VMS) && __INITIAL_POINTER_SIZE == 64
+        std::tm tmp;
+        if(!gmtime_r(t,&tmp))
           result = 0;
         else
           *result = tmp;
-	#else
+#else
         result = gmtime_r(t, result);
-	#endif
+#endif
         if (!result)
           autoboost::throw_exception(std::runtime_error("could not convert calendar time to UTC time"));
         return result;

@@ -24,6 +24,7 @@
 #include <autoboost/smart_ptr/shared_ptr.hpp>
 #include <autoboost/smart_ptr/detail/shared_count.hpp>
 #include <autoboost/smart_ptr/detail/sp_nullptr_t.hpp>
+#include <autoboost/smart_ptr/detail/sp_noexcept.hpp>
 #include <autoboost/detail/workaround.hpp>
 
 #include <cstddef>            // for std::ptrdiff_t
@@ -53,13 +54,13 @@ public:
 
     typedef T element_type;
 
-    shared_array() AUTOBOOST_NOEXCEPT : px( 0 ), pn()
+    shared_array() AUTOBOOST_SP_NOEXCEPT : px( 0 ), pn()
     {
     }
 
 #if !defined( AUTOBOOST_NO_CXX11_NULLPTR )
 
-    shared_array( autoboost::detail::sp_nullptr_t ) AUTOBOOST_NOEXCEPT : px( 0 ), pn()
+    shared_array( autoboost::detail::sp_nullptr_t ) AUTOBOOST_SP_NOEXCEPT : px( 0 ), pn()
     {
     }
 
@@ -95,11 +96,11 @@ public:
 
 // ... except in C++0x, move disables the implicit copy
 
-    shared_array( shared_array const & r ) AUTOBOOST_NOEXCEPT : px( r.px ), pn( r.pn )
+    shared_array( shared_array const & r ) AUTOBOOST_SP_NOEXCEPT : px( r.px ), pn( r.pn )
     {
     }
 
-    shared_array( shared_array && r ) AUTOBOOST_NOEXCEPT : px( r.px ), pn()
+    shared_array( shared_array && r ) AUTOBOOST_SP_NOEXCEPT : px( r.px ), pn()
     {
         pn.swap( r.pn );
         r.px = 0;
@@ -133,7 +134,7 @@ public:
 
     // assignment
 
-    shared_array & operator=( shared_array const & r ) AUTOBOOST_NOEXCEPT
+    shared_array & operator=( shared_array const & r ) AUTOBOOST_SP_NOEXCEPT
     {
         this_type( r ).swap( *this );
         return *this;
@@ -152,7 +153,7 @@ public:
 
 #if !defined( AUTOBOOST_NO_CXX11_RVALUE_REFERENCES )
 
-    shared_array & operator=( shared_array && r ) AUTOBOOST_NOEXCEPT
+    shared_array & operator=( shared_array && r ) AUTOBOOST_SP_NOEXCEPT
     {
         this_type( static_cast< shared_array && >( r ) ).swap( *this );
         return *this;

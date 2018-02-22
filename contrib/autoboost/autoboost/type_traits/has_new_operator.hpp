@@ -11,12 +11,9 @@
 
 #include <new> // std::nothrow_t
 #include <cstddef> // std::size_t
-#include <autoboost/type_traits/config.hpp>
+#include <autoboost/type_traits/integral_constant.hpp>
 #include <autoboost/type_traits/detail/yes_no_type.hpp>
-#include <autoboost/type_traits/detail/ice_or.hpp>
-
-// should be the last #include
-#include <autoboost/type_traits/detail/bool_trait_def.hpp>
+#include <autoboost/detail/workaround.hpp>
 
 #if defined(new)
 #  if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1310)
@@ -129,26 +126,22 @@ namespace detail {
             #endif
         #endif
         AUTOBOOST_STATIC_CONSTANT(bool, value =
-           (::autoboost::type_traits::ice_or<
-            (s1 == sizeof(type_traits::yes_type)),
-            (s2 == sizeof(type_traits::yes_type)),
-            (s3 == sizeof(type_traits::yes_type)),
-            (s4 == sizeof(type_traits::yes_type)),
-            (s5 == sizeof(type_traits::yes_type)),
+            (s1 == sizeof(type_traits::yes_type)) ||
+            (s2 == sizeof(type_traits::yes_type)) ||
+            (s3 == sizeof(type_traits::yes_type)) ||
+            (s4 == sizeof(type_traits::yes_type)) ||
+            (s5 == sizeof(type_traits::yes_type)) ||
             (s6 == sizeof(type_traits::yes_type))
-           >::value)
         );
     };
 } // namespace detail
 
-AUTOBOOST_TT_AUX_BOOL_TRAIT_DEF1(has_new_operator,T,::autoboost::detail::has_new_operator_impl<T>::value)
+template <class T> struct has_new_operator : public integral_constant<bool, ::autoboost::detail::has_new_operator_impl<T>::value>{};
 
 } // namespace autoboost
 
 #if defined(AUTOBOOST_TT_AUX_MACRO_NEW_DEFINED)
 #  pragma pop_macro("new")
 #endif
-
-#include <autoboost/type_traits/detail/bool_trait_undef.hpp>
 
 #endif // AUTOBOOST_TT_HAS_NEW_OPERATOR_HPP_INCLUDED

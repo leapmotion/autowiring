@@ -13,7 +13,11 @@
 
 #if !defined(AUTOBOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 

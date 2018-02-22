@@ -2,7 +2,7 @@
 // detail/macos_fenced_block.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -19,7 +19,7 @@
 
 #if defined(__MACH__) && defined(__APPLE__)
 
-#include <atomic>
+#include <libkern/OSAtomic.h>
 
 #include <autoboost/asio/detail/push_options.hpp>
 
@@ -42,13 +42,13 @@ public:
   // Constructor for a full fenced block.
   explicit macos_fenced_block(full_t)
   {
-    std::atomic_thread_fence(std::memory_order_seq_cst);
+    OSMemoryBarrier();
   }
 
   // Destructor.
   ~macos_fenced_block()
   {
-    std::atomic_thread_fence(std::memory_order_seq_cst);
+    OSMemoryBarrier();
   }
 };
 

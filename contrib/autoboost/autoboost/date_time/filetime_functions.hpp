@@ -1,5 +1,5 @@
-#ifndef AB_DATE_TIME_FILETIME_FUNCTIONS_HPP__
-#define AB_DATE_TIME_FILETIME_FUNCTIONS_HPP__
+#ifndef DATE_TIME_FILETIME_FUNCTIONS_HPP__
+#define DATE_TIME_FILETIME_FUNCTIONS_HPP__
 
 /* Copyright (c) 2004 CrystalClear Software, Inc.
  * Use, modification and distribution is subject to the

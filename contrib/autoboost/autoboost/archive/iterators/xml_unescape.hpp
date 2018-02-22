@@ -19,7 +19,6 @@
 #include <autoboost/assert.hpp>
 
 #include <autoboost/serialization/throw_exception.hpp>
-#include <autoboost/serialization/pfto.hpp>
 
 #include <autoboost/archive/iterators/unescape.hpp>
 #include <autoboost/archive/iterators/dataflow_exception.hpp>
@@ -54,8 +53,8 @@ public:
     value_type drain();
 
     template<class T>
-    xml_unescape(AUTOBOOST_PFTO_WRAPPER(T) start) :
-        super_t(Base(AUTOBOOST_MAKE_PFTO_WRAPPER(static_cast< T >(start))))
+    xml_unescape(T start) :
+        super_t(Base(static_cast< T >(start)))
     {}
     // intel 7.1 doesn't like default copy constructor
     xml_unescape(const xml_unescape & rhs) :

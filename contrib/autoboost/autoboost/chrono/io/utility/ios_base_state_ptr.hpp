@@ -164,9 +164,10 @@ namespace autoboost
        */
       T * release() AUTOBOOST_NOEXCEPT
       {
-        T const* f = get();
-        reset();
-        return f;
+        void*& pw = ios_.pword(index());
+        T* ptr = static_cast<T*> (pw);
+        pw = 0;
+        return ptr;
       }
 
       /**

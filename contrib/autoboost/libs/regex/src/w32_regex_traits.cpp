@@ -19,7 +19,7 @@
 #define AUTOBOOST_REGEX_SOURCE
 #include <autoboost/regex/config.hpp>
 
-#if defined(_WIN32) && !defined(AUTOBOOST_REGEX_NO_W32)
+#if defined(_WIN32) && !defined(AUTOBOOST_REGEX_NO_W32) && !defined(AUTOBOOST_REGEX_NO_WIN32_LOCALE)
 #include <autoboost/regex/regex_traits.hpp>
 #include <autoboost/regex/pattern_except.hpp>
 
@@ -40,7 +40,7 @@ namespace std{
 }
 #endif
 
-namespace autoboost{ namespace re_detail{
+namespace autoboost{ namespace AUTOBOOST_REGEX_DETAIL_NS{
 
 #ifdef AUTOBOOST_NO_ANSI_APIS
 UINT get_code_page_for_locale_id(lcid_type idx)
@@ -63,12 +63,12 @@ void w32_regex_traits_char_layer<char>::init()
    std::string cat_name(w32_regex_traits<char>::get_catalog_name());
    if(cat_name.size())
    {
-      cat = ::autoboost::re_detail::w32_cat_open(cat_name);
+      cat = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::w32_cat_open(cat_name);
       if(!cat)
       {
          std::string m("Unable to open message catalog: ");
          std::runtime_error err(m + cat_name);
-         ::autoboost::re_detail::raise_runtime_error(err);
+         ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::raise_runtime_error(err);
       }
    }
    //
@@ -78,7 +78,7 @@ void w32_regex_traits_char_layer<char>::init()
    {
       for(regex_constants::syntax_type i = 1; i < regex_constants::syntax_max; ++i)
       {
-         string_type mss = ::autoboost::re_detail::w32_cat_get(cat, this->m_locale, i, get_default_syntax(i));
+         string_type mss = ::autoboost::AUTOBOOST_REGEX_DETAIL_NS::w32_cat_get(cat, this->m_locale, i, get_default_syntax(i));
          for(string_type::size_type j = 0; j < mss.size(); ++j)
          {
             m_char_map[static_cast<unsigned char>(mss[j])] = i;
@@ -105,9 +105,9 @@ void w32_regex_traits_char_layer<char>::init()
    {
       if(m_char_map[i] == 0)
       {
-         if(::autoboost::re_detail::w32_is(this->m_locale, 0x0002u, (char)i))
+         if(::autoboost::AUTOBOOST_REGEX_DETAIL_NS::w32_is(this->m_locale, 0x0002u, (char)i))
             m_char_map[i] = regex_constants::escape_type_class;
-         else if(::autoboost::re_detail::w32_is(this->m_locale, 0x0001u, (char)i))
+         else if(::autoboost::AUTOBOOST_REGEX_DETAIL_NS::w32_is(this->m_locale, 0x0001u, (char)i))
             m_char_map[i] = regex_constants::escape_type_not_class;
       }
    }while(0xFF != i++);
@@ -645,7 +645,7 @@ AUTOBOOST_REGEX_DECL bool AUTOBOOST_REGEX_CALL w32_is(lcid_type idx, autoboost::
 #endif
 #endif
 
-} // re_detail
+} // AUTOBOOST_REGEX_DETAIL_NS
 } // autoboost
 
 #endif

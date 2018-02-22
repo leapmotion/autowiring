@@ -32,11 +32,11 @@ namespace archive {
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // implementation of binary_binary_archive
 template<class Archive>
-AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
-basic_binary_iarchive<Archive>::load_override(class_name_type & t, int){
+AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
+basic_binary_iarchive<Archive>::load_override(class_name_type & t){
     std::string cn;
     cn.reserve(AUTOBOOST_SERIALIZATION_MAX_KEY_SIZE);
-    load_override(cn, 0);
+    load_override(cn);
     if(cn.size() > (AUTOBOOST_SERIALIZATION_MAX_KEY_SIZE - 1))
         autoboost::serialization::throw_exception(
             archive_exception(archive_exception::invalid_class_name)
@@ -47,13 +47,13 @@ basic_binary_iarchive<Archive>::load_override(class_name_type & t, int){
 }
 
 template<class Archive>
-AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL(void)
-basic_binary_iarchive<Archive>::init(){
+AUTOBOOST_ARCHIVE_OR_WARCHIVE_DECL void
+basic_binary_iarchive<Archive>::init(void){
     // read signature in an archive version independent manner
     std::string file_signature;
 
     #if 0 // commented out since it interfers with derivation
-    try {
+    AUTOBOOST_TRY {
         std::size_t l;
         this->This()->load(l);
         if(l == std::strlen(AUTOBOOST_ARCHIVE_SIGNATURE())) {
@@ -67,10 +67,11 @@ basic_binary_iarchive<Archive>::init(){
                 this->This()->load_binary(&(*file_signature.begin()), l);
         }
     }
-    catch(archive_exception const &) {  // catch stream_error archive exceptions
+    AUTOBOOST_CATCH(archive_exception const &) {  // catch stream_error archive exceptions
         // will cause invalid_signature archive exception to be thrown below
         file_signature = "";
     }
+    AUTOBOOST_CATCH_END
     #else
     // https://svn.boost.org/trac/autoboost/ticket/7301
     * this->This() >> file_signature;

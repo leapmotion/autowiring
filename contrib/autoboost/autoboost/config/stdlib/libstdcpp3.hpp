@@ -98,10 +98,11 @@
 #if defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103)
 #  define AUTOBOOST_LIBSTDCXX11
 #endif
+
 //
 //  Decide which version of libstdc++ we have, normally
-//  stdlibc++ C++0x support is detected via __GNUC__, __GNUC_MINOR__, and possibly
-//  __GNUC_PATCHLEVEL__ at the suggestion of Jonathan Wakely, one of the stdlibc++
+//  libstdc++ C++0x support is detected via __GNUC__, __GNUC_MINOR__, and possibly
+//  __GNUC_PATCHLEVEL__ at the suggestion of Jonathan Wakely, one of the libstdc++
 //  developers. He also commented:
 //
 //       "I'm not sure how useful __GLIBCXX__ is for your purposes, for instance in
@@ -109,7 +110,7 @@
 //       Although 4.3.0 was released earlier than 4.2.4, it has better C++0x support
 //       than any release in the 4.2 series."
 //
-//  Another resource for understanding stdlibc++ features is:
+//  Another resource for understanding libstdc++ features is:
 //  http://gcc.gnu.org/onlinedocs/libstdc++/manual/status.html#manual.intro.status.standard.200x
 //
 //  However, using the GCC version number fails when the compiler is clang since this
@@ -122,7 +123,9 @@
 //
 #ifdef __clang__
 
-#if __has_include(<experimental/any>)
+#if __has_include(<experimental/memory_resource>)
+#  define AUTOBOOST_LIBSTDCXX_VERSION 60100
+#elif __has_include(<experimental/any>)
 #  define AUTOBOOST_LIBSTDCXX_VERSION 50100
 #elif __has_include(<shared_mutex>)
 #  define AUTOBOOST_LIBSTDCXX_VERSION 40900
@@ -139,6 +142,7 @@
 #elif __has_include(<array>)
 #  define AUTOBOOST_LIBSTDCXX_VERSION 40300
 #endif
+
 //
 //  GCC 4.8 and 9 add working versions of <atomic> and <regex> respectively.
 //  However, we have no test for these as the headers were present but broken
@@ -151,11 +155,27 @@
 // Oracle Solaris compiler uses it's own verison of libstdc++ but doesn't
 // set __GNUC__
 //
+#if __SUNPRO_CC >= 0x5140
+#define AUTOBOOST_LIBSTDCXX_VERSION 50100
+#else
 #define AUTOBOOST_LIBSTDCXX_VERSION 40800
+#endif
 #endif
 
 #if !defined(AUTOBOOST_LIBSTDCXX_VERSION)
 #  define AUTOBOOST_LIBSTDCXX_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#endif
+
+// std::auto_ptr isn't provided with _GLIBCXX_DEPRECATED=0 (GCC 4.5 and earlier)
+// or _GLIBCXX_USE_DEPRECATED=0 (GCC 4.6 and later).
+#if defined(AUTOBOOST_LIBSTDCXX11)
+#  if AUTOBOOST_LIBSTDCXX_VERSION < 40600
+#     if !_GLIBCXX_DEPRECATED
+#        define AUTOBOOST_NO_AUTO_PTR
+#     endif
+#  elif !_GLIBCXX_USE_DEPRECATED
+#     define AUTOBOOST_NO_AUTO_PTR
+#  endif
 #endif
 
 //  C++0x headers in GCC 4.3.0 and later
@@ -202,7 +222,7 @@
 //
 #if (AUTOBOOST_LIBSTDCXX_VERSION < 40700) || !defined(AUTOBOOST_LIBSTDCXX11)
 // Note that although <chrono> existed prior to 4.7, "steady_clock" is spelled "monotonic_clock"
-// so 4.7.0 is the first truely conforming one.
+// so 4.7.0 is the first truly conforming one.
 #  define AUTOBOOST_NO_CXX11_HDR_CHRONO
 #  define AUTOBOOST_NO_CXX11_ALLOCATOR
 #endif
@@ -220,6 +240,9 @@
 // even for the simplest patterns such as "\d" or "[0-9]". This is the case at least in gcc up to 4.8, inclusively.
 #  define AUTOBOOST_NO_CXX11_HDR_REGEX
 #endif
+#if (AUTOBOOST_LIBSTDCXX_VERSION < 40900) || (__cplusplus <= 201103)
+#  define AUTOBOOST_NO_CXX14_STD_EXCHANGE
+#endif
 
 #if defined(__clang_major__) && ((__clang_major__ < 3) || ((__clang_major__ == 3) && (__clang_minor__ < 7)))
 // As of clang-3.6, libstdc++ header <atomic> throws up errors with clang:
@@ -235,6 +258,16 @@
 #  define AUTOBOOST_NO_CXX11_STD_ALIGN
 #endif
 
+//
+//  C++17 features in GCC 6.1 and later
+//
+#if (AUTOBOOST_LIBSTDCXX_VERSION < 60100) || (__cplusplus <= 201402L)
+#  define AUTOBOOST_NO_CXX17_STD_INVOKE
+#endif
+#if (AUTOBOOST_LIBSTDCXX_VERSION < 70100) || (__cplusplus <= 201402L)
+#  define AUTOBOOST_NO_CXX17_STD_APPLY
+#endif
+
 #if defined(__has_include)
 #if !__has_include(<shared_mutex>)
 #  define AUTOBOOST_NO_CXX14_HDR_SHARED_MUTEX
@@ -247,7 +280,7 @@
 
 //
 // Headers not present on Solaris with the Oracle compiler:
-#if defined(__SUNPRO_CC)
+#if defined(__SUNPRO_CC) && (__SUNPRO_CC < 0x5140)
 #define AUTOBOOST_NO_CXX11_HDR_FUTURE
 #define AUTOBOOST_NO_CXX11_HDR_FORWARD_LIST
 #define AUTOBOOST_NO_CXX11_HDR_ATOMIC

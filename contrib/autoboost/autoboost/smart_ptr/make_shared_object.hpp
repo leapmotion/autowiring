@@ -13,6 +13,8 @@
 //  for documentation.
 
 #include <autoboost/config.hpp>
+#include <autoboost/move/core.hpp>
+#include <autoboost/move/utility_core.hpp>
 #include <autoboost/smart_ptr/shared_ptr.hpp>
 #include <autoboost/smart_ptr/detail/sp_forward.hpp>
 #include <autoboost/type_traits/type_with_alignment.hpp>
@@ -338,466 +340,10 @@ template< class T, class A > typename autoboost::detail::sp_if_not_array< T >::t
     return autoboost::shared_ptr< T >( pt, pt2 );
 }
 
-#if !defined( AUTOBOOST_NO_CXX11_RVALUE_REFERENCES )
-
-// For example MSVC 10.0
-
-template< class T, class A1 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A, class A1 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 && a1 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A1, class A2 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2 && a2 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A, class A1, class A2 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 && a1, A2 && a2 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A1, class A2, class A3 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2 && a2, A3 && a3 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A, class A1, class A2, class A3 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 && a1, A2 && a2, A3 && a3 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A1, class A2, class A3, class A4 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2 && a2, A3 && a3, A4 && a4 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 ),
-        autoboost::detail::sp_forward<A4>( a4 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A, class A1, class A2, class A3, class A4 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 && a1, A2 && a2, A3 && a3, A4 && a4 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 ),
-        autoboost::detail::sp_forward<A4>( a4 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A1, class A2, class A3, class A4, class A5 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 ),
-        autoboost::detail::sp_forward<A4>( a4 ),
-        autoboost::detail::sp_forward<A5>( a5 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A, class A1, class A2, class A3, class A4, class A5 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 ),
-        autoboost::detail::sp_forward<A4>( a4 ),
-        autoboost::detail::sp_forward<A5>( a5 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A1, class A2, class A3, class A4, class A5, class A6 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5, A6 && a6 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 ),
-        autoboost::detail::sp_forward<A4>( a4 ),
-        autoboost::detail::sp_forward<A5>( a5 ),
-        autoboost::detail::sp_forward<A6>( a6 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A, class A1, class A2, class A3, class A4, class A5, class A6 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5, A6 && a6 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 ),
-        autoboost::detail::sp_forward<A4>( a4 ),
-        autoboost::detail::sp_forward<A5>( a5 ),
-        autoboost::detail::sp_forward<A6>( a6 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A1, class A2, class A3, class A4, class A5, class A6, class A7 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5, A6 && a6, A7 && a7 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 ),
-        autoboost::detail::sp_forward<A4>( a4 ),
-        autoboost::detail::sp_forward<A5>( a5 ),
-        autoboost::detail::sp_forward<A6>( a6 ),
-        autoboost::detail::sp_forward<A7>( a7 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A, class A1, class A2, class A3, class A4, class A5, class A6, class A7 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5, A6 && a6, A7 && a7 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 ),
-        autoboost::detail::sp_forward<A4>( a4 ),
-        autoboost::detail::sp_forward<A5>( a5 ),
-        autoboost::detail::sp_forward<A6>( a6 ),
-        autoboost::detail::sp_forward<A7>( a7 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5, A6 && a6, A7 && a7, A8 && a8 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 ),
-        autoboost::detail::sp_forward<A4>( a4 ),
-        autoboost::detail::sp_forward<A5>( a5 ),
-        autoboost::detail::sp_forward<A6>( a6 ),
-        autoboost::detail::sp_forward<A7>( a7 ),
-        autoboost::detail::sp_forward<A8>( a8 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5, A6 && a6, A7 && a7, A8 && a8 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 ),
-        autoboost::detail::sp_forward<A4>( a4 ),
-        autoboost::detail::sp_forward<A5>( a5 ),
-        autoboost::detail::sp_forward<A6>( a6 ),
-        autoboost::detail::sp_forward<A7>( a7 ),
-        autoboost::detail::sp_forward<A8>( a8 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5, A6 && a6, A7 && a7, A8 && a8, A9 && a9 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 ),
-        autoboost::detail::sp_forward<A4>( a4 ),
-        autoboost::detail::sp_forward<A5>( a5 ),
-        autoboost::detail::sp_forward<A6>( a6 ),
-        autoboost::detail::sp_forward<A7>( a7 ),
-        autoboost::detail::sp_forward<A8>( a8 ),
-        autoboost::detail::sp_forward<A9>( a9 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-template< class T, class A, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5, A6 && a6, A7 && a7, A8 && a8, A9 && a9 )
-{
-    autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
-
-    autoboost::detail::sp_ms_deleter< T > * pd = static_cast<autoboost::detail::sp_ms_deleter< T > *>( pt._internal_get_untyped_deleter() );
-
-    void * pv = pd->address();
-
-    ::new( pv ) T(
-        autoboost::detail::sp_forward<A1>( a1 ),
-        autoboost::detail::sp_forward<A2>( a2 ),
-        autoboost::detail::sp_forward<A3>( a3 ),
-        autoboost::detail::sp_forward<A4>( a4 ),
-        autoboost::detail::sp_forward<A5>( a5 ),
-        autoboost::detail::sp_forward<A6>( a6 ),
-        autoboost::detail::sp_forward<A7>( a7 ),
-        autoboost::detail::sp_forward<A8>( a8 ),
-        autoboost::detail::sp_forward<A9>( a9 )
-        );
-
-    pd->set_initialized();
-
-    T * pt2 = static_cast< T* >( pv );
-
-    autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
-    return autoboost::shared_ptr< T >( pt, pt2 );
-}
-
-#else // !defined( AUTOBOOST_NO_CXX11_RVALUE_REFERENCES )
-
 // C++03 version
 
 template< class T, class A1 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a1 )
+typename autoboost::detail::sp_if_not_array< T >::type make_shared( AUTOBOOST_FWD_REF(A1) a1 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
 
@@ -805,7 +351,10 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -815,7 +364,7 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 }
 
 template< class T, class A, class A1 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 const & a1 )
+typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, AUTOBOOST_FWD_REF(A1) a1 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
 
@@ -823,7 +372,10 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -833,7 +385,7 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 }
 
 template< class T, class A1, class A2 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a1, A2 const & a2 )
+typename autoboost::detail::sp_if_not_array< T >::type make_shared( AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
 
@@ -841,7 +393,11 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -851,7 +407,7 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 }
 
 template< class T, class A, class A1, class A2 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 const & a1, A2 const & a2 )
+typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
 
@@ -859,7 +415,11 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -869,7 +429,7 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 }
 
 template< class T, class A1, class A2, class A3 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a1, A2 const & a2, A3 const & a3 )
+typename autoboost::detail::sp_if_not_array< T >::type make_shared( AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
 
@@ -877,7 +437,12 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -887,7 +452,7 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 }
 
 template< class T, class A, class A1, class A2, class A3 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 const & a1, A2 const & a2, A3 const & a3 )
+typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
 
@@ -895,7 +460,12 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -905,7 +475,7 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 }
 
 template< class T, class A1, class A2, class A3, class A4 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4 )
+typename autoboost::detail::sp_if_not_array< T >::type make_shared( AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3, AUTOBOOST_FWD_REF(A4) a4 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
 
@@ -913,7 +483,13 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3, a4 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 ),
+        autoboost::forward<A4>( a4 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -923,7 +499,7 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 }
 
 template< class T, class A, class A1, class A2, class A3, class A4 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4 )
+typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3, AUTOBOOST_FWD_REF(A4) a4 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
 
@@ -931,7 +507,13 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3, a4 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 ),
+        autoboost::forward<A4>( a4 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -941,7 +523,7 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 }
 
 template< class T, class A1, class A2, class A3, class A4, class A5 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5 )
+typename autoboost::detail::sp_if_not_array< T >::type make_shared( AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3, AUTOBOOST_FWD_REF(A4) a4, AUTOBOOST_FWD_REF(A5) a5 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
 
@@ -949,7 +531,14 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3, a4, a5 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 ),
+        autoboost::forward<A4>( a4 ),
+        autoboost::forward<A5>( a5 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -959,7 +548,7 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 }
 
 template< class T, class A, class A1, class A2, class A3, class A4, class A5 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5 )
+typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3, AUTOBOOST_FWD_REF(A4) a4, AUTOBOOST_FWD_REF(A5) a5 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
 
@@ -967,7 +556,14 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3, a4, a5 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 ),
+        autoboost::forward<A4>( a4 ),
+        autoboost::forward<A5>( a5 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -977,7 +573,7 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 }
 
 template< class T, class A1, class A2, class A3, class A4, class A5, class A6 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5, A6 const & a6 )
+typename autoboost::detail::sp_if_not_array< T >::type make_shared( AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3, AUTOBOOST_FWD_REF(A4) a4, AUTOBOOST_FWD_REF(A5) a5, AUTOBOOST_FWD_REF(A6) a6 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
 
@@ -985,7 +581,15 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3, a4, a5, a6 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 ),
+        autoboost::forward<A4>( a4 ),
+        autoboost::forward<A5>( a5 ),
+        autoboost::forward<A6>( a6 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -995,7 +599,7 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 }
 
 template< class T, class A, class A1, class A2, class A3, class A4, class A5, class A6 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5, A6 const & a6 )
+typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3, AUTOBOOST_FWD_REF(A4) a4, AUTOBOOST_FWD_REF(A5) a5, AUTOBOOST_FWD_REF(A6) a6 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
 
@@ -1003,7 +607,15 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3, a4, a5, a6 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 ),
+        autoboost::forward<A4>( a4 ),
+        autoboost::forward<A5>( a5 ),
+        autoboost::forward<A6>( a6 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -1013,7 +625,7 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 }
 
 template< class T, class A1, class A2, class A3, class A4, class A5, class A6, class A7 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5, A6 const & a6, A7 const & a7 )
+typename autoboost::detail::sp_if_not_array< T >::type make_shared( AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3, AUTOBOOST_FWD_REF(A4) a4, AUTOBOOST_FWD_REF(A5) a5, AUTOBOOST_FWD_REF(A6) a6, AUTOBOOST_FWD_REF(A7) a7 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
 
@@ -1021,7 +633,16 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3, a4, a5, a6, a7 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 ),
+        autoboost::forward<A4>( a4 ),
+        autoboost::forward<A5>( a5 ),
+        autoboost::forward<A6>( a6 ),
+        autoboost::forward<A7>( a7 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -1031,7 +652,7 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 }
 
 template< class T, class A, class A1, class A2, class A3, class A4, class A5, class A6, class A7 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5, A6 const & a6, A7 const & a7 )
+typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3, AUTOBOOST_FWD_REF(A4) a4, AUTOBOOST_FWD_REF(A5) a5, AUTOBOOST_FWD_REF(A6) a6, AUTOBOOST_FWD_REF(A7) a7 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
 
@@ -1039,7 +660,16 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3, a4, a5, a6, a7 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 ),
+        autoboost::forward<A4>( a4 ),
+        autoboost::forward<A5>( a5 ),
+        autoboost::forward<A6>( a6 ),
+        autoboost::forward<A7>( a7 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -1049,7 +679,7 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 }
 
 template< class T, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5, A6 const & a6, A7 const & a7, A8 const & a8 )
+typename autoboost::detail::sp_if_not_array< T >::type make_shared( AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3, AUTOBOOST_FWD_REF(A4) a4, AUTOBOOST_FWD_REF(A5) a5, AUTOBOOST_FWD_REF(A6) a6, AUTOBOOST_FWD_REF(A7) a7, AUTOBOOST_FWD_REF(A8) a8 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
 
@@ -1057,7 +687,17 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3, a4, a5, a6, a7, a8 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 ),
+        autoboost::forward<A4>( a4 ),
+        autoboost::forward<A5>( a5 ),
+        autoboost::forward<A6>( a6 ),
+        autoboost::forward<A7>( a7 ),
+        autoboost::forward<A8>( a8 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -1067,7 +707,7 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 }
 
 template< class T, class A, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5, A6 const & a6, A7 const & a7, A8 const & a8 )
+typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3, AUTOBOOST_FWD_REF(A4) a4, AUTOBOOST_FWD_REF(A5) a5, AUTOBOOST_FWD_REF(A6) a6, AUTOBOOST_FWD_REF(A7) a7, AUTOBOOST_FWD_REF(A8) a8 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
 
@@ -1075,7 +715,17 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3, a4, a5, a6, a7, a8 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 ),
+        autoboost::forward<A4>( a4 ),
+        autoboost::forward<A5>( a5 ),
+        autoboost::forward<A6>( a6 ),
+        autoboost::forward<A7>( a7 ),
+        autoboost::forward<A8>( a8 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -1085,7 +735,7 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 }
 
 template< class T, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9 >
-typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5, A6 const & a6, A7 const & a7, A8 const & a8, A9 const & a9 )
+typename autoboost::detail::sp_if_not_array< T >::type make_shared( AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3, AUTOBOOST_FWD_REF(A4) a4, AUTOBOOST_FWD_REF(A5) a5, AUTOBOOST_FWD_REF(A6) a6, AUTOBOOST_FWD_REF(A7) a7, AUTOBOOST_FWD_REF(A8) a8, AUTOBOOST_FWD_REF(A9) a9 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ) );
 
@@ -1093,7 +743,18 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3, a4, a5, a6, a7, a8, a9 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 ),
+        autoboost::forward<A4>( a4 ),
+        autoboost::forward<A5>( a5 ),
+        autoboost::forward<A6>( a6 ),
+        autoboost::forward<A7>( a7 ),
+        autoboost::forward<A8>( a8 ),
+        autoboost::forward<A9>( a9 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -1103,7 +764,7 @@ typename autoboost::detail::sp_if_not_array< T >::type make_shared( A1 const & a
 }
 
 template< class T, class A, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9 >
-typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5, A6 const & a6, A7 const & a7, A8 const & a8, A9 const & a9 )
+typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const & a, AUTOBOOST_FWD_REF(A1) a1, AUTOBOOST_FWD_REF(A2) a2, AUTOBOOST_FWD_REF(A3) a3, AUTOBOOST_FWD_REF(A4) a4, AUTOBOOST_FWD_REF(A5) a5, AUTOBOOST_FWD_REF(A6) a6, AUTOBOOST_FWD_REF(A7) a7, AUTOBOOST_FWD_REF(A8) a8, AUTOBOOST_FWD_REF(A9) a9 )
 {
     autoboost::shared_ptr< T > pt( static_cast< T* >( 0 ), AUTOBOOST_SP_MSD( T ), a );
 
@@ -1111,7 +772,18 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
 
     void * pv = pd->address();
 
-    ::new( pv ) T( a1, a2, a3, a4, a5, a6, a7, a8, a9 );
+    ::new( pv ) T(
+        autoboost::forward<A1>( a1 ),
+        autoboost::forward<A2>( a2 ),
+        autoboost::forward<A3>( a3 ),
+        autoboost::forward<A4>( a4 ),
+        autoboost::forward<A5>( a5 ),
+        autoboost::forward<A6>( a6 ),
+        autoboost::forward<A7>( a7 ),
+        autoboost::forward<A8>( a8 ),
+        autoboost::forward<A9>( a9 )
+        );
+
     pd->set_initialized();
 
     T * pt2 = static_cast< T* >( pv );
@@ -1119,8 +791,6 @@ typename autoboost::detail::sp_if_not_array< T >::type allocate_shared( A const 
     autoboost::detail::sp_enable_shared_from_this( &pt, pt2, pt2 );
     return autoboost::shared_ptr< T >( pt, pt2 );
 }
-
-#endif // !defined( AUTOBOOST_NO_CXX11_RVALUE_REFERENCES )
 
 #endif // !defined( AUTOBOOST_NO_CXX11_VARIADIC_TEMPLATES ) && !defined( AUTOBOOST_NO_CXX11_RVALUE_REFERENCES )
 

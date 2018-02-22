@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2014
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -29,6 +29,10 @@ Version number available as major, minor, and patch.
     [[`_MSC_FULL_VER`] [V.R.P]]
     [[`_MSC_VER`] [V.R.0]]
     ]
+
+[note Release of Visual Studio after 2015 will no longer be identified
+by Boost Predef as the marketing version number. Instead we use the
+compiler version number directly, i.e. the _MSC_VER number.]
  */
 
 #define AUTOBOOST_COMP_MSVC AUTOBOOST_VERSION_NUMBER_NOT_AVAILABLE
@@ -48,10 +52,33 @@ Version number available as major, minor, and patch.
 #           error "Cannot determine build number from _MSC_FULL_VER"
 #       endif
 #   endif
-#   define AUTOBOOST_COMP_MSVC_DETECTION AUTOBOOST_VERSION_NUMBER(\
-        _MSC_VER/100-6,\
-        _MSC_VER%100,\
-        AUTOBOOST_COMP_MSVC_BUILD)
+    /*
+    VS2014 was skipped in the release sequence for MS. Which
+    means that the compiler and VS product versions are no longer
+    in sync. Hence we need to use different formulas for
+    mapping from MSC version to VS product version.
+
+    VS2017 is a total nightmare when it comes to version numbers.
+    Hence to avoid arguments relating to that both present and
+    future.. Any version after VS2015 will use solely the compiler
+    version, i.e. cl.exe, as the version number here.
+    */
+#   if (_MSC_VER > 1900)
+#       define AUTOBOOST_COMP_MSVC_DETECTION AUTOBOOST_VERSION_NUMBER(\
+            _MSC_VER/100,\
+            _MSC_VER%100,\
+            AUTOBOOST_COMP_MSVC_BUILD)
+#   elif (_MSC_VER >= 1900)
+#       define AUTOBOOST_COMP_MSVC_DETECTION AUTOBOOST_VERSION_NUMBER(\
+            _MSC_VER/100-5,\
+            _MSC_VER%100,\
+            AUTOBOOST_COMP_MSVC_BUILD)
+#   else
+#       define AUTOBOOST_COMP_MSVC_DETECTION AUTOBOOST_VERSION_NUMBER(\
+            _MSC_VER/100-6,\
+            _MSC_VER%100,\
+            AUTOBOOST_COMP_MSVC_BUILD)
+#   endif
 #endif
 
 #ifdef AUTOBOOST_COMP_MSVC_DETECTION
@@ -67,13 +94,12 @@ Version number available as major, minor, and patch.
 
 #define AUTOBOOST_COMP_MSVC_NAME "Microsoft Visual C/C++"
 
+#endif
+
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_COMP_MSVC,AUTOBOOST_COMP_MSVC_NAME)
 
 #ifdef AUTOBOOST_COMP_MSVC_EMULATED
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_COMP_MSVC_EMULATED,AUTOBOOST_COMP_MSVC_NAME)
-#endif
-
-
 #endif

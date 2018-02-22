@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2014
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -25,7 +25,8 @@ Version number available as major, minor, and patch.
     [[`__ICC`] [__predef_detection__]]
     [[`__ECC`] [__predef_detection__]]
 
-    [[`__INTEL_COMPILER`] [V.R.P]]
+    [[`__INTEL_COMPILER`] [V.R]]
+    [[`__INTEL_COMPILER` and `__INTEL_COMPILER_UPDATE`] [V.R.P]]
     ]
  */
 
@@ -33,8 +34,14 @@ Version number available as major, minor, and patch.
 
 #if defined(__INTEL_COMPILER) || defined(__ICL) || defined(__ICC) || \
     defined(__ECC)
+#   if !defined(AUTOBOOST_COMP_INTEL_DETECTION) && defined(__INTEL_COMPILER) && defined(__INTEL_COMPILER_UPDATE)
+#       define AUTOBOOST_COMP_INTEL_DETECTION AUTOBOOST_VERSION_NUMBER( \
+            AUTOBOOST_VERSION_NUMBER_MAJOR(AUTOBOOST_PREDEF_MAKE_10_VVRR(__INTEL_COMPILER)), \
+            AUTOBOOST_VERSION_NUMBER_MINOR(AUTOBOOST_PREDEF_MAKE_10_VVRR(__INTEL_COMPILER)), \
+            __INTEL_COMPILER_UPDATE)
+#   endif
 #   if !defined(AUTOBOOST_COMP_INTEL_DETECTION) && defined(__INTEL_COMPILER)
-#       define AUTOBOOST_COMP_INTEL_DETECTION AUTOBOOST_PREDEF_MAKE_10_VRP(__INTEL_COMPILER)
+#       define AUTOBOOST_COMP_INTEL_DETECTION AUTOBOOST_PREDEF_MAKE_10_VVRR(__INTEL_COMPILER)
 #   endif
 #   if !defined(AUTOBOOST_COMP_INTEL_DETECTION)
 #       define AUTOBOOST_COMP_INTEL_DETECTION AUTOBOOST_VERSION_NUMBER_AVAILABLE
@@ -54,13 +61,12 @@ Version number available as major, minor, and patch.
 
 #define AUTOBOOST_COMP_INTEL_NAME "Intel C/C++"
 
+#endif
+
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_COMP_INTEL,AUTOBOOST_COMP_INTEL_NAME)
 
 #ifdef AUTOBOOST_COMP_INTEL_EMULATED
 #include <autoboost/predef/detail/test.h>
 AUTOBOOST_PREDEF_DECLARE_TEST(AUTOBOOST_COMP_INTEL_EMULATED,AUTOBOOST_COMP_INTEL_NAME)
-#endif
-
-
 #endif

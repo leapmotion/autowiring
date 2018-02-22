@@ -459,7 +459,7 @@ namespace filesystem
     //  Experimental generic function returning generic formatted path (i.e. separators
     //  are forward slashes). Motivation: simpler than a family of generic_*string
     //  functions.
-    path generic() const
+    path generic_path() const
     {
 #   ifdef AUTOBOOST_WINDOWS_API
       path tmp;
@@ -576,6 +576,7 @@ namespace filesystem
     path&  remove_leaf()            { return remove_filename(); }
     path   leaf() const             { return filename(); }
     path   branch_path() const      { return parent_path(); }
+    path   generic() const          { return generic_path(); }
     bool   has_leaf() const         { return !m_pathname.empty(); }
     bool   has_branch_path() const  { return !parent_path().empty(); }
     bool   is_complete() const      { return is_absolute(); }

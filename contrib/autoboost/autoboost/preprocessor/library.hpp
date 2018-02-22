@@ -32,5 +32,6 @@
 # include <autoboost/preprocessor/stringize.hpp>
 # include <autoboost/preprocessor/tuple.hpp>
 # include <autoboost/preprocessor/variadic.hpp>
+# include <autoboost/preprocessor/wstringize.hpp>
 #
 # endif

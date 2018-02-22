@@ -10,6 +10,7 @@
 #include <autoboost/thread/lock_algorithms.hpp>
 #include <autoboost/thread/lock_types.hpp>
 #include <autoboost/thread/lock_guard.hpp>
+#include <autoboost/thread/shared_lock_guard.hpp>
 #include <autoboost/thread/lockable_traits.hpp>
 #include <autoboost/thread/lock_options.hpp>
 

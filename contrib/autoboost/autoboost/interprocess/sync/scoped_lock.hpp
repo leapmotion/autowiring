@@ -16,7 +16,11 @@
 #ifndef AUTOBOOST_INTERPROCESS_SCOPED_LOCK_HPP
 #define AUTOBOOST_INTERPROCESS_SCOPED_LOCK_HPP
 
-#if defined(_MSC_VER)
+#ifndef AUTOBOOST_CONFIG_HPP
+#  include <autoboost/config.hpp>
+#endif
+#
+#if defined(AUTOBOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -29,6 +33,7 @@
 #include <autoboost/interprocess/detail/type_traits.hpp>
 #include <autoboost/move/utility_core.hpp>
 #include <autoboost/interprocess/detail/posix_time_types_wrk.hpp>
+#include <autoboost/interprocess/detail/simple_swap.hpp>
 
 //!\file
 //!Describes the scoped_lock class.
@@ -353,8 +358,8 @@ class scoped_lock
    //!Throws: Nothing.
    void swap( scoped_lock<mutex_type> &other)
    {
-      std::swap(mp_mutex, other.mp_mutex);
-      std::swap(m_locked, other.m_locked);
+      (simple_swap)(mp_mutex, other.mp_mutex);
+      (simple_swap)(m_locked, other.m_locked);
    }
 
    #if !defined(AUTOBOOST_INTERPROCESS_DOXYGEN_INVOKED)
