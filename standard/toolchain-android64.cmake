@@ -1,3 +1,4 @@
-set(CMAKE_ANDROID_ARCH_ABI arm64-v8a)
+set(ANDROID_NDK_TOOL_PREFIX aarch64-linux-android)
+set(_ndk_suffix -4.9-aarch64)
+set(CMAKE_SYSTEM_PROCESSOR aarch64)
 include(${CMAKE_CURRENT_LIST_DIR}/toolchain-android.cmake)
-
