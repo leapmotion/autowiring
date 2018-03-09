@@ -4,5 +4,4 @@
 #include "Autowired.h"
 #include "auto_in.h"
 #include "auto_out.h"
-#include "auto_prev.h"
 #include <autowiring/AutowiringVersion.h>

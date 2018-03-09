@@ -36,28 +36,8 @@ AutoPacket::~AutoPacket(void) {
     )
   );
 
-  // Mark decorations of successor packets that use decorations
-  // originating from this packet as unsatisfiable
-  for (auto& pair : m_decoration_map)
-    if (!pair.first.tshift && pair.second.m_state != DispositionState::Complete)
-      MarkSuccessorsUnsatisfiable(DecorationKey(pair.first.id, 0));
-
   // Needed for the AutoPacketGraph
   NotifyTeardownListeners();
-
-  // Create vector of all successor packets that will be destroyed
-  // This prevents recursive AutoPacket destructor calls
-  std::vector<std::shared_ptr<AutoPacket>> packets;
-
-  // Recurse through unique successors, storing them in our vector
-  for (AutoPacket* current = this; current->m_successor.unique();) {
-    packets.push_back(current->m_successor);
-
-    // Reset and continue to next successor
-    AutoPacket* prev_current = current;
-    current = current->m_successor.get();
-    prev_current->m_successor.reset();
-  }
 
   // Safe linked list unwind
   for (auto cur = m_firstCounter; cur;) {
@@ -87,12 +67,8 @@ DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& 
 
 void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
   for(auto pCur = satCounter.GetAutoFilterArguments(); *pCur; pCur++) {
-    DecorationKey key(pCur->id, pCur->tshift);
+    DecorationKey key(pCur->id);
     DecorationDisposition& entry = m_decoration_map[key];
-
-    // Make sure decorations exist for timeshifts less that key's timeshift
-    for (int tshift = 0; tshift < key.tshift; ++tshift)
-      m_decoration_map[DecorationKey(key.id, tshift)];
 
     // Decide what to do with this entry:
     if (pCur->is_input) {
@@ -181,7 +157,7 @@ void AutoPacket::DetectCycle(SatCounter& satCounter, std::unordered_set<SatCount
   for(auto pCur = satCounter.GetAutoFilterArguments(); *pCur; pCur++) {
     if (!pCur->is_output) continue;
 
-    DecorationKey key(pCur->id, pCur->tshift);
+    DecorationKey key(pCur->id);
     DecorationDisposition& entry = m_decoration_map[key];
     for (auto& subscriber : entry.m_subscribers) {
       auto ptr = subscriber.satCounter;
@@ -201,7 +177,7 @@ void AutoPacket::DetectCycle(SatCounter& satCounter, std::unordered_set<SatCount
 
 void AutoPacket::RemoveSatCounterUnsafe(const SatCounter& satCounter) {
   for (auto pCur = satCounter.GetAutoFilterArguments(); *pCur; pCur++) {
-    DecorationKey key(pCur->id, pCur->tshift);
+    DecorationKey key(pCur->id);
     DecorationDisposition& entry = m_decoration_map[key];
 
     if (pCur->is_rvalue) {
@@ -251,22 +227,6 @@ void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
 
   // Notify all consumers
   UpdateSatisfactionUnsafe(std::move(lk), entry);
-}
-
-void AutoPacket::MarkSuccessorsUnsatisfiable(DecorationKey key) {
-  std::lock_guard<std::mutex> lk(m_lock);
-
-  // Update key and successor
-  key.tshift++;
-  auto successor = SuccessorUnsafe();
-
-  while (m_decoration_map.count(key)) {
-    successor->MarkUnsatisfiable(key);
-
-    // Update key and successor
-    key.tshift++;
-    successor = successor->Successor();
-  }
 }
 
 void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const DecorationDisposition& disposition) {
@@ -388,7 +348,7 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   // Mark all unsatisfiable output types
   for (auto unsatOutputArg : unsatOutputArgs) {
     // One more producer run, even though we couldn't attach any new decorations
-    auto& disposition = m_decoration_map[DecorationKey{unsatOutputArg->id, 0}];
+    auto& disposition = m_decoration_map[DecorationKey{unsatOutputArg->id}];
     if(disposition.IncProducerCount())
       // Recurse on this entry
       UpdateSatisfactionUnsafe(std::unique_lock<std::mutex>{m_lock}, disposition);
@@ -491,19 +451,8 @@ void AutoPacket::DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key
 void AutoPacket::Decorate(const AnySharedPointer& ptr, DecorationKey key) {
   auto cur = shared_from_this();
 
-  do {
-    // Update satisfaction set on this entry
-    cur->DecorateNoPriors(ptr, key);
-
-    // Obtain the successor
-    cur = cur->Successor();
-    key.tshift++;
-  } while (
-    // If there are any filters on _this_ packet that desire to know the prior packet, then
-    // we must proactively preserve the value of this decoration for our successor.
-    (std::lock_guard<std::mutex>)m_lock,
-    m_decoration_map.count(key)
-  );
+  // Update satisfaction set on this entry
+  cur->DecorateNoPriors(ptr, key);
 }
 
 void AutoPacket::RemoveDecoration(DecorationKey key) {
@@ -577,7 +526,7 @@ AutoPacket::t_decorationMap AutoPacket::GetDecorations(void) const
 
 bool AutoPacket::IsUnsatisfiable(const auto_id& id) const
 {
-  const DecorationDisposition* pDisposition = GetDisposition(DecorationKey{ id, 0 });
+  const DecorationDisposition* pDisposition = GetDisposition(DecorationKey{ id });
   if (!pDisposition)
     // We have never heard of this type
     return false;
@@ -645,20 +594,6 @@ void AutoPacket::RemoveRecipient(const SatCounter& recipient) {
     recipient.flink->blink = recipient.blink;
 
   RemoveSatCounterUnsafe(recipient);
-}
-
-std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
-  std::lock_guard<std::mutex> lk(m_lock);
-  return SuccessorUnsafe();
-}
-
-std::shared_ptr<AutoPacket> AutoPacket::SuccessorUnsafe(void) {
-  // If successor doesn't already exists, create it
-  if (!m_successor){
-    m_successor = m_parentFactory->ConstructPacket();
-  }
-
-  return m_successor;
 }
 
 AutoPacket* AutoPacket::SetCurrent(AutoPacket* apkt) {

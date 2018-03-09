@@ -34,16 +34,6 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
     }
   }
 
-  // Mark timeshifted decorations as unsatisfiable on the first packet
-  if (isFirstPacket)
-    for (auto& dec : m_decoration_map) {
-      auto& key = dec.first;
-      if (key.tshift) {
-        MarkUnsatisfiable(key);
-        MarkSuccessorsUnsatisfiable(key);
-      }
-    }
-
   // Call all subscribers with no required or optional arguments:
   // NOTE: This may result in decorations that cause other subscribers to be called.
   {
@@ -51,8 +41,4 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
     for (SatCounter* call : callCounters)
       call->GetCall()(call->GetAutoFilter().ptr(), *this);
   }
-}
-
-std::shared_ptr<AutoPacketInternal> AutoPacketInternal::SuccessorInternal(void) {
-  return std::static_pointer_cast<AutoPacketInternal>(Successor());
 }

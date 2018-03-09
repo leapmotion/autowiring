@@ -39,7 +39,6 @@ public:
   static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
-  static const int tshift = 0;
 
   template<class C>
   static const T& arg(C& packet) {
@@ -115,7 +114,6 @@ public:
   static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
-  static const int tshift = 0;
 
   template<class C>
   static const T& arg(C& packet) {
@@ -139,7 +137,6 @@ public:
   static const bool is_rvalue = true;
   static const bool is_shared = false;
   static const bool is_multi = false;
-  static const int tshift = 0;
 
   template<class C>
   static T&& arg(C& packet) {
@@ -167,7 +164,6 @@ public:
   static const bool is_rvalue = false;
   static const bool is_shared = true;
   static const bool is_multi = false;
-  static const int tshift = 0;
 
   template<class C>
   static const std::shared_ptr<const T>& arg(C& packet) {
@@ -204,7 +200,6 @@ public:
   static const bool is_rvalue = true;
   static const bool is_shared = true;
   static const bool is_multi = false;
-  static const int tshift = 0;
 
   static std::shared_ptr<T>&& arg(AutoPacket& packet) {
     (void) auto_id_t_init<T, false>::init;
@@ -242,7 +237,6 @@ public:
   static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
-  static const int tshift = 0;
 
   static std::shared_ptr<T> arg(AutoPacket& packet) {
     (void)auto_id_t_init<T>::init;
@@ -272,7 +266,6 @@ public:
   static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
-  static const int tshift = 0;
 
   template<class C>
   static const T* arg(C& packet) {
@@ -306,7 +299,6 @@ public:
   static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
-  static const int tshift = 0;
 
   static std::shared_ptr<T> arg(AutoPacket& packet) {
     // Need to ensure the identifier is initialized properly, we can do a full
@@ -375,7 +367,6 @@ public:
   static const bool is_rvalue = false;
   static const bool is_shared = true;
   static const bool is_multi = false;
-  static const int tshift = 0;
 
   static downstream_status arg(AutoPacket& packet) {
     (void)auto_id_t_init<T>::init;
@@ -414,7 +405,6 @@ public:
   static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
-  static const int tshift = 0;
 
   static CoreContext& arg(AutoPacket&);
 };
@@ -434,7 +424,6 @@ public:
   static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
-  static const int tshift = 0;
 
   static std::shared_ptr<CoreContext> arg(AutoPacket&);
 };
@@ -470,7 +459,6 @@ public:
   static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = true;
-  static const int tshift = 0;
 
   template<class C>
   static type arg(C& packet) {
@@ -513,7 +501,6 @@ public:
   static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = true;
-  static const int tshift = 0;
 
   template<class C>
   static type arg(C& packet) {

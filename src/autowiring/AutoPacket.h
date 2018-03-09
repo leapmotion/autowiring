@@ -69,9 +69,6 @@ protected:
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
   const std::shared_ptr<AutoPacketFactory> m_parentFactory;
 
-  // The successor to this packet
-  std::shared_ptr<AutoPacketInternal> m_successor;
-
   // Hold the time point at which this packet was last initalized.
   std::chrono::high_resolution_clock::time_point m_initTime;
 
@@ -114,11 +111,6 @@ protected:
   void MarkUnsatisfiable(const autowiring::DecorationKey& key);
 
   /// <summary>
-  /// Marks timeshifted decorations on successor packets as unsatisfiable
-  /// </summary>
-  void MarkSuccessorsUnsatisfiable(autowiring::DecorationKey type);
-
-  /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
   /// </summary>
   /// <param name="lk">The unique_lock used to control the synchronization level</param>
@@ -151,11 +143,6 @@ protected:
 
   /// <summary>Runtime counterpart to RemoveDecoration</summary>
   void RemoveDecoration(autowiring::DecorationKey key);
-
-  /// <summary>
-  /// The portion of Successor that must run under a lock
-  /// </summary>
-  std::shared_ptr<AutoPacket> SuccessorUnsafe(void);
 
   /// <summary>
   /// Retrieves the decoration disposition corresponding to some type
@@ -219,21 +206,21 @@ public:
   /// satisfied, the AutoPacket does not "have" these types.
   /// </remarks>
   template<class T>
-  bool Has(int tshift=0) const {
+  bool Has() const {
     std::lock_guard<std::mutex> lk(m_lock);
-    return HasUnsafe(autowiring::DecorationKey(auto_id_t<T>{}, tshift));
+    return HasUnsafe(autowiring::DecorationKey(auto_id_t<T>{}));
   }
 
   /// <summary>
   /// Detects the desired type, or throws an exception if such a type cannot be found
   /// </summary>
   template<class T>
-  const T& Get(int tshift=0) const {
+  const T& Get() const {
     static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
 
     const T* retVal;
-    if (!Get(retVal, tshift) || !retVal)
-      ThrowNotDecoratedException(autowiring::DecorationKey(auto_id_t<T>{}, tshift));
+    if (!Get(retVal) || !retVal)
+      ThrowNotDecoratedException(autowiring::DecorationKey(auto_id_t<T>{}));
     return *retVal;
   }
 
@@ -245,8 +232,8 @@ public:
   /// valid ONLY during recursive satisfaction calls.
   /// </remarks>
   template<class T>
-  bool Get(const T*& out, int tshift=0) const {
-    autowiring::DecorationKey key(auto_id_t<T>{}, tshift);
+  bool Get(const T*& out) const {
+    autowiring::DecorationKey key(auto_id_t<T>{});
     const autowiring::DecorationDisposition* pDisposition = GetDisposition(key);
     if (pDisposition) {
       switch (pDisposition->m_decorations.size()) {
@@ -277,7 +264,6 @@ public:
   /// Shared pointer specialization of const T*&, used to obtain the underlying shared pointer for some type T
   /// </summary>
   /// <param name="out">Receives the requested decoration, or else nullptr</param>
-  /// <param name="tshift">The number back to retrieve</param>
   /// <remarks>
   /// This specialization cannot be used to obtain a decoration which has been attached to this packet via
   /// DecorateImmediate.
@@ -285,12 +271,12 @@ public:
   /// This method will throw an exception if the requested decoration is multiply present on the packet
   /// </remarks>
   template<class T>
-  bool Get(const std::shared_ptr<T>*& out, int tshift=0) const {
+  bool Get(const std::shared_ptr<T>*& out) const {
     static_assert(std::is_const<T>::value, "Cannot get a non-const shared pointer from AutoPacket, declare as `const std::shared_ptr<const T>*`");
     typedef typename std::remove_const<T>::type TActual;
 
     // Decoration must be present and the shared pointer itself must also be present
-    autowiring::DecorationKey key(auto_id_t<TActual>{}, tshift);
+    autowiring::DecorationKey key(auto_id_t<TActual>{});
     const autowiring::DecorationDisposition* pDisposition = GetDisposition(key);
     if (!pDisposition) {
       out = nullptr;
@@ -319,9 +305,9 @@ public:
   /// PROBLEM: This use case implies that holding shared_ptr references to decorations is NOT SAFE.
   /// </remarks>
   template<class T>
-  bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
+  bool Get(std::shared_ptr<const T>& out) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto deco = m_decoration_map.find(autowiring::DecorationKey(auto_id_t<T>{}, tshift));
+    auto deco = m_decoration_map.find(autowiring::DecorationKey(auto_id_t<T>{}));
     if(deco != m_decoration_map.end() && deco->second.m_state == autowiring::DispositionState::Complete) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
@@ -337,9 +323,9 @@ public:
   /// The shared pointer decoration for the specified type and time shift, or nullptr if no such decoration exists
   /// </returns>
   template<class T>
-  const std::shared_ptr<const T>* GetShared(int tshift = 0) const {
+  const std::shared_ptr<const T>* GetShared() const {
     const std::shared_ptr<const T>* retVal;
-    Get(retVal, tshift);
+    Get(retVal);
     return retVal;
   }
 
@@ -347,12 +333,12 @@ public:
   /// The Rvalue decoration for the specified type and time shift, or throws an exception if such a type cannot be found
   /// </returns>
   template<class T>
-  T&& GetRvalue(int tshift = 0) const {
+  T&& GetRvalue() const {
     static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
 
     const T* retVal;
-    if (!Get(retVal, tshift) || !retVal)
-      ThrowNotDecoratedException(autowiring::DecorationKey(auto_id_t<T>{}, tshift));
+    if (!Get(retVal) || !retVal)
+      ThrowNotDecoratedException(autowiring::DecorationKey(auto_id_t<T>{}));
     return std::move(const_cast<T&>(*retVal));
   }
 
@@ -360,11 +346,11 @@ public:
   /// The Rvalue shared pointer decoration for the specified type and time shift, or throws an exception is such a type cannot be found
   /// </returns>
   template<class T>
-  std::shared_ptr<T>&& GetRvalueShared(int tshift = 0) {
+  std::shared_ptr<T>&& GetRvalueShared() {
     static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
 
     typedef typename std::remove_const<T>::type TActual;
-    const autowiring::DecorationKey key(auto_id_t<TActual>{}, tshift);
+    const autowiring::DecorationKey key(auto_id_t<TActual>{});
 
     std::lock_guard<std::mutex> lk(m_lock);
     auto q = m_decoration_map.find(key);
@@ -391,11 +377,11 @@ public:
   /// </summary>
   /// <returns>The null-terminated buffer</returns>
   template<class T>
-  std::unique_ptr<const T*[]> GetAll(int tshift = 0) const {
+  std::unique_ptr<const T*[]> GetAll() const {
     std::lock_guard<std::mutex> lk(m_lock);
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decoration_map.find(autowiring::DecorationKey(auto_id_t<T>{}, tshift));
+    auto q = m_decoration_map.find(autowiring::DecorationKey(auto_id_t<T>{}));
     if (q == m_decoration_map.end())
       return std::unique_ptr<const T*[]>{
         new const T*[1] {nullptr}
@@ -415,12 +401,12 @@ public:
   /// </summary>
   /// <returns>The null-terminated buffer</returns>
   template<class T>
-  std::unique_ptr<std::shared_ptr<const T>[]> GetAllShared(int tshift = 0) const {
+  std::unique_ptr<std::shared_ptr<const T>[]> GetAllShared() const {
     std::lock_guard<std::mutex> lk(m_lock);
     typedef typename std::remove_const<T>::type TActual;
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decoration_map.find(autowiring::DecorationKey(auto_id_t<TActual>{}, tshift));
+    auto q = m_decoration_map.find(autowiring::DecorationKey(auto_id_t<TActual>{}));
     if (q == m_decoration_map.end())
       return std::unique_ptr<std::shared_ptr<const T>[]>{
         new std::shared_ptr<const T>[1] {nullptr}
@@ -456,7 +442,7 @@ public:
   /// </remarks>
   template<class T>
   void MarkUnsatisfiable(void) {
-    MarkUnsatisfiable(autowiring::DecorationKey(auto_id_t<T>{}, 0));
+    MarkUnsatisfiable(autowiring::DecorationKey(auto_id_t<T>{}));
   }
 
   /// <summary>
@@ -471,7 +457,7 @@ public:
   /// </remarks>
   template<class T>
   void Decorate(const std::shared_ptr<T>& ptr) {
-    autowiring::DecorationKey key(auto_id_t<T>{}, 0);
+    autowiring::DecorationKey key(auto_id_t<T>{});
 
     // We don't want to see this overload used on a const T
     static_assert(!std::is_const<T>::value, "Cannot decorate a shared pointer to const T with this overload");
@@ -515,7 +501,7 @@ public:
     auto ptr = std::shared_ptr<TActual>(new TActual(std::forward<T&&>(t)));
     Decorate(
       AnySharedPointer(ptr),
-      autowiring::DecorationKey(auto_id_t<TActual>{}, 0)
+      autowiring::DecorationKey(auto_id_t<TActual>{})
     );
     return *ptr;
   }
@@ -536,7 +522,7 @@ public:
     auto ptr = std::shared_ptr<T>(new T(std::forward<Args&&>(args)...));
     Decorate(
       AnySharedPointer(ptr),
-      autowiring::DecorationKey(auto_id_t<T>(), 0)
+      autowiring::DecorationKey(auto_id_t<T>())
     );
     return *ptr;
   }
@@ -564,8 +550,8 @@ public:
     // Perform standard decoration with a short initialization:
     std::unique_lock<std::mutex> lk(m_lock);
     autowiring::DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)] = {
-      &DecorateImmediateUnsafe(autowiring::DecorationKey(auto_id_t<T>(), 0), &immed),
-      &DecorateImmediateUnsafe(autowiring::DecorationKey(auto_id_t<Ts>(), 0), &immeds)...
+      &DecorateImmediateUnsafe(autowiring::DecorationKey(auto_id_t<T>()), &immed),
+      &DecorateImmediateUnsafe(autowiring::DecorationKey(auto_id_t<Ts>()), &immeds)...
     };
 
     // Pulse satisfaction:
@@ -579,8 +565,8 @@ public:
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
       autowiring::noop(
-        (MarkUnsatisfiable(autowiring::DecorationKey(auto_id_t<T>(), 0)), false),
-        (MarkUnsatisfiable(autowiring::DecorationKey(auto_id_t<Ts>(), 0)), false)...
+        (MarkUnsatisfiable(autowiring::DecorationKey(auto_id_t<T>())), false),
+        (MarkUnsatisfiable(autowiring::DecorationKey(auto_id_t<Ts>())), false)...
       );
     }),
     PulseSatisfactionUnsafe(std::move(lk), pTypeSubs, 1 + sizeof...(Ts));
@@ -591,7 +577,7 @@ public:
   /// </summary>
   template<class T>
   void RemoveDecoration(void) {
-    autowiring::DecorationKey key(auto_id_t<T>{}, 0);
+    autowiring::DecorationKey key(auto_id_t<T>{});
     RemoveDecoration(key);
   }
 
@@ -639,21 +625,16 @@ public:
   template<class T>
   inline const autowiring::SatCounter& GetSatisfaction(void) const { return GetSatisfaction(auto_id_t<T>{}); }
 
-  /// <summary>
-  /// Returns the next packet that will be issued by the packet factory in this context relative to this context
-  /// </summary>
-  std::shared_ptr<AutoPacket> Successor(void);
-
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   template<typename T>
   bool HasSubscribers(void) const {
-    return HasSubscribers(autowiring::DecorationKey{auto_id_t<T>{}, 0});
+    return HasSubscribers(autowiring::DecorationKey{auto_id_t<T>{}});
   }
 
   /// <returns>Zero if there are no publishers, otherwise the number of publishers</returns>
   template<typename T>
   size_t HasPublishers(void) const {
-    return HasPublishers(autowiring::DecorationKey{auto_id_t<T>{}, 0});
+    return HasPublishers(autowiring::DecorationKey{auto_id_t<T>{}});
   }
 
   struct SignalStub {
@@ -896,7 +877,6 @@ namespace autowiring {
     static const bool is_rvalue = false;
     static const bool is_shared = false;
     static const bool is_multi = false;
-    static const int tshift = 0;
 
     static AutoPacket& arg(AutoPacket& packet) {
       return packet;
@@ -918,7 +898,6 @@ namespace autowiring {
     static const bool is_rvalue = false;
     static const bool is_shared = false;
     static const bool is_multi = false;
-    static const int tshift = 0;
 
     static std::shared_ptr<AutoPacket> arg(AutoPacket& packet) {
       return packet.shared_from_this();

@@ -691,7 +691,6 @@ FILE_PATTERNS          = "at_exit.h" \
                          "auto_arg.h" \
                          "auto_in.h" \
                          "auto_out.h" \
-                         "auto_prev.h" \
                          "AutoConfig.h" \
                          "AutoNetServer.h" \
                          "AutoPacket.h" \

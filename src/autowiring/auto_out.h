@@ -128,7 +128,6 @@ public:
   static const bool is_rvalue = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
-  static const int tshift = 0;
 
   static auto_out<T> arg(AutoPacket& packet) {
     return auto_out<T>(packet);

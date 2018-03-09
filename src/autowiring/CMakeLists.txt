@@ -21,7 +21,6 @@ set(Autowiring_SRCS
   auto_id.cpp
   auto_in.h
   auto_out.h
-  auto_prev.h
   auto_signal.h
   auto_tuple.h
   AutoCurrentPacketPusher.h
