@@ -118,10 +118,6 @@ TEST_F(AutowiringDebugTest, BasicAutoFilterGraph) {
   AutoRequired<IntInFloatIn> filter3;
   AutoRequired<IntModifier> filter4;
 
-  *factory += [](auto_prev<float> in, std::string& out) {
-    out = "hello world";
-  };
-
   *factory += [](double& out) { out = 3.0;};
   *factory += [](double& out) { out = 4.0; };
 

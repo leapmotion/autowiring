@@ -19,16 +19,14 @@ protected:
     bool is_rvalue,
     bool is_shared,
     bool is_multi,
-    auto_id id,
-    int tshift
+    auto_id id
   ) :
     is_input(is_input),
     is_output(is_output),
     is_rvalue(is_rvalue),
     is_shared(is_shared),
     is_multi(is_multi),
-    id(id),
-    tshift(tshift)
+    id(id)
   {}
 
 public:
@@ -38,7 +36,6 @@ public:
   const bool is_shared = false;
   const bool is_multi = false;
   const auto_id id = auto_id_t<void>{};
-  const int tshift = 0;
 
   explicit operator bool(void) const {
     return static_cast<bool>(id);
@@ -56,8 +53,7 @@ struct AutoFilterArgumentT:
       auto_arg<T>::is_rvalue,
       auto_arg<T>::is_shared,
       auto_arg<T>::is_multi,
-      typename auto_arg<T>::id_type(),
-      auto_arg<T>::tshift
+      typename auto_arg<T>::id_type()
     )
   {}
 };

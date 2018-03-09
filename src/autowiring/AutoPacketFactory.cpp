@@ -41,8 +41,8 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
     ++m_packetCount;
 
     // Create a new next packet
-    retVal = m_nextPacket;
-    m_nextPacket = retVal->SuccessorInternal();
+    retVal = std::move(m_nextPacket);
+    m_nextPacket = ConstructPacket();
     m_curPacket = retVal;
   }
 

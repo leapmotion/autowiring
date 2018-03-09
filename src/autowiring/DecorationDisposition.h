@@ -13,20 +13,15 @@ struct SatCounter;
 struct DecorationKey {
   DecorationKey(void) = default;
 
-  explicit DecorationKey(auto_id id, int tshift) :
-    id(id),
-    tshift(tshift)
+  explicit DecorationKey(auto_id id) :
+    id(id)
   {}
 
   // The type index
   auto_id id;
 
-  // Zero refers to a decoration created on this packet, a positive number [tshift] indicates
-  // a decoration attached [tshift] packets ago.
-  int tshift = -1;
-
   bool operator==(const DecorationKey& rhs) const {
-    return id == rhs.id && tshift == rhs.tshift;
+    return id == rhs.id;
   }
 };
 
@@ -198,7 +193,7 @@ namespace std {
   template<>
   struct hash<autowiring::DecorationKey> {
     size_t operator()(const autowiring::DecorationKey& key) const {
-      return key.tshift + (size_t)key.id.block;
+      return (size_t)key.id.block;
     }
   };
 }

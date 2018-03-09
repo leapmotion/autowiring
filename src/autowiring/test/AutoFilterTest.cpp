@@ -784,8 +784,8 @@ TEST_F(AutoFilterTest, AutoOut2) {
     packet->Decorate(123.45);
     d = packet->GetDecorations();
     ASSERT_EQ(1, d.size()) << "Unexpected number of AutoFilter parameters.";
-    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>(),0)].m_state) << "Incorrect `double` decoration disposition.";
-    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>(),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>())].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>())].m_decorations.size()) << "Incorrect `double` decoration disposition.";
 
     bool filter_0_called = false;
     auto filter_0 = [&filter_0_called](const double &x, auto_out<int> y) {
@@ -805,11 +805,11 @@ TEST_F(AutoFilterTest, AutoOut2) {
     ASSERT_FALSE(filter_1_called) << "We expected filter_0 to not have been called by now.";
     d = packet->GetDecorations();
     ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
-    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>(),0)].m_state) << "Incorrect `double` decoration disposition.";
-    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>(),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>())].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>())].m_decorations.size()) << "Incorrect `double` decoration disposition.";
     // Being Complete and having no decorations indicates that it has been MarkUnsatisfiable()'d.
-    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<int>(),0)].m_state) << "Incorrect `int` decoration disposition.";
-    ASSERT_EQ(0, d[DecorationKey(auto_id_t<int>(),0)].m_decorations.size()) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<int>())].m_state) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(0, d[DecorationKey(auto_id_t<int>())].m_decorations.size()) << "Incorrect `int` decoration disposition.";
 
     // Because the auto_out<int> was never assigned to, it went unsatisfiable, so this filter should never be called.
     *packet += filter_1;
@@ -839,10 +839,10 @@ TEST_F(AutoFilterTest, AutoOut3) {
     packet->Decorate(123.45);
     d = packet->GetDecorations();
     ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
-    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>(),0)].m_state) << "Incorrect `double` decoration disposition.";
-    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>(),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
-    ASSERT_EQ(DispositionState::Unsatisfied, d[DecorationKey(auto_id_t<int>(),0)].m_state) << "Incorrect `int` decoration disposition.";
-    ASSERT_EQ(0, d[DecorationKey(auto_id_t<int>(),0)].m_decorations.size()) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>())].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>())].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(DispositionState::Unsatisfied, d[DecorationKey(auto_id_t<int>())].m_state) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(0, d[DecorationKey(auto_id_t<int>())].m_decorations.size()) << "Incorrect `int` decoration disposition.";
 
     bool filter_0_called = false;
     auto filter_0 = [&filter_0_called](const double &x, auto_out<int> y) {
@@ -858,11 +858,11 @@ TEST_F(AutoFilterTest, AutoOut3) {
     ASSERT_FALSE(filter_1_called) << "We expected filter_0 to not have been called by now.";
     d = packet->GetDecorations();
     ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
-    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>(),0)].m_state) << "Incorrect `double` decoration disposition.";
-    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>(),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>())].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>())].m_decorations.size()) << "Incorrect `double` decoration disposition.";
     // Being Complete and having no decorations indicates that it has been MarkUnsatisfiable()'d.
-    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<int>(),0)].m_state) << "Incorrect `int` decoration disposition.";
-    ASSERT_EQ(0, d[DecorationKey(auto_id_t<int>(),0)].m_decorations.size()) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<int>())].m_state) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(0, d[DecorationKey(auto_id_t<int>())].m_decorations.size()) << "Incorrect `int` decoration disposition.";
 
     // Because the auto_out<int> was never assigned to, it went unsatisfiable, so this filter should never be called.
     ASSERT_TRUE(filter_0_called) << "We expected filter_0 to have been called by now.";
@@ -891,10 +891,10 @@ TEST_F(AutoFilterTest, AutoOut4) {
     packet->Decorate(123.45);
     d = packet->GetDecorations();
     ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
-    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>(),0)].m_state) << "Incorrect `double` decoration disposition.";
-    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>(),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
-    ASSERT_EQ(DispositionState::Unsatisfied, d[DecorationKey(auto_id_t<int>(),0)].m_state) << "Incorrect `int` decoration disposition.";
-    ASSERT_EQ(0, d[DecorationKey(auto_id_t<int>(),0)].m_decorations.size()) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>())].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>())].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(DispositionState::Unsatisfied, d[DecorationKey(auto_id_t<int>())].m_state) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(0, d[DecorationKey(auto_id_t<int>())].m_decorations.size()) << "Incorrect `int` decoration disposition.";
 
     bool filter_0_called = false;
     auto_out<int> ao;
@@ -912,12 +912,12 @@ TEST_F(AutoFilterTest, AutoOut4) {
     ASSERT_FALSE(filter_1_called) << "We expected filter_0 to not have been called by now.";
     d = packet->GetDecorations();
     ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
-    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>(),0)].m_state) << "Incorrect `double` decoration disposition.";
-    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>(),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>())].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>())].m_decorations.size()) << "Incorrect `double` decoration disposition.";
 
     // Being Complete and having no decorations indicates that it has been MarkUnsatisfiable()'d.
-    ASSERT_EQ(DispositionState::Unsatisfied, d[DecorationKey(auto_id_t<int>(),0)].m_state) << "Incorrect `int` decoration disposition.";
-    ASSERT_EQ(0, d[DecorationKey(auto_id_t<int>(),0)].m_decorations.size()) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(DispositionState::Unsatisfied, d[DecorationKey(auto_id_t<int>())].m_state) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(0, d[DecorationKey(auto_id_t<int>())].m_decorations.size()) << "Incorrect `int` decoration disposition.";
 
     // Assign to ao, thereby decorating the packet with int.
     *ao = 42;
@@ -927,9 +927,9 @@ TEST_F(AutoFilterTest, AutoOut4) {
     ASSERT_TRUE(filter_1_called) << "We expected filter_0 to have been called by now.";
     d = packet->GetDecorations();
     ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
-    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>(),0)].m_state) << "Incorrect `double` decoration disposition.";
-    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>(),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
-    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<int>(),0)].m_state) << "Incorrect `int` decoration disposition.";
-    ASSERT_EQ(1, d[DecorationKey(auto_id_t<int>(),0)].m_decorations.size()) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<double>())].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(auto_id_t<double>())].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(auto_id_t<int>())].m_state) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(auto_id_t<int>())].m_decorations.size()) << "Incorrect `int` decoration disposition.";
   }
 }

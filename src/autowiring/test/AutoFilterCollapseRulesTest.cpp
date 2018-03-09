@@ -81,21 +81,21 @@ TEST_F(AutoFilterCollapseRulesTest, ConstCollapse) {
   *factory += [&](const int& dataIn) {
     callCount++;
   };
-  
+
   // Test const shared_ptr
   auto packet1 = factory->NewPacket();
-  
+
   std::shared_ptr<const int> dec1 = std::make_shared<const int>(42);
   packet1->Decorate(dec1);
-  
+
   ASSERT_EQ(1, callCount) << "'const T' decoration didn't resolve to 'T'";
-  
+
   // Test const value
   auto packet2 = factory->NewPacket();
-  
+
   const int dec2 = 42;
   packet2->Decorate(dec2);
-  
+
   ASSERT_EQ(2, callCount) << "'const T' decoration didn't resolve to 'T'";
 }
 
@@ -151,52 +151,6 @@ TEST_F(AutoFilterCollapseRulesTest, UnsatisfiableDecoration) {
 
   // Ensure the correct decoration was invoked
   ASSERT_TRUE(bInvoked) << "AutoFilter was not invoked in an unsatisfiable case as expected";
-}
-
-TEST_F(AutoFilterCollapseRulesTest, SharedOutSelfAutoPrev) {
-  AutoRequired<AutoPacketFactory> factory;
-  AutoCurrentContext()->Initiate();
-
-  auto hello = std::make_shared<std::string>("Hello world!");
-  size_t nMsgs = 0;
-  *factory += [&](auto_prev<std::string> lastMsg, std::shared_ptr<std::string>& msg) {
-    msg = hello;
-    if (lastMsg)
-      nMsgs++;
-  };
-
-  auto packet1 = factory->NewPacket();
-  auto packet2 = factory->NewPacket();
-
-  ASSERT_TRUE(packet1->Has<std::string>());
-  ASSERT_TRUE(packet2->Has<std::string>());
-  ASSERT_EQ(1UL, nMsgs) << "auto_prev was not correctly set when a filter produces a shared_ptr output";
-}
-
-struct Base {};
-struct Derived : public Base{};
-
-TEST_F(AutoFilterCollapseRulesTest, AutoPrevInheritance) {
-  AutoRequired<AutoPacketFactory> factory;
-  AutoCurrentContext()->Initiate();
-  
-  size_t counter = 0;
-  
-  *factory += [&](const std::vector<Base>& base, auto_prev<std::vector<Derived>> prev, std::vector<Derived>& deriv) {
-    deriv.emplace_back();
-    
-    if (counter) {
-      ASSERT_FALSE(prev->empty()) << "auto_prev not called";
-    }
-    
-    counter++;
-  };
-  
-  for (size_t i = 0; i < 10; ++i) {
-    auto packet = factory->NewPacket();
-    std::vector<Base> baseVec{Base(), Base(), Base()};
-    packet->Decorate(baseVec);
-  }
 }
 
 TEST_F(AutoFilterCollapseRulesTest, CoreContextArg) {

@@ -369,11 +369,6 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, CoreContext& ctxt) 
         os << filters[filter] << " -> " << decorations[decoration];
       }
 
-      // Label time shifted edges
-      if (arg.tshift) {
-        os << " [style=dotted label=\"prev=" << arg.tshift << "\"]";
-      }
-
       os << std::endl;
     }
   }

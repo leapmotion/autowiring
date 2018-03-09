@@ -22,10 +22,4 @@ public:
   /// spurious calls when no packet is issued.
   /// </remarks>
   void Initialize(bool isFirstPacket);
-
-  /// <summary>
-  ///
-  /// </summary>
-  std::shared_ptr<AutoPacketInternal> SuccessorInternal(void);
 };
-

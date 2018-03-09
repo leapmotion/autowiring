@@ -11,8 +11,6 @@
 
 /// \file auto_out.h
 
-/// \file auto_prev.h
-
 /// \file AutowiringDebug.h
 
 /// \file AutoConfig.h
@@ -71,4 +69,3 @@
 /// \file MicroBolt.h
 
 /// \file Object.h
-
