@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <autowiring/ContextEnumerator.h>
 #include <algorithm>
+#include <random>
 #include MEMORY_HEADER
 #include STL_UNORDERED_SET
 
@@ -110,7 +111,7 @@ TEST_F(ContextEnumeratorTest, VerifyComplexEnumeration) {
   // Verify global context structure
   auto enumerator = ContextEnumeratorT<NamedContext>(AutoGlobalContext());
   size_t globalCount = std::distance(enumerator.begin(), enumerator.end());
-  
+
   ASSERT_EQ(globalCount, 2UL) << "Expected exactly one context in the parent context, found " << globalCount;
 }
 
@@ -146,7 +147,9 @@ TEST_F(ContextEnumeratorTest, ComplexRemovalInterference) {
     children.push_back(AutoCreateContext());
 
   // Shuffle the collection to prevent the order here from being equivalent to the order in the context
-  std::random_shuffle(children.begin(), children.end());
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::shuffle(children.begin(), children.end(), gen);
 
   // These are the elements actually encountered in the enumeration, held here to prevent expiration in the
   // event that we enumerate a context which should have already been evicted
@@ -158,7 +161,7 @@ TEST_F(ContextEnumeratorTest, ComplexRemovalInterference) {
   // Go through the enumeration, the totals should line up by the time we're done:
   for(const auto& cur : CurrentContextEnumerator()) {
     enumerated.insert(cur);
-    
+
     // Pull off the last element:
     auto removed = children.back();
     children.pop_back();
