@@ -65,7 +65,6 @@ namespace lib {
 #ifdef _WEBSOCKETPP_CPP11_MEMORY_
     using std::shared_ptr;
     using std::weak_ptr;
-    using std::auto_ptr;
     using std::enable_shared_from_this;
     using std::static_pointer_cast;
     using std::make_shared;
@@ -75,7 +74,6 @@ namespace lib {
 #else
     using autoboost::shared_ptr;
     using autoboost::weak_ptr;
-    using std::auto_ptr;
     using autoboost::enable_shared_from_this;
     using autoboost::static_pointer_cast;
     using autoboost::make_shared;
