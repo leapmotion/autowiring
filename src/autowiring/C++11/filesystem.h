@@ -4,7 +4,7 @@
 //C++17 Filesystem standard
 #if defined(_MSC_VER) && _MSC_VER >= 1900
   #include <filesystem>
-  #if _MSC_VER >= 1914 && __cplusplus >= 201402L
+  #if _MSC_VER >= 1914 && _HAS_CXX17
     // VS 2017 15.7 Preview 2 or newer with /std:c++17
     namespace awfsnamespace = std::filesystem;
   #elif _MSC_VER >= 1910
@@ -18,7 +18,7 @@
 namespace awfsnamespace = autoboost::filesystem;
 #endif
 
-#if !defined(_MSC_VER) || _MSC_VER < 1914 || __cplusplus < 201402L
+#if !defined(_MSC_VER) || _MSC_VER < 1914 || !_HAS_CXX17
 namespace std {
   namespace filesystem {
     using awfsnamespace::path;
