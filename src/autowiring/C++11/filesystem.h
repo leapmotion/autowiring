@@ -4,7 +4,9 @@
 //C++17 Filesystem standard
 #if defined(_MSC_VER) && _MSC_VER >= 1900
   #include <filesystem>
-#if _MSC_VER >= 1910
+  #if _MSC_VER >= 1914
+    namespace awfsnamespace = std::filesystem;
+  #elif _MSC_VER >= 1910
     namespace awfsnamespace = std::experimental::filesystem;
   #else
     namespace awfsnamespace = std::tr2::sys;
@@ -15,6 +17,7 @@
 namespace awfsnamespace = autoboost::filesystem;
 #endif
 
+#if !defined(_MSC_VER) || _MSC_VER < 1914
 namespace std {
   namespace filesystem {
     using awfsnamespace::path;
@@ -33,3 +36,4 @@ namespace std {
     using awfsnamespace::temp_directory_path;
   }
 }
+#endif
