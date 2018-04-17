@@ -4,7 +4,7 @@
 //C++17 Filesystem standard
 #if defined(_MSC_VER) && _MSC_VER >= 1900
   #include <filesystem>
-  #if _MSC_VER >= 1914 && _MSVC_LANG >= 201402L
+  #if _MSC_VER >= 1914 && _MSVC_LANG >= 201703L
     // VS 2017 15.7 Preview 2 or newer with /std:c++17
     namespace awfsnamespace = std::filesystem;
   #elif _MSC_VER >= 1910
