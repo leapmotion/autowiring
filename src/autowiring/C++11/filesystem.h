@@ -18,7 +18,7 @@
 namespace awfsnamespace = autoboost::filesystem;
 #endif
 
-#if !defined(_MSC_VER) || _MSC_VER < 1914 || _MSVC_LANG < 201402L
+#if !defined(_MSC_VER) || _MSC_VER < 1914 || _MSVC_LANG < 201703L
 namespace std {
   namespace filesystem {
     using awfsnamespace::path;
