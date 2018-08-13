@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include TYPE_TRAITS_HEADER
 
 #if defined(__ANDROID__) && !defined(_LIBCPP_VERSION)
