@@ -370,7 +370,7 @@
 // -std={c,gnu}++{0x,11} is passed.  The C++11 standard specifies a
 // value for __cplusplus, and recent versions of clang, gcc, and
 // probably other compilers set that too in C++11 mode.
-# if __GXX_EXPERIMENTAL_CXX0X__ || __cplusplus >= 201103L
+# if __GXX_EXPERIMENTAL_CXX0X__ || __cplusplus >= 201103L || _MSC_VER >= 1900
 // Compiling in at least C++11 mode.
 #  define GTEST_LANG_CXX11 1
 # else
@@ -614,7 +614,8 @@
 // support TR1 tuple.  libc++ only provides std::tuple, in C++11 mode,
 // and it can be used with some compilers that define __GNUC__.
 # if (defined(__GNUC__) && !defined(__CUDACC__) && (GTEST_GCC_VER_ >= 40000) \
-      && !GTEST_OS_QNX && !defined(_LIBCPP_VERSION)) || _MSC_VER >= 1600
+      && !GTEST_OS_QNX && !defined(_LIBCPP_VERSION)) \
+      || (_MSC_VER >= 1600 && _MSC_VER < 1900)
 #  define GTEST_ENV_HAS_TR1_TUPLE_ 1
 # endif
 
@@ -9670,6 +9671,10 @@ inline void PrintTo(const ::std::wstring& s, ::std::ostream* os) {
   PrintWideStringTo(s, os);
 }
 #endif  // GTEST_HAS_STD_WSTRING
+
+#if GTEST_LANG_CXX11
+inline void PrintTo(std::nullptr_t, ::std::ostream* os) { *os << "(nullptr)"; }
+#endif  // GTEST_LANG_CXX11
 
 #if GTEST_HAS_TR1_TUPLE
 // Overload for ::std::tr1::tuple.  Needed for printing function arguments,
