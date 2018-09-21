@@ -110,6 +110,7 @@ namespace autowiring {
   };
 
   struct metadata_pack_base {
+    virtual ~metadata_pack_base(void) {}
     virtual const std::vector<const metadata_base*>& get_list(void) const = 0;
     virtual std::unique_ptr<metadata_pack_base> clone(void) const = 0;
     virtual void bind(const config_field& configField, void* pField) = 0;
