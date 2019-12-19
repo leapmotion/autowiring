@@ -14,6 +14,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include TYPE_TRAITS_HEADER
 
 /// <summary>
