@@ -34,7 +34,7 @@ void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName)
   __try
   {
     // Magic exception which informs the OS of this thread's name
-    RaiseException(0x406D1388, 0, sizeof(info)/sizeof(DWORD), (ULONG_PTR*)&info);
+    RaiseException(0x406D1388, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info);
   }
   __except(EXCEPTION_CONTINUE_EXECUTION)
   {
